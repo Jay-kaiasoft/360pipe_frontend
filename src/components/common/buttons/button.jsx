@@ -1,0 +1,117 @@
+import Components from '../../muiComponents/components';
+import { useTheme } from '@mui/material';
+
+const Button = ({
+    useFor = "primary",
+    type,
+    text,
+    onClick,
+    disabled = false,
+    isLoading = false,
+    startIcon = null,
+    endIcon = null,
+    value = null,
+    id,
+}) => {
+    const theme = useTheme();
+    const ButtonComponent = isLoading ? Components.LoadingButton : Components.Button;
+
+    // Base styles for all buttons
+    const baseStyles = {
+        borderRadius: 1,
+        fontWeight: 500,
+        fontFamily: '"Inter", sans-serif',
+        height: 30,
+        textTransform: "capitalize",
+    };
+
+    // Styles when useFor !== "primary"
+    const normalStyles = {
+        background: useFor === "error"
+            ? theme.palette.error.main
+            : useFor === "success"
+                ? theme.palette.success.main
+                : useFor === "disabled"
+                    ? theme.palette.background.default
+                    : theme.palette.secondary.light,
+        color: theme.palette.text.primary,
+        "&:hover": {
+            boxShadow: 0,
+            opacity: 0.9,
+        },
+        px: 5,
+        py: 1,
+        fontWeight: "bold",
+        fontSize: "1.1rem",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: 0,
+        textTransform: "none",
+    };
+    const primaryStyles = {
+        background: theme.palette.primary.main,
+        color: theme.palette.text.primary,
+        px: 5,
+        py: 3,
+        fontWeight: "bold",
+        fontSize: "1.1rem",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: 0,
+        textTransform: "none",
+        "& .overlay": {
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: 0,
+            bgcolor: theme.palette.secondary.main,
+            transition: "height 0.3s ease-out",
+            zIndex: 0,
+        },
+        "& .btn-text": {
+            position: "relative",
+            zIndex: 1,
+            transition: "color 0.3s ease",
+        },
+        "&:hover .overlay": {
+            height: "100%",
+        },
+        "&:hover .btn-text": {
+            color: "#fff",
+        },
+        "&:hover": {
+            boxShadow: 0,
+        },
+    };
+
+    return (
+        <ButtonComponent
+            fullWidth
+            disabled={disabled || isLoading}
+            type={type}
+            onClick={onClick}
+            variant="contained"
+            loading={isLoading}
+            startIcon={startIcon}
+            endIcon={endIcon}
+            id={id}
+            data-value={value}
+            sx={{
+                ...baseStyles,
+                ...(useFor === "primary" ? primaryStyles : normalStyles),
+            }}
+        >
+            {useFor === "primary" ? (
+                <>
+                    <span className="overlay" />
+                    <span className="btn-text">{text}</span>
+                </>
+            ) : (
+                text
+            )}
+        </ButtonComponent>
+    );
+};
+
+export default Button;
