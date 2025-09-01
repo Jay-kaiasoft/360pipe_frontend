@@ -1,3 +1,4 @@
+import Button from "../../components/common/buttons/button";
 import Header from "./header";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -28,15 +29,15 @@ const PricingSection = () => {
             to use our Savings Calculator when you move all your tools to
             360Pipe.
           </p>
-         
+
           <div className="md:bg-gray-50 md:rounded-md md:shadow overflow-hidden">
             <div className="hidden md:block">
               {/* Plan Names */}
               <div className="grid grid-cols-5 border-b">
-                <div className="p-4 font-semibold">Plans</div>
+                <div className="p-4 font-semibold text-black">Plans</div>
                 {["Pay As You Go", "Surveys Only", "Pay as You Grow", "Enterprise"].map(
                   (plan, index) => (
-                    <div key={index} className="p-4 text-center font-semibold border-l">
+                    <div key={index} className="p-4 text-center font-semibold border-l text-black">
                       {plan}
                     </div>
                   )
@@ -45,7 +46,7 @@ const PricingSection = () => {
 
               {/* Monthly Base Cost */}
               <div className="grid grid-cols-5 border-b">
-                <div className="p-4 font-medium">Monthly Base Cost</div>
+                <div className="p-4 font-medium text-black">Monthly Base Cost</div>
                 {["$0", "$250", "$0.10", "Custom Price"].map((price, index) => (
                   <div key={index} className="p-4 text-center border-l font-bold">
                     {price}
@@ -60,16 +61,21 @@ const PricingSection = () => {
                   <div key={index} className="p-4 text-center border-l">
                     <button
                       onClick={() => handlePlanSelection()}
-                      className="bg-[#FFD600] px-5 py-2 rounded font-bold hover:bg-blue-600 hover:text-white transition"
+                      type="button"
+                      className="relative px-5 py-2 rounded group overflow-hidden font-medium bg-[#FFD600] text-[#222] shadow-md"
                     >
-                      Choose Plan
-                    </button>
+                      <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-blue-600 group-hover:h-full"></span>
+
+                      <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
+                        Choose Plan
+                      </span>
+                    </button>                    
                   </div>
                 ))}
                 {/* Enterprise Call */}
                 <div className="p-4 text-center border-l flex flex-col items-center justify-center text-blue-600">
-                  <p className="font-semibold">Call Us</p>
-                  <p className="text-sm text-gray-600">+1 415 906 4001 ext 1</p>
+                  {/* <p className="font-semibold">Call Us</p>
+                  <p className="text-sm text-gray-600">+1 415 906 4001 ext 1</p> */}
                 </div>
               </div>
             </div>

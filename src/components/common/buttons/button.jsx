@@ -12,6 +12,7 @@ const Button = ({
     endIcon = null,
     value = null,
     id,
+    height = 0,
 }) => {
     const theme = useTheme();
     const ButtonComponent = isLoading ? Components.LoadingButton : Components.Button;
@@ -21,8 +22,8 @@ const Button = ({
         borderRadius: 1,
         fontWeight: 500,
         fontFamily: '"Inter", sans-serif',
-        height: 30,
-        textTransform: "capitalize",
+        height: height || 40,
+        textTransform: "uppercase",
     };
 
     // Styles when useFor !== "primary"
@@ -34,7 +35,7 @@ const Button = ({
                 : useFor === "disabled"
                     ? theme.palette.background.default
                     : theme.palette.secondary.light,
-        color: theme.palette.text.primary,
+        color: "#000",
         "&:hover": {
             boxShadow: 0,
             opacity: 0.9,
@@ -46,19 +47,19 @@ const Button = ({
         position: "relative",
         overflow: "hidden",
         boxShadow: 0,
-        textTransform: "none",
+        textTransform: "uppercase",
     };
     const primaryStyles = {
         background: theme.palette.primary.main,
         color: theme.palette.text.primary,
-        px: 5,
-        py: 3,
+        // px: 5,
+        // py: 3,
         fontWeight: "bold",
         fontSize: "1.1rem",
         position: "relative",
         overflow: "hidden",
         boxShadow: 0,
-        textTransform: "none",
+        textTransform: "uppercase",
         "& .overlay": {
             position: "absolute",
             bottom: 0,

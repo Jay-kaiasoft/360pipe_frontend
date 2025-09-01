@@ -1,6 +1,6 @@
 export default function ValuesSection() {
     return (
-        <section className="py-12 max-w-7xl">
+        <section className="py-12 4k:max-w-7xl">
             <div className="relative rounded-3xl overflow-hidden shadow-md bg-gradient-to-r from-yellow-50 via-white to-blue-50 py-12">
                 <div className="w-full h-full flex flex-col items-center gap-6 pb-5 md:pb-12">
                     <div className="px-3 py-1 bg-white shadow-sm border border-gray-100 rounded-full flex items-center gap-2">

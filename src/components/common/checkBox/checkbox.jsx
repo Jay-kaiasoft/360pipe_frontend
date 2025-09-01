@@ -14,24 +14,25 @@ const Checkbox = ({ text, onChange, checked = false, disabled }) => {
                         size="small"
                         sx={{
                             "&.Mui-checked": {
-                                color: theme.palette.primary.main,
+                                color: theme.palette.secondary.main,
                             },
                             "&.MuiSvgIcon-root": {
-                                color: theme.palette.primary.main,
+                                color: theme.palette.secondary.main,
                             },
-                            color: theme.palette.primary.main,
+                            color: theme.palette.secondary.main,
                             paddingY: 0,
                         }}
                         checked={checked}
                         onChange={onChange}
+                        
                     />
-                }
+                }                
                 label={text}
                 sx={{
-                    color: theme.palette.primary.main,
+                    color: theme.palette.secondary.main,
                     margin: 0,
                 }}
-            />
+            />            
         </Components.FormGroup>
     );
 };

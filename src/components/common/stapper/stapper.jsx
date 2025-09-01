@@ -3,7 +3,6 @@ import { useTheme } from '@mui/material/styles';
 import CustomIcons from '../icons/CustomIcons';
 import Components from '../../muiComponents/components';
 
-
 export default function Stapper({ steps, activeStep, orientation = "vertical", labelFontSize, width = null, show }) {
   const theme = useTheme();
 
@@ -32,7 +31,7 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
           <div className="w-2 h-2 bg-white rounded-full" />
         ) : (
           <span style={{ fontSize: 12, color: "#000000", fontWeight: 800 }}>{icon}</span>
-      )}
+        )}
       </CustomStepIconRoot>
     );
   }
@@ -60,7 +59,7 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
   }));
 
   return (
-    <Components.Box sx={{ width: width !== null ? width : '100%' }}>
+    <Components.Box sx={{ width: { sm: width !== null ? width : '100%' } }}>
       <Components.Stepper
         activeStep={activeStep}
         orientation={orientation}

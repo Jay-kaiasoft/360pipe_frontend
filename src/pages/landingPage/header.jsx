@@ -116,16 +116,20 @@ const Header = () => {
                 }
 
                 {/* Mobile Toggle */}
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="xl:hidden transition-transform duration-300"
-                >
-                    <CustomIcons
-                        iconName={isOpen ? "fa-solid fa-xmark" : "fa-solid fa-bars"}
-                        css={`cursor-pointer text-2xl transform transition-transform duration-300 ${isOpen ? "rotate-90" : "rotate-0"
-                            } ${isScrolled ? "text-gray-800" : "text-black"}`}
-                    />
-                </button>
+                {
+                    location.pathname !== "/register" && (
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="xl:hidden transition-transform duration-300"
+                        >
+                            <CustomIcons
+                                iconName={isOpen ? "fa-solid fa-xmark" : "fa-solid fa-bars"}
+                                css={`cursor-pointer text-2xl transform transition-transform duration-300 ${isOpen ? "rotate-90" : "rotate-0"
+                                    } ${isScrolled ? "text-gray-800" : "text-black"}`}
+                            />
+                        </button>
+                    )
+                }
             </div>
 
             {/* Mobile Sidebar */}

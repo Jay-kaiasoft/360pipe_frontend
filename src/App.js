@@ -10,6 +10,7 @@ import PageNotFound from "./components/pageNotFound/pageNotFound";
 import PricingSection from "./pages/landingPage/pricingSection";
 import Register from "./pages/auth/register/register";
 import MuiThemeProvider from "./components/common/muiTheme/muiTheme";
+import GlobalAlert from "./components/common/alert/globalAlert";
 
 library.add(fas, far, fab)
 
@@ -36,6 +37,7 @@ const App = () => {
     <>
       <MuiThemeProvider>
         <div className="h-screen">
+          <GlobalAlert />
           <RouterProvider router={router} />
         </div>
       </MuiThemeProvider>

@@ -3,13 +3,8 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import {
-    default_color,
-    default_hover_color,
-    error_color,
-    primary_color,
-} from '../../../utils/cssVariables/variable';
 import Components from '../../muiComponents/components';
+import { useTheme } from '@mui/material';
 
 const BaseDatePicker = React.forwardRef(({
     label,
@@ -21,14 +16,16 @@ const BaseDatePicker = React.forwardRef(({
     onChange,
     endIcon,
 }, ref) => {
+    const theme = useTheme();
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DemoContainer components={['DatePicker']}>
-                <DatePicker            
+                <DatePicker
                     label={label || 'Basic date picker'}
                     value={value}
                     onChange={onChange}
-                    ref={ref}                    
+                    ref={ref}
                     renderInput={(params) => (
                         <Components.TextField
                             {...params}
@@ -46,42 +43,42 @@ const BaseDatePicker = React.forwardRef(({
                             padding: 0
                         },
                         '& .MuiOutlinedInput-root': {
-                            height: '2.2rem',  // Smaller height
+                            height: '2.2rem',
                             borderRadius: '0.5rem',
                             height: '3rem',
                             transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
                             '& fieldset': {
-                                borderColor: error ? error_color : default_color, // Error color logic
+                                borderColor: error ? theme.palette.error.main : theme.palette.secondary.main,
                             },
                             '&:hover fieldset': {
-                                borderColor: error ? error_color : default_hover_color, // Hover border color
+                                borderColor: error ? theme.palette.error.main : theme.palette.secondary.main,
                             },
                             '&.Mui-focused fieldset': {
-                                borderColor: error ? error_color : primary_color, // Focus border color
+                                borderColor: error ? theme.palette.error.main : theme.palette.secondary.main,
                             },
                         },
                         '& .MuiInputLabel-root': {
-                            color: error ? error_color : default_color, // Default label color
+                            color: error ? theme.palette.error.main : theme.palette.secondary.main,
                         },
                         '& .MuiInputLabel-root.Mui-focused': {
-                            color: error ? error_color : primary_color, // Focused label color
+                            color: error ? theme.palette.error.main : theme.palette.secondary.main,
                         },
                         '& .MuiInputBase-input': {
-                            color: '#3b4056', // Text color
+                            color: '#3b4056',
                         },
                         '& .Mui-disabled': {
-                            color: '#3b4056', // Disabled text color
+                            color: '#3b4056',
                         },
                         '& .MuiFormHelperText-root': {
-                            color: error_color,
+                            color: theme.palette.error.main,
                             fontSize: '14px',
                             fontWeight: '500',
                             marginX: 0.5,
                         },
-                        fontFamily:
-                            '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+                        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
                     }}
                 />
+
             </DemoContainer>
         </LocalizationProvider>
     );
