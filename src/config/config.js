@@ -7,3 +7,4 @@ export const radarPKAPIKey = "prj_live_pk_52c928de8697ee80316163c20c3708b53c3b34
 
 export const authIdURL = baseURL + '/authIdDetails'
 export const customersURL = baseURL + '/customers'
+export const rolesURL = baseURL + '/roles'

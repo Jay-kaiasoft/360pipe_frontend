@@ -68,8 +68,9 @@ const MuiTheme = () =>
 });
 
 const MuiThemeProvider = ({ children }) => {
+  const theme = MuiTheme(); // Call the function to create the theme object
   return (
-    <ThemeProvider theme={MuiTheme}>
+    <ThemeProvider theme={theme}>
       {children}
     </ThemeProvider>
   );

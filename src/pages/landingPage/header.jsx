@@ -150,7 +150,8 @@ const Header = () => {
                 <nav className="space-y-2">
                     {navItems.map((item, idx) => (
                         <div key={idx}>
-                            <button
+                            <NavLink
+                                to={item.route}
                                 className="flex justify-between items-center w-full px-2 py-2 text-left text-gray-800 font-semibold hover:bg-gray-100 rounded-md"
                                 onClick={() =>
                                     setOpenMenu(openMenu === idx ? null : idx)
@@ -167,13 +168,13 @@ const Header = () => {
                                         css="text-sm transition-transform duration-300"
                                     />
                                 )}
-                            </button>
+                            </NavLink>
                             {openMenu === idx && item.children && (
                                 <div className="ml-4 space-y-1 animate-fadeIn">
                                     {item.children.map((child, cidx) => (
                                         <NavLink
                                             key={cidx}
-                                            to="#"
+                                            to={child.route}
                                             className="block px-2 py-1 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md text-sm"
                                         >
                                             {child}

@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@authid/react-component": "^1.4.0",
+    "@authid/web-component": "^1.4.0",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
