@@ -1,0 +1,304 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { connect } from 'react-redux';
+
+import '@authid/web-component'
+import AuthIDComponent from '@authid/react-component';
+
+import { setAlert, setLoading } from "../../../redux/commonReducers/commonReducers";
+
+import Header from '../../landingPage/header'
+import CopyRight from '../../landingPage/copyRight'
+import Input from '../../../components/common/input/input';
+import CustomIcons from '../../../components/common/icons/CustomIcons';
+import Button from '../../../components/common/buttons/button';
+import { userLogin } from '../../../service/customers/customersService';
+import { loginWithAuthID } from '../../../service/auth/authIdAccountService';
+
+const Login = ({ setAlert, loading }) => {
+    const navigate = useNavigate();
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [loginPreference, setLoginPreference] = useState(null);
+
+    const emailRef = useRef(null);
+    const passwordRef = useRef(null);
+
+    const [showAuth, setShowAuth] = useState(false);
+    const [finalUrl, setFinalUrl] = useState(null);
+    const [userData, setUserData] = useState(null);
+    const [jsonResponse, setJsonResponse] = useState(null);
+
+    const {
+        handleSubmit,
+        control,
+        reset,
+        watch,
+        setError,
+        formState: { errors },
+    } = useForm({
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+    });
+
+    const handleCloseAuthModel = () => {
+        setShowAuth(false);
+        setFinalUrl(null);
+    };
+
+    const togglePasswordVisibility = () => {
+        setIsPasswordVisible((prev) => !prev);
+    };
+
+    const handleAuthFailureCount = () => {
+        setAlert({
+            open: true,
+            message: "You have exceeded the maximum number of login attempts. Please try using password.",
+            type: "error",
+        });
+        handleCloseAuthModel();
+        setLoginPreference("password");
+    }
+
+    const handleSubmitAuth = async () => {
+        if (!watch("email")) {
+            setError("email", { type: "manual", message: "Email is required" });
+            return;
+        }
+
+        const response = await loginWithAuthID(watch("email"));
+        if (response?.status === 200) {
+            const uData = response.data.result.userData;
+            setUserData(uData);
+            setJsonResponse(response);
+
+            const t = response.data.result.transactionId;
+            const s = response.data.result.oneTimeSecret;
+            const url = `https://id.authid.ai/?t=${t}&s=${s}`;
+
+            setFinalUrl(url);
+            setShowAuth(true);
+        } else {
+            setAlert({
+                open: true,
+                message: response?.data?.message || "An error occurred. Please try again.",
+                type: "error",
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (!showAuth) return;
+
+        const handleMessage = (event) => {
+            // Debug logging to see what comes in
+            if (event.data?.pageName === "verifiedMatchFailPage") {
+                handleAuthFailureCount();
+            }
+            if (event.data?.params?.message === "LIVENESS_FINISHED") {
+                if (!userData?.userId) {
+                    setAlert({
+                        open: true,
+                        message: "An error occurred. Please try again.",
+                        type: "error",
+                    });
+                }
+            }
+
+            if (event.data?.success) {
+                sessionStorage.setItem("authToken", jsonResponse?.data?.result?.authToken);
+                handleCloseAuthModel();
+                setAlert({
+                    open: true,
+                    message: "Login successful",
+                    type: "success",
+                });
+                navigate("/");
+            } else {
+                switch (event.data.pageName) {
+                    case "documentFailedPage":
+                    case "documentFailedNonMobilePage":
+                    case "networkErrorPage":
+                    case "livenessErrorPage":
+                    case "docScanWasmTimeoutPage":
+                    case "requestTimeoutPage":
+                    case "transactionNotValidPage":
+                    case "transactionMaxAttemptsPage":
+                    case "QRCodePage":
+                        return;
+                    case "verifiedMatchFailPage":
+                    case "verifyDeclinedPage":
+                    case "docScanResolutionTooLowPage":
+                    case "videoDeviceNotFoundPage":
+                    case "standardErrorPage":
+                    case "defaultFailedPage":
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+
+        window.addEventListener("message", handleMessage, false);
+        return () => window.removeEventListener("message", handleMessage, false);
+    }, [showAuth, userData, jsonResponse]);
+
+
+    const onSubmit = async (data) => {
+        const res = await userLogin(data)
+        if (res?.data?.result?.loginPreference) {
+            setLoginPreference(res?.data?.result?.loginPreference)
+            if (res?.data?.result?.loginPreference === "authId") {
+                handleSubmitAuth()
+            }
+        } else if (res?.data?.status === 200 && res?.data?.result?.token) {
+            localStorage.setItem("authToken", res?.data?.result?.token)
+            navigate("/")
+            setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
+        } else {
+            setAlert({ open: true, type: "error", message: res?.data?.result?.error || "Something went wrong" })
+        }
+    }
+
+    useEffect(() => {
+        if (loginPreference === "password" && passwordRef.current) {
+            passwordRef.current.focus();
+        }
+    }, [loginPreference]);
+
+    return (
+        <div>
+            <div className="h-screen flex flex-col">
+                <div className="fixed z-50 w-full px-5 lg:px-20 border-b border-gray-200 shadow-sm bg-white">
+                    <Header />
+                </div>
+
+                <div className="flex items-center justify-center px-5 lg:px-20 py-40">
+                    <form className="p-6" onSubmit={handleSubmit(onSubmit)}>
+                        <div className='my-4'>
+                            <p className="text-center text-2xl font-semibold text-black">Sign In</p>
+                        </div>
+                        <div className="flex justify-center">
+                            <div className="min-w-80">
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <Controller
+                                            name="email"
+                                            control={control}
+                                            rules={{
+                                                required: "Email is required",
+                                                pattern: {
+                                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                                    message: "Invalid email address",
+                                                },
+                                            }}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    ref={emailRef}
+                                                    label="Email"
+                                                    type="text"
+                                                    error={errors?.email}
+                                                    disabled={loginPreference === "password"}
+                                                    onChange={(e) => {
+                                                        field.onChange(e);
+                                                    }}
+                                                    endIcon={
+                                                        <span
+                                                            onClick={() => { setLoginPreference(null); reset(); emailRef.current.focus(); }}
+                                                            style={{ cursor: "pointer", color: "black" }}
+                                                        >
+                                                            {loginPreference === "password" ? (
+                                                                <CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer text-black text-xl" />
+                                                            ) : null}
+                                                        </span>
+                                                    }
+                                                />
+                                            )}
+                                        />
+                                    </div>
+
+                                    {loginPreference === "password" && (
+                                        <div>
+                                            <Controller
+                                                name="password"
+                                                control={control}
+                                                rules={{
+                                                    required: "Password is required",
+                                                }}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        ref={passwordRef}
+                                                        label="Password"
+                                                        type={isPasswordVisible ? "text" : "password"}
+                                                        error={errors?.password?.message}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value.replace(/\s/g, "");
+                                                            field.onChange(value);
+                                                        }}
+                                                        endIcon={
+                                                            <span
+                                                                onClick={togglePasswordVisibility}
+                                                                style={{ cursor: "pointer", color: "black" }}
+                                                            >
+                                                                {isPasswordVisible ? (
+                                                                    <CustomIcons iconName="fa-solid fa-eye" css="cursor-pointer text-black" />
+                                                                ) : (
+                                                                    <CustomIcons iconName="fa-solid fa-eye-slash" css="cursor-pointer text-black" />
+                                                                )}
+                                                            </span>
+                                                        }
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mt-6 flex justify-end items-center gap-3 cap">
+                                    <div>
+                                        <Button type="submit" text={"Sigin in"} isLoading={loading} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                {finalUrl != null ? (
+                    <div className="fixed inset-0 z-50 bg-white h-screen w-screen">
+                        <div>
+                            <AuthIDComponent
+                                url={finalUrl}
+                                webauth={true} // Ensure this prop is explicitly passed
+                            />
+                        </div>
+                        <button
+                            onClick={() => { handleCloseAuthModel() }}
+                            className="absolute top-5 right-5 w-10 h-10 text-xl font-bold z-50 text-black border-2 border-black rounded-full"
+                        >
+                            <CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer text-black text-xl" />
+                        </button>
+                    </div>
+                ) : null}
+                <div className="fixed bottom-0 z-30 w-full border-b border-gray-200 shadow-sm bg-white">
+                    <CopyRight />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+const mapDispatchToProps = {
+    setAlert,
+    setLoading
+};
+
+const mapStateToProps = (state) => ({
+    loading: state.common.loading,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

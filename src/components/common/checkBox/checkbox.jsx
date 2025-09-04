@@ -24,15 +24,20 @@ const Checkbox = ({ text, onChange, checked = false, disabled }) => {
                         }}
                         checked={checked}
                         onChange={onChange}
-                        
+
                     />
-                }                
+                }
                 label={text}
                 sx={{
                     color: theme.palette.secondary.main,
                     margin: 0,
+                    '& .MuiFormControlLabel-label': {
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                        fontFamily: '"Inter", sans-serif'
+                    }
                 }}
-            />            
+            />
         </Components.FormGroup>
     );
 };

@@ -1,6 +1,17 @@
 import { customersURL } from "../../config/config"
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
+
+export const userLogin = async (data) => {
+    try {
+        const response = axiosInterceptor().post(`${customersURL}/login`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 export const addCustomer = async (data) => {
     try {
         const response = axiosInterceptor().post(`${customersURL}/create`, data)
@@ -24,6 +35,27 @@ export const updateCustomer = async (id, data) => {
 export const getCustomer = async (id) => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/get/${id}`)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+export const verifyEmail = async (email) => {
+    try {
+        const response = axiosInterceptor().get(`${customersURL}/verifyEmail?email=${email}`)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const verifyUsername = async (username) => {
+    try {
+        const response = axiosInterceptor().get(`${customersURL}/verifyUsername?username=${username}`)
         return response
 
     } catch (error) {

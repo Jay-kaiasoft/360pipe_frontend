@@ -6,5 +6,10 @@ export const radarSKAPIKey = "prj_live_sk_6d98dc8a1d5176a349d7226de83908980e1d9a
 export const radarPKAPIKey = "prj_live_pk_52c928de8697ee80316163c20c3708b53c3b3410"
 
 export const authIdURL = baseURL + '/authIdDetails'
+export const countryURL = baseURL + '/country'
+export const stateURL = baseURL + '/state'
+export const fileUploadURL = baseURL + '/uploadFile'
+
 export const customersURL = baseURL + '/customers'
 export const rolesURL = baseURL + '/roles'
+export const businessInfoURL = baseURL + '/businessInfo'

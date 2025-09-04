@@ -108,7 +108,7 @@ const Header = () => {
                             <button onClick={() => navigate("/pricing")} className="bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-blue-700 transition">
                                 Sign Up
                             </button>
-                            <button onClick={() => navigate("/")} className='px-5 py-2 rounded-md font-semibold transition bg-yellow-400 text-gray-900 hover:bg-yellow-500'>
+                            <button onClick={() => navigate("/login")} className='px-5 py-2 rounded-md font-semibold transition bg-yellow-400 text-gray-900 hover:bg-yellow-500'>
                                 Sign In
                             </button>
                         </div>

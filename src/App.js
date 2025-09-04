@@ -12,6 +12,7 @@ import MuiThemeProvider from "./components/common/muiTheme/muiTheme";
 import GlobalAlert from "./components/common/alert/globalAlert";
 import Register from "./pages/auth/register/register";
 import Loader from "./components/loader/loader";
+import Login from "./pages/auth/login/login";
 
 library.add(fas, far, fab)
 
@@ -33,13 +34,17 @@ const App = () => {
       path: "/register",
       element: <Register />,
     },
+    {
+      path: "/login",
+      element: <Login />,
+    },
   ])
   return (
     <>
       <MuiThemeProvider>
         <div className="h-screen">
           <Loader />
-          <GlobalAlert />          
+          <GlobalAlert />
           <RouterProvider router={router} />
         </div>
       </MuiThemeProvider>

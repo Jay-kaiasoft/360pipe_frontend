@@ -1,4 +1,20 @@
+import { fileUploadURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
+
+export const securityQuestions = [
+    { id: 1, title: "What is your father’s middle name?" },
+    { id: 2, title: "What high school did you attend?" },
+    { id: 3, title: "Who was your childhood hero?" },
+    { id: 4, title: "What is your favorite hobby?" },
+    { id: 5, title: "What is the name of your favorite pet?" },
+    { id: 6, title: "In what city were you born?" },
+    { id: 7, title: "What is your mother's maiden name?" },
+    { id: 8, title: "What was the name of your elementary school?" },
+    { id: 9, title: "What was the make of your first car?" },
+    { id: 10, title: "What was your favorite food as a child?" },
+    { id: 11, title: "Where did you meet your spouse?" },
+    { id: 12, title: "What year was your father (or mother) born?" }
+];
 
 export const uploadFiles = async (data) => {
     try {

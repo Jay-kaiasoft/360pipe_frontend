@@ -6,7 +6,6 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
     const theme = useTheme();
     const selectOptions = Array.isArray(options) && options.length > 0 ? options : [];
 
-    // Ensure value is consistently an object or null
     const selectedOption = selectOptions.find((option) => option.id === value) || null;
 
     return (
@@ -53,6 +52,7 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
                         },
                         '& .Mui-disabled': {
                             color: theme.palette.text.primary,
+                            borderColor: error ? theme.palette.error.main : theme.palette.secondary.main,
                         },
                         '& .MuiFormHelperText-root': {
                             color: theme.palette.error.main,
@@ -70,8 +70,15 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
                         '& .MuiAutocomplete-option': {
                             padding: '0.5rem 1rem',
                             '&:hover': {
-                                backgroundColor: theme.palette.background.default,
-                                color: theme.palette.text.primary,
+                                backgroundColor: `${theme.palette.custom.default2} !important`, // Enforce hover background color
+                                color: `${theme.palette.text.primary} !important`, // Enforce hover text color
+                            },
+                            '&[aria-selected="true"]': {
+                                backgroundColor: `${theme.palette.secondary.main} !important`, // Enforce selected background color
+                                color: "#ffffff !important", // Enforce selected text color
+                                '&:hover': {
+                                    backgroundColor: `${theme.palette.secondary.main} !important`, // Retain secondary color on hover
+                                },
                             },
                         },
                     },

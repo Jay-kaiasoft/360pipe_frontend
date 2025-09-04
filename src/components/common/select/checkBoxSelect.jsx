@@ -78,6 +78,26 @@ const CheckBoxSelect = forwardRef(
             </li>
           );
         }}
+        componentsProps={{
+          paper: {
+            sx: {
+              '& .MuiAutocomplete-option': {
+                padding: '0.5rem 1rem',
+                color: `${theme.palette.text.primary} !important`,
+                '&:hover': {
+                  backgroundColor: `${theme.palette.custom.default2} !important`,
+                },
+                '&[aria-selected="true"]': {
+                  backgroundColor: `${theme.palette.secondary.main} !important`,
+                  color: `#ffffff !important`,
+                  '& .MuiCheckbox-root': {
+                    color: `#ffffff !important`,
+                  },
+                },
+              },
+            },
+          },
+        }}
         renderInput={(params) => (
           <Components.TextField
             {...params}
@@ -88,17 +108,17 @@ const CheckBoxSelect = forwardRef(
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '0.5rem',
-                transition:
-                  'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
+                // backgroundColor: `${theme.palette.se.main} !important`, // Input background color
+                color: `${theme.palette.text.primary} !important`, // Input text color
                 '& fieldset': {
                   borderColor: error
                     ? theme.palette.error.main
-                    : theme.palette.text.disabled,
+                    : theme.palette.secondary.main,
                 },
                 '&:hover fieldset': {
                   borderColor: error
                     ? theme.palette.error.main
-                    : theme.palette.text.disabled,
+                    : theme.palette.secondary.main,
                 },
                 '&.Mui-focused fieldset': {
                   borderColor: error
@@ -107,17 +127,13 @@ const CheckBoxSelect = forwardRef(
                 },
               },
               '& .MuiInputLabel-root': {
-                color: error
-                  ? theme.palette.error.main
-                  : theme.palette.text.disabled,
+                color: `${theme.palette.text.primary} !important`, 
               },
               '& .MuiInputLabel-root.Mui-focused': {
-                color: error
-                  ? theme.palette.error.main
-                  : theme.palette.text.disabled,
+                color: `${theme.palette.text.primary} !important`, // Focused input label color
               },
               '& .MuiInputBase-input': {
-                color: theme.palette.text.disabled,
+                color: `${theme.palette.text.primary} !important`, // Input text color
               },
               '& .Mui-disabled': {
                 color: theme.palette.text.disabled,
@@ -128,24 +144,10 @@ const CheckBoxSelect = forwardRef(
                 fontWeight: '500',
                 marginX: 0.5,
               },
-              fontFamily:
-                '"Inter", sans-serif',
+              fontFamily: '"Inter", sans-serif',
             }}
           />
         )}
-        componentsProps={{
-          paper: {
-            sx: {
-              '& .MuiAutocomplete-option': {
-                padding: '0.5rem 1rem',
-                '&:hover': {
-                  backgroundColor: theme.palette.background.default,
-                  color: theme.palette.text.disabled,
-                },
-              },
-            },
-          },
-        }}
       />
     );
   }
