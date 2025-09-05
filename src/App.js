@@ -13,6 +13,8 @@ import GlobalAlert from "./components/common/alert/globalAlert";
 import Register from "./pages/auth/register/register";
 import Loader from "./components/loader/loader";
 import Login from "./pages/auth/login/login";
+import ForgotPassword from "./pages/auth/forgotPassword/forgotPassword";
+import ResetPassword from "./pages/auth/resetPassword/resetPassword";
 
 library.add(fas, far, fab)
 
@@ -37,6 +39,14 @@ const App = () => {
     {
       path: "/login",
       element: <Login />,
+    },
+    {
+      path: "/forgotpassword",
+      element: <ForgotPassword />,
+    },
+    {
+      path: "/resetpassword/:token",
+      element: <ResetPassword />,
     },
   ])
   return (

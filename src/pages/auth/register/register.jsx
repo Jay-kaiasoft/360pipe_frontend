@@ -557,11 +557,11 @@ const Register = ({ setAlert, setLoading }) => {
     return (
         <>
             <div className="h-screen flex flex-col">
-                <div className="fixed z-50 w-full px-5 lg:px-20 border-b border-gray-200 shadow-sm bg-white">
+                <div className="fixed z-50 w-full px-2 md:px-5 lg:px-20 border-b border-gray-200 shadow-sm bg-white">
                     <Header />
                 </div>
 
-                <div className="flex items-center justify-center px-5 lg:px-20 py-20">
+                <div className="flex items-center justify-center px-2 md:px-5 py-28 lg:px-20 md:py-20">
                     <form className="p-6" onSubmit={handleSubmit(onSubmit)}>
                         <div>
                             <p className="text-center text-2xl font-semibold text-black">Registration</p>
@@ -1424,7 +1424,7 @@ const Register = ({ setAlert, setLoading }) => {
                                         </p>
                                     </div>
                                     <div className="flex justify-center items-center">
-                                        <div className="max-w-96 w-full px-6 flex flex-col gap-4 text-center">
+                                        <div className="md:max-w-96 w-full md:px-6 flex flex-col gap-4">
                                             <div>
                                                 <Controller
                                                     name="subscribeToNewsletter"

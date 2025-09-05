@@ -1,7 +1,6 @@
 import { customersURL } from "../../config/config"
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
-
 export const userLogin = async (data) => {
     try {
         const response = axiosInterceptor().post(`${customersURL}/login`, data)
@@ -42,7 +41,6 @@ export const getCustomer = async (id) => {
     }
 }
 
-
 export const verifyEmail = async (email) => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/verifyEmail?email=${email}`)
@@ -56,6 +54,35 @@ export const verifyEmail = async (email) => {
 export const verifyUsername = async (username) => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/verifyUsername?username=${username}`)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const forgotPassword = async (data) => {
+    try {
+        const response = axiosInterceptor().post(`${customersURL}/forgotpassword`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const resetPassword = async (data) => {
+    try {
+        const response = axiosInterceptor().post(`${customersURL}/resetpassword`, data)
+        return response
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const checkValidToken = async (token) => {
+    try {
+        const response = axiosInterceptor().get(`${customersURL}/validateToken?token=${token}`)
         return response
 
     } catch (error) {

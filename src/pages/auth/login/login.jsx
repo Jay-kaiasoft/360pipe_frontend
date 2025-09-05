@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 
 import '@authid/web-component'
@@ -145,7 +145,6 @@ const Login = ({ setAlert, loading }) => {
         return () => window.removeEventListener("message", handleMessage, false);
     }, [showAuth, userData, jsonResponse]);
 
-
     const onSubmit = async (data) => {
         const res = await userLogin(data)
         if (res?.data?.result?.loginPreference) {
@@ -169,7 +168,7 @@ const Login = ({ setAlert, loading }) => {
     }, [loginPreference]);
 
     return (
-        <div>
+        <>
             <div className="h-screen flex flex-col">
                 <div className="fixed z-50 w-full px-5 lg:px-20 border-b border-gray-200 shadow-sm bg-white">
                     <Header />
@@ -181,7 +180,7 @@ const Login = ({ setAlert, loading }) => {
                             <p className="text-center text-2xl font-semibold text-black">Sign In</p>
                         </div>
                         <div className="flex justify-center">
-                            <div className="min-w-80">
+                            <div className="min-w-96">
                                 <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <Controller
@@ -211,7 +210,7 @@ const Login = ({ setAlert, loading }) => {
                                                             style={{ cursor: "pointer", color: "black" }}
                                                         >
                                                             {loginPreference === "password" ? (
-                                                                <CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer text-black text-xl" />
+                                                                <CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer text-black" />
                                                             ) : null}
                                                         </span>
                                                     }
@@ -258,7 +257,20 @@ const Login = ({ setAlert, loading }) => {
                                     )}
                                 </div>
 
-                                <div className="mt-6 flex justify-end items-center gap-3 cap">
+                                <div className="mt-6 flex justify-end items-start gap-3 cap">
+                                    <div className='grow'>
+                                        {loginPreference === "password" && (
+                                            <>
+                                                <NavLink to="/forgotpassword">
+                                                    <span className="text-blue-500">Forgot Password? </span>
+                                                </NavLink>
+                                                <span className='text-black'>|</span>
+                                            </>
+                                        )}
+                                        <NavLink to="/register">
+                                            <span className="text-blue-500"> Registration</span>
+                                        </NavLink>
+                                    </div>
                                     <div>
                                         <Button type="submit" text={"Sigin in"} isLoading={loading} />
                                     </div>
@@ -288,7 +300,7 @@ const Login = ({ setAlert, loading }) => {
                     <CopyRight />
                 </div>
             </div>
-        </div>
+        </>
     )
 }
 

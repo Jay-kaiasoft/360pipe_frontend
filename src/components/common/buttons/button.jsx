@@ -84,6 +84,9 @@ const Button = ({
         "&:hover": {
             boxShadow: 0,
         },
+        "&:MuiButton-root:disabled": {
+            cursor: "not-allowed",
+        },
     };
 
     return (
