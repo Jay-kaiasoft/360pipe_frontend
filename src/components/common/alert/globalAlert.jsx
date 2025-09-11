@@ -14,7 +14,7 @@ function GlobalAlert({ alert, setAlert }) {
   
   return (
     <div>
-      <Components.Snackbar Snackbar open={alert.open} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+      <Components.Snackbar open={alert.open} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
         <Components.Alert
           onClose={handleClose}
           severity={alert.type}

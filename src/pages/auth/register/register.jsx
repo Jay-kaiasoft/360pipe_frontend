@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import { Controller, useForm } from "react-hook-form";
+import Cookies from 'js-cookie';
 
 import '@authid/web-component'
 import AuthIDComponent from '@authid/react-component';
@@ -547,6 +548,9 @@ const Register = ({ setAlert, setLoading }) => {
     }, [authOperationData]);
 
     useEffect(() => {
+        if (Cookies.get('authToken')) {
+            navigate("/dashboard");
+        }
         handleGetAllRoles();
     }, [])
 

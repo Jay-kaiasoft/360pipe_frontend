@@ -1,5 +1,5 @@
-import Components from '../../muiComponents/components';
 import { useTheme } from '@mui/material';
+import Components from '../../muiComponents/components';
 
 const Button = ({
     useFor = "primary",
@@ -35,7 +35,7 @@ const Button = ({
                 : useFor === "disabled"
                     ? theme.palette.background.default
                     : theme.palette.secondary.light,
-        color: "#000",
+        color: useFor !== "primary" ? "#fff" : theme.palette.text.primary,
         "&:hover": {
             boxShadow: 0,
             opacity: 0.9,
@@ -52,8 +52,6 @@ const Button = ({
     const primaryStyles = {
         background: theme.palette.primary.main,
         color: theme.palette.text.primary,
-        // px: 5,
-        // py: 3,
         fontWeight: "bold",
         fontSize: "1.1rem",
         position: "relative",
@@ -97,8 +95,6 @@ const Button = ({
             onClick={onClick}
             variant="contained"
             loading={isLoading}
-            startIcon={startIcon}
-            endIcon={endIcon}
             id={id}
             data-value={value}
             sx={{
@@ -109,12 +105,21 @@ const Button = ({
             {useFor === "primary" ? (
                 <>
                     <span className="overlay" />
-                    <span className="btn-text">{text}</span>
+                    <span className="btn-text flex items-center gap-2">
+                        {startIcon}
+                        {text}
+                        {endIcon}
+                    </span>
                 </>
             ) : (
-                text
+                <>
+                    {startIcon}
+                    {text}
+                    {endIcon}
+                </>
             )}
         </ButtonComponent>
+
     );
 };
 

@@ -13,7 +13,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-export default function AlertDialog({ open, handleClose, title, message, handleAction, actionButtonText, loading, note = null }) {
+export default function AlertDialog({ open, handleClose, title, message, handleAction, actionButtonText, loading, note = null, closeIcon = true }) {
     const theme = useTheme();
 
     const onClose = () => {
@@ -29,22 +29,26 @@ export default function AlertDialog({ open, handleClose, title, message, handleA
                 fullWidth
                 maxWidth='sm'
             >
-                <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.primary.text.main }} id="customized-dialog-title">
+                <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {title}
                 </Components.DialogTitle>
-                <Components.IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={(theme) => ({
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: theme.palette.primary.icon,
-                    })}
-                >
-                    <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
-                </Components.IconButton>
-                <Components.DialogContent dividers style={{ color: theme.palette.primary.text.main, }}>
+                {
+                    closeIcon && (
+                        <Components.IconButton
+                            aria-label="close"
+                            onClick={onClose}
+                            sx={(theme) => ({
+                                position: 'absolute',
+                                right: 8,
+                                top: 8,
+                                color: theme.palette.text.primary,
+                            })}
+                        >
+                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
+                        </Components.IconButton>
+                    )
+                }
+                <Components.DialogContent dividers style={{ color: theme.palette.text.primary }}>
                     <Components.Typography gutterBottom>
                         {message}
                     </Components.Typography>

@@ -15,10 +15,15 @@ import Loader from "./components/loader/loader";
 import Login from "./pages/auth/login/login";
 import ForgotPassword from "./pages/auth/forgotPassword/forgotPassword";
 import ResetPassword from "./pages/auth/resetPassword/resetPassword";
-
+import Layout from "./pages/dashboard/layout";
+import Accounts from "./pages/dashboard/accounts/accounts";
+import { useEffect, useState } from "react";
+import { setLoading } from "./redux/commonReducers/commonReducers";
+import { connect } from "react-redux";
+import Opportunities from "./pages/dashboard/opportunities/opportunities";
 library.add(fas, far, fab)
 
-const App = () => {
+const App = ({ setLoading }) => {
   const router = createBrowserRouter([
     {
       path: "*",
@@ -48,18 +53,51 @@ const App = () => {
       path: "/resetpassword/:token",
       element: <ResetPassword />,
     },
+    {
+      path: "/dashboard",
+      element: <Layout />,
+      children: [
+        {
+          path: "accounts",
+          element: <Accounts />,
+        },
+        {
+          path: "opportunities",
+          element: <Opportunities />,
+        },
+      ],
+    },
   ])
+
+  const [bootLoading, setBootLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+      setBootLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (bootLoading) {
+    return <div className="h-screen">
+      <Loader />
+    </div>;
+  }
   return (
     <>
       <MuiThemeProvider>
         <div className="h-screen">
           <Loader />
           <GlobalAlert />
-          <RouterProvider router={router} />
+          <RouterProvider router={router} fallbackElement={<Loader />} />
         </div>
       </MuiThemeProvider>
     </>
   )
 }
-
-export default App
+const mapDispatchToProps = {
+  setLoading,
+}
+export default connect(null, mapDispatchToProps)(App);

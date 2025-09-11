@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
+import Cookies from 'js-cookie';
 
 import '@authid/web-component'
 import AuthIDComponent from '@authid/react-component';
@@ -89,6 +90,36 @@ const Login = ({ setAlert, loading }) => {
         }
     };
 
+    const onSubmit = async (data) => {
+        const res = await userLogin(data)
+        if (res?.data?.result?.loginPreference) {
+            setLoginPreference(res?.data?.result?.loginPreference)
+            if (res?.data?.result?.loginPreference === "authId") {
+                handleSubmitAuth()
+            }
+        } else if (res?.data?.status === 200 && res?.data?.result?.token) {
+            Cookies.set('authToken', res?.data?.result?.token, { expires: 0.5 });
+            const userdata = {
+                username: res?.data?.result?.username,
+                email: res?.data?.result?.email,
+                userId: res?.data?.result?.userId,
+                roleId: res?.data?.result?.roleId,
+                rolename: res?.data?.result?.roleName,
+            };
+            localStorage.setItem("userInfo", JSON.stringify(userdata));
+            navigate("/dashboard")
+            setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
+        } else {
+            setAlert({ open: true, type: "error", message: res?.data?.result?.error || "Something went wrong" })
+        }
+    }
+
+    useEffect(() => {
+        if (Cookies.get('authToken')) {
+            navigate("/dashboard");
+        }
+    }, [])
+
     useEffect(() => {
         if (!showAuth) return;
 
@@ -144,22 +175,6 @@ const Login = ({ setAlert, loading }) => {
         window.addEventListener("message", handleMessage, false);
         return () => window.removeEventListener("message", handleMessage, false);
     }, [showAuth, userData, jsonResponse]);
-
-    const onSubmit = async (data) => {
-        const res = await userLogin(data)
-        if (res?.data?.result?.loginPreference) {
-            setLoginPreference(res?.data?.result?.loginPreference)
-            if (res?.data?.result?.loginPreference === "authId") {
-                handleSubmitAuth()
-            }
-        } else if (res?.data?.status === 200 && res?.data?.result?.token) {
-            localStorage.setItem("authToken", res?.data?.result?.token)
-            navigate("/")
-            setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
-        } else {
-            setAlert({ open: true, type: "error", message: res?.data?.result?.error || "Something went wrong" })
-        }
-    }
 
     useEffect(() => {
         if (loginPreference === "password" && passwordRef.current) {

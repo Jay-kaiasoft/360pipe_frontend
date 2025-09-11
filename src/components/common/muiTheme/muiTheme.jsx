@@ -52,7 +52,7 @@ const MuiTheme = () =>
       },
       background: {
         default: colors.default,
-        paper: colors.white,
+        paper: "#fff",
       },
       custom: {
         primaryTwo: colors.primaryTwo,
