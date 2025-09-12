@@ -27,12 +27,7 @@ const Header = () => {
                         "Cloud and Devops",
                     ],
                 },
-                { title: "Company", children: ["About Us", "Careers", "Partners"] },
-                { title: "Services", children: ["Web Development", "App Development"] },
-                { title: "Casestudy", children: ["Case 1", "Case 2"] },
-                { title: "Blog", children: ["Latest Posts", "Categories"] },
                 { title: "Pricing", route: "/pricing" },
-                { title: "Contact", route: "" },
             ])
         } else {
             setNavItems([])
@@ -70,9 +65,7 @@ const Header = () => {
                         <div key={idx} className="relative group">
                             <NavLink
                                 to={item.route}
-                                className={`px-3 py-1 rounded-full transition-all duration-300 ${item.title === "Home" && !isScrolled
-                                    ? "bg-white text-gray-900 shadow-sm"
-                                    : isScrolled
+                                className={`px-3 py-1 rounded-full transition-all duration-300 ${isScrolled
                                         ? "hover:text-blue-600"
                                         : "text-black hover:text-blue-700 hover:bg-white hover:shadow-sm"
                                     }`}

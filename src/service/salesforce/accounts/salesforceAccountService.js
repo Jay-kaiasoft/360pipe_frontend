@@ -1,8 +1,8 @@
 import { salesforceAccountURL } from "../../config/config";
 import axiosInterceptor from "../../axiosInterceptor/axiosInterceptor"
 
-const accessToken = sessionStorage.getItem("accessToken_salesforce");
-const instanceUrl = sessionStorage.getItem("instanceUrl_salesforce");
+const accessToken = localStorage.getItem("accessToken_salesforce");
+const instanceUrl = localStorage.getItem("instanceUrl_salesforce");
 
 export const getAllAccounts = async () => {
     try {

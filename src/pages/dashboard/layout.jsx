@@ -1,13 +1,15 @@
-import { Outlet, useNavigate } from "react-router"
+import { Outlet, useLocation, useNavigate } from "react-router"
 import { connect } from "react-redux"
 import AlertDialog from "../../components/common/alertDialog/alertDialog"
 
 import AppHeader from "./appHeader/appHeader"
 import SideBar from "./sideBar/sideBar"
 import BackDrop from "./sideBar/backDrop"
+import Dashboard from "./dashboard"
 
 const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
   const navigate = useNavigate()
+  const location = useLocation()
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
@@ -22,6 +24,11 @@ const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
         <AppHeader />
 
         <main className="p-4 max-w-screen-2xl">
+          {
+            location.pathname === '/dashboard' && (
+              <Dashboard />
+            )
+          }
           <Outlet />
         </main>
       </div>
@@ -33,7 +40,6 @@ const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
         handleAction={() => navigate('/login')}
         closeIcon={false}
       />
-
     </div>
   )
 }

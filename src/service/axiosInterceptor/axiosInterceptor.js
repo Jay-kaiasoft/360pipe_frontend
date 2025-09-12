@@ -42,7 +42,7 @@ const axiosInterceptor = (signal) => {
     axiosInstance.interceptors.response.use(
         (response) => {
             store.dispatch(setLoading(false));
-            if (response.status === 403) {
+            if (response.status === 403 && response.msg === "Access Denied") {
                 Cookies.remove('authToken');
                 localStorage.removeItem("userInfo");
                 store.dispatch(setSessionEndModel(true));

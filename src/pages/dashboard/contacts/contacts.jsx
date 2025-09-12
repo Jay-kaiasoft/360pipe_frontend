@@ -7,69 +7,69 @@ import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { deleteOpportunity, getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
-import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
+import { deleteContact, getAllContacts } from '../../../service/contact/contactService';
+import ContactModel from '../../../components/models/contact/contactModel';
 
-const Opportunities = ({ setAlert, setLoading }) => {
-    const [opportunities, setOpportunities] = useState([]);
+const Contacts = ({ setAlert, setLoading }) => {
+    const [contacts, setContacts] = useState([]);
     const [open, setOpen] = useState(false);
-    const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
+    const [selectedContactId, setSelectedContactId] = useState(null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
-    const handleGetOpportunities = async () => {
+    const handleGetContacts = async () => {
         try {
-            const opportunities = await getAllOpportunities();
-            const formattedOpportunities = opportunities?.result?.map((opportunity, index) => ({
-                ...opportunity,
+            const contacts = await getAllContacts();
+            const formattedContacts = contacts?.result?.map((contact, index) => ({
+                ...contact,
                 rowId: index + 1
             }));
-            setOpportunities(formattedOpportunities);
+            setContacts(formattedContacts);
         } catch (error) {
-            console.error("Error fetching opportunities:", error);
+            console.error("Error fetching contacts:", error);
         }
     }
 
-    const handleOpen = (opportunityId = null) => {
-        setSelectedOpportunityId(opportunityId);
+    const handleOpen = (contactId = null) => {
+        setSelectedContactId(contactId);
         setOpen(true);
     }
 
     const handleClose = () => {
-        setSelectedOpportunityId(null);
+        setSelectedContactId(null);
         setOpen(false);
     }
 
-    const handleOpenDeleteDialog = (opportunityId) => {
-        setSelectedOpportunityId(opportunityId);
-        setDialog({ open: true, title: 'Delete Opportunity', message: 'Are you sure! Do you want to delete this opportunity?', actionButtonText: 'yes' });
+    const handleOpenDeleteDialog = (contactId) => {
+        setSelectedContactId(contactId);
+        setDialog({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' });
     }
 
     const handleCloseDeleteDialog = () => {
-        setSelectedOpportunityId(null);
+        setSelectedContactId(null);
         setDialog({ open: false, title: '', message: '', actionButtonText: '' });
     }
 
-    const handleDeleteOpportunity = async () => {
-        const res = await deleteOpportunity(selectedOpportunityId);
+    const handleDeleteContact = async () => {
+        const res = await deleteContact(selectedContactId);
         if (res.status === 200) {
             setAlert({
                 open: true,
-                message: "Opportunity deleted successfully",
+                message: "Contact deleted successfully",
                 type: "success"
             });
-            handleGetOpportunities();
+            handleGetContacts();
             handleCloseDeleteDialog();
         } else {
             setAlert({
                 open: true,
-                message: res?.message || "Failed to delete opportunity",
+                message: res?.message || "Failed to delete contact",
                 type: "error"
             });
         }
     }
 
     useEffect(() => {
-        handleGetOpportunities();
+        handleGetContacts();
     }, []);
 
     const columns = [
@@ -82,35 +82,30 @@ const Opportunities = ({ setAlert, setLoading }) => {
             sortable: false,
         },
         {
-            field: 'opportunity',
-            headerName: 'opportunity Name',
+            field: 'firstName',
+            headerName: 'First Name',
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 300,
             sortable: false,
         },
         {
-            field: 'salesStage',
-            headerName: 'sales Stage',
+            field: 'lastName',
+            headerName: 'Last Name',
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 200
         },
         {
-            field: 'dealAmount',
-            headerName: 'deal Amount',
+            field: 'title',
+            headerName: 'Title',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200,
-            renderCell: (params) => {
-                return (
-                    <span>{params.value ? `$${params.value.toLocaleString()}` : ''}</span>
-                )
-            }
+            minWidth: 200,          
         },
         {
-            field: 'closeDate',
-            headerName: 'close Date',
+            field: 'emailAddress',
+            headerName: 'Email',
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 200
@@ -165,7 +160,7 @@ const Opportunities = ({ setAlert, setLoading }) => {
             //   actionId={1}
             //   component={
             <div>
-                <Button type={`button`} text={'Add Opportunity'} onClick={() => handleOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                <Button type={`button`} text={'Add Contact'} onClick={() => handleOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
             </div>
             //   }
             // />
@@ -175,19 +170,19 @@ const Opportunities = ({ setAlert, setLoading }) => {
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
+                <DataTable columns={columns} rows={contacts} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
             </div>
-            <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
+            <ContactModel open={open} handleClose={handleClose} contactId={selectedContactId} handleGetAllContacts={handleGetContacts} />
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}
                 message={dialog.message}
                 actionButtonText={dialog.actionButtonText}
-                handleAction={() => handleDeleteOpportunity()}
+                handleAction={() => handleDeleteContact()}
                 handleClose={() => handleCloseDeleteDialog()}
             />
         </>
-    )
+    );
 }
 
 const mapDispatchToProps = {
@@ -195,4 +190,4 @@ const mapDispatchToProps = {
     setLoading,
 };
 
-export default connect(null, mapDispatchToProps)(Opportunities)
+export default connect(null, mapDispatchToProps)(Contacts)

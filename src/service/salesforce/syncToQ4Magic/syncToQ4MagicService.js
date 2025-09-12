@@ -1,10 +1,10 @@
-import { q4magicSyncURL } from "../../config/config";
+import { q4magicSyncURL } from "../../../config/config";
 import axiosInterceptor from "../../axiosInterceptor/axiosInterceptor"
 
 
 export const syncToQ4Magic = async () => {
-    const accessToken = sessionStorage.getItem("accessToken_salesforce");
-    const instanceUrl = sessionStorage.getItem("instanceUrl_salesforce");
+    const accessToken = localStorage.getItem("accessToken_salesforce");
+    const instanceUrl = localStorage.getItem("instanceUrl_salesforce");
     try {
         const response = await axiosInterceptor().get(`${q4magicSyncURL}?access_token=${accessToken}&instance_url=${instanceUrl}`);
         return response.data;

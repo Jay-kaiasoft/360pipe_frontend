@@ -21,6 +21,8 @@ import { useEffect, useState } from "react";
 import { setLoading } from "./redux/commonReducers/commonReducers";
 import { connect } from "react-redux";
 import Opportunities from "./pages/dashboard/opportunities/opportunities";
+import Contacts from "./pages/dashboard/contacts/contacts";
+import Crm from "./pages/crm/crm";
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
@@ -65,6 +67,14 @@ const App = ({ setLoading }) => {
           path: "opportunities",
           element: <Opportunities />,
         },
+        {
+          path: "contacts",
+          element: <Contacts />,
+        },
+        {
+          path: "mycrm",
+          element: <Crm />,
+        },
       ],
     },
   ])
@@ -76,7 +86,7 @@ const App = ({ setLoading }) => {
     const timer = setTimeout(() => {
       setLoading(false);
       setBootLoading(false);
-    }, 3000);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -85,6 +95,7 @@ const App = ({ setLoading }) => {
       <Loader />
     </div>;
   }
+
   return (
     <>
       <MuiThemeProvider>
@@ -97,7 +108,9 @@ const App = ({ setLoading }) => {
     </>
   )
 }
+
 const mapDispatchToProps = {
   setLoading,
 }
+
 export default connect(null, mapDispatchToProps)(App);

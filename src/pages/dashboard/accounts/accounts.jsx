@@ -22,7 +22,6 @@ const Accounts = ({ setAlert, setLoading }) => {
         ...account,
         rowId: index + 1
       }));
-      console.log("formattedAccounts", formattedAccounts)
       setAccounts(formattedAccounts);
     } catch (error) {
       console.error("Error fetching accounts:", error);

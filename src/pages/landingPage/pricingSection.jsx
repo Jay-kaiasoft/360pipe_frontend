@@ -29,62 +29,46 @@ const PricingSection = () => {
             360Pipe.
           </p>
 
-          <div className="md:bg-gray-50 md:rounded-md md:shadow overflow-hidden">
+          <div className="md:bg-gray-50 md:rounded-md md:shadow overflow-hidden w-full md:w-96">
             <div className="hidden md:block">
               {/* Plan Names */}
-              <div className="grid grid-cols-5 border-b">
+              <div className="grid grid-cols-2 border-b">
                 <div className="p-4 font-semibold text-black">Plans</div>
-                {["Pay As You Go", "Surveys Only", "Pay as You Grow", "Enterprise"].map(
-                  (plan, index) => (
-                    <div key={index} className="p-4 text-center font-semibold border-l text-black">
-                      {plan}
-                    </div>
-                  )
-                )}
+                <div className="p-4 text-center font-semibold border-l text-black">
+                  Premium
+                </div>
               </div>
 
               {/* Monthly Base Cost */}
-              <div className="grid grid-cols-5 border-b">
+              <div className="grid grid-cols-2 border-b">
                 <div className="p-4 font-medium text-black">Monthly Base Cost</div>
-                {["$0", "$250", "$0.10", "Custom Price"].map((price, index) => (
-                  <div key={index} className="p-4 text-center border-l font-bold">
-                    {price}
-                  </div>
-                ))}
+                <div className="p-4 text-center border-l font-bold">
+                  $250
+                </div>
               </div>
 
               {/* Buttons */}
-              <div className="grid grid-cols-5">
+              <div className="grid grid-cols-2">
                 <div className="p-4"></div>
-                {["Pay As You Go", "Surveys Only", "Pay As You Grow"].map((plan, index) => (
-                  <div key={index} className="p-4 text-center border-l">
-                    <button
-                      onClick={() => handlePlanSelection()}
-                      type="button"
-                      className="relative px-5 py-2 rounded group overflow-hidden font-medium bg-[#FFD600] text-[#222] shadow-md"
-                    >
-                      <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-blue-600 group-hover:h-full"></span>
+                <div className="p-4 text-center border-l">
+                  <button
+                    onClick={() => handlePlanSelection()}
+                    type="button"
+                    className="relative px-5 py-2 rounded group overflow-hidden font-medium bg-[#FFD600] text-[#222] shadow-md"
+                  >
+                    <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-blue-600 group-hover:h-full"></span>
 
-                      <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
-                        Choose Plan
-                      </span>
-                    </button>                    
-                  </div>
-                ))}
-                {/* Enterprise Call */}
-                <div className="p-4 text-center border-l flex flex-col items-center justify-center text-blue-600">
-                  {/* <p className="font-semibold">Call Us</p>
-                  <p className="text-sm text-gray-600">+1 415 906 4001 ext 1</p> */}
+                    <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
+                      Choose Plan
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
 
             <div className="block md:hidden">
-              {[
-                { name: "Pay As You Go", price: "$0" },
-                { name: "Surveys Only", price: "$250" },
-                { name: "Pay as You Grow", price: "$0.10" },
-                { name: "Enterprise", price: "Custom Price" },
+              { [
+                { name: "Pay As You Go", price: "$0" }
               ].map((plan, index) => (
                 <div
                   key={index}
@@ -92,19 +76,12 @@ const PricingSection = () => {
                 >
                   <h3 className="text-lg font-bold text-gray-800 mb-2">{plan.name}</h3>
                   <p className="text-2xl font-bold text-gray-900 mb-4">{plan.price}</p>
-                  {plan.name !== "Enterprise" ? (
-                    <button
-                      onClick={() => handlePlanSelection()}
-                      className="bg-[#FFD600] px-5 py-2 rounded font-bold hover:bg-blue-600 hover:text-white transition"
-                    >
-                      Choose Plan
-                    </button>
-                  ) : (
-                    <div className="text-blue-600">
-                      <p className="font-semibold">Call Us</p>
-                      <p className="text-sm text-gray-600">+1 415 906 4001 ext 1</p>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => handlePlanSelection()}
+                    className="bg-[#FFD600] px-5 py-2 rounded font-bold hover:bg-blue-600 hover:text-white transition"
+                  >
+                    Choose Plan
+                  </button>
                 </div>
               ))}
             </div>

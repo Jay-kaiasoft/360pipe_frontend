@@ -15,10 +15,16 @@ const navItems = [
     {
         icon: <CustomIcons iconName="th-large" />,
         name: "Dashboard",
-        subItems: [{ name: "Accounts", path: "/dashboard/accounts", pro: false },{ name: "Opportunities", path: "/dashboard/opportunities", pro: false },{ name: "Contacts", path: "/dashboard/contacts", pro: false }]
+        path: "/dashboard",
+        subItems: [{ name: "Accounts", path: "/dashboard/accounts", pro: false }, { name: "Opportunities", path: "/dashboard/opportunities", pro: false }, { name: "Contacts", path: "/dashboard/contacts", pro: false }]
+    },
+    {
+        icon: <CustomIcons iconName="th-large" />,
+        name: "My CRM",
+        path: "/dashboard/mycrm",
+        pro: false
     },
 ]
-
 
 const Sidebar = ({
     isExpanded,
@@ -117,8 +123,8 @@ const Sidebar = ({
                                     <CustomIcons
                                         iconName="chevron-down"
                                         className={`ml-auto w-4 h-4 transform transition-transform duration-200 ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                                                ? "transform transition-transform duration-200 rotate-180 text-blue-500"
-                                                : "transform transition-transform duration-200 text-gray-400"
+                                            ? "transform transition-transform duration-200 rotate-180 text-blue-500"
+                                            : "transform transition-transform duration-200 text-gray-400"
                                             }`}
                                     />
                                 )}
@@ -252,24 +258,12 @@ const Sidebar = ({
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                 <nav className="mb-6">
                     <div className="flex flex-col gap-6">
-                        <div>
-                            {/* <h2
-                                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
-                                    ? "lg:justify-center"
-                                    : "justify-start px-4"
-                                    }`}
-                            >
-                                {isExpanded || isHovered || isMobileOpen ? (
-                                    "Menu"
-                                ) : (
-                                    <CustomIcons iconName="ellipsis-h" className="w-5 h-5" />
-                                )}
-                            </h2> */}
+                        <div>                           
                             {renderMenuItems(navItems, "main")}
                         </div>
                     </div>
                 </nav>
-            </div>
+            </div>            
         </div>
     )
 }

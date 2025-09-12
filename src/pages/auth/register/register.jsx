@@ -514,7 +514,7 @@ const Register = ({ setAlert, setLoading }) => {
                 setAlert({ open: true, message: res.data.message, type: "error" })
             }
         } else if (activeStep === 5) {
-            navigate("/pricing")
+            navigate("/dashboard")
         }
         else {
             setActiveStep((prev) => prev + 1);

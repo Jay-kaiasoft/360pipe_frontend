@@ -89,3 +89,13 @@ export const checkValidToken = async (token) => {
         console.log(error)
     }
 }
+
+export const getDashboardData = async () => {
+    try {
+        const response = axiosInterceptor().get(`${customersURL}/get/dashboard`)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}

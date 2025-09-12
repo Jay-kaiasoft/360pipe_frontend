@@ -16,6 +16,18 @@ export const securityQuestions = [
     { id: 12, title: "What year was your father (or mother) born?" }
 ];
 
+export const opportunityContactRoles = [
+  { id: 1, title: "Business User" },
+  { id: 2, title: "Decision Maker" },
+  { id: 3, title: "Economic Buyer" },
+  { id: 4, title: "Economic Decision Maker" },
+  { id: 5, title: "Evaluator" },
+  { id: 6, title: "Executive Sponsor" },
+  { id: 7, title: "Influencer" },
+  { id: 8, title: "Technical Buyer" },  
+];
+
+
 export const uploadFiles = async (data) => {
     try {
         const response = axiosInterceptor().post(`${fileUploadURL}`, data)

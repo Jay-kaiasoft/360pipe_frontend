@@ -72,6 +72,8 @@ const Login = ({ setAlert, loading }) => {
         const response = await loginWithAuthID(watch("email"));
         if (response?.status === 200) {
             const uData = response.data.result.userData;
+            const customerData = response.data.result.customerData;
+            localStorage.setItem("userInfo", JSON.stringify(customerData));
             setUserData(uData);
             setJsonResponse(response);
 
@@ -110,7 +112,7 @@ const Login = ({ setAlert, loading }) => {
             navigate("/dashboard")
             setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
         } else {
-            setAlert({ open: true, type: "error", message: res?.data?.result?.error || "Something went wrong" })
+            setAlert({ open: true, type: "error", message: res?.data?.result?.error || res?.data?.msg || "Server error" })
         }
     }
 
@@ -139,14 +141,14 @@ const Login = ({ setAlert, loading }) => {
             }
 
             if (event.data?.success) {
-                sessionStorage.setItem("authToken", jsonResponse?.data?.result?.authToken);
+                Cookies.set('authToken', jsonResponse?.data?.result?.authToken, { expires: 0.5 });
                 handleCloseAuthModel();
                 setAlert({
                     open: true,
                     message: "Login successful",
                     type: "success",
                 });
-                navigate("/");
+                navigate("/dashboard");
             } else {
                 switch (event.data.pageName) {
                     case "documentFailedPage":
@@ -202,17 +204,13 @@ const Login = ({ setAlert, loading }) => {
                                             name="email"
                                             control={control}
                                             rules={{
-                                                required: "Email is required",
-                                                pattern: {
-                                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                                    message: "Invalid email address",
-                                                },
+                                                required: "Email or Username is required",                                               
                                             }}
                                             render={({ field }) => (
                                                 <Input
                                                     {...field}
                                                     ref={emailRef}
-                                                    label="Email"
+                                                    label="Email / Username"
                                                     type="text"
                                                     error={errors?.email}
                                                     disabled={loginPreference === "password"}
