@@ -17,16 +17,15 @@ export const securityQuestions = [
 ];
 
 export const opportunityContactRoles = [
-  { id: 1, title: "Business User" },
-  { id: 2, title: "Decision Maker" },
-  { id: 3, title: "Economic Buyer" },
-  { id: 4, title: "Economic Decision Maker" },
-  { id: 5, title: "Evaluator" },
-  { id: 6, title: "Executive Sponsor" },
-  { id: 7, title: "Influencer" },
-  { id: 8, title: "Technical Buyer" },  
+    { id: 1, title: "Business User" },
+    { id: 2, title: "Decision Maker" },
+    { id: 3, title: "Economic Buyer" },
+    { id: 4, title: "Economic Decision Maker" },
+    { id: 5, title: "Evaluator" },
+    { id: 6, title: "Executive Sponsor" },
+    { id: 7, title: "Influencer" },
+    { id: 8, title: "Technical Buyer" },
 ];
-
 
 export const uploadFiles = async (data) => {
     try {
@@ -123,3 +122,8 @@ export const getAllCountryList = async () => {
         console.log(error)
     }
 }
+
+export const capitalize = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};

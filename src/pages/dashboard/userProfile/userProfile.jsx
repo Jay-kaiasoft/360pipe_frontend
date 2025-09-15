@@ -5,6 +5,7 @@ import Profile from "./profile";
 import Brand from "./brand";
 import Security from "./security";
 import ChangePassword from "./changePassword";
+import CreditCard from "./creditCard";
 
 const tabData = [
     {
@@ -18,6 +19,9 @@ const tabData = [
     },
     {
         label: 'Change Passowrd', icon: <CustomIcons iconName="fa-solid fa-lock" />
+    },
+    {
+        label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
     },
 ]
 
@@ -33,6 +37,7 @@ const UserProfile = () => {
             <div>
                 <Tabs tabsData={tabData} selectedTab={selectedTab} handleChange={handleChangeTab} />
             </div>
+
             <div className="mt-6">
                 {
                     selectedTab === 0 && <Profile />
@@ -45,6 +50,9 @@ const UserProfile = () => {
                 }
                 {
                     selectedTab === 3 && <ChangePassword />
+                }
+                {
+                    selectedTab === 4 && <CreditCard />
                 }
             </div>
         </>

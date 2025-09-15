@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
+
 import BrandSection from './brandSecrion'
 import CaseStudy from './caseStudy'
 import ComparisonSection from './comparisonSection'
@@ -15,9 +18,14 @@ import WorkingProcess from './workingProcess'
 import CustomIcons from "../../components/common/icons/CustomIcons";
 
 const Main = () => {
+    const navigate = useNavigate();
+
     const [showScrollBtn, setShowScrollBtn] = useState(false);
 
     useEffect(() => {
+        if (Cookies.get('authToken')) {
+            navigate("/dashboard");
+        }
         const handleScroll = () => {
             // Find BrandSection position
             const brandSection = document.getElementById("brand-section");
@@ -31,6 +39,7 @@ const Main = () => {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
 
     const scrollToTop = () => {
         window.scrollTo({
@@ -47,7 +56,7 @@ const Main = () => {
                 <div className='absolute z-50 w-full px-5 lg:px-20 border-b border-gray-200 shadow-sm'>
                     <Header />
                 </div>
-                
+
                 {/* Hero Section */}
                 <div className='px-5 lg:px-20 pt-10'>
                     <SalesWorkflowSection />

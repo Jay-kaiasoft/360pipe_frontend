@@ -111,8 +111,10 @@ const Profile = ({ setAlert }) => {
     const handleGetUserDetails = async () => {
         const res = await getCustomer(data?.userId);
         if (res?.data?.status === 200) {
-            reset(res?.data?.result); 
-            handleGetAllStatesByCountryId(102);
+            reset(res?.data?.result);
+            // const selectedCountry = countrys?.find((row) => row?.title === res?.data?.result?.country) || null
+            // console.log("selectedCountry", selectedCountry)
+            // handleGetAllStatesByCountryId(selectedCountry?.id);
         }
     }
 
@@ -123,7 +125,7 @@ const Profile = ({ setAlert }) => {
                 open: true,
                 type: "success",
                 message: res?.data?.message || "Profile updated successfully.",
-            });         
+            });
         } else {
             setAlert({
                 open: true,
@@ -137,6 +139,13 @@ const Profile = ({ setAlert }) => {
         handleGetAllCountrys();
         handleGetUserDetails();
     }, [])
+
+    useEffect(() => {
+        if (countrys?.length > 0 && watch("country")) {
+            const selectedCountry = countrys?.find((row) => row?.title === watch("country")) || null
+            handleGetAllStatesByCountryId(selectedCountry?.id);
+        }
+    }, [countrys, watch("country")])
 
     return (
         <div className='4k:flex justify-center items-center w-full'>

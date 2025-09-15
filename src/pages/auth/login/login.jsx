@@ -110,7 +110,7 @@ const Login = ({ setAlert, loading }) => {
             };
             localStorage.setItem("userInfo", JSON.stringify(userdata));
             navigate("/dashboard")
-            setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
+            // setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
         } else {
             setAlert({ open: true, type: "error", message: res?.data?.result?.error || res?.data?.msg || "Server error" })
         }
@@ -143,11 +143,11 @@ const Login = ({ setAlert, loading }) => {
             if (event.data?.success) {
                 Cookies.set('authToken', jsonResponse?.data?.result?.authToken, { expires: 0.5 });
                 handleCloseAuthModel();
-                setAlert({
-                    open: true,
-                    message: "Login successful",
-                    type: "success",
-                });
+                // setAlert({
+                //     open: true,
+                //     message: "Login successful",
+                //     type: "success",
+                // });
                 navigate("/dashboard");
             } else {
                 switch (event.data.pageName) {

@@ -32,6 +32,7 @@ const Brand = ({ setAlert }) => {
             websiteUrl: "",
         },
     });
+    
     const handleImageChange = (event) => {
         if (event) {
             setFormDataFile(event)

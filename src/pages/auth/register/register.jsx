@@ -29,7 +29,7 @@ import { getCurrentLocation } from "../../../service/common/radarService";
 import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
 import { addCustomer, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
 import { getAllRoles } from "../../../service/roles/rolesService";
-import { securityQuestions, uploadFiles } from "../../../service/common/commonService";
+import { capitalize, securityQuestions, uploadFiles } from "../../../service/common/commonService";
 import { getAllCountry } from "../../../service/country/countryService";
 import { getAllStateByCountry } from "../../../service/state/stateService";
 import { addBusinessInfo, deleteBrandLogo, uploadBrandLogo } from "../../../service/businessInfo/businessInfoService";
@@ -250,6 +250,25 @@ const Register = ({ setAlert, setLoading }) => {
                         type: "success",
                         message: "Verification process is completed. Let's continue with registration process.",
                     });
+                    if (parseInt(watch("documentType")) === 21) {
+                        let name = updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.split(" ") || [];
+                        if (name.length > 0) {
+                            setValue(
+                                "name",
+                                name[0].charAt(0).toUpperCase() + name[0].slice(1).toLowerCase() + name[1].charAt(0).toUpperCase() + name[1].slice(1).toLowerCase()
+                            );
+
+                        }
+                        setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.Address?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
+                    } else if (parseInt(watch("documentType")) === 2) {
+                        setValue("name", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.toLowerCase() + updateResponse?.data?.result?.authUserData?.userInfo?.primaryID?.toLowerCase()));
+                        setValue("city", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressCity?.toLowerCase()));
+                        let pc = updateResponse?.data?.result?.authUserData?.userInfo?.AddressPostalCode?.split("-");
+                        if (pc.length > 0) {
+                            setValue("zipCode", pc[0]);
+                        }
+                        setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressStreet?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
+                    }
                     setActiveStep((prevStep) => prevStep + 1);
                 } else {
                     handleCloseAuthModel();
@@ -479,11 +498,11 @@ const Register = ({ setAlert, setLoading }) => {
             if (res.data.status === 201) {
                 setValue("cusId", res?.data?.result?.id)
                 setLoading(false);
-                setAlert({
-                    type: "success",
-                    message: "Customer added successfully",
-                    open: true
-                });
+                // setAlert({
+                //     type: "success",
+                //     message: "Customer added successfully",
+                //     open: true
+                // });
                 setActiveStep((prev) => prev + 1);
             } else {
                 setLoading(false);
@@ -1267,7 +1286,7 @@ const Register = ({ setAlert, setLoading }) => {
                                                                             handleGetAllBillingStatesByCountryId(newValue.id);
                                                                         } else {
                                                                             setValue("billingCountry", null);
-                                                                            setStates([]);
+                                                                            setBillingStates([]);
                                                                         }
                                                                     }}
                                                                     error={errors?.billingCountry}
