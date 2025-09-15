@@ -1,9 +1,14 @@
 import { useEffect, useRef } from "react"
-import { useSelector, useDispatch } from "react-redux"
-import { toggleSidebar, toggleMobileSidebar } from "../../../redux/commonReducers/commonReducers"
+import { useSelector, useDispatch, connect } from "react-redux"
+import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus } from "../../../redux/commonReducers/commonReducers"
 import UserDropdown from "./userDropDown"
+import Components from "../../../components/muiComponents/components"
+import { syncToQ4Magic } from "../../../service/salesforce/syncToQ4Magic/syncToQ4MagicService"
+import { syncFromQ4magic } from "../../../service/salesforce/syncFromQ4magic/syncFromQ4magicService"
+import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsService"
+import Button from "../../../components/common/buttons/button"
 
-const AppHeader = () => {
+const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus, syncingPullStatus }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const dispatch = useDispatch()
 
@@ -30,10 +35,88 @@ const AppHeader = () => {
     }
   }, [])
 
+  const handleGetAllSyncRecords = async () => {
+    try {
+      const syncRecords = await getAllSyncRecords();
+      if (syncRecords?.status === 200) {
+        setSyncCount(syncRecords.result?.length || null);
+        setSyncingPullStatus(false);
+        setSyncingPushStatus(false);
+      }
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.message || "Error fetching sync records.",
+        type: "error"
+      });
+    }
+  }
+
+  const handlePushData = async () => {
+    setLoading(true);
+    try {
+      const res = await syncFromQ4magic();
+      if (res?.status === 200) {
+        setLoading(false);
+        setAlert({
+          open: true,
+          message: res?.message || "Data synced successfully",
+          type: "success"
+        })
+        setSyncingPullStatus(true);
+        handleGetAllSyncRecords()
+      } else {
+        setLoading(false);
+        setAlert({
+          open: true,
+          message: res?.message || "Failed to sync data",
+          type: "error"
+        })
+      }
+    } catch (err) {
+      setLoading(false);
+      setAlert({
+        open: true,
+        message: err.message || "Error syncing data.",
+        type: "error"
+      })
+    }
+  }
+
+  const handleSync = async () => {
+    setLoading(true);
+    try {
+      const res = await syncToQ4Magic();
+      if (res?.status === 200) {
+        handlePushData();
+      } else {
+        setLoading(false);
+        setAlert({
+          open: true,
+          message: res?.message || "Failed to sync data",
+          type: "error"
+        })
+      }
+    } catch (err) {
+      setLoading(false);
+      setAlert({
+        open: true,
+        message: err.message || "Error syncing accounts to Q4Magic.",
+        type: "error"
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (syncingPushStatus) {
+      handleGetAllSyncRecords();
+    }
+  }, [syncingPushStatus]);
+
+  
   return (
     <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
-        {/* Left Section */}
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <div className="grow">
             <button
@@ -76,8 +159,25 @@ const AppHeader = () => {
               )}
             </button>
           </div>
-          <div>
-            <UserDropdown />
+          <div className="flex items-center justify-end gap-6 w-full">
+            {
+              (localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
+                <div>
+                  <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
+                    <Button
+                      onClick={() => handleSync()}
+                      text={"SYNC"}
+                      useFor="success"
+                    // className="w-24 py-3 bg-green-500 text-white rounded shadow-md hover:bg-green-600 transition-colors duration-300 focus:outline-none"
+                    />
+
+                  </Components.Badge>
+                </div>
+              )
+            }
+            <div>
+              <UserDropdown />
+            </div>
           </div>
         </div>
       </div>
@@ -85,4 +185,19 @@ const AppHeader = () => {
   )
 }
 
-export default AppHeader
+const mapStateToProps = (state) => ({
+  loading: state.common.loading,
+  syncCount: state.common.syncCount,
+  syncingPullStatus: state.common.syncingPullStatus,
+  syncingPushStatus: state.common.syncingPushStatus,
+});
+
+const mapDispatchToProps = {
+  setLoading,
+  setAlert,
+  setSyncCount,
+  setSyncingPushStatus,
+  setSyncingPullStatus
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

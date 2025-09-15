@@ -8,6 +8,9 @@ const initialState = {
   userPermissions: null,
   title: null,
   sessionEndModel: false,
+  syncCount: null,
+  syncingPullStatus: false,
+  syncingPushStatus: false,
 
   // Sidebar states (moved from context)
   isExpanded: true,
@@ -55,16 +58,16 @@ const commonReducersSlice = createSlice({
         state.settingDrawerWidth = 350;
       }
     },
-    handleResetTheme(state) {
-      state.theme = {
-        primaryColor: "#666cff",
-        sideNavigationBgColor: "#ffffff",
-        contentBgColor: "#F7F7F9",
-        headerBgColor: "#ffffff",
-        textColor: "#262b43",
-        iconColor: "#0000008a",
-      };
+    setSyncCount(state, action) {
+      state.syncCount = action.payload;
     },
+    setSyncingPullStatus(state, action) {
+      state.syncingPullStatus = action.payload;
+    },
+    setSyncingPushStatus(state, action) {
+      state.syncingPushStatus = action.payload;
+    },
+
     // Sidebar reducers
     toggleSidebar(state) {
       state.isExpanded = !state.isExpanded;
@@ -101,6 +104,9 @@ export const {
   handleSetUserDetails,
   handleSetUserPermissions,
   setSessionEndModel,
+  setSyncCount,
+  setSyncingPullStatus,
+  setSyncingPushStatus,
   
   // Sidebar actions
   toggleSidebar,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux';
-import { setAlert, setLoading } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
 import DataTable from '../../../components/common/table/table';
 import Button from '../../../components/common/buttons/button';
@@ -9,8 +9,11 @@ import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 import { deleteOpportunity, getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
+import { useLocation } from 'react-router-dom';
 
-const Opportunities = ({ setAlert, setLoading }) => {
+const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
+    const location = useLocation();
+
     const [opportunities, setOpportunities] = useState([]);
     const [open, setOpen] = useState(false);
     const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
@@ -52,6 +55,7 @@ const Opportunities = ({ setAlert, setLoading }) => {
     const handleDeleteOpportunity = async () => {
         const res = await deleteOpportunity(selectedOpportunityId);
         if (res.status === 200) {
+            setSyncingPushStatus(true);
             setAlert({
                 open: true,
                 message: "Opportunity deleted successfully",
@@ -71,6 +75,12 @@ const Opportunities = ({ setAlert, setLoading }) => {
     useEffect(() => {
         handleGetOpportunities();
     }, []);
+
+    useEffect(() => {
+        if (syncingPullStatus && location.pathname === '/dashboard/opportunities') {
+            handleGetOpportunities();
+        }
+    }, [syncingPullStatus]);
 
     const columns = [
         {
@@ -190,9 +200,14 @@ const Opportunities = ({ setAlert, setLoading }) => {
     )
 }
 
+
+const mapStateToProps = (state) => ({
+    syncingPullStatus: state.common.syncingPullStatus,
+});
+
 const mapDispatchToProps = {
     setAlert,
-    setLoading,
+    setSyncingPushStatus
 };
 
-export default connect(null, mapDispatchToProps)(Opportunities)
+export default connect(mapStateToProps, mapDispatchToProps)(Opportunities)

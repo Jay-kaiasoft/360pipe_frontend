@@ -5,10 +5,6 @@ import { setAlert, setLoading } from '../../redux/commonReducers/commonReducers'
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
-import { syncFromQ4magic } from '../../service/salesforce/syncFromQ4magic/syncFromQ4magicService';
-import { syncToQ4Magic } from '../../service/salesforce/syncToQ4Magic/syncToQ4MagicService';
-import Components from '../../components/muiComponents/components';
-import { getAllSyncRecords } from '../../service/syncRecords/syncRecordsService';
 
 const UserInfoSkeleton = () => (
     <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full animate-pulse">
@@ -30,7 +26,6 @@ const getInitials = (name = "") => {
 const Crm = ({ setLoading, setAlert, loading }) => {
     const [userInfo, setUserInfo] = useState(localStorage.getItem("salesforceUserData") ? JSON.parse(localStorage.getItem("salesforceUserData")) : null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-    const [syncRecords, setSyncRecords] = useState([]);
 
     const handleOpenDialog = () => {
         setDialog({ open: true, title: 'Log Out', message: 'Are you sure! Do you want to log out from salesforce account?', actionButtonText: 'yes' });
@@ -131,6 +126,7 @@ const Crm = ({ setLoading, setAlert, loading }) => {
     };
 
     const handleLogout = () => {
+        localStorage.removeItem("salesforceUserData");
         localStorage.removeItem("accessToken_salesforce");
         localStorage.removeItem("instanceUrl_salesforce");
         setUserInfo(null);
@@ -142,78 +138,8 @@ const Crm = ({ setLoading, setAlert, loading }) => {
         handleCloseDialog();
     };
 
-    const handlePushData = async () => {
-        setLoading(true);
-        try {
-            const res = await syncFromQ4magic();
-            if (res?.status === 200) {
-                setLoading(false);
-                setAlert({
-                    open: true,
-                    message: res?.message || "Data synced successfully",
-                    type: "success"
-                })
-                handleGetAllSyncRecords()
-            } else {
-                setLoading(false);
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to sync data",
-                    type: "error"
-                })
-            }
-        } catch (err) {
-            setLoading(false);
-            setAlert({
-                open: true,
-                message: err.message || "Error syncing data.",
-                type: "error"
-            })
-        }
-    }
-
-    const handleSync = async () => {
-        setLoading(true);
-        try {
-            const res = await syncToQ4Magic();
-            if (res?.status === 200) {
-                handlePushData();
-            } else {
-                setLoading(false);
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to sync data",
-                    type: "error"
-                })
-            }
-        } catch (err) {
-            setLoading(false);
-            setAlert({
-                open: true,
-                message: err.message || "Error syncing accounts to Q4Magic.",
-                type: "error"
-            })
-        }
-    }
-
-    const handleGetAllSyncRecords = async () => {
-        try {
-            const syncRecords = await getAllSyncRecords();
-            if (syncRecords?.status === 200) {
-                setSyncRecords(syncRecords.result || []);
-            }
-        } catch (error) {
-            setAlert({
-                open: true,
-                message: error.message || "Error fetching sync records.",
-                type: "error"
-            });
-        }
-    }
-
     useEffect(() => {
         handleGetUserInfo();
-        handleGetAllSyncRecords();
     }, []);
 
     return (
@@ -241,17 +167,7 @@ const Crm = ({ setLoading, setAlert, loading }) => {
                                     className="flex-1 py-3 bg-red-500 text-white rounded shadow-md hover:bg-red-600 transition-colors duration-300"
                                 >
                                     Logout
-                                </button>
-                                <Components.Badge badgeContent={syncRecords?.length || 0} color="error" className="flex-1">
-                                    <div className='w-full'>
-                                        <button
-                                            onClick={handleSync}
-                                            className="w-full py-3 bg-green-500 text-white rounded shadow-md hover:bg-green-600 transition-colors duration-300 focus:outline-none"
-                                        >
-                                            SYNC
-                                        </button>
-                                    </div>
-                                </Components.Badge>
+                                </button>                               
                             </div>
 
                         </div>
@@ -304,9 +220,3 @@ const mapDispatchToProps = {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Crm)
-
-{/* <img
-      src={userInfo?.photos?.picture}
-      alt="Profile"
-      className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-16 mb-4"
-    /> */}

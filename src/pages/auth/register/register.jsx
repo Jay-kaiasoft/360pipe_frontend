@@ -475,7 +475,6 @@ const Register = ({ setAlert, setLoading }) => {
                     }
                 )
             }
-            console.log("resetData", resetData)
             const res = await addCustomer(resetData);
             if (res.data.status === 201) {
                 setValue("cusId", res?.data?.result?.id)
@@ -520,7 +519,6 @@ const Register = ({ setAlert, setLoading }) => {
             setActiveStep((prev) => prev + 1);
         }
     };
-
 
     useEffect(() => {
         const handleMessage = (event) => {

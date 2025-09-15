@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux';
-import { setAlert, setLoading } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
 import DataTable from '../../../components/common/table/table';
 import Button from '../../../components/common/buttons/button';
@@ -9,8 +9,11 @@ import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 import { deleteContact, getAllContacts } from '../../../service/contact/contactService';
 import ContactModel from '../../../components/models/contact/contactModel';
+import { useLocation } from 'react-router-dom';
 
-const Contacts = ({ setAlert, setLoading }) => {
+const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
+    const location = useLocation();
+
     const [contacts, setContacts] = useState([]);
     const [open, setOpen] = useState(false);
     const [selectedContactId, setSelectedContactId] = useState(null);
@@ -52,6 +55,7 @@ const Contacts = ({ setAlert, setLoading }) => {
     const handleDeleteContact = async () => {
         const res = await deleteContact(selectedContactId);
         if (res.status === 200) {
+            setSyncingPushStatus(true);
             setAlert({
                 open: true,
                 message: "Contact deleted successfully",
@@ -71,6 +75,12 @@ const Contacts = ({ setAlert, setLoading }) => {
     useEffect(() => {
         handleGetContacts();
     }, []);
+
+    useEffect(() => {
+        if (syncingPullStatus && location.pathname === '/dashboard/contacts') {
+            handleGetContacts();
+        }
+    }, [syncingPullStatus]);
 
     const columns = [
         {
@@ -101,7 +111,7 @@ const Contacts = ({ setAlert, setLoading }) => {
             headerName: 'Title',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200,          
+            minWidth: 200,
         },
         {
             field: 'emailAddress',
@@ -185,9 +195,13 @@ const Contacts = ({ setAlert, setLoading }) => {
     );
 }
 
+const mapStateToProps = (state) => ({
+    syncingPullStatus: state.common.syncingPullStatus,
+});
+
 const mapDispatchToProps = {
     setAlert,
-    setLoading,
+    setSyncingPushStatus
 };
 
-export default connect(null, mapDispatchToProps)(Contacts)
+export default connect(mapStateToProps, mapDispatchToProps)(Contacts)

@@ -99,7 +99,7 @@ export default function UserDropdown() {
                     <ul className="flex flex-col gap-1 py-3 border-b border-gray-200">
                         <li>
                             <NavLink
-                                to="/profile"
+                                to="/dashboard/profile"
                                 onClick={closeDropdown}
                                 className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
                             >
@@ -108,7 +108,7 @@ export default function UserDropdown() {
                                 Edit profile
                             </NavLink>
                         </li>
-                        <li>
+                        {/* <li>
                             <NavLink
                                 to="/account-settings"
                                 onClick={closeDropdown}
@@ -117,7 +117,7 @@ export default function UserDropdown() {
                                 <CustomIcons iconName="fa-solid fa-gear" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
                                 Account settings
                             </NavLink>
-                        </li>
+                        </li> */}
                         {/* <li>
                             <NavLink
                                 to="/support"

@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
 import Input from '../../../components/common/input/input';
-import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../common/select/select';
 
@@ -22,7 +22,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function AccountModel({ setAlert, open, handleClose, accountId, handleGetAllAccounts , handleGetAllSyncRecords }) {
+function AccountModel({ setSyncingPushStatus, setAlert, open, handleClose, accountId, handleGetAllAccounts }) {
     const theme = useTheme()
 
     const [loading, setLoading] = useState(false);
@@ -96,6 +96,9 @@ function AccountModel({ setAlert, open, handleClose, accountId, handleGetAllAcco
             if (accountId) {
                 const res = await updateAccount(accountId, data);
                 if (res?.status === 200) {
+                    if (watch("salesforceAccountId") !== null && watch("salesforceAccountId") !== "") {
+                        setSyncingPushStatus(true);
+                    }
                     setLoading(false);
                     setAlert({
                         open: true,
@@ -116,6 +119,7 @@ function AccountModel({ setAlert, open, handleClose, accountId, handleGetAllAcco
             } else {
                 const res = await createAccount(data);
                 if (res?.status === 201) {
+                    setSyncingPushStatus(true);
                     setLoading(false);
                     setAlert({
                         open: true,
@@ -249,6 +253,7 @@ function AccountModel({ setAlert, open, handleClose, accountId, handleGetAllAcco
 
 const mapDispatchToProps = {
     setAlert,
+    setSyncingPushStatus
 };
 
 export default connect(null, mapDispatchToProps)(AccountModel)

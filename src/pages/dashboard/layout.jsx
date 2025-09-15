@@ -23,7 +23,7 @@ const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
       >
         <AppHeader />
 
-        <main className="p-4 max-w-screen-2xl">
+        <main className="p-4">
           {
             location.pathname === '/dashboard' && (
               <Dashboard />

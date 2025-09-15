@@ -6,7 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
 import Input from '../../../components/common/input/input';
-import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
@@ -23,7 +23,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function ContactModel({ setAlert, open, handleClose, contactId, handleGetAllContacts, handleGetAllSyncRecords }) {
+function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, contactId, handleGetAllContacts }) {
     const theme = useTheme()
 
     const [loading, setLoading] = useState(false);
@@ -114,6 +114,9 @@ function ContactModel({ setAlert, open, handleClose, contactId, handleGetAllCont
             if (contactId) {
                 const res = await updateContact(contactId, newData);
                 if (res?.status === 200) {
+                    if (watch("salesforceContactId") !== null && watch("salesforceContactId") !== "") {
+                        setSyncingPushStatus(true);
+                    }
                     setLoading(false);
                     setAlert({
                         open: true,
@@ -134,6 +137,7 @@ function ContactModel({ setAlert, open, handleClose, contactId, handleGetAllCont
             } else {
                 const res = await createContact(newData);
                 if (res?.status === 201) {
+                    setSyncingPushStatus(true);
                     setLoading(false);
                     setAlert({
                         open: true,
@@ -312,6 +316,7 @@ function ContactModel({ setAlert, open, handleClose, contactId, handleGetAllCont
 
 const mapDispatchToProps = {
     setAlert,
+    setSyncingPushStatus
 };
 
 export default connect(null, mapDispatchToProps)(ContactModel)

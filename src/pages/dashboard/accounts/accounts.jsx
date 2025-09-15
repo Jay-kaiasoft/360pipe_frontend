@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import { deleteAccount, getAllAccounts } from '../../../service/account/accountService';
+import { connect } from 'react-redux';
+import { useLocation } from 'react-router-dom';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+
 import DataTable from '../../../components/common/table/table';
 import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AccountModel from '../../../components/models/accounts/accountModel';
-import { setAlert, setLoading } from '../../../redux/commonReducers/commonReducers';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { connect } from 'react-redux';
 
-const Accounts = ({ setAlert, setLoading }) => {
+import { deleteAccount, getAllAccounts } from '../../../service/account/accountService';
+import { use } from 'react';
+
+const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
+  const location = useLocation();
   const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
@@ -51,6 +56,7 @@ const Accounts = ({ setAlert, setLoading }) => {
   const handleDeleteAccount = async () => {
     const res = await deleteAccount(selectedAccountId);
     if (res.status === 200) {
+      setSyncingPushStatus(true);
       setAlert({
         open: true,
         message: "Account deleted successfully",
@@ -66,6 +72,12 @@ const Accounts = ({ setAlert, setLoading }) => {
       });
     }
   }
+
+  useEffect(() => {
+    if (syncingPullStatus && location.pathname === '/dashboard/accounts') {
+      handleGetAccounts();
+    }
+  }, [syncingPullStatus]);
 
   useEffect(() => {
     handleGetAccounts();
@@ -170,9 +182,13 @@ const Accounts = ({ setAlert, setLoading }) => {
   )
 }
 
+const mapStateToProps = (state) => ({
+  syncingPullStatus: state.common.syncingPullStatus,
+});
+
 const mapDispatchToProps = {
   setAlert,
-  setLoading,
+  setSyncingPushStatus,
 };
 
-export default connect(null, mapDispatchToProps)(Accounts)
+export default connect(mapStateToProps, mapDispatchToProps)(Accounts)

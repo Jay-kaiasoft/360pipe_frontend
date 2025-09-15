@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { Controller, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
-import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import Components from '../../../components/muiComponents/components';
@@ -23,7 +23,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, handleGetAllSyncRecords }) {
+function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, setSyncingPushStatus }) {
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -41,7 +41,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             dealAmount: null,
             closeDate: null,
             nextSteps: null,
-            accountId: null
+            accountId: null,
+            salesforceOpportunityId: null
         },
     });
 
@@ -53,7 +54,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             salesStage: null,
             dealAmount: null,
             closeDate: null,
-            nextSteps: null
+            nextSteps: null,
+            salesforceOpportunityId: null
         });
         handleClose();
     };
@@ -93,6 +95,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             if (opportunityId) {
                 const res = await updateOpportunity(opportunityId, data);
                 if (res?.status === 200) {
+                    if (watch("salesforceOpportunityId") !== null && watch("salesforceOpportunityId") !== "") {
+                        setSyncingPushStatus(true);
+                    }
                     setLoading(false);
                     setAlert({
                         open: true,
@@ -113,6 +118,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             } else {
                 const res = await createOpportunity(data);
                 if (res?.status === 201) {
+                    setSyncingPushStatus(true);
                     setLoading(false);
                     setAlert({
                         open: true,
@@ -278,6 +284,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
 const mapDispatchToProps = {
     setAlert,
+    setSyncingPushStatus
 };
 
 export default connect(null, mapDispatchToProps)(OpportunitiesModel)

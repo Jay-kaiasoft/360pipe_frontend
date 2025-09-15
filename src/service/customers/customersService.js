@@ -90,6 +90,16 @@ export const checkValidToken = async (token) => {
     }
 }
 
+export const changePassword = async (data) => {
+    try {
+        const response = axiosInterceptor().post(`${customersURL}/changePassword`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 export const getDashboardData = async () => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/get/dashboard`)
