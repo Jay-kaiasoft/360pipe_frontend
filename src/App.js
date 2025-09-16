@@ -24,6 +24,8 @@ import Opportunities from "./pages/dashboard/opportunities/opportunities";
 import Contacts from "./pages/dashboard/contacts/contacts";
 import Crm from "./pages/crm/crm";
 import UserProfile from "./pages/dashboard/userProfile/userProfile";
+import ManageUser from "./pages/dashboard/manageUser/manageUser";
+import AddSubUser from "./pages/dashboard/manageUser/addSubUser";
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
@@ -76,9 +78,21 @@ const App = ({ setLoading }) => {
           path: "mycrm",
           element: <Crm />,
         },
-         {
+        {
           path: "profile",
           element: <UserProfile />,
+        },
+        {
+          path: "manageusers",
+          element: <ManageUser />,
+        },
+        {
+          path: "manageusers/add",
+          element: <AddSubUser />,
+        },
+        {
+          path: "manageusers/edit/:id",
+          element: <AddSubUser />,
         },
       ],
     },

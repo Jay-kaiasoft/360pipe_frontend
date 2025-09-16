@@ -103,9 +103,18 @@ export default function UserDropdown() {
                                 onClick={closeDropdown}
                                 className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
                             >
-                                {/* <i class="fa-solid fa-circle-user"></i> */}
                                 <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
                                 Edit profile
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink
+                                to="/dashboard/manageusers"
+                                onClick={closeDropdown}
+                                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
+                            >
+                                <CustomIcons iconName="fa-solid fa-user" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
+                                Manage Users
                             </NavLink>
                         </li>
                         {/* <li>

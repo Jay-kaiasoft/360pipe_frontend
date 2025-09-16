@@ -31,6 +31,15 @@ export const updateCustomer = async (id, data) => {
     }
 }
 
+export const deleteCustomer = async (id) => {
+    try {
+        const response = axiosInterceptor().delete(`${customersURL}/delete/${id}`)
+        return response;
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 export const getCustomer = async (id) => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/get/${id}`)
@@ -103,6 +112,36 @@ export const changePassword = async (data) => {
 export const getDashboardData = async () => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/get/dashboard`)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const sendRegisterInvitation = async (data) => {
+    try {
+        const response = axiosInterceptor().post(`${customersURL}/sendRegisterInvitation`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const createSubUser = async (data) => {
+    try {
+        const response = axiosInterceptor().post(`${customersURL}/create/subuser`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const getAllSubUsers = async () => {
+    try {
+        const response = axiosInterceptor().get(`${customersURL}/getAllSubUsers`)
         return response
 
     } catch (error) {

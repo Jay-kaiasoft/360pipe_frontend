@@ -3,6 +3,9 @@ import { NavLink } from 'react-router-dom'
 import Cards from 'react-credit-cards-2';
 import 'react-credit-cards-2/dist/es/styles-compiled.css';
 import { Controller, useForm } from 'react-hook-form';
+import { connect } from 'react-redux';
+import { setAlert } from '../../../redux/commonReducers/commonReducers';
+
 
 import { getUserDetails } from '../../../utils/getUserDetails';
 import Input from '../../../components/common/input/input';
@@ -10,7 +13,9 @@ import Select from '../../../components/common/select/select';
 import { getAllCountry } from '../../../service/country/countryService';
 import { getAllStateByCountry } from '../../../service/state/stateService';
 import { getCustomer } from '../../../service/customers/customersService';
-import { getPaymentProfile } from '../../../service/payment/paymentService';
+import { createPaymentProfile, deletePaymentProfile, getPaymentProfile } from '../../../service/payment/paymentService';
+import Button from '../../../components/common/buttons/button';
+import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 
 
 const formatCardNumber = (value) => {
@@ -62,18 +67,18 @@ const validateExpiry = (value) => {
 const validateCVV = (value) => /^\d{3,4}$/.test(value) || "Enter valid CVV";
 
 
-const CreditCard = () => {
+const CreditCard = ({ setAlert }) => {
     const data = getUserDetails();
 
     const [countrys, setCountrys] = useState([]);
     const [billingStates, setBillingStates] = useState([]);
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const {
         handleSubmit,
         control,
         watch,
         setValue,
-        reset,
         formState: { errors },
     } = useForm({
         defaultValues: {
@@ -83,7 +88,6 @@ const CreditCard = () => {
             expMonthYear: "",
             cardCode: "",
             cardType: "",
-            cardNumber: "",
 
             name: "",
             email: "",
@@ -98,6 +102,13 @@ const CreditCard = () => {
         },
     });
 
+    const handleOpenDeleteDialog = () => {
+        setDialog({ open: true, title: 'Delete Payment Profile', message: 'Are you sure you want to delete payment profile?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
 
     const handleGetAllCountrys = async () => {
         const res = await getAllCountry()
@@ -130,13 +141,14 @@ const CreditCard = () => {
     const handleGetUserDetails = async () => {
         const res = await getCustomer(data?.userId);
         if (res?.data?.status === 200) {
-            reset(res?.data?.result);
+            // reset(res?.data?.result);
             setValue("cardNumber", "");
             setValue("expMonthYear", "");
             setValue("cardCode", "");
+            setValue("cardType", "");
             setValue("name", res?.data?.result?.name);
-            setValue("email", res?.data?.result?.email);
-            setValue("businessName", res?.data?.result?.businessName);
+            setValue("email", res?.data?.result?.emailAddress);
+            setValue("businessName", res?.data?.result?.businessInfo?.businessName);
             setValue("billingAddress1", res?.data?.result?.billingAddress1);
             setValue("billingAddress2", res?.data?.result?.billingAddress2);
             setValue("billingCity", res?.data?.result?.billingCity);
@@ -149,17 +161,41 @@ const CreditCard = () => {
             // handleGetAllBillingStatesByCountryId(selectedCountry?.id);
         }
     }
+
     const handleCustomerPaymentProfile = async () => {
         const res = await getPaymentProfile();
         if (res?.data?.status === 200) {
             setValue("cardType", res?.data?.result?.paymentProfile?.cardType || "");
             setValue("cardNumber", res?.data?.result?.paymentProfile?.cardNumber || "");
+            setValue("name", res?.data?.result?.paymentProfile?.firstName);
+            setValue("email", res?.data?.result?.paymentProfile?.email);
+            setValue("businessName", res?.data?.result?.paymentProfile?.businessName);
+            setValue("billingAddress1", res?.data?.result?.paymentProfile?.address);
+            setValue("billingAddress2", res?.data?.result?.paymentProfile?.billingAddress2);
+            setValue("billingCity", res?.data?.result?.paymentProfile?.city);
+            setValue("billingZipcode", res?.data?.result?.paymentProfile?.postCode);
+            setValue("billingPhone", res?.data?.result?.paymentProfile?.phone);
+            setValue("billingCountry", res?.data?.result?.paymentProfile?.country);
+            setValue("billingState", res?.data?.result?.paymentProfile?.state);
+        } else {
+            handleGetUserDetails();
         }
     }
+
+    const handleDeletePaymentProfile = async () => {
+        const res = await deletePaymentProfile();
+        if (res?.data?.status === 200) {
+            setAlert({ open: true, type: 'success', message: res?.data?.message });
+            handleCustomerPaymentProfile()
+            handleCloseDeleteDialog();
+        } else {
+            setAlert({ open: true, type: 'error', message: res?.data?.message });
+        }
+    }
+
     useEffect(() => {
-        handleCustomerPaymentProfile()
         handleGetAllCountrys();
-        handleGetUserDetails();
+        handleCustomerPaymentProfile()
     }, [])
 
     useEffect(() => {
@@ -169,11 +205,37 @@ const CreditCard = () => {
         }
     }, [countrys, watch("billingCountry")])
 
+    const submit = async (data) => {
+        const payload = {
+            cardNumber: data.cardNumber.replace(/\s+/g, ''),
+            expMonthYear: data.expMonthYear,
+            cardCode: data.cardCode,
+            name: data.name,
+            email: watch("email"),
+            companyName: data.businessName,
+            address: data.billingAddress1,
+            city: data.billingCity,
+            state: data.billingState,
+            country: data.billingCountry,
+            postCode: data.billingZipcode,
+            phone: data.billingPhone,
+        }
+        const res = await createPaymentProfile(payload);
+        if (res?.data?.status === 200) {
+            setAlert({ open: true, type: 'success', message: res?.data?.message });
+
+            handleCustomerPaymentProfile()
+        } else {
+            setAlert({ open: true, type: 'error', message: res?.data?.message });
+        }
+    }
+
     return (
         <>
             <div className='flex justify-center items-center'>
                 <div className='max-w-96 text-center'>
                     <h2 className='text-3xl font-semibold mb-6 text-black'>Payment Profile</h2>
+
                     <div className='flex justify-center items-center gap-4'>
                         <div>
                             <img alt="sealserver" src="https://sealserver.trustwave.com/seal_image.php?customerId=ded751cddc1046b69288437788ee373b&size=105x54&style=invert" />
@@ -182,17 +244,38 @@ const CreditCard = () => {
                             <img alt="authorize" src="https://verify.authorize.net/anetseal/images/secure90x72.gif" />
                         </div>
                     </div>
+
                     <div>
                         <p>For your Security we do not store your Credit Card. Your Credit Card information is stored at <NavLink to="http://www.authorize.net/" target="_blank" rel="noreferrer" className='text-blue-600'>http://www.authorize.net</NavLink>  which is an industry leader in security and PCI credit card controls. You have the right to remove this Credit Card and delete your account profile at 360Pipe at any time.</p>
                     </div>
+
                     <div className='my-6'>
                         <h2 className='text-3xl font-semibold text-black'>Credit Card Details</h2>
                     </div>
 
-                    <form onSubmit={handleSubmit((data) => console.log(data))} className='flex flex-col gap-4'>
+                    <form onSubmit={handleSubmit(submit)} className='flex flex-col gap-4'>
                         {
                             watch("cardType") && watch("cardNumber") ? (
-                                <></>
+                                <>
+                                    <div className='flex justify-center items-center gap-4'>
+                                        <Input
+                                            label="Card Type"
+                                            type="text"
+                                            value={watch("cardType")}
+                                            disabled={true}
+
+                                        />
+                                        <Input
+                                            disabled={true}
+                                            label="Card Number"
+                                            type="text"
+                                            value={watch("cardNumber")}
+                                        />
+                                    </div>
+                                    <div className='mt-3 w-60'>
+                                        <Button type="button" text={"Remove Credit Card"} onClick={() => handleOpenDeleteDialog()} />
+                                    </div>
+                                </>
                             ) : <>
                                 <Cards
                                     number={watch("cardNumber")}
@@ -283,6 +366,25 @@ const CreditCard = () => {
                                 }}
                                 render={({ field }) => (
                                     <Input {...field} label="Name" type="text" error={errors?.name}
+                                        disabled={watch("cardType") ? true : false}
+                                        onChange={(e) => {
+                                            field.onChange(e.target.value);
+                                        }}
+                                    />
+                                )}
+                            />
+                        </div>
+
+                        <div>
+                            <Controller
+                                name="businessName"
+                                control={control}
+                                rules={{
+                                    required: "Business Name is required"
+                                }}
+                                render={({ field }) => (
+                                    <Input {...field} label="Company Name" type="text" error={errors?.businessName}
+                                        disabled={watch("cardType") ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                         }}
@@ -300,6 +402,7 @@ const CreditCard = () => {
                                 }}
                                 render={({ field }) => (
                                     <Input {...field} label="Address 1" type="text" error={errors?.billingAddress1}
+                                        disabled={watch("cardType") ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                         }}
@@ -314,6 +417,7 @@ const CreditCard = () => {
                                 control={control}
                                 render={({ field }) => (
                                     <Input {...field} label="Address 2" type="text"
+                                        disabled={watch("cardType") ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                         }}
@@ -331,6 +435,7 @@ const CreditCard = () => {
                                 }}
                                 render={({ field }) => (
                                     <Input {...field} label="City" type="text" error={errors?.billingCity}
+                                        disabled={watch("cardType") ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                         }}
@@ -348,6 +453,7 @@ const CreditCard = () => {
                                 }}
                                 render={({ field }) => (
                                     <Input {...field} label="Post Code" type="text" error={errors?.billingZipcode}
+                                        disabled={watch("cardType") ? true : false}
                                         onChange={(e) => {
                                             const numericValue = e.target.value.replace(/[^0-9]/g, '');
                                             field.onChange(numericValue);
@@ -366,7 +472,7 @@ const CreditCard = () => {
                                 }}
                                 render={({ field }) => (
                                     <Select
-                                        disabled={countrys?.length === 0}
+                                        disabled={(countrys?.length === 0 || watch("cardType")) ? true : false}
                                         options={countrys}
                                         label={"Country"}
                                         placeholder="Select country"
@@ -395,7 +501,7 @@ const CreditCard = () => {
                                 }}
                                 render={({ field }) => (
                                     <Select
-                                        disabled={billingStates?.length === 0}
+                                        disabled={(billingStates?.length === 0 || watch("cardType")) ? true : false}
                                         options={billingStates}
                                         label={"State"}
                                         placeholder="Select state"
@@ -431,6 +537,7 @@ const CreditCard = () => {
                                 render={({ field }) => (
                                     <Input
                                         {...field}
+                                        disabled={watch("cardType") ? true : false}
                                         label="Phone"
                                         type={`text`}
                                         error={errors?.billingPhone}
@@ -442,11 +549,32 @@ const CreditCard = () => {
                                 )}
                             />
                         </div>
+                        {
+                            !watch("cardType") ? (
+                                <div className="mt-6 flex justify-end items-center gap-3 cap">
+                                    <div>
+                                        <Button type="submit" text={"Update"} />
+                                    </div>
+                                </div>) : null
+                        }
                     </form>
                 </div>
             </div>
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleDeletePaymentProfile()}
+                handleClose={() => handleCloseDeleteDialog()}
+            />
         </>
     )
 }
 
-export default CreditCard
+
+const mapDispatchToProps = {
+    setAlert,
+};
+
+export default connect(null, mapDispatchToProps)(CreditCard);

@@ -22,7 +22,7 @@ const Button = ({
         borderRadius: 1,
         fontWeight: 500,
         fontFamily: '"Inter", sans-serif',
-        height: height || 40,
+        // height: height || 40,
         textTransform: "uppercase",
     };
 
@@ -40,8 +40,8 @@ const Button = ({
             boxShadow: 0,
             opacity: 0.9,
         },
-        px: 5,
-        py: 1,
+        // px: 5,
+        // py: 1,
         fontWeight: "bold",
         fontSize: "1.1rem",
         position: "relative",

@@ -18,7 +18,7 @@ const tabData = [
         label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
     },
     {
-        label: 'Change Passowrd', icon: <CustomIcons iconName="fa-solid fa-lock" />
+        label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
     },
     {
         label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
