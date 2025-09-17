@@ -26,6 +26,7 @@ import Crm from "./pages/crm/crm";
 import UserProfile from "./pages/dashboard/userProfile/userProfile";
 import ManageUser from "./pages/dashboard/manageUser/manageUser";
 import AddSubUser from "./pages/dashboard/manageUser/addSubUser";
+import SubUserRegister from "./pages/auth/subUserRegister/subUserRegister";
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
@@ -45,6 +46,10 @@ const App = ({ setLoading }) => {
     {
       path: "/register",
       element: <Register />,
+    },
+    {
+      path: "/subaccountactivesetup/:token",
+      element: <SubUserRegister />,
     },
     {
       path: "/login",

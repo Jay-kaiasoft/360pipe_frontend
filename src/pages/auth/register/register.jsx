@@ -11,6 +11,8 @@ import { setAlert, setLoading } from "../../../redux/commonReducers/commonReduce
 
 import AuthIdLogo from "../../../assets/svgs/authid-logo.svg"
 import AuthIdSignUpSvg from '../../../assets/svgs/authid-signup.svg';
+import AuthidAthenticator from "../../../assets/svgs/authid-authenticator.svg";
+import PasswordAuthenticator from "../../../assets/svgs/password-authenticator.svg";
 
 import Button from "../../../components/common/buttons/button";
 import CopyRight from "../../landingPage/copyRight";
@@ -19,8 +21,7 @@ import Stapper from "../../../components/common/stapper/stapper";
 import CustomIcons from "../../../components/common/icons/CustomIcons";
 import Input from "../../../components/common/input/input";
 
-import AuthidAthenticator from "../../../assets/svgs/authid-authenticator.svg";
-import PasswordAuthenticator from "../../../assets/svgs/password-authenticator.svg";
+
 
 import Select from "../../../components/common/select/select";
 import FileInputBox from "../../../components/fileInputBox/fileInputBox";

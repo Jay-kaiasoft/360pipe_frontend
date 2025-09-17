@@ -107,6 +107,7 @@ const Login = ({ setAlert, loading }) => {
                 userId: res?.data?.result?.userId,
                 roleId: res?.data?.result?.roleId,
                 rolename: res?.data?.result?.roleName,
+                permissions: res?.data?.result?.permissions?.rolesActions,
             };
             localStorage.setItem("userInfo", JSON.stringify(userdata));
             navigate("/dashboard")

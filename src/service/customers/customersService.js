@@ -139,9 +139,29 @@ export const createSubUser = async (data) => {
     }
 }
 
+export const updateSubUser = async (id, data) => {
+    try {
+        const response = axiosInterceptor().patch(`${customersURL}/update/subuser/${id}`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 export const getAllSubUsers = async () => {
     try {
         const response = axiosInterceptor().get(`${customersURL}/getAllSubUsers`)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const checkValidSubUserToken = async (token) => {
+    try {
+        const response = axiosInterceptor().get(`${customersURL}/validateSubUserToken?token=${token}`)
         return response
 
     } catch (error) {

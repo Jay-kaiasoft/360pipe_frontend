@@ -9,9 +9,8 @@ import Input from '../../../components/common/input/input';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../common/select/select';
-import { verifyEmail } from '../../../service/customers/customersService';
+import { createSubUser, getCustomer, sendRegisterInvitation, updateSubUser, verifyEmail } from '../../../service/customers/customersService';
 import { getAllSubUserTypes } from '../../../service/subUserType/subUserTypeService';
-import { use } from 'react';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -23,11 +22,11 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, handleGetAllUsers }) {
+function SubUserModel({ setAlert, open, handleClose, id, handleGetAllUsers }) {
     const theme = useTheme()
     const [validEmail, setValidEmail] = useState(null);
     const [subUsersTypes, setSubUsersTypes] = useState([]);
-
+    const [emailAddress, setEmailAddress] = useState(null);
     const {
         handleSubmit,
         control,
@@ -38,80 +37,20 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     } = useForm({
         defaultValues: {
             id: "",
-            username: "",
-            password: "",
-            accountOwner: "",
-            managerId: "",
             name: "",
-            title: "",
-            roleId: "",
             emailAddress: "",
-            cellPhone: "",
-            address1: "",
-            address2: "",
-            city: "",
-            state: "",
-            country: "",
-            zipCode: "",
-            quota: "",
-            evalPeriod: "",
-            calendarYearType: "",
-            question1: "",
-            question2: "",
-            question3: "",
-            answer1: "",
-            answer2: "",
-            answer3: "",
-            billingAddress1: "",
-            billingAddress2: "",
-            billingCity: "",
-            billingState: "",
-            billingCountry: "",
-            billingZipcode: "",
-            billingPhone: "",
-            dateRegistered: "",
             subUserTypeId: "",
         },
     });
 
     const onClose = () => {
-        setLoading(false);
         reset({
             id: "",
-            username: "",
-            password: "",
-            accountOwner: "",
-            managerId: "",
             name: "",
-            title: "",
-            roleId: "",
             emailAddress: "",
-            cellPhone: "",
-            address1: "",
-            address2: "",
-            city: "",
-            state: "",
-            country: "",
-            zipCode: "",
-            quota: "",
-            evalPeriod: "",
-            calendarYearType: "",
-            question1: "",
-            question2: "",
-            question3: "",
-            answer1: "",
-            answer2: "",
-            answer3: "",
-            billingAddress1: "",
-            billingAddress2: "",
-            billingCity: "",
-            billingState: "",
-            billingCountry: "",
-            billingZipcode: "",
-            billingPhone: "",
-            dateRegistered: "",
-            subUserTypeId: ""
+            subUserTypeId: "",
         });
+        setValidEmail(null);
         handleClose();
     };
 
@@ -132,6 +71,19 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         }
     };
 
+    const handleGetUser = async () => {
+        if (id && open) {
+            const response = await getCustomer(id);
+            if (response?.data?.status === 200) {
+                setValue("id", response?.data?.result?.id || "");
+                setValue("name", response?.data?.result?.name || "");
+                setValue("emailAddress", response?.data?.result?.emailAddress || "");
+                setEmailAddress(response?.data?.result?.emailAddress || null);
+                setValue("subUserTypeId", response?.data?.result?.subUserTypeId || "");
+            }
+        }
+    }
+
     const handleGetSubUserTypes = async () => {
         if (open) {
             const response = await getAllSubUserTypes();
@@ -145,12 +97,78 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         }
     }
 
+    const handleSendInvitation = async () => {
+        const data = {
+            email: watch("emailAddress"),
+            name: watch("name"),
+            userId: watch("id"),
+        }
+        const response = await sendRegisterInvitation(data);
+        if (response?.data?.status === 200) {
+            setAlert({
+                open: true,
+                type: "success",
+                message: response?.data?.message || "Invitation sent successfully.",
+            });
+            onClose();
+        } else {
+            setAlert({
+                open: true,
+                type: "error",
+                message: response?.data?.message || "An error occurred. Please try again.",
+            });
+        }
+    }
+
     useEffect(() => {
         handleGetSubUserTypes();
-    }, []);
+        handleGetUser();
+    }, [open]);
 
     const submit = async (data) => {
-        console.log("Submitted data:", data);
+        if ((id && watch("emailAddress") === emailAddress) || validEmail) {
+            if (id) {
+                const res = await updateSubUser(id, data);
+                if (res?.data.status === 200) {
+                    setAlert({
+                        open: true,
+                        type: "success",
+                        message: "Sub-user updated successfully.",
+                    });
+                    handleGetAllUsers();
+                    onClose();
+                } else {
+                    setAlert({
+                        open: true,
+                        type: "error",
+                        message: res?.data?.message || "An error occurred. Please try again.",
+                    });
+                }
+            } else {
+                const res = await createSubUser(data);
+                if (res?.data.status === 201) {
+                    setAlert({
+                        open: true,
+                        type: "success",
+                        message: "Sub-user created successfully.",
+                    });
+                    handleGetAllUsers();
+                    onClose();
+                } else {
+                    setAlert({
+                        open: true,
+                        type: "error",
+                        message: res?.data?.message || "An error occurred. Please try again.",
+                    });
+                }
+            }
+        } else {
+            setAlert({
+                open: true,
+                type: "error",
+                message: "Email is not valid or already registered.",
+            });
+        }
     }
     return (
         <React.Fragment>
@@ -161,7 +179,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {accountId ? "Update" : "Create"} Sub User
+                    {id ? "Update" : "Create"} Sub User
                 </Components.DialogTitle>
 
                 <Components.IconButton
@@ -197,24 +215,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                     )}
                                 />
                             </div>
-                            <Controller
-                                name="name"
-                                control={control}
-                                rules={{
-                                    required: "Name is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Name"
-                                        type={`text`}
-                                        error={errors.name}
-                                        onChange={(e) => {
-                                            field.onChange(e);
-                                        }}
-                                    />
-                                )}
-                            />
                             <div>
                                 <Controller
                                     name="emailAddress"
@@ -236,7 +236,11 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 field.onChange(e);
                                             }}
                                             onBlur={() => {
-                                                handleVerifyEmail();
+                                                if (emailAddress !== watch("emailAddress")) {
+                                                    handleVerifyEmail();
+                                                } else {
+                                                    setValidEmail(true);
+                                                }
                                             }}
                                             endIcon={
                                                 validEmail === true ? (
@@ -249,12 +253,37 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                     )}
                                 />
                             </div>
+                            <div>
+                                <Controller
+                                    name="name"
+                                    control={control}
+                                    rules={{
+                                        required: "Name is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Name"
+                                            type={`text`}
+                                            error={errors.name}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </div>
                         </div>
 
                     </Components.DialogContent>
 
                     <Components.DialogActions>
-                        <div className='flex justify-end'>
+                        <div className='flex justify-end items-center gap-4 w-[380px]'>
+                            {
+                                id && (
+                                    <Button type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
+                                )
+                            }
                             <Button type={`submit`} text={id ? "Update" : "Submit"} />
                         </div>
                     </Components.DialogActions>

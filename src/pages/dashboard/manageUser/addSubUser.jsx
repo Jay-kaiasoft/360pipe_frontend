@@ -120,7 +120,6 @@ const AddSubUser = () => {
     const handleGetAllActionsByRole = async () => {
         if (id) {
             const res = await getSubUserTypes(id);
-            console.log("res.data?.result",res.data?.result)
             setValue('name', res.data?.result?.name);
             replace(res.data?.result?.rolesActions?.functionalities);
 

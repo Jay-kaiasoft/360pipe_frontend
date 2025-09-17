@@ -19,18 +19,18 @@ const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
       </div>
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[80px]"} ${isMobileOpen ? "ml-0" : ""}`}
+        className={`flex-1 transition-all duration-300 ease-in-out overflow-x-hidden ${isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[80px]"} ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
 
-        <main className="p-4">
+        <div className="p-4 mx-auto">
           {
             location.pathname === '/dashboard' && (
               <Dashboard />
             )
           }
           <Outlet />
-        </main>
+        </div>
       </div>
       <AlertDialog
         open={sessionEndModel}

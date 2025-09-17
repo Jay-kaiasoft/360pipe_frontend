@@ -149,7 +149,7 @@ const ResetPassword = ({ setAlert, setLoading }) => {
                                                         onClick={togglePasswordVisibility}
                                                         style={{ cursor: "pointer", color: "black" }}
                                                     >
-                                                        {isPasswordVisible ? (
+                                                        {!isPasswordVisible ? (
                                                             <CustomIcons iconName="fa-solid fa-eye" css="cursor-pointer text-black" />
                                                         ) : (
                                                             <CustomIcons iconName="fa-solid fa-eye-slash" css="cursor-pointer text-black" />
@@ -208,7 +208,7 @@ const ResetPassword = ({ setAlert, setLoading }) => {
                                                         onClick={toggleConfirmPasswordVisibility}
                                                         style={{ cursor: "pointer", color: "black" }}
                                                     >
-                                                        {isConfirmPasswordVisible ? (
+                                                        {!isConfirmPasswordVisible ? (
                                                             <CustomIcons iconName="fa-solid fa-eye" css="cursor-pointer text-black" />
                                                         ) : (
                                                             <CustomIcons iconName="fa-solid fa-eye-slash" css="cursor-pointer text-black" />

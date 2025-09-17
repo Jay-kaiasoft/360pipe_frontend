@@ -24,6 +24,7 @@ const Button = ({
         fontFamily: '"Inter", sans-serif',
         // height: height || 40,
         textTransform: "uppercase",
+        fontSize: "16px",
     };
 
     // Styles when useFor !== "primary"
@@ -43,7 +44,6 @@ const Button = ({
         // px: 5,
         // py: 1,
         fontWeight: "bold",
-        fontSize: "1.1rem",
         position: "relative",
         overflow: "hidden",
         boxShadow: 0,
@@ -53,7 +53,6 @@ const Button = ({
         background: theme.palette.primary.main,
         color: theme.palette.text.primary,
         fontWeight: "bold",
-        fontSize: "1.1rem",
         position: "relative",
         overflow: "hidden",
         boxShadow: 0,

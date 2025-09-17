@@ -11,7 +11,7 @@ import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 
 import { deleteAccount, getAllAccounts } from '../../../service/account/accountService';
-import { use } from 'react';
+import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 
 const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   const location = useLocation();
@@ -115,30 +115,30 @@ const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       renderCell: (params) => {
         return (
           <div className='flex items-center gap-2 justify-center h-full'>
-            {/* <PermissionWrapper
-              functionalityName="Company"
-              moduleName="Manage Shifts"
+            <PermissionWrapper
+              functionalityName="Account"
+              moduleName="Account"
               actionId={2}
-              component={ */}
-            <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-              <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-              </Components.IconButton>
-            </div>
-            {/* }
-            /> */}
-            {/* <PermissionWrapper
-              functionalityName="Company"
-              moduleName="Manage Shifts"
+              component={
+                <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                  <Components.IconButton onClick={() => handleOpen(params.row.id)}>
+                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                  </Components.IconButton>
+                </div>
+              }
+            />
+            <PermissionWrapper
+              functionalityName="Account"
+              moduleName="Account"
               actionId={3}
-              component={ */}
-            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-              <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-              </Components.IconButton>
-            </div>
-            {/* }
-            /> */}
+              component={
+                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                  <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                  </Components.IconButton>
+                </div>
+              }
+            />
           </div>
         );
       },
@@ -151,22 +151,22 @@ const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
   const actionButtons = () => {
     return (
-      // <PermissionWrapper
-      //   functionalityName="Company"
-      //   moduleName="Manage Shifts"
-      //   actionId={1}
-      //   component={
-      <div>
-        <Button type={`button`} text={'Add Account'} onClick={() => handleOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
-      </div>
-      //   }
-      // />
+      <PermissionWrapper
+        functionalityName="Account"
+        moduleName="Account"
+        actionId={1}
+        component={
+          <div>
+            <Button type={`button`} text={'Add Account'} onClick={() => handleOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+          </div>
+        }
+      />
     )
   }
 
   return (
-    <>
-      <div className='border rounded-lg bg-white w-full lg:w-full '>
+    <div className='w-full'>
+      <div className='border rounded-lg bg-white'>
         <DataTable columns={columns} rows={accounts} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
       </div>
       <AccountModel open={open} handleClose={handleClose} accountId={selectedAccountId} handleGetAllAccounts={handleGetAccounts} />
@@ -178,7 +178,7 @@ const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         handleAction={() => handleDeleteAccount()}
         handleClose={() => handleCloseDeleteDialog()}
       />
-    </>
+    </div>
   )
 }
 

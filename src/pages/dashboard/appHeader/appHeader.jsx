@@ -115,7 +115,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
 
   
   return (
-    <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
+    <header className="sticky top-0 flex w-full z-40 bg-white border-b shadow-sm">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <div className="grow">

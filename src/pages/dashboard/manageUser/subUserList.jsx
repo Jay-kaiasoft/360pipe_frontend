@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Components from '../../../components/muiComponents/components';
 import { deleteSubUserType, getAllSubUserTypes } from '../../../service/subUserType/subUserTypeService';
-import { useNavigate } from 'react-router-dom';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import DataTable from '../../../components/common/table/table';
 import Button from '../../../components/common/buttons/button';
@@ -9,13 +8,26 @@ import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import { deleteCustomer, getAllSubUsers } from '../../../service/customers/customersService';
+import SubUserModel from '../../../components/models/subUser/subUserModel';
 
 const SubUserList = ({ setAlert }) => {
-    const navigate = useNavigate();
 
     const [subUsers, setSubUsers] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = (id = null) => {
+        if (id) {
+            setSelectedUserId(id);
+        }
+        setOpen(true);
+    }
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedUserId(null);
+    }
 
     const handleOpenDeleteDialog = (id) => {
         setSelectedUserId(id);
@@ -46,7 +58,9 @@ const SubUserList = ({ setAlert }) => {
         if (res.status === 200) {
             const formattedSubUsers = res?.data?.result?.map((subUser, index) => ({
                 ...subUser,
-                rowId: index + 1
+                rowId: index + 1,
+                subUserType: subUser?.subUserTypeDto?.name,
+                status: ((subUser?.userName !== "" || subUser?.userName !== null) && (subUser?.password !== '' || subUser?.password !== null)) ? 'Pending' : 'Active'
             }));
             setSubUsers(formattedSubUsers);
         }
@@ -67,19 +81,27 @@ const SubUserList = ({ setAlert }) => {
             sortable: false,
         },
         {
-            field: 'name',
+            field: 'subUserType',
             headerName: 'Sub-Users Type',
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 800,
             sortable: false,
         },
-         {
+        {
             field: 'emailAddress',
             headerName: 'Email Address',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 800,
+            maxWidth: 700,
+            sortable: false,
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            headerClassName: 'uppercase',
+            flex: 1,
+            maxWidth: 100,
             sortable: false,
         },
         {
@@ -98,7 +120,7 @@ const SubUserList = ({ setAlert }) => {
               actionId={2}
               component={ */}
                         <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => navigate(`/dashboard/manageusers/edit/${params.row.id}`)}>
+                            <Components.IconButton onClick={() => handleClickOpen(params.row.id)}>
                                 <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                             </Components.IconButton>
                         </div>
@@ -134,7 +156,7 @@ const SubUserList = ({ setAlert }) => {
             //   actionId={1}
             //   component={
             <div>
-                <Button type={`button`} text={'Add Sub-User'} onClick={() => navigate("/dashboard/manageusers/add")} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                <Button type={`button`} text={'Add Sub-User'} onClick={() => handleClickOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
             </div>
             //   }
             // />
@@ -154,6 +176,7 @@ const SubUserList = ({ setAlert }) => {
                 handleAction={() => handleDeleteSubUser()}
                 handleClose={() => handleCloseDeleteDialog()}
             />
+            <SubUserModel open={open} handleClose={handleClose} id={selectedUserId} handleGetAllUsers={handleGetAllSubUsers} />
         </>
     )
 }

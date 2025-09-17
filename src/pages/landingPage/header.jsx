@@ -13,7 +13,7 @@ const Header = () => {
 
     // Track scroll
     useEffect(() => {
-        if (location.pathname !== "/register") {
+        if (location.pathname !== "/register" && location.pathname !== "/login" && !location.pathname?.startsWith("/subaccountactivesetup")) {
             setNavItems([
                 {
                     title: "Home",
@@ -50,7 +50,7 @@ const Header = () => {
                 ? "fixed bg-white shadow-md transition-all duration-700 "
                 : "absolute bg-transparent transition-all duration-700 "
                 }
-                ${location.pathname !== "/register" ? "" : "py-2 bg-white shadow"}
+                ${(location.pathname !== "/register" && location.pathname !== "/login" && !location.pathname?.startsWith("/subaccountactivesetup")) ? "" : "py-2 bg-white shadow"}
                 `}
         >
             <div className="flex items-center justify-between 4k:justify-center 4k:gap-32 px-5 lg:px-20 py-4">
@@ -66,8 +66,8 @@ const Header = () => {
                             <NavLink
                                 to={item.route}
                                 className={`px-3 py-1 rounded-full transition-all duration-300 ${isScrolled
-                                        ? "hover:text-blue-600"
-                                        : "text-black hover:text-blue-700 hover:bg-white hover:shadow-sm"
+                                    ? "hover:text-blue-600"
+                                    : "text-black hover:text-blue-700 hover:bg-white hover:shadow-sm"
                                     }`}
                             >
                                 {item.title}
@@ -96,7 +96,7 @@ const Header = () => {
 
                 {/* Desktop Buttons */}
                 {
-                    location.pathname !== "/register" && (
+                    (location.pathname !== "/register" && location.pathname !== "/login" && !location.pathname?.startsWith("/subaccountactivesetup")) && (
                         <div className="hidden xl:flex space-x-3">
                             <button onClick={() => navigate("/pricing")} className="bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-blue-700 transition">
                                 Sign Up
