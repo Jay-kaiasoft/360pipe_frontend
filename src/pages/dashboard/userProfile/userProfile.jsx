@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs } from "../../../components/common/tabs/tabs";
 import CustomIcons from "../../../components/common/icons/CustomIcons";
 import Profile from "./profile";
@@ -6,8 +6,12 @@ import Brand from "./brand";
 import Security from "./security";
 import ChangePassword from "./changePassword";
 import CreditCard from "./creditCard";
+import { getUserDetails } from "../../../utils/getUserDetails";
 
-const tabData = [
+const UserProfile = () => {
+    const data = getUserDetails();
+
+    const [tabsData, setTabsData] = useState([
     {
         label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
     },
@@ -23,19 +27,22 @@ const tabData = [
     {
         label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
     },
-]
-
-const UserProfile = () => {
+]);
 
     const [selectedTab, setSelectedTab] = useState(0);
     const handleChangeTab = (value) => {
         setSelectedTab(value);
     }
 
+    useEffect(() => {
+        if (data?.subUser && data?.subUser === true) {
+            setTabsData((prev) => prev.filter((tab) => tab.label !== "Brand"));
+        }
+    }, [])
     return (
         <>
             <div>
-                <Tabs tabsData={tabData} selectedTab={selectedTab} handleChange={handleChangeTab} />
+                <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} />
             </div>
 
             <div className="mt-6">

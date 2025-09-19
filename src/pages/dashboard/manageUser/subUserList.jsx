@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import Components from '../../../components/muiComponents/components';
-import { deleteSubUserType, getAllSubUserTypes } from '../../../service/subUserType/subUserTypeService';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import DataTable from '../../../components/common/table/table';
 import Button from '../../../components/common/buttons/button';

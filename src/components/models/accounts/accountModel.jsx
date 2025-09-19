@@ -223,7 +223,15 @@ function AccountModel({ setSyncingPushStatus, setAlert, open, handleClose, accou
                                 name="phone"
                                 control={control}
                                 rules={{
-                                    required: "Phone number is required",
+                                    required: "Phone is required",
+                                    maxLength: {
+                                        value: 10,
+                                        message: 'Enter valid phone number',
+                                    },
+                                    minLength: {
+                                        value: 10,
+                                        message: 'Enter valid phone number',
+                                    },
                                 }}
                                 render={({ field }) => (
                                     <Input
@@ -232,7 +240,8 @@ function AccountModel({ setSyncingPushStatus, setAlert, open, handleClose, accou
                                         type={`text`}
                                         error={errors.phone}
                                         onChange={(e) => {
-                                            field.onChange(e.target.value);
+                                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                            field.onChange(numericValue);
                                         }}
                                     />
                                 )}

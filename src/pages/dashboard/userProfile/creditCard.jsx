@@ -524,7 +524,7 @@ const CreditCard = ({ setAlert }) => {
                                 name="billingPhone"
                                 control={control}
                                 rules={{
-                                    required: "Phone is required",
+                                    required: watch("billingPhone") ? "Phone is required" : false,
                                     maxLength: {
                                         value: 10,
                                         message: 'Enter valid phone number',

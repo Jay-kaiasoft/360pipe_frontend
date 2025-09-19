@@ -9,3 +9,12 @@ export const getAllSyncRecords = async () => {
         throw error;
     }
 };
+
+export const getSyncHistory = async () => {
+    try {
+        const response = await axiosInterceptor().get(`${syncRecordsURL}/get/history`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

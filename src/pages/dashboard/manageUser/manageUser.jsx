@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react'
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import { connect } from 'react-redux';
 import SubuserTypeList from './subuserTypeList';

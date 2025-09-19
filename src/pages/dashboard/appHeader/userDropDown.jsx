@@ -107,49 +107,20 @@ export default function UserDropdown() {
                                 Edit profile
                             </NavLink>
                         </li>
-                        <li>
-                            <NavLink
-                                to="/dashboard/manageusers"
-                                onClick={closeDropdown}
-                                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                            >
-                                <CustomIcons iconName="fa-solid fa-user" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
-                                Manage Users
-                            </NavLink>
-                        </li>
-                        {/* <li>
-                            <NavLink
-                                to="/account-settings"
-                                onClick={closeDropdown}
-                                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                            >
-                                <CustomIcons iconName="fa-solid fa-gear" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
-                                Account settings
-                            </NavLink>
-                        </li> */}
-                        {/* <li>
-                            <NavLink
-                                to="/support"
-                                onClick={closeDropdown}
-                                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                            >
-                                <svg
-                                    className="text-gray-500 group-hover:text-gray-700"
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        clipRule="evenodd"
-                                        d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z"
-                                    />
-                                </svg>
-                                Support
-                            </NavLink>
-                        </li> */}
+                        {
+                            (userdata?.subUser && userdata?.subUser !== true) && (
+                                <li>
+                                    <NavLink
+                                        to="/dashboard/manageusers"
+                                        onClick={closeDropdown}
+                                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
+                                    >
+                                        <CustomIcons iconName="fa-solid fa-user" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
+                                        Manage Users
+                                    </NavLink>
+                                </li>
+                            )
+                        }
                     </ul>
 
                     {/* Sign Out Button */}

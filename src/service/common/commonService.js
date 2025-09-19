@@ -1,6 +1,17 @@
 import { fileUploadURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+
+// get user timezone dynamically
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 export const securityQuestions = [
     { id: 1, title: "What is your father’s middle name?" },
     { id: 2, title: "What high school did you attend?" },
@@ -126,4 +137,9 @@ export const getAllCountryList = async () => {
 export const capitalize = (str) => {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+export const formatUtcToLocal = (utcTime, format = "hh:mm A") => {
+    if (!utcTime) return "";
+    return dayjs.utc(utcTime).tz(userTimeZone).format(format);
 };

@@ -1,16 +1,21 @@
 import { useEffect, useRef } from "react"
 import { useSelector, useDispatch, connect } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus } from "../../../redux/commonReducers/commonReducers"
+
 import UserDropdown from "./userDropDown"
+
 import Components from "../../../components/muiComponents/components"
 import { syncToQ4Magic } from "../../../service/salesforce/syncToQ4Magic/syncToQ4MagicService"
 import { syncFromQ4magic } from "../../../service/salesforce/syncFromQ4magic/syncFromQ4magicService"
 import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsService"
 import Button from "../../../components/common/buttons/button"
+import CustomIcons from "../../../components/common/icons/CustomIcons"
 
 const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus, syncingPullStatus }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const dispatch = useDispatch()
+  const navigate = useNavigate();
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -39,7 +44,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
     try {
       const syncRecords = await getAllSyncRecords();
       if (syncRecords?.status === 200) {
-        setSyncCount(syncRecords.result?.length || null);
+        setSyncCount(syncRecords.result?.filter((row) => row.subjectId != null && row.deleted === false)?.length || null);
         setSyncingPullStatus(false);
         setSyncingPushStatus(false);
       }
@@ -113,7 +118,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
     }
   }, [syncingPushStatus]);
 
-  
+
   return (
     <header className="sticky top-0 flex w-full z-40 bg-white border-b shadow-sm">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
@@ -168,11 +173,21 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
                       onClick={() => handleSync()}
                       text={"SYNC"}
                       useFor="success"
-                    // className="w-24 py-3 bg-green-500 text-white rounded shadow-md hover:bg-green-600 transition-colors duration-300 focus:outline-none"
                     />
 
                   </Components.Badge>
                 </div>
+              )
+            }
+            {
+              (localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
+                <span className="cursor-pointer flex items-center" onClick={() => navigate('/dashboard/syncHistory')}>
+                  <Components.Tooltip title="Sync History">
+                    <span>
+                      <CustomIcons iconName={'fa-solid fa-arrows-rotate'} css={"text-lg"} />
+                    </span>
+                  </Components.Tooltip>
+                </span>
               )
             }
             <div>
