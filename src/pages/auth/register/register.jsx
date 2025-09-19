@@ -604,15 +604,21 @@ const Register = ({ setAlert, setLoading }) => {
                                                     control={control}
                                                     rules={{
                                                         required: "Username is required",
+                                                        pattern: {
+                                                            value: /^\S+$/, // no spaces allowed
+                                                            message: "Username cannot contain spaces"
+                                                        }
                                                     }}
                                                     render={({ field }) => (
                                                         <Input
                                                             {...field}
                                                             label="Username"
-                                                            type={`text`}
+                                                            type="text"
                                                             error={errors?.username}
                                                             onChange={(e) => {
-                                                                field.onChange(e);
+                                                                // remove spaces as user types
+                                                                const value = e.target.value.replace(/\s/g, "");
+                                                                field.onChange(value);
                                                             }}
                                                             onBlur={() => {
                                                                 handleVerifyUsername();
@@ -647,7 +653,8 @@ const Register = ({ setAlert, setLoading }) => {
                                                             type={`text`}
                                                             error={errors?.emailAddress}
                                                             onChange={(e) => {
-                                                                field.onChange(e);
+                                                                const value = e.target.value.replace(/\s/g, "");
+                                                                field.onChange(value);
                                                             }}
                                                             onBlur={() => {
                                                                 handleVerifyEmail();
@@ -1465,13 +1472,27 @@ const Register = ({ setAlert, setLoading }) => {
                                 </>
                             )
                         }
-                        <div className="mt-6 flex justify-end items-center gap-3 cap">
-                            <div>
-                                <Button type="button" onClick={() => handleBack()} text={"Back"} />
-                            </div>
+                        <div className="mt-6 flex justify-end items-center gap-3">
+                            {
+                                activeStep === 0 && (
+                                    <div className="grow w-full">
+                                        <p>
+                                            Already have an account? &nbsp;
+                                            <NavLink to="/login">
+                                                <span className="text-blue-500">Login</span>
+                                            </NavLink>
+                                        </p>
+                                    </div>
+                                )
+                            }
+                            <div className="flex justify-start items-center gap-3">
+                                <div>
+                                    <Button type="button" onClick={() => handleBack()} text={"Back"} />
+                                </div>
 
-                            <div>
-                                <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 5 ? "Let's Go" : "next"} />
+                                <div>
+                                    <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 5 ? "Let's Go" : "next"} />
+                                </div>
                             </div>
                         </div>
                     </form>

@@ -170,13 +170,13 @@ const CreditCard = ({ setAlert }) => {
             setValue("name", res?.data?.result?.paymentProfile?.firstName);
             setValue("email", res?.data?.result?.paymentProfile?.email);
             setValue("businessName", res?.data?.result?.paymentProfile?.businessName);
-            setValue("billingAddress1", res?.data?.result?.paymentProfile?.address);
+            setValue("billingAddress1", res?.data?.result?.paymentProfile?.billingAddress1);
             setValue("billingAddress2", res?.data?.result?.paymentProfile?.billingAddress2);
-            setValue("billingCity", res?.data?.result?.paymentProfile?.city);
-            setValue("billingZipcode", res?.data?.result?.paymentProfile?.postCode);
-            setValue("billingPhone", res?.data?.result?.paymentProfile?.phone);
-            setValue("billingCountry", res?.data?.result?.paymentProfile?.country);
-            setValue("billingState", res?.data?.result?.paymentProfile?.state);
+            setValue("billingCity", res?.data?.result?.paymentProfile?.billingCity);
+            setValue("billingZipcode", res?.data?.result?.paymentProfile?.billingZipcode);
+            setValue("billingPhone", res?.data?.result?.paymentProfile?.billingPhone);
+            setValue("billingCountry", res?.data?.result?.paymentProfile?.billingCountry);
+            setValue("billingState", res?.data?.result?.paymentProfile?.billingState);
         } else {
             handleGetUserDetails();
         }

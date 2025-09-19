@@ -97,7 +97,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'opportunity Name',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 300,
+            minWidth: 400,
             sortable: false,
         },
         {
@@ -124,7 +124,12 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'close Date',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200
+            maxWidth: 150,
+            renderCell: (params) => {
+                return (
+                    <span>{params.value ? new Date(params.value).toLocaleDateString() : ''}</span>
+                )
+            }
         },
         {
             field: 'action',

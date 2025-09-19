@@ -249,7 +249,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     />
                                 )}
                             />
-                            <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={null} maxDate={null} required={true} />
+                            <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
                             <Controller
                                 name="nextSteps"
                                 control={control}

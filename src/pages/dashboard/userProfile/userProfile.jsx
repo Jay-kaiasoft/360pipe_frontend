@@ -12,33 +12,33 @@ const UserProfile = () => {
     const data = getUserDetails();
 
     const [tabsData, setTabsData] = useState([
-    {
-        label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
-    },
-    {
-        label: 'Brand', icon: <CustomIcons iconName="fa-solid fa-medal" />
-    },
-    {
-        label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
-    },
-    {
-        label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
-    },
-    {
-        label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
-    },
-]);
+        {
+            label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
+        },
+        {
+            label: 'Brand', icon: <CustomIcons iconName="fa-solid fa-medal" />
+        },
+        {
+            label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
+        },
+        {
+            label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
+        },
+        {
+            label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
+        },
+    ]);
 
     const [selectedTab, setSelectedTab] = useState(0);
     const handleChangeTab = (value) => {
         setSelectedTab(value);
     }
 
-    useEffect(() => {
-        if (data?.subUser && data?.subUser === true) {
-            setTabsData((prev) => prev.filter((tab) => tab.label !== "Brand"));
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (data?.subUser && data?.subUser === true) {
+    //         setTabsData((prev) => prev.filter((tab) => tab.label !== "Brand"));
+    //     }
+    // }, [])
     return (
         <>
             <div>

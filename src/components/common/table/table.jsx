@@ -39,7 +39,7 @@ export default function DataTable({ checkboxSelection = false, showSearch = fals
                     rows={rows}
                     columns={columns}
                     initialState={{ pagination: { paginationModel } }}
-                    pageSizeOptions={[10, 25, 50]}
+                    pageSizeOptions={[10, 25, 50, { value: -1, label: 'All' }]}
                     disableRowSelectionOnClick
                     hideFooterSelectedRowCount
                     // disableColumnSorting

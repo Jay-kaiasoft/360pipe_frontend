@@ -206,7 +206,7 @@ const Login = ({ setAlert, loading }) => {
                                             name="email"
                                             control={control}
                                             rules={{
-                                                required: "Email or Username is required",                                               
+                                                required: "Email or Username is required",
                                             }}
                                             render={({ field }) => (
                                                 <Input
@@ -217,7 +217,8 @@ const Login = ({ setAlert, loading }) => {
                                                     error={errors?.email}
                                                     disabled={loginPreference === "password"}
                                                     onChange={(e) => {
-                                                        field.onChange(e);
+                                                        const value = e.target.value.replace(/\s/g, "");
+                                                        field.onChange(value);
                                                     }}
                                                     endIcon={
                                                         <span

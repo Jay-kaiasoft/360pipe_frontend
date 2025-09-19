@@ -10,7 +10,7 @@ const PermissionWrapper = ({
     const userData = getUserDetails() || [];
 
     // Allow Admins
-    if (userData?.rolename === "Admin" || userData?.rolename === "Owner") {
+    if (userData?.rolename === "Admin" || userData?.rolename === "Owner" || userData?.subUser === false) {
         return <>{component}</>;
     }
 
