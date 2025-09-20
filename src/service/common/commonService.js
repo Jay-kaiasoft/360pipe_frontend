@@ -12,6 +12,20 @@ dayjs.extend(timezone);
 // get user timezone dynamically
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+export const opportunityStages = [
+    { id: 1, title: "Prospecting" },
+    { id: 2, title: "Qualification" },
+    { id: 3, title: "Needs Analysis" },
+    { id: 4, title: "Value Proposition" },
+    { id: 5, title: "Id. Decision Makers" },
+    { id: 6, title: "Perception Analysis" },
+    { id: 7, title: "Proposal/Price Quote" },
+    { id: 8, title: "Negotiation/Review" },
+    { id: 9, title: "Closed Won" },
+    { id: 10, title: "Closed Lost" },
+]
+
+
 export const securityQuestions = [
     { id: 1, title: "What is your father’s middle name?" },
     { id: 2, title: "What high school did you attend?" },

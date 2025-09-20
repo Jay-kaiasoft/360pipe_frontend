@@ -13,6 +13,7 @@ import Select from '../../../components/common/select/select';
 
 import { createOpportunity, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
+import { opportunityStages } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -65,6 +66,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             const res = await getOpportunityDetails(opportunityId);
             if (res?.status === 200) {
                 reset(res?.result);
+                setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.id || null);
             }
         }
     }
@@ -91,9 +93,13 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
     const submit = async (data) => {
         setLoading(true);
+        const newData = {
+            ...data,
+            salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
+        }
         try {
             if (opportunityId) {
-                const res = await updateOpportunity(opportunityId, data);
+                const res = await updateOpportunity(opportunityId, newData);
                 if (res?.status === 200) {
                     if (watch("salesforceOpportunityId") !== null && watch("salesforceOpportunityId") !== "") {
                         setSyncingPushStatus(true);
@@ -116,7 +122,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     });
                 }
             } else {
-                const res = await createOpportunity(data);
+                const res = await createOpportunity(newData);
                 if (res?.status === 201) {
                     setSyncingPushStatus(true);
                     setLoading(false);
@@ -235,16 +241,21 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                 name="salesStage"
                                 control={control}
                                 rules={{
-                                    required: "Stage is required",
+                                    required: "Sales stage is required",
                                 }}
                                 render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Stage"
-                                        type={`text`}
+                                    <Select
+                                        options={opportunityStages}
+                                        label={"Stage"}
+                                        placeholder="Select Stage"
+                                        value={parseInt(watch("salesStage")) || null}
                                         error={errors.salesStage}
-                                        onChange={(e) => {
-                                            field.onChange(e.target.value);
+                                        onChange={(_, newValue) => {
+                                            if (newValue?.id) {
+                                                field.onChange(newValue.id);
+                                            } else {
+                                                setValue("salesStage", null);
+                                            }
                                         }}
                                     />
                                 )}
