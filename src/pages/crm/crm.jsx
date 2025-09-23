@@ -93,6 +93,7 @@ const Crm = ({ setLoading, setAlert, loading }) => {
                         }
                     } catch (err) {
                         // Ignore cross-origin until redirect back
+                        console.error("Error polling popup:", err);
                     }
                 }, 500);
             } else {

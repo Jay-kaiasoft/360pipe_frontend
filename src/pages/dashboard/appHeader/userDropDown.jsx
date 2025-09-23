@@ -108,7 +108,7 @@ export default function UserDropdown() {
                             </NavLink>
                         </li>
                         {
-                            (userdata?.subUser && userdata?.subUser !== true) && (
+                            !userdata?.subUser && (
                                 <li>
                                     <NavLink
                                         to="/dashboard/manageusers"

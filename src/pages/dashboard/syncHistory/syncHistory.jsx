@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getSyncHistory } from '../../../service/syncRecords/syncRecordsService';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
-import { handleConvertUTCDateToLocalDate } from '../../../service/common/commonService';
+import { handleConvertUTCDateToLocalDate, userTimeZone } from '../../../service/common/commonService';
 
 const SyncHistory = () => {
     const [syncHistory, setSyncHistory] = useState([])
@@ -86,10 +86,7 @@ const SyncHistory = () => {
                                                         {
                                                             (() => {
                                                                 let dateStr = handleConvertUTCDateToLocalDate(record.date);
-                                                                if (dateStr instanceof Date) {
-                                                                    dateStr = dateStr.toLocaleString();
-                                                                }
-                                                                return dateStr;
+                                                                return dateStr.toLocaleString("en-IN", { timeZone: userTimeZone });
                                                             })()
                                                         }
                                                     </p>
@@ -101,8 +98,7 @@ const SyncHistory = () => {
                                                         <CustomIcons iconName={'fa-solid fa-upload'} css={'text-lg text-green-500'} />
                                                     )}
                                                     <p
-                                                        className={`text-sm ${record.syncType === 'PULL' ? 'text-blue-500' : 'text-green-500'
-                                                            }`}
+                                                        className={`text-sm ${record.syncType === 'PULL' ? 'text-blue-500' : 'text-green-500'}`}
                                                     >
                                                         {record.syncType}
                                                     </p>

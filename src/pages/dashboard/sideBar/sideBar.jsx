@@ -10,21 +10,8 @@ import {
 } from "../../../redux/commonReducers/commonReducers"
 
 import CustomIcons from "../../../components/common/icons/CustomIcons"
+import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
 
-const navItems = [
-    {
-        icon: <CustomIcons iconName="th-large" />,
-        name: "Dashboard",
-        path: "/dashboard",
-        subItems: [{ name: "Accounts", path: "/dashboard/accounts", pro: false }, { name: "Opportunities", path: "/dashboard/opportunities", pro: false }, { name: "Contacts", path: "/dashboard/contacts", pro: false }]
-    },
-    {
-        icon: <CustomIcons iconName="th-large" />,
-        name: "My CRM",
-        path: "/dashboard/mycrm",
-        pro: false
-    },
-]
 
 const Sidebar = ({
     isExpanded,
@@ -37,6 +24,32 @@ const Sidebar = ({
     setActiveItem,
     toggleSubmenu
 }) => {
+    const userDetails = getUserDetails();
+    const salesforceUserDetails = getSalesforceUserDetails();
+
+    const navItems = [
+        {
+            icon: <CustomIcons iconName="th-large" />,
+            name: "Dashboard",
+            path: "/dashboard",
+            subItems: [
+                { name: "Accounts", path: "/dashboard/accounts", pro: false },
+                { name: "Opportunities", path: "/dashboard/opportunities", pro: false },
+                { name: "Contacts", path: "/dashboard/contacts", pro: false }
+            ]
+        },
+        ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
+            ? [
+                {
+                    icon: <CustomIcons iconName="th-large" />,
+                    name: "My CRM",
+                    path: "/dashboard/mycrm",
+                    pro: false
+                }
+            ]
+            : [])
+    ];
+
     const location = useLocation()
     const [subMenuHeight, setSubMenuHeight] = useState({})
     const subMenuRefs = useRef({})
@@ -258,12 +271,12 @@ const Sidebar = ({
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                 <nav className="mb-6">
                     <div className="flex flex-col gap-6">
-                        <div>                           
+                        <div>
                             {renderMenuItems(navItems, "main")}
                         </div>
                     </div>
                 </nav>
-            </div>            
+            </div>
         </div>
     )
 }

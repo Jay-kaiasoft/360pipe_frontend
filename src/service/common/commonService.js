@@ -10,7 +10,7 @@ dayjs.extend(timezone);
 
 
 // get user timezone dynamically
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+export const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export const opportunityStages = [
     { id: 1, title: "Prospecting" },
@@ -24,7 +24,6 @@ export const opportunityStages = [
     { id: 9, title: "Closed Won" },
     { id: 10, title: "Closed Lost" },
 ]
-
 
 export const securityQuestions = [
     { id: 1, title: "What is your father’s middle name?" },
@@ -63,6 +62,7 @@ export const uploadFiles = async (data) => {
 }
 
 export const handleConvertUTCDateToLocalDate = (utcDateString) => {
+    
     if (!utcDateString) return null;
 
     try {
@@ -157,3 +157,98 @@ export const formatUtcToLocal = (utcTime, format = "hh:mm A") => {
     if (!utcTime) return "";
     return dayjs.utc(utcTime).tz(userTimeZone).format(format);
 };
+
+export const getStaticRoles = () => {
+    return [
+        {
+            id: 1,
+            title: 'Sales Representative',
+        },
+        {
+            id: 2,
+            title: 'Sales Consultant',
+        },
+        {
+            id: 3,
+            title: 'Sales Manager',
+        },
+        {
+            id: 4,
+            title: 'Sales Director',
+        },
+        {
+            id: 5,
+            title: 'Decision Maker',
+        },
+        {
+            id: 6,
+            title: 'Influencer-Advocate',
+        },
+        {
+            id: 7,
+            title: 'Economic Buyer',
+        },
+        {
+            id: 8,
+            title: 'Influencer-Challenger',
+        },
+        {
+            id: 9,
+            title: 'SME',
+        },
+        {
+            id: 10,
+            title: 'Technical Expert',
+        },
+    ];
+}
+
+export const getStaticRolesWithPermissions = () => {
+    return getStaticRoles()?.map((item) => {
+        const isSalesRep = item.title === 'Sales Representative';
+
+        return {
+            name: item.title,
+            rolesActions: {
+                "functionalities": [
+                    {
+                        "functionalityId": 2,
+                        "functionalityName": "Account",
+                        "modules": [
+                            {
+                                "moduleId": 2,
+                                "moduleName": "Account",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": isSalesRep ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 3,
+                        "functionalityName": "Opportunities",
+                        "modules": [
+                            {
+                                "moduleId": 3,
+                                "moduleName": "Opportunities",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": isSalesRep ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 4,
+                        "functionalityName": "Contacts",
+                        "modules": [
+                            {
+                                "moduleId": 4,
+                                "moduleName": "Contacts",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": [1, 2, 3, 4] // Read-only
+                            },
+                        ]
+                    }
+                ]
+            }
+        }
+    })
+}

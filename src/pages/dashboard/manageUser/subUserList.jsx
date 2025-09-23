@@ -59,7 +59,7 @@ const SubUserList = ({ setAlert }) => {
                 ...subUser,
                 rowId: index + 1,
                 subUserType: subUser?.subUserTypeDto?.name,
-                status: ((subUser?.userName !== "" || subUser?.userName !== null) && (subUser?.password !== '' || subUser?.password !== null)) ? 'Pending' : 'Active'
+                status: ((subUser?.userName !== "" && subUser?.userName !== null) && (subUser?.password !== '' && subUser?.password !== null)) ? 'Active' : 'Pending'
             }));
             setSubUsers(formattedSubUsers);
         }

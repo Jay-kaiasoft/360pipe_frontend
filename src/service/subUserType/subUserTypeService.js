@@ -65,3 +65,13 @@ export const deleteSubUserType = async (id) => {
         throw error
     }
 }
+
+export const createSubUserTypes = async (data) => {
+    try {
+        const response = await axiosInterceptor().post(`${subUserTypeURL}/create/all`, data)
+        return response
+
+    } catch (error) {
+        console.log(error)
+    }
+}

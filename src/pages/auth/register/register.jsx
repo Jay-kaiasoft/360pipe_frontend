@@ -21,19 +21,18 @@ import Stapper from "../../../components/common/stapper/stapper";
 import CustomIcons from "../../../components/common/icons/CustomIcons";
 import Input from "../../../components/common/input/input";
 
-
-
 import Select from "../../../components/common/select/select";
 import FileInputBox from "../../../components/fileInputBox/fileInputBox";
 import Checkbox from "../../../components/common/checkBox/checkbox";
 import { getCurrentLocation } from "../../../service/common/radarService";
 import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
-import { addCustomer, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
+import { addCustomer, updateCustomer, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
 import { getAllRoles } from "../../../service/roles/rolesService";
-import { capitalize, securityQuestions, uploadFiles } from "../../../service/common/commonService";
+import { capitalize, getStaticRolesWithPermissions, securityQuestions, uploadFiles } from "../../../service/common/commonService";
 import { getAllCountry } from "../../../service/country/countryService";
 import { getAllStateByCountry } from "../../../service/state/stateService";
-import { addBusinessInfo, deleteBrandLogo, uploadBrandLogo } from "../../../service/businessInfo/businessInfoService";
+import { addBusinessInfo, deleteBrandLogo, updateBusinessInfo, uploadBrandLogo } from "../../../service/businessInfo/businessInfoService";
+import { createSubUserTypes } from "../../../service/subUserType/subUserTypeService";
 
 const steps = ["", "", "", "", "", ""];
 
@@ -98,7 +97,7 @@ const Register = ({ setAlert, setLoading }) => {
             managerId: "",
             name: "",
             title: "",
-            roleId: "",
+            roleId: 1,
             emailAddress: "",
             cellPhone: "",
             address1: "",
@@ -126,7 +125,7 @@ const Register = ({ setAlert, setLoading }) => {
             dateRegistered: "",
 
             brandId: "",
-            cusId: "",
+            cusId: null,
             businessName: "",
             brandName: "",
             brandLogo: "",
@@ -480,9 +479,9 @@ const Register = ({ setAlert, setLoading }) => {
             const resetData = {
                 ...data,
                 authId: watch("authId"),
-                question1: securityQuestions.find(q => q.id === parseInt(data.question1))?.title || "",
-                question2: securityQuestions.find(q => q.id === parseInt(data.question2))?.title || "",
-                question3: securityQuestions.find(q => q.id === parseInt(data.question3))?.title || "",
+                question1: securityQuestions?.find(q => q.id === parseInt(data.question1))?.title || "",
+                question2: securityQuestions?.find(q => q.id === parseInt(data.question2))?.title || "",
+                question3: securityQuestions?.find(q => q.id === parseInt(data.question3))?.title || "",
                 ...(
                     watch("billingAddressSameAsPrimary") && {
                         billingAddress1: data.address1,
@@ -495,23 +494,43 @@ const Register = ({ setAlert, setLoading }) => {
                     }
                 )
             }
-            const res = await addCustomer(resetData);
-            if (res.data.status === 201) {
-                setValue("cusId", res?.data?.result?.id)
-                setLoading(false);
-                // setAlert({
-                //     type: "success",
-                //     message: "Customer added successfully",
-                //     open: true
-                // });
-                setActiveStep((prev) => prev + 1);
+            if (watch("cusId")) {
+                const res = await updateCustomer(parseInt(watch("cusId")), resetData);
+                if (res.data.status === 200) {                  
+                    setLoading(false);
+                    setActiveStep((prev) => prev + 1);
+                } else {
+                    setLoading(false);
+                    setAlert({
+                        type: "error",
+                        message: "An error occurred. Please try again.",
+                        open: true
+                    });
+                }
             } else {
-                setLoading(false);
-                setAlert({
-                    type: "error",
-                    message: "An error occurred. Please try again.",
-                    open: true
-                });
+                const res = await addCustomer(resetData);
+                if (res.data.status === 201) {
+                    const roles = {
+                        userId: parseInt(watch("cusId")),
+                        data: getStaticRolesWithPermissions()
+                    }
+                    setValue("cusId", res?.data?.result?.id)
+                    const roleRes = await createSubUserTypes(roles);
+                    if (roleRes?.data?.status === 201) {
+                        setLoading(false);
+                        setActiveStep((prev) => prev + 1);
+                    } else {
+                        setLoading(false);
+                        setAlert({ open: true, message: roleRes?.data?.message || "Roles not created.", type: "error" })
+                    }
+                } else {
+                    setLoading(false);
+                    setAlert({
+                        type: "error",
+                        message: "An error occurred. Please try again.",
+                        open: true
+                    });
+                }
             }
         }
         else if (activeStep === 4) {
@@ -524,13 +543,24 @@ const Register = ({ setAlert, setLoading }) => {
                 brandLogo: watch("brandLogo"),
                 websiteUrl: watch("websiteUrl"),
             }
-            const res = await addBusinessInfo(newData);
-            if (res.data.status === 201) {
-                setValue("brandId", res?.data?.result?.id)
-                handleUploadImage(res?.data?.result?.id);
+            if (watch("brandId")) {
+                const res = await updateBusinessInfo(parseInt(watch("brandId")), newData);
+                if (res.data.status === 200) {
+                    setValue("brandId", res?.data?.result?.id)
+                    handleUploadImage(watch("brandId"));
+                } else {
+                    setLoading(false);
+                    setAlert({ open: true, message: res.data.message, type: "error" })
+                }
             } else {
-                setLoading(false);
-                setAlert({ open: true, message: res.data.message, type: "error" })
+                const res = await addBusinessInfo(newData);
+                if (res.data.status === 201) {
+                    setValue("brandId", res?.data?.result?.id)
+                    handleUploadImage(res?.data?.result?.id);
+                } else {
+                    setLoading(false);
+                    setAlert({ open: true, message: res.data.message, type: "error" })
+                }
             }
         } else if (activeStep === 5) {
             navigate("/login")
@@ -1022,18 +1052,19 @@ const Register = ({ setAlert, setLoading }) => {
                                                 }}
                                                 render={({ field }) => (
                                                     <Select
+                                                        disabled
                                                         options={roles}
                                                         label={"Role"}
                                                         placeholder="Select role"
                                                         value={parseInt(watch("roleId")) || null}
-                                                        onChange={(_, newValue) => {
-                                                            if (newValue?.id) {
-                                                                field.onChange(newValue.id);
-                                                            } else {
-                                                                setValue("roleId", 1);
-                                                            }
-                                                        }}
-                                                        error={errors?.roleId}
+                                                    // onChange={(_, newValue) => {
+                                                    //     if (newValue?.id) {
+                                                    //         field.onChange(newValue.id);
+                                                    //     } else {
+                                                    //         setValue("roleId", 1);
+                                                    //     }
+                                                    // }}
+                                                    // error={errors?.roleId}
                                                     />
                                                 )}
                                             />

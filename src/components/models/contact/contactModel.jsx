@@ -124,7 +124,6 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                         type: "success"
                     });
                     handleGetAllContacts();
-                    // handleGetAllSyncRecords();
                     onClose();
                 } else {
                     setLoading(false);
@@ -145,7 +144,6 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                         type: "success"
                     });
                     handleGetAllContacts();
-                    // handleGetAllSyncRecords();
                     onClose();
                 } else {
                     setLoading(false);

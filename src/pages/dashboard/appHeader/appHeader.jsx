@@ -11,11 +11,15 @@ import { syncFromQ4magic } from "../../../service/salesforce/syncFromQ4magic/syn
 import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsService"
 import Button from "../../../components/common/buttons/button"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
+import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
 
 const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus, syncingPullStatus }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const dispatch = useDispatch()
   const navigate = useNavigate();
+
+  const userDetails = getUserDetails();
+  const salesforceUserDetails = getSalesforceUserDetails();
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -94,7 +98,19 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       const res = await syncToQ4Magic();
       if (res?.status === 200) {
         handlePushData();
-      } else {
+      } else if (res?.status === 401) {
+        setLoading(false);
+        localStorage.removeItem("accessToken_salesforce");
+        localStorage.removeItem("instanceUrl_salesforce");
+        localStorage.removeItem("salesforceUserData");
+        setAlert({
+          open: true,
+          message: "Your Salesforce session has expired. Please reconnect your Salesforce account.",
+          type: "error"
+        })
+        navigate('/dashboard/mycrm');
+      }
+      else {
         setLoading(false);
         setAlert({
           open: true,
@@ -166,28 +182,27 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
           </div>
           <div className="flex items-center justify-end gap-6 w-full">
             {
-              (localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
-                <div>
-                  <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                    <Button
-                      onClick={() => handleSync()}
-                      text={"SYNC"}
-                      useFor="success"
-                    />
+              ((userDetails?.userId === salesforceUserDetails?.userId) && localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
+                <>
+                  <div>
+                    <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
+                      <Button
+                        onClick={() => handleSync()}
+                        text={"SYNC"}
+                        useFor="success"
+                      />
 
-                  </Components.Badge>
-                </div>
-              )
-            }
-            {
-              (localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
-                <span className="cursor-pointer flex items-center" onClick={() => navigate('/dashboard/syncHistory')}>
-                  <Components.Tooltip title="Sync History">
-                    <span>
-                      <CustomIcons iconName={'fa-solid fa-arrows-rotate'} css={"text-lg"} />
-                    </span>
-                  </Components.Tooltip>
-                </span>
+                    </Components.Badge>
+                  </div>
+
+                  <span className="cursor-pointer flex items-center" onClick={() => navigate('/dashboard/syncHistory')}>
+                    <Components.Tooltip title="Sync History">
+                      <span>
+                        <CustomIcons iconName={'fa-solid fa-arrows-rotate'} css={"text-lg"} />
+                      </span>
+                    </Components.Tooltip>
+                  </span>
+                </>
               )
             }
             <div>
