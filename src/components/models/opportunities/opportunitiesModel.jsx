@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, set, useFieldArray, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
@@ -13,7 +13,8 @@ import Select from '../../../components/common/select/select';
 
 import { createOpportunity, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { opportunityStages } from '../../../service/common/commonService';
+import { opportunityStages, partnerRoles } from '../../../service/common/commonService';
+import { createOpportunitiesPartner, updateOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -43,8 +44,23 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             closeDate: null,
             nextSteps: null,
             accountId: null,
-            salesforceOpportunityId: null
+            salesforceOpportunityId: null,
+            opportunityPartnerDetails: [{
+                id: null,
+                salesforceOpportunityPartnerId: null,
+                opportunityId: null,
+                accountToId: null,
+                accountId: null,
+                role: null,
+                roleid: null,
+                isPrimary: false,
+                isDeleted: false,
+            }],
         },
+    });
+    const { fields: opportunityPartnerDetails, append, remove } = useFieldArray({
+        control,
+        name: 'opportunityPartnerDetails',
     });
 
     const onClose = () => {
@@ -56,7 +72,18 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             dealAmount: null,
             closeDate: null,
             nextSteps: null,
-            salesforceOpportunityId: null
+            salesforceOpportunityId: null,
+            opportunityPartnerDetails: [{
+                id: null,
+                salesforceOpportunityPartnerId: null,
+                opportunityId: null,
+                accountToId: null,
+                accountId: null,
+                role: null,
+                roleid: null,
+                isPrimary: false,
+                isDeleted: false,
+            }],
         });
         handleClose();
     };
@@ -67,6 +94,26 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             if (res?.status === 200) {
                 reset(res?.result);
                 setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.id || null);
+                if (res?.result?.opportunityPartnerDetails?.length > 0) {
+                    const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
+                        ...item,
+                        roleid: partnerRoles?.find(role => role.title === item.role)?.id || null,
+                        opportunityId: opportunityId,
+                    }));
+                    setValue('opportunityPartnerDetails', formattedDetails);
+                } else {
+                    setValue('opportunityPartnerDetails', [{
+                        id: null,
+                        salesforceOpportunityPartnerId: null,
+                        opportunityId: null,
+                        accountToId: null,
+                        accountId: null,
+                        role: null,
+                        roleid: null,
+                        isPrimary: false,
+                        isDeleted: false,
+                    }]);
+                }
             }
         }
     }
@@ -78,7 +125,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             if (res?.status === 200) {
                 const data = res?.result?.map((acc) => ({
                     title: acc.accountName,
-                    id: acc.id
+                    id: acc.id,
+                    salesforceAccountId: acc.salesforceAccountId
                 }));
                 setAccounts(data);
                 setLoading(false);
@@ -97,6 +145,14 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             ...data,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
         }
+        const opportunityPartnerDetails = watch("opportunityPartnerDetails")
+        opportunityPartnerDetails.map(async (item) => {
+            if (item.id) {
+                await updateOpportunitiesPartner(item.id, item);
+            } else {
+                await createOpportunitiesPartner(item);
+            }
+        });
         try {
             if (opportunityId) {
                 const res = await updateOpportunity(opportunityId, newData);
@@ -159,7 +215,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
-                maxWidth='sm'
+                maxWidth='md'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {opportunityId ? "Update" : "Create"} Opportunity
@@ -180,7 +236,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 gap-4'>
+                        <div className='grid grid-cols-3 gap-4'>
                             <Controller
                                 name="accountId"
                                 control={control}
@@ -279,6 +335,100 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     />
                                 )}
                             />
+                        </div>
+                        <div>
+                            <div className='font-semibold my-5'>Opportunity Partner Details</div>
+                            {opportunityPartnerDetails?.map((item, index) => (
+                                <div className='grid grid-cols-3 gap-4' key={index}>
+                                    <div className='mb-3'>
+                                        <Controller
+                                            name={`opportunityPartnerDetails.${index}.accountId`}
+                                            control={control}
+                                            rules={{
+                                                required: "Account is required",
+                                            }}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={accounts}
+                                                    label={"Account"}
+                                                    placeholder="Select Account"
+                                                    value={parseInt(watch(`opportunityPartnerDetails.${index}.accountId`)) || null}
+                                                    error={errors?.opportunityPartnerDetails?.[index]?.accountId}
+                                                    onChange={(_, newValue) => {
+                                                        if (newValue?.id) {
+                                                            field.onChange(newValue.id);
+                                                            setValue(`opportunityPartnerDetails.${index}.accountToId`, newValue.salesforceAccountId || null);
+                                                        } else {
+                                                            setValue(`opportunityPartnerDetails.${index}.accountToId`, null);
+                                                            setValue(`opportunityPartnerDetails.${index}.accountId`, null);
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Controller
+                                            name={`opportunityPartnerDetails.${index}.role`}
+                                            control={control}
+                                            rules={{
+                                                required: "Role is required",
+                                            }}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={partnerRoles}
+                                                    label={"Role"}
+                                                    placeholder="Select Role"
+                                                    value={parseInt(watch(`opportunityPartnerDetails.${index}.roleid`)) || null}
+                                                    error={errors?.opportunityPartnerDetails?.[index]?.role}
+                                                    onChange={(_, newValue) => {
+                                                        if (newValue?.id) {
+                                                            field.onChange(newValue.id);
+                                                            setValue(`opportunityPartnerDetails.${index}.roleid`, newValue.id);
+                                                            setValue(`opportunityPartnerDetails.${index}.role`, newValue.title);
+                                                        } else {
+                                                            setValue(`opportunityPartnerDetails.${index}.role`, null);
+                                                            setValue(`opportunityPartnerDetails.${index}.roleid`, null);
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div className='flex items-center justify-start gap-2'>
+                                            <div className='bg-blue-600 h-8 w-8 rounded-full text-white'>
+                                                <Components.IconButton onClick={() => append({
+                                                    id: null,
+                                                    salesforceOpportunityPartnerId: null,
+                                                    opportunityId: opportunityId,
+                                                    accountToId: null,
+                                                    accountId: null,
+                                                    role: null,
+                                                    roleid: null,
+                                                    isPrimary: false,
+                                                    isDeleted: false,
+                                                })}>
+                                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                </Components.IconButton>
+                                            </div>
+                                            <div>
+                                                {
+                                                    opportunityPartnerDetails?.length > 1 && (
+                                                        <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => remove(index)}>
+                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    )
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </Components.DialogContent>
 

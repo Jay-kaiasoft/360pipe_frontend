@@ -23,6 +23,8 @@ export const salesforceAccountURL = salesforceBaseURL + '/account'
 export const accountURL = baseURL + '/account'
 export const crmURL = baseURL + '/crm'
 export const opportunityURL = baseURL + '/opportunities'
+export const opportunityPartnerURL = baseURL + '/opportunityPartner'
+
 export const syncRecordsURL = baseURL + '/syncRecords'
 export const contactURL = baseURL + '/contact'
 export const paymentGatewayURL = baseURL + '/paymentGateway'

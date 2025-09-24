@@ -8,9 +8,24 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-
-// get user timezone dynamically
 export const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+export const partnerRoles = [
+    { id: 1, title: "System Integrator" },
+    { id: 2, title: "Agency" },
+    { id: 3, title: "Advertiser" },
+    { id: 4, title: "VAR/Reseller" },
+    { id: 5, title: "Distributor" },
+    { id: 6, title: "Developer" },
+    { id: 7, title: "Broker" },
+    { id: 8, title: "Lender" },
+    { id: 9, title: "Supplier" },
+    { id: 10, title: "Institution" },
+    { id: 11, title: "Contractor" },
+    { id: 12, title: "Dealer" },
+    { id: 13, title: "Consultant" }
+];
+
 
 export const opportunityStages = [
     { id: 1, title: "Prospecting" },
@@ -62,7 +77,7 @@ export const uploadFiles = async (data) => {
 }
 
 export const handleConvertUTCDateToLocalDate = (utcDateString) => {
-    
+
     if (!utcDateString) return null;
 
     try {
