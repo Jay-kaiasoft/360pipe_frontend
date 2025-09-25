@@ -16,7 +16,6 @@ import Login from "./pages/auth/login/login";
 import ForgotPassword from "./pages/auth/forgotPassword/forgotPassword";
 import ResetPassword from "./pages/auth/resetPassword/resetPassword";
 import Layout from "./pages/dashboard/layout";
-import Accounts from "./pages/dashboard/accounts/accounts";
 import { useEffect, useState } from "react";
 import { setLoading } from "./redux/commonReducers/commonReducers";
 import { connect } from "react-redux";
@@ -28,6 +27,7 @@ import ManageUser from "./pages/dashboard/manageUser/manageUser";
 import AddSubUser from "./pages/dashboard/manageUser/addSubUser";
 import SubUserRegister from "./pages/auth/subUserRegister/subUserRegister";
 import SyncHistory from "./pages/dashboard/syncHistory/syncHistory";
+import ManageAccounts from "./pages/dashboard/accounts/manageAccounts";
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
@@ -70,7 +70,7 @@ const App = ({ setLoading }) => {
       children: [
         {
           path: "accounts",
-          element: <Accounts />,
+          element: <ManageAccounts />,
         },
         {
           path: "opportunities",
@@ -93,11 +93,11 @@ const App = ({ setLoading }) => {
           element: <ManageUser />,
         },
         {
-          path: "manageusers/add",
+          path: "accounts/add",
           element: <AddSubUser />,
         },
         {
-          path: "manageusers/edit/:id",
+          path: "accounts/edit/:id",
           element: <AddSubUser />,
         },
         {

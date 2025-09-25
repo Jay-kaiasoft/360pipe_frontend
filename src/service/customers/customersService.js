@@ -50,9 +50,9 @@ export const getCustomer = async (id) => {
     }
 }
 
-export const verifyEmail = async (email) => {
+export const verifyEmail = async (email, type = null, id = null) => {
     try {
-        const response = axiosInterceptor().get(`${customersURL}/verifyEmail?email=${email}`)
+        const response = axiosInterceptor().get(`${customersURL}/verifyEmail?email=${email}&type=${type}&id=${id}`)
         return response
 
     } catch (error) {

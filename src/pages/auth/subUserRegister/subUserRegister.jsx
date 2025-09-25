@@ -40,6 +40,7 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
     const [authOperationData, setAuthOperationData] = useState(null);
     const [validUsername, setValidUsername] = useState(null);
     const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+    const [stopRegisterProcess, setStopRegisterProcess] = useState(false);
 
     const [passwordError, setPasswordError] = useState([
         {
@@ -115,6 +116,7 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
     const checkValidUrl = async () => {
         const response = await checkValidSubUserToken(token)
         if (response.data?.result?.status !== 200) {
+            setStopRegisterProcess(true)
             setAlert({ open: true, message: response.data.message, type: "error" })
         } else {
             setValue("id", response.data?.result?.userId?.toString() || null)
@@ -346,7 +348,7 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
                 authId: watch("authId"),
                 question1: securityQuestions.find(q => q.id === parseInt(data.question1))?.title || "",
                 question2: securityQuestions.find(q => q.id === parseInt(data.question2))?.title || "",
-                question3: securityQuestions.find(q => q.id === parseInt(data.question3))?.title || "",               
+                question3: securityQuestions.find(q => q.id === parseInt(data.question3))?.title || "",
             }
             const res = await updateCustomer(watch("id"), resetData);
             if (res.data.status === 200) {
@@ -737,11 +739,11 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
                         }
                         <div className="mt-6 flex justify-end items-center gap-3 cap">
                             <div>
-                                <Button type="button" onClick={() => handleBack()} text={"Back"} />
+                                <Button type="button" onClick={() => handleBack()} text={"Back"} disabled={stopRegisterProcess} />
                             </div>
 
                             <div>
-                                <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 2 ? "Let's Go" : "next"} />
+                                <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 2 ? "Let's Go" : "next"} disabled={stopRegisterProcess} />
                             </div>
                         </div>
                     </form>
