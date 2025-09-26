@@ -28,6 +28,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     const [validEmail, setValidEmail] = useState(null);
     const [subUsersTypes, setSubUsersTypes] = useState([]);
     const [emailAddress, setEmailAddress] = useState(null);
+    const [isEmailExits, setIsEmailExits] = useState(false);
     const [crm, setCrm] = useState([]);
 
     const {
@@ -82,12 +83,15 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         if (id && open) {
             const response = await getCustomer(id);
             if (response?.data?.status === 200) {
+                if (response?.data?.result?.emailAddress) {
+                    setIsEmailExits(true);
+                }
                 setValue("id", response?.data?.result?.id || "");
                 setValue("name", response?.data?.result?.name || "");
                 setValue("emailAddress", response?.data?.result?.emailAddress || "");
                 setEmailAddress(response?.data?.result?.emailAddress || null);
                 setValue("subUserTypeId", response?.data?.result?.subUserTypeId || "");
-                setValue("crmId", response?.data?.result?.crmId || null);
+                setValue("crmId", response?.data?.result?.crmId || null);                
             }
         }
     }
@@ -118,7 +122,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                 type: "success",
                 message: response?.data?.message || "Invitation sent successfully.",
             });
-            onClose();
         } else {
             setAlert({
                 open: true,
@@ -262,7 +265,9 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                             onBlur={() => {
                                                 if (emailAddress !== watch("emailAddress")) {
                                                     handleVerifyEmail();
+                                                    setIsEmailExits(false);
                                                 } else {
+                                                    setIsEmailExits(true);
                                                     setValidEmail(true);
                                                 }
                                             }}
@@ -327,13 +332,17 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                     </Components.DialogContent>
 
                     <Components.DialogActions>
-                        <div className={`flex justify-end items-center gap-4 ${id ? 'w-[380px]' : ''}`}>
-                            {
-                                id && (
-                                    <Button type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
-                                )
-                            }
-                            <Button type={`submit`} text={id ? "Update" : "Submit"} />
+                        <div className={`flex justify-end items-center gap-4`}>
+                            <div>
+                                {
+                                    id && (
+                                        <Button disabled={!isEmailExits} type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
+                                    )
+                                }
+                            </div>
+                            <div>
+                                <Button type={`submit`} text={id ? "Update" : "Submit"} />
+                            </div>
                         </div>
                     </Components.DialogActions>
                 </form>

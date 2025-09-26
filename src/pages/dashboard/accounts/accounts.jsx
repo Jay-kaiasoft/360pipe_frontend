@@ -90,8 +90,8 @@ const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       sortable: false,
     },
     {
-      field: 'subUserType',
-      headerName: 'Account Type',
+      field: 'name',
+      headerName: 'Account Name',
       headerClassName: 'uppercase',
       flex: 1,
       maxWidth: 800,
@@ -104,7 +104,25 @@ const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       flex: 1,
       maxWidth: 700,
       sortable: false,
+      renderCell: (params) => {
+        return (
+          <div>
+            <span>
+              {params.value ? params.value : '-'}
+            </span>
+          </div>
+        )
+      }
     },
+    {
+      field: 'subUserType',
+      headerName: 'Account Type',
+      headerClassName: 'uppercase',
+      flex: 1,
+      maxWidth: 800,
+      sortable: false,
+    },
+
     {
       field: 'status',
       headerName: 'Status',

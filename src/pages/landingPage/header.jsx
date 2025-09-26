@@ -11,9 +11,16 @@ const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [navItems, setNavItems] = useState([]);
 
+    const hideButtons =
+        location.pathname === "/register" ||
+        location.pathname === "/login" ||
+        location.pathname === "/forgotpassword" ||
+        location.pathname.startsWith("/subaccountactivesetup") ||
+        location.pathname.startsWith("/resetpassword");
+
     // Track scroll
     useEffect(() => {
-        if (location.pathname !== "/register" && location.pathname !== "/login" && !location.pathname?.startsWith("/subaccountactivesetup")) {
+        if (!hideButtons) {
             setNavItems([
                 {
                     title: "Home",
@@ -50,7 +57,7 @@ const Header = () => {
                 ? "fixed bg-white shadow-md transition-all duration-700 "
                 : "absolute bg-transparent transition-all duration-700 "
                 }
-                ${(location.pathname !== "/register" && location.pathname !== "/login" && !location.pathname?.startsWith("/subaccountactivesetup")) ? "" : "py-2 bg-white shadow"}
+                ${hideButtons ? "py-2 bg-white shadow" : ""}
                 `}
         >
             <div className="flex items-center justify-between 4k:justify-center 4k:gap-32 px-5 lg:px-20 py-4">
@@ -71,7 +78,7 @@ const Header = () => {
                                     }`}
                             >
                                 {item.title}
-                                {item.children && <span className="ml-1">+</span>}
+                                {/* {item.children && <span className="ml-1">+</span>} */}
                             </NavLink>
 
                             {/* Dropdown for desktop
@@ -95,18 +102,22 @@ const Header = () => {
                 </nav>
 
                 {/* Desktop Buttons */}
-                {
-                    (location.pathname !== "/register" && location.pathname !== "/login" && !location.pathname?.startsWith("/subaccountactivesetup")) && (
-                        <div className="hidden xl:flex space-x-3">
-                            <button onClick={() => navigate("/pricing")} className="bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-blue-700 transition">
-                                Sign Up
-                            </button>
-                            <button onClick={() => navigate("/login")} className='px-5 py-2 rounded-md font-semibold transition bg-yellow-400 text-gray-900 hover:bg-yellow-500'>
-                                Sign In
-                            </button>
-                        </div>
-                    )
-                }
+                {!hideButtons && (
+                    <div className="hidden xl:flex space-x-3">
+                        <button
+                            onClick={() => navigate("/pricing")}
+                            className="bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+                        >
+                            Sign Up
+                        </button>
+                        <button
+                            onClick={() => navigate("/login")}
+                            className="px-5 py-2 rounded-md font-semibold transition bg-yellow-400 text-gray-900 hover:bg-yellow-500"
+                        >
+                            Sign In
+                        </button>
+                    </div>
+                )}
 
                 {/* Mobile Toggle */}
                 {

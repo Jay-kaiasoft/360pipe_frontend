@@ -107,7 +107,7 @@ export default function UserDropdown() {
                                 Edit profile
                             </NavLink>
                         </li>
-                        {
+                        {/* {
                             !userdata?.subUser && (
                                 <li>
                                     <NavLink
@@ -120,7 +120,7 @@ export default function UserDropdown() {
                                     </NavLink>
                                 </li>
                             )
-                        }
+                        } */}
                     </ul>
 
                     {/* Sign Out Button */}

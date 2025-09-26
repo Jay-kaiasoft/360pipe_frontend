@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import { Controller, set, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
@@ -14,7 +14,7 @@ import Select from '../../../components/common/select/select';
 import { createOpportunity, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
 import { opportunityStages, partnerRoles } from '../../../service/common/commonService';
-import { createOpportunitiesPartner, updateOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
+import { createOpportunitiesPartner, deleteOpportunitiesPartner, updateOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -58,10 +58,28 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             }],
         },
     });
-    const { fields: opportunityPartnerDetails, append, remove } = useFieldArray({
+    const { fields, append, remove } = useFieldArray({
         control,
         name: 'opportunityPartnerDetails',
     });
+
+    const handleDeletePartner = async (item, index) => {
+        if (item?.partnerId) {
+            const res = await deleteOpportunitiesPartner(item?.partnerId);
+            if (res?.status === 200) {
+                remove(index);
+                setSyncingPushStatus(true);
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete opportunity partner",
+                    type: "error"
+                });
+            }
+        } else {
+            remove(index);
+        }
+    }
 
     const onClose = () => {
         setLoading(false);
@@ -92,13 +110,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         if (opportunityId && open) {
             const res = await getOpportunityDetails(opportunityId);
             if (res?.status === 200) {
-                reset(res?.result);
+                // reset(res?.result);
+                setValue("accountId", res?.result?.accountId || null);
+                setValue("opportunity", res?.result?.opportunity || null);
+                setValue("dealAmount", res?.result?.dealAmount || null);
+                setValue("closeDate", res?.result?.closeDate ? res?.result?.closeDate : null);
+                setValue("nextSteps", res?.result?.nextSteps || null);
+                setValue("salesforceOpportunityId", res?.result?.salesforceOpportunityId || null);
                 setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.id || null);
+
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
                         ...item,
                         roleid: partnerRoles?.find(role => role.title === item.role)?.id || null,
-                        opportunityId: opportunityId,
+                        partnerId: item.id
                     }));
                     setValue('opportunityPartnerDetails', formattedDetails);
                 } else {
@@ -338,7 +363,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         </div>
                         <div>
                             <div className='font-semibold my-5'>Opportunity Partner Details</div>
-                            {opportunityPartnerDetails?.map((item, index) => (
+                            {fields?.map((item, index) => (
                                 <div className='grid grid-cols-3 gap-4' key={index}>
                                     <div className='mb-3'>
                                         <Controller
@@ -416,9 +441,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             </div>
                                             <div>
                                                 {
-                                                    opportunityPartnerDetails?.length > 1 && (
+                                                    fields?.length > 1 && (
                                                         <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => remove(index)}>
+                                                            <Components.IconButton onClick={() => handleDeletePartner(item, index)}>
                                                                 <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
                                                             </Components.IconButton>
                                                         </div>

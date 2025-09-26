@@ -13,7 +13,7 @@ import Button from "../../../components/common/buttons/button"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
 import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
 
-const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus, syncingPullStatus }) => {
+const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const dispatch = useDispatch()
   const navigate = useNavigate();
@@ -31,19 +31,6 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
 
   const inputRef = useRef(null)
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault()
-        inputRef.current?.focus()
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [])
-
   const handleGetAllSyncRecords = async () => {
     try {
       const syncRecords = await getAllSyncRecords();
@@ -60,6 +47,22 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       });
     }
   }
+
+  useEffect(() => {
+    handleGetAllSyncRecords()
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
+
+
 
   const handlePushData = async () => {
     setLoading(true);

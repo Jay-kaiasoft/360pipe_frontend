@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { setAlert, setLoading } from '../../redux/commonReducers/commonReducers';
+import { setAlert, setLoading, setSyncingPushStatus } from '../../redux/commonReducers/commonReducers';
 
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
@@ -23,7 +23,7 @@ const getInitials = (name = "") => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 };
 
-const Crm = ({ setLoading, setAlert, loading }) => {
+const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
     const [userInfo, setUserInfo] = useState(localStorage.getItem("salesforceUserData") ? JSON.parse(localStorage.getItem("salesforceUserData")) : null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
@@ -120,6 +120,7 @@ const Crm = ({ setLoading, setAlert, loading }) => {
                 const userInfo = await getUserInfo();
                 setUserInfo(userInfo?.result?.data || null);
                 localStorage.setItem("salesforceUserData", JSON.stringify(userInfo?.result?.data) || "");
+                setSyncingPushStatus(true);
             }
         } catch (error) {
             console.error("Error fetching user info:", error);
@@ -168,7 +169,7 @@ const Crm = ({ setLoading, setAlert, loading }) => {
                                     className="flex-1 py-3 bg-red-500 text-white rounded shadow-md hover:bg-red-600 transition-colors duration-300"
                                 >
                                     Logout
-                                </button>                               
+                                </button>
                             </div>
 
                         </div>
@@ -217,7 +218,8 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
     setLoading,
-    setAlert
+    setAlert,
+    setSyncingPushStatus
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Crm)

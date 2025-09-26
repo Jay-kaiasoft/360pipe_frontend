@@ -510,11 +510,11 @@ const Register = ({ setAlert, setLoading }) => {
             } else {
                 const res = await addCustomer(resetData);
                 if (res.data.status === 201) {
+                    setValue("cusId", res?.data?.result?.id)
                     const roles = {
-                        userId: parseInt(watch("cusId")),
+                        userId: parseInt(res?.data?.result?.id),
                         data: getStaticRolesWithPermissions()
                     }
-                    setValue("cusId", res?.data?.result?.id)
                     const roleRes = await createSubUserTypes(roles);
                     if (roleRes?.data?.status === 201) {
                         setLoading(false);
