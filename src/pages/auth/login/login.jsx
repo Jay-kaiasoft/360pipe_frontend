@@ -144,6 +144,7 @@ const Login = ({ setAlert, loading }) => {
 
             if (event.data?.success) {
                 Cookies.set('authToken', jsonResponse?.data?.result?.authToken, { expires: 0.5 });
+                localStorage.setItem("userInfo", JSON.stringify(jsonResponse?.data?.result?.customerData));
                 handleCloseAuthModel();
                 // setAlert({
                 //     open: true,

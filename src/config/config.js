@@ -32,3 +32,6 @@ export const functionalityURL = baseURL + '/functionality'
 export const moduleURL = baseURL + '/module'
 export const actionURL = baseURL + '/actions'
 export const subUserTypeURL = baseURL + '/subUserType'
+export const teamDetailsURL = baseURL + '/teamDetails'
+export const teamMembersURL = baseURL + '/teamMembers'
+

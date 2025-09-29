@@ -38,6 +38,12 @@ const Sidebar = ({
                 { name: "Contacts", path: "/dashboard/contacts", pro: false }
             ]
         },
+        {
+            icon: <CustomIcons iconName="th-large" />,
+            name: "My Team",
+            path: "/dashboard/myteam",
+            pro: false
+        },
         ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
             ? [
                 {

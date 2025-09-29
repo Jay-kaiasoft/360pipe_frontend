@@ -496,7 +496,7 @@ const Register = ({ setAlert, setLoading }) => {
             }
             if (watch("cusId")) {
                 const res = await updateCustomer(parseInt(watch("cusId")), resetData);
-                if (res.data.status === 200) {                  
+                if (res.data.status === 200) {
                     setLoading(false);
                     setActiveStep((prev) => prev + 1);
                 } else {
@@ -1503,10 +1503,19 @@ const Register = ({ setAlert, setLoading }) => {
                                 </>
                             )
                         }
-                        <div className="mt-6 flex justify-end items-center gap-3">
+                        <div className="mt-6">
+                            <div className="flex justify-center items-center gap-3">
+                                <div>
+                                    <Button type="button" onClick={() => handleBack()} text={"Back"} />
+                                </div>
+
+                                <div>
+                                    <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 5 ? "Let's Go" : "next"} />
+                                </div>
+                            </div>
                             {
                                 activeStep === 0 && (
-                                    <div className="grow w-full">
+                                    <div className="flex justify-center items-center mt-4 text-sm">
                                         <p>
                                             Already have an account? &nbsp;
                                             <NavLink to="/login">
@@ -1516,15 +1525,6 @@ const Register = ({ setAlert, setLoading }) => {
                                     </div>
                                 )
                             }
-                            <div className="flex justify-start items-center gap-3">
-                                <div>
-                                    <Button type="button" onClick={() => handleBack()} text={"Back"} />
-                                </div>
-
-                                <div>
-                                    <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 5 ? "Let's Go" : "next"} />
-                                </div>
-                            </div>
                         </div>
                     </form>
                 </div>

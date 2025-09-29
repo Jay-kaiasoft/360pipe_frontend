@@ -28,6 +28,8 @@ import AddSubUser from "./pages/dashboard/manageUser/addSubUser";
 import SubUserRegister from "./pages/auth/subUserRegister/subUserRegister";
 import SyncHistory from "./pages/dashboard/syncHistory/syncHistory";
 import ManageAccounts from "./pages/dashboard/accounts/manageAccounts";
+import ManageTeam from "./pages/myTeam/manageTeam";
+import AddTeamMembers from "./pages/myTeam/addTeamMembers";
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
@@ -103,6 +105,18 @@ const App = ({ setLoading }) => {
         {
           path: "syncHistory",
           element: <SyncHistory />,
+        },
+        {
+          path: "myteam",
+          element: <ManageTeam />,
+        },
+        {
+          path: "myteam/create",
+          element: <AddTeamMembers />,
+        },
+        {
+          path: "myteam/edit/:id",
+          element: <AddTeamMembers />,
         },
       ],
     },

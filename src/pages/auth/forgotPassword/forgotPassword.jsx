@@ -147,13 +147,13 @@ const ForgotPassword = ({ setAlert, setLoading }) => {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end items-center gap-3 cap">
+                        <div className="mt-6 flex justify-center items-center gap-3 cap">
                             <div>
                                 <Button type="button" onClick={() => handleBack()} text={activeStep === 0 ? "Cancel" : "Back"} />
                             </div>
 
                             <div>
-                                <Button type="submit" text={"Next"} />
+                                <Button type="submit" text={activeStep === 0 ? "Next" : "Submit"} />
                             </div>
                         </div>
                     </form>
