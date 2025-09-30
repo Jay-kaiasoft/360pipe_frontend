@@ -353,7 +353,7 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
             const res = await updateCustomer(watch("id"), resetData);
             if (res.data.status === 200) {
                 setLoading(false);
-                navigate("/dashboard");
+                navigate("/login");
             } else {
                 setLoading(false);
                 setAlert({
@@ -737,7 +737,7 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
                                 </div>
                             )
                         }
-                        <div className="mt-6 flex justify-end items-center gap-3 cap">
+                        <div className="mt-6 flex justify-center items-center gap-3 cap">
                             <div>
                                 <Button type="button" onClick={() => handleBack()} text={"Back"} disabled={stopRegisterProcess} />
                             </div>

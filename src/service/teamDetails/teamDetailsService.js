@@ -10,7 +10,7 @@ export const getAllTeams = async () => {
     }
 };
 
-export const getTeamDetailsId = async (id) => {
+export const getTeamDetails = async (id) => {
     try {
         const response = await axiosInterceptor().get(`${teamDetailsURL}/get/${id}`);
         return response.data;

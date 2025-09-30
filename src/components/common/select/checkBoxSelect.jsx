@@ -46,6 +46,14 @@ const CheckBoxSelect = forwardRef(
       onChange(event, newValue);
     };
 
+    // Format the display value for the input
+    const getDisplayValue = () => {
+      if (value.length === 0) return '';
+      if (value.length === 1) return value[0]?.title || '';
+      if (value.length === 2) return `${value[0]?.title}, ${value[1]?.title}`;
+      return `${value.length} selected`; // Show "2+" or similar count
+    };
+
     return (
       <Components.Autocomplete
         multiple
@@ -65,7 +73,14 @@ const CheckBoxSelect = forwardRef(
             return (
               <li {...props}>
                 <Checkbox checked={isAllChecked} />
-                <Components.ListItemText secondary={option.title} />
+                <Components.ListItemText 
+                  secondary={option.title}
+                  sx={{
+                    '& .MuiTypography-root': {
+                      color: isAllChecked ? '#ffffff !important' : 'inherit',
+                    }
+                  }}
+                />
               </li>
             );
           }
@@ -74,7 +89,14 @@ const CheckBoxSelect = forwardRef(
           return (
             <li {...props}>
               <Checkbox checked={selected} />
-              <Components.ListItemText secondary={option.title} />
+              <Components.ListItemText 
+                secondary={option.title}
+                sx={{
+                  '& .MuiTypography-root': {
+                    color: selected ? '#ffffff !important' : 'inherit',
+                  }
+                }}
+              />
             </li>
           );
         }}
@@ -105,11 +127,14 @@ const CheckBoxSelect = forwardRef(
             placeholder={placeholder || "Select options"}
             error={!!error}
             helperText={helperText}
+            // inputProps={{
+            //   ...params.inputProps,
+            //   value: getDisplayValue(), // Override the displayed value
+            // }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '0.5rem',
-                // backgroundColor: `${theme.palette.se.main} !important`, // Input background color
-                color: `${theme.palette.text.primary} !important`, // Input text color
+                color: `${theme.palette.text.primary} !important`,
                 '& fieldset': {
                   borderColor: error
                     ? theme.palette.error.main
@@ -130,10 +155,10 @@ const CheckBoxSelect = forwardRef(
                 color: `${theme.palette.text.primary} !important`, 
               },
               '& .MuiInputLabel-root.Mui-focused': {
-                color: `${theme.palette.text.primary} !important`, // Focused input label color
+                color: `${theme.palette.text.primary} !important`,
               },
               '& .MuiInputBase-input': {
-                color: `${theme.palette.text.primary} !important`, // Input text color
+                color: `${theme.palette.text.primary} !important`,
               },
               '& .Mui-disabled': {
                 color: theme.palette.text.disabled,

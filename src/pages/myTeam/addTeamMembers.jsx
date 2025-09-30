@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux';
 import { setAlert } from '../../redux/commonReducers/commonReducers';
 
@@ -12,6 +12,10 @@ import Button from '../../components/common/buttons/button';
 import Components from '../../components/muiComponents/components';
 import CustomIcons from '../../components/common/icons/CustomIcons';
 import AddTeamMemberModel from '../../components/models/teamMember/addTeamMemberModel';
+import AlertDialog from '../../components/common/alertDialog/alertDialog';
+import { createTeam, getTeamDetails, updateTeam } from '../../service/teamDetails/teamDetailsService';
+import { getAllSubUsers } from '../../service/customers/customersService';
+import Select from '../../components/common/select/select';
 
 const AddTeamMembers = ({ setAlert }) => {
     const { id } = useParams();
@@ -20,6 +24,7 @@ const AddTeamMembers = ({ setAlert }) => {
     const [open, setOpen] = useState(false);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedMember, setSelectedMember] = useState(null)
+    const [customers, setCustomers] = useState([]);
 
     const handleOpen = (id = null) => {
         setSelectedMember(id);
@@ -51,21 +56,24 @@ const AddTeamMembers = ({ setAlert }) => {
         defaultValues: {
             id: null,
             name: null,
+            assignMember: null,
             teamMembers: []
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, update } = useFieldArray({
         control,
         name: 'teamMembers',
     });
 
     const handleDeleteTeam = async () => {
-        const res = await deleteTeamMembers(selectedMember?.id);
+        remove(selectedMember?.id);
+        handleCloseDeleteDialog();
+        const res = await deleteTeamMembers(selectedMember?.teamMemberId);
         if (res.status === 200) {
             setAlert({
                 open: true,
-                message: "Team deleted successfully",
+                message: "Team member deleted successfully",
                 type: "success"
             });
             handleCloseDeleteDialog();
@@ -79,16 +87,89 @@ const AddTeamMembers = ({ setAlert }) => {
     }
 
     const handleSave = async (data) => {
-        console.log("data", data);
+        const newData = {
+            ...data,
+            teamMembers: data.teamMembers.map((item) => {
+                delete item.rowId;
+                return {
+                    ...item,
+                    id: item.teamMemberId,
+                    opportunities: item.opportunities ? JSON.stringify(item.opportunities) : null,
+                }
+            })
+        }
+        if (id) {
+            const res = await updateTeam(id, newData)
+            if (res.status === 200) {
+                navigate("/dashboard/myteam")
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to update team",
+                    type: "error"
+                });
+            }
+        } else {
+            const res = await createTeam(newData)
+            if (res.status === 201) {
+                navigate("/dashboard/myteam")
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to create team",
+                    type: "error"
+                });
+            }
+        }
     }
 
-    const columns = [      
+    const handleGetTeamDetails = async () => {
+        if (id) {
+            const res = await getTeamDetails(id)
+            const teamMembersData = res?.result?.teamMembers?.map((item, index) => {
+                return {
+                    ...item,
+                    teamMemberId: item.id,
+                    opportunities: item.opportunities ? JSON.parse(item.opportunities) : [],
+                }
+            })
+            reset({
+                id: res?.result?.id || null,
+                name: res?.result?.name || null,
+                teamMembers: teamMembersData || [],
+                assignMember: res?.result?.assignMember || null,
+            });
+        }
+    }
+
+    const handleGetAllCustomers = async () => {
+        const res = await getAllSubUsers()
+        const data = res?.data?.result?.map((item) => {
+            return {
+                id: item.id,
+                title: item.username || item.name,
+                role: item.subUserTypeDto?.name || ''
+            }
+        })
+        setCustomers(data)
+    }
+
+    useEffect(() => {
+        handleGetAllCustomers();
+    }, [])
+
+    useEffect(() => {
+        handleGetAllCustomers();
+        handleGetTeamDetails();
+    }, [id])
+
+    const columns = [
         {
             field: 'memberName',
             headerName: 'Member Name',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 300,
+            minWidth: 300,
             sortable: false,
         },
         {
@@ -96,14 +177,7 @@ const AddTeamMembers = ({ setAlert }) => {
             headerName: 'Role',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 200,
-        },
-        {
-            field: 'oppName',
-            headerName: 'Assigned Opportunity',
-            headerClassName: 'uppercase',
-            flex: 1,
-            minWidth: 300,
+            minWidth: 200,
         },
         {
             field: 'action',
@@ -165,24 +239,46 @@ const AddTeamMembers = ({ setAlert }) => {
     return (
         <div>
             <form onSubmit={handleSubmit(handleSave)}>
-                <div className='my-5 md:w-96'>
-                    <Controller
-                        name="name"
-                        control={control}
-                        rules={{
-                            required: "Team name is required",
-                        }}
-                        render={({ field }) => (
-                            <Input
-                                {...field}
-                                fullWidth
-                                id="name"
-                                label="Team Name"
-                                variant="outlined"
-                                error={!!errors.name}
-                            />
-                        )}
-                    />
+                <div className='my-5 md:w-[500px] flex justify-start items-center gap-5'>
+                    <div className='w-full'>
+                        <Controller
+                            name="name"
+                            control={control}
+                            rules={{
+                                required: "Team Name is required",
+                            }}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    label="Team Name"
+                                    type={`text`}
+                                    error={errors.name}
+                                />
+                            )}
+                        />
+                    </div>
+                    <div className='w-full'>
+                        <Controller
+                            name="assignMember"
+                            control={control}
+                            render={({ field }) => (
+                                <Select
+                                    options={customers}
+                                    label={"Assign Team Lead"}
+                                    placeholder="Select account"
+                                    value={parseInt(watch("assignMember")) || null}
+                                    onChange={(_, newValue) => {
+                                        if (newValue?.id) {
+                                            field.onChange(newValue.id);
+                                        } else {
+                                            setValue("assignMember", null);
+                                        }
+                                    }}
+                                    error={errors?.assignMember}
+                                />
+                            )}
+                        />
+                    </div>
                 </div>
                 <div className='border rounded-lg bg-white w-full lg:w-full '>
                     <DataTable columns={columns} rows={fields} getRowId={getRowId} height={400} showButtons={true} buttons={actionButtons} />
@@ -196,7 +292,15 @@ const AddTeamMembers = ({ setAlert }) => {
                     </div>
                 </div>
             </form>
-            <AddTeamMemberModel open={open} handleClose={handleClose} selectedMember={selectedMember} members={fields} append={append} />
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleDeleteTeam()}
+                handleClose={() => handleCloseDeleteDialog()}
+            />
+            <AddTeamMemberModel open={open} handleClose={handleClose} selectedMember={selectedMember} members={fields} append={append} update={update} />
         </div>
     )
 }

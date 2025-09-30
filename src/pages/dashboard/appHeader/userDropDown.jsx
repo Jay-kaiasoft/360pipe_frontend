@@ -60,8 +60,11 @@ export default function UserDropdown() {
                     <img src={UserIcon} alt="User" />
                 </span>
 
-                <span className="block mr-1 text-sm font-medium text-start min-w-10">
+                <span className="block mr-1 text-sm font-bold text-start min-w-28">
                     {userdata?.username ? userdata?.username : userdata?.name}<br />
+                    <span className="capitalize">
+                        {userdata?.rolename ? userdata?.rolename?.toLowerCase() : ""}
+                    </span>
                 </span>
                 <svg
                     className={`stroke-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""

@@ -21,7 +21,9 @@ const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
       <div
         className={`flex-1 transition-all duration-300 ease-in-out overflow-x-hidden ${isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[80px]"} ${isMobileOpen ? "ml-0" : ""}`}
       >
-        <AppHeader />
+        <div>
+          <AppHeader />
+        </div>
 
         <div className="p-4 mx-auto">
           {

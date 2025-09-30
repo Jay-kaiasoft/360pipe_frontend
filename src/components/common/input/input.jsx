@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 
-const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon, InputLabelProps, onFocus, onBlur,}, ref) => {
+const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon, InputLabelProps, onFocus, onBlur}, ref) => {
     const theme = useTheme();
     return (
         <Components.TextField

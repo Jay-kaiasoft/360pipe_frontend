@@ -26,35 +26,8 @@ const Sidebar = ({
 }) => {
     const userDetails = getUserDetails();
     const salesforceUserDetails = getSalesforceUserDetails();
+    const [navItems, setNavItems] = useState([]);
 
-    const navItems = [
-        {
-            icon: <CustomIcons iconName="th-large" />,
-            name: "Dashboard",
-            path: "/dashboard",
-            subItems: [
-                { name: "Accounts", path: "/dashboard/accounts", pro: false },
-                { name: "Opportunities", path: "/dashboard/opportunities", pro: false },
-                { name: "Contacts", path: "/dashboard/contacts", pro: false }
-            ]
-        },
-        {
-            icon: <CustomIcons iconName="th-large" />,
-            name: "My Team",
-            path: "/dashboard/myteam",
-            pro: false
-        },
-        ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
-            ? [
-                {
-                    icon: <CustomIcons iconName="th-large" />,
-                    name: "My CRM",
-                    path: "/dashboard/mycrm",
-                    pro: false
-                }
-            ]
-            : [])
-    ];
 
     const location = useLocation()
     const [subMenuHeight, setSubMenuHeight] = useState({})
@@ -63,6 +36,44 @@ const Sidebar = ({
     const isActive = useCallback(path => location.pathname === path, [
         location.pathname
     ])
+    const handleSetNavItems = () => {
+        setNavItems([
+            {
+                icon: <CustomIcons iconName="th-large" />,
+                name: "Dashboard",
+                path: "/dashboard",
+                subItems: [
+                    ...((userDetails?.rolename === "SALES REPRESENTIVE")
+                        ? [
+                            { name: "Accounts", path: "/dashboard/accounts", pro: false },
+                        ]
+                        : []),
+                    { name: "Opportunities", path: "/dashboard/opportunities", pro: false },
+                    { name: "Contacts", path: "/dashboard/contacts", pro: false }
+                ]
+            },
+            {
+                icon: <CustomIcons iconName="th-large" />,
+                name: "My Team",
+                path: "/dashboard/myteam",
+                pro: false
+            },
+            ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
+                ? [
+                    {
+                        icon: <CustomIcons iconName="th-large" />,
+                        name: "My CRM",
+                        path: "/dashboard/mycrm",
+                        pro: false
+                    }
+                ]
+                : [])
+        ])
+    }
+
+    useEffect(() => {
+        handleSetNavItems();
+    }, [])
 
     useEffect(() => {
         let submenuMatched = false

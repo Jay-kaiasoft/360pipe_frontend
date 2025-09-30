@@ -8,6 +8,7 @@ import CustomIcons from '../../common/icons/CustomIcons';
 import Select from '../../common/select/select';
 import { getAllSubUsers } from '../../../service/customers/customersService';
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
+import CheckBoxSelect from '../../common/select/checkBoxSelect';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -18,10 +19,9 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function AddTeamMemberModel({ open, handleClose, selectedMember, append }) {
+function AddTeamMemberModel({ open, handleClose, selectedMember, members, append, update }) {
     const theme = useTheme()
 
-    const [loading, setLoading] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [opportunities, setOpportunities] = useState([]);
 
@@ -34,22 +34,21 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, append }) {
         formState: { errors },
     } = useForm({
         defaultValues: {
+            teamMemberId: null,
             memberId: null,
-            oppId: null,
-            memberName: '',
-            oppName: '',
-            role: ''
+            memberName: null,
+            opportunities: null,
+            role: null,
         },
     });
 
     const onClose = () => {
-        setLoading(false);
         reset({
+            teamMemberId: null,
             memberId: null,
-            oppId: null,
-            memberName: '',
-            oppName: '',
-            role: ''
+            memberName: null,
+            opportunities: null,
+            role: null,
         });
         handleClose();
     };
@@ -60,7 +59,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, append }) {
             const data = res?.data?.result?.map((item) => {
                 return {
                     id: item.id,
-                    title: item.name,
+                    title: item.username || item.name,
                     role: item.subUserTypeDto?.name || ''
                 }
             })
@@ -86,16 +85,42 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, append }) {
         handleGetAllOpportunities();
     }, [open])
 
+    useEffect(() => {
+        if (selectedMember && open) {
+            setValue("teamMemberId", selectedMember.teamMemberId || null);
+            setValue("memberId", selectedMember.memberId || null);
+            setValue("memberName", selectedMember.memberName || null);
+            setValue("role", selectedMember.role || null);
+            setValue("opportunities", selectedMember.opportunities || []);
+        }
+    }, [selectedMember])
+
     const submit = async (data) => {
-        console.log(data)
-        append({
-            memberId: data.memberId,
-            memberName: data.memberName,
-            oppId: data.oppId,
-            oppName: data.oppName,
-            role: data.role
-        });
-        handleClose();
+        console.log("data", data)
+        if (selectedMember) {
+            // Update existing member - find the index and update
+            const index = members.findIndex(field =>
+                field.teamMemberId === selectedMember.teamMemberId
+            );
+
+            if (index !== -1 && update) {
+                update(index, {
+                    teamMemberId: selectedMember.teamMemberId,
+                    memberId: data.memberId,
+                    memberName: data.memberName,
+                    role: data.role,
+                    opportunities: data.opportunities
+                });
+            }
+        } else {
+            append({
+                memberId: data.memberId,
+                memberName: data.memberName,
+                opportunities: data.opportunities,
+                role: data.role
+            });
+        }
+        onClose();
     }
 
     return (
@@ -157,29 +182,26 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, append }) {
                             </div>
                             <div>
                                 <Controller
-                                    name="oppId"
+                                    name="opportunities"
                                     control={control}
-                                    rules={{
-                                        required: "Opportunity is required"
+                                    render={({ field }) => {
+                                        const selectedOptions = opportunities.filter((opp) =>
+                                            (field.value || []).includes(opp.id)
+                                        );
+
+                                        return (
+                                            <CheckBoxSelect
+                                                options={opportunities}
+                                                label="Select Opportunities"
+                                                value={selectedOptions}
+                                                onChange={(event, newValue) => {
+                                                    const newIds = newValue.map((opt) => opt.id);
+                                                    field.onChange(newIds);
+                                                }}
+                                                checkAll={true}
+                                            />
+                                        );
                                     }}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={opportunities}
-                                            label={"Opportunity"}
-                                            placeholder="Select opportunity"
-                                            value={parseInt(watch("oppId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    setValue("oppName", newValue.title);
-                                                } else {
-                                                    setValue("oppId", null);
-                                                    setValue("oppName", '');
-                                                }
-                                            }}
-                                            error={errors?.oppId}
-                                        />
-                                    )}
                                 />
                             </div>
                         </div>
@@ -187,7 +209,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, append }) {
 
                     <Components.DialogActions>
                         <div className='flex justify-end'>
-                            <Button type={`submit`} text={selectedMember ? "Update" : "Submit"} isLoading={loading} />
+                            <Button type={`submit`} text={selectedMember ? "Update" : "Submit"} />
                         </div>
                     </Components.DialogActions>
                 </form>

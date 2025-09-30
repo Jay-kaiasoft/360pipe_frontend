@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux'
 import { setAlert } from '../../redux/commonReducers/commonReducers'
-import PermissionWrapper from '../../components/common/permissionWrapper/PermissionWrapper'
 import Components from '../../components/muiComponents/components'
 import CustomIcons from '../../components/common/icons/CustomIcons'
 import { deleteTeam, getAllTeams } from '../../service/teamDetails/teamDetailsService'
@@ -49,7 +48,7 @@ const ManageTeam = ({ setAlert }) => {
     const handleGetAllTeams = async () => {
         const res = await getAllTeams();
         if (res.status === 200) {
-            const formattedTeams = res.result?.map((team, index) => ({
+            const formattedTeams = res.result?.reverse()?.map((team, index) => ({
                 ...team,
                 rowId: index + 1,
                 teamMembers: team.teamMembers?.length || 0
@@ -85,6 +84,14 @@ const ManageTeam = ({ setAlert }) => {
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 200
+        },
+        {
+            field: 'assignMemberName',
+            headerName: 'Assign Team Lead',
+            headerClassName: 'uppercase',
+            flex: 1,
+            maxWidth: 300,
+            sortable: false,
         },
         {
             field: 'teamMembers',
