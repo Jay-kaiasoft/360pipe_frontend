@@ -221,7 +221,7 @@ export const getStaticRoles = () => {
 export const getStaticRolesWithPermissions = () => {
     return getStaticRoles()?.map((item) => {
         const isSalesRep = item.title === 'Sales Representative';
-
+        const isSalesManager = item.title === "Sales Manager"
         return {
             name: item.title,
             rolesActions: {
@@ -258,10 +258,23 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 4,
                                 "moduleName": "Contacts",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": [1, 2, 3, 4] // Read-only
+                                "roleAssignedActions": [1, 2, 3, 4]
+                            },
+                        ]
+                    },
+                    ...isSalesManager && {
+                        "functionalityId": 5,
+                        "functionalityName": "My Team",
+                        "modules": [
+                            {
+                                "moduleId": 5,
+                                "moduleName": "My Team",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": [1, 2, 3, 4]
                             },
                         ]
                     }
+
                 ]
             }
         }

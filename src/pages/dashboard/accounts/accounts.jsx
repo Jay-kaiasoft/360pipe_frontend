@@ -59,7 +59,7 @@ const Accounts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
   const handleGetAllAccounts = async () => {
     const res = await getAllSubUsers();
-    if (res.status === 200) {
+    if (res?.data?.status === 200) {
       const formattedSubUsers = res?.data?.result?.map((subUser, index) => ({
         ...subUser,
         rowId: index + 1,

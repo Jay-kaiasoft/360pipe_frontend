@@ -39,6 +39,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
             memberName: null,
             opportunities: null,
             role: null,
+            assignMemberName: null,
         },
     });
 
@@ -49,6 +50,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
             memberName: null,
             opportunities: null,
             role: null,
+            assignMemberName: null,
         });
         handleClose();
     };
@@ -92,11 +94,11 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
             setValue("memberName", selectedMember.memberName || null);
             setValue("role", selectedMember.role || null);
             setValue("opportunities", selectedMember.opportunities || []);
+            setValue("assignMemberName", selectedMember.assignMemberName || null);
         }
     }, [selectedMember])
 
     const submit = async (data) => {
-        console.log("data", data)
         if (selectedMember) {
             // Update existing member - find the index and update
             const index = members.findIndex(field =>

@@ -15,7 +15,6 @@ const SyncHistory = () => {
             if (dateOnly instanceof Date) {
                 dateOnly = dateOnly.toLocaleDateString(); // or use toLocaleString() if you want time
             }
-            console.log("dateOnly",dateOnly)
             if (!groups[dateOnly]) {
                 groups[dateOnly] = [];
             }

@@ -1,9 +1,9 @@
 import { accountURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
-export const getAllAccounts = async () => {
+export const getAllAccounts = async (params) => {
     try {
-        const response = await axiosInterceptor().get(`${accountURL}/getall`);
+        const response = await axiosInterceptor().get(`${accountURL}/getall?${params ? `?${params}` : ''}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching accounts:", error);

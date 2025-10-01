@@ -79,6 +79,19 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         } else {
             remove(index);
         }
+        if (index === 0 && fields.length === 1) {
+            append({
+                id: null,
+                salesforceOpportunityPartnerId: null,
+                opportunityId: null,
+                accountToId: null,
+                accountId: null,
+                role: null,
+                roleid: null,
+                isPrimary: false,
+                isDeleted: false,
+            });
+        }
     }
 
     const onClose = () => {
@@ -146,7 +159,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const handleGetAllAccounts = async () => {
         if (open) {
             setLoading(true);
-            const res = await getAllAccounts();
+            const res = await getAllAccounts("fetchType=Options");
             if (res?.status === 200) {
                 const data = res?.result?.map((acc) => ({
                     title: acc.accountName,
@@ -169,15 +182,14 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         const newData = {
             ...data,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
+            opportunityPartnerDetails: watch("opportunityPartnerDetails")?.length > 0 ? watch("opportunityPartnerDetails")?.map((item, index) => {
+                delete item.id
+                return {
+                    ...item,
+                    id: item?.partnerId || null,
+                }
+            }) : []
         }
-        const opportunityPartnerDetails = watch("opportunityPartnerDetails")
-        opportunityPartnerDetails.map(async (item) => {
-            if (item.id) {
-                await updateOpportunitiesPartner(item.id, item);
-            } else {
-                await createOpportunitiesPartner(item);
-            }
-        });
         try {
             if (opportunityId) {
                 const res = await updateOpportunity(opportunityId, newData);
@@ -205,6 +217,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             } else {
                 const res = await createOpportunity(newData);
                 if (res?.status === 201) {
+                    const createdOpportunityId = res?.result?.id;
                     setSyncingPushStatus(true);
                     setLoading(false);
                     setAlert({
@@ -369,16 +382,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                         <Controller
                                             name={`opportunityPartnerDetails.${index}.accountId`}
                                             control={control}
-                                            rules={{
-                                                required: "Account is required",
-                                            }}
                                             render={({ field }) => (
                                                 <Select
-                                                    options={accounts}
+                                                    options={accounts?.filter(acc => acc.id !== parseInt(watch("accountId"))) || []} // Prevent selecting the same account in both fields
                                                     label={"Account"}
                                                     placeholder="Select Account"
                                                     value={parseInt(watch(`opportunityPartnerDetails.${index}.accountId`)) || null}
-                                                    error={errors?.opportunityPartnerDetails?.[index]?.accountId}
                                                     onChange={(_, newValue) => {
                                                         if (newValue?.id) {
                                                             field.onChange(newValue.id);
@@ -397,16 +406,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                         <Controller
                                             name={`opportunityPartnerDetails.${index}.role`}
                                             control={control}
-                                            rules={{
-                                                required: "Role is required",
-                                            }}
                                             render={({ field }) => (
                                                 <Select
                                                     options={partnerRoles}
                                                     label={"Role"}
                                                     placeholder="Select Role"
                                                     value={parseInt(watch(`opportunityPartnerDetails.${index}.roleid`)) || null}
-                                                    error={errors?.opportunityPartnerDetails?.[index]?.role}
                                                     onChange={(_, newValue) => {
                                                         if (newValue?.id) {
                                                             field.onChange(newValue.id);
@@ -441,12 +446,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             </div>
                                             <div>
                                                 {
-                                                    fields?.length > 1 && (
-                                                        <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleDeletePartner(item, index)}>
-                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                            </Components.IconButton>
-                                                        </div>
+                                                    (item.role || item.accountId) && (
+                                                    <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleDeletePartner(item, index)}>
+                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                        </Components.IconButton>
+                                                    </div>
                                                     )
                                                 }
                                             </div>

@@ -76,14 +76,18 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
 
     const handleGetAllOpportunities = async () => {
         if (open) {
-            const res = await getAllOpportunities()
+            const res = await getAllOpportunities("fetchType=Options")
             const data = res?.result?.map((item) => {
                 return {
                     id: item.id,
                     title: item.opportunity
                 }
             })
-            setOpportunities(data)
+            const uniqueData = Array.from(
+                new Map(data.map(item => [item.title, item])).values()
+            );
+
+            setOpportunities(uniqueData);
         }
     }
 

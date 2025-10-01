@@ -14,41 +14,42 @@ const UserProfile = () => {
 
     const [selectedTab, setSelectedTab] = useState(0);
     const handleChangeTab = (value) => {
+        
         setSelectedTab(value);
     }
 
     useEffect(() => {
-        if (userdata?.rolename === 'Sales Representative') {
-            setTabsData([
-                {
-                    label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
-                },
-                {
-                    label: 'Brand', icon: <CustomIcons iconName="fa-solid fa-medal" />
-                },
-                {
-                    label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
-                },
-                {
-                    label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
-                },
-                {
-                    label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
-                },
-            ])
-        } else {
-            setTabsData([
-                {
-                    label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
-                },               
-                {
-                    label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
-                },
-                {
-                    label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
-                },                
-            ])
-        }
+        setTabsData([
+            {
+                label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
+            },
+            {
+                label: 'Brand', icon: <CustomIcons iconName="fa-solid fa-medal" />
+            },
+            {
+                label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
+            },
+            {
+                label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
+            },
+            {
+                label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
+            },
+        ])
+        // if (userdata?.rolename.toLowerCase() === 'sales representive') {
+        // } else {
+        //     setTabsData([
+        //         {
+        //             label: 'Profile', icon: <CustomIcons iconName="fa-solid fa-circle-user" />
+        //         },
+        //         {
+        //             label: 'Security', icon: <CustomIcons iconName="fa-solid fa-shield-halved" />
+        //         },
+        //         {
+        //             label: 'Change Password', icon: <CustomIcons iconName="fa-solid fa-lock" />
+        //         },
+        //     ])
+        // }
     }, [])
 
     return (

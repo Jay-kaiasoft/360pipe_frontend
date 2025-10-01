@@ -1,9 +1,9 @@
 import { contactURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
-export const getAllContacts = async () => {
+export const getAllContacts = async (params) => {
     try {
-        const response = await axiosInterceptor().get(`${contactURL}/get/all`);
+        const response = await axiosInterceptor().get(`${contactURL}/get/all?${params ? `?${params}` : ''}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching contacts:", error);

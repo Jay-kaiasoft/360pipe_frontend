@@ -45,3 +45,12 @@ export const deleteTeamMembers = async (id) => {
         throw error;
     }
 };
+
+export const assignOpportunitiesToTeamMember = async (id, data) => {
+    try {
+        const response = await axiosInterceptor().patch(`${teamMembersURL}/assignOpp/${id}`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

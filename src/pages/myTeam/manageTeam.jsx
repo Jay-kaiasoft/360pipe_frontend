@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import DataTable from '../../components/common/table/table'
 import Button from '../../components/common/buttons/button'
 import AlertDialog from '../../components/common/alertDialog/alertDialog'
+import AssignTeamOpportunities from '../../components/models/teamMember/assignTeamOpportunities'
 
 const ManageTeam = ({ setAlert }) => {
     const navigate = useNavigate()
@@ -15,6 +16,17 @@ const ManageTeam = ({ setAlert }) => {
     const [teams, setTeams] = useState([])
     const [selectedTeamId, setSelectedTeamId] = useState(null)
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [openAssignOpportunities, setOpenAssignOpportunities] = useState(false);
+
+    const handleOpenAssignOpportunities = (id = null) => {
+        setSelectedTeamId(id);
+        setOpenAssignOpportunities(true);
+    }
+
+    const handleCloseAssignOpportunities = () => {
+        setSelectedTeamId(null);
+        setOpenAssignOpportunities(false);
+    }
 
     const handleOpenDeleteDialog = (teamId) => {
         setSelectedTeamId(teamId);
@@ -90,7 +102,7 @@ const ManageTeam = ({ setAlert }) => {
             headerName: 'Assign Team Lead',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 300,
+            minWidth: 350,
             sortable: false,
         },
         {
@@ -98,13 +110,14 @@ const ManageTeam = ({ setAlert }) => {
             headerName: 'Team Members',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200,
+            minWidth: 50,
         },
         {
             field: 'action',
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
+            flex: 1,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
@@ -113,6 +126,11 @@ const ManageTeam = ({ setAlert }) => {
                             moduleName="Contacts"
                             actionId={2}
                             component={ */}
+                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row.id)}>
+                                <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
                         <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                             <Components.IconButton onClick={() => navigate(`/dashboard/myTeam/edit/${params.row.id}`)}>
                                 <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
@@ -170,6 +188,7 @@ const ManageTeam = ({ setAlert }) => {
                 handleAction={() => handleDeleteTeam()}
                 handleClose={() => handleCloseDeleteDialog()}
             />
+            <AssignTeamOpportunities open={openAssignOpportunities} handleClose={handleCloseAssignOpportunities} teamId={selectedTeamId} />
         </div>
     )
 }

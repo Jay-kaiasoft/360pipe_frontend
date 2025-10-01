@@ -16,6 +16,8 @@ import AlertDialog from '../../components/common/alertDialog/alertDialog';
 import { createTeam, getTeamDetails, updateTeam } from '../../service/teamDetails/teamDetailsService';
 import { getAllSubUsers } from '../../service/customers/customersService';
 import Select from '../../components/common/select/select';
+import OpenDisplayOpportunities from '../../components/models/teamMember/displayOpportunities';
+import OpenAssignOpportunities from '../../components/models/teamMember/openAssignOpportunities';
 
 const AddTeamMembers = ({ setAlert }) => {
     const { id } = useParams();
@@ -25,14 +27,37 @@ const AddTeamMembers = ({ setAlert }) => {
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedMember, setSelectedMember] = useState(null)
     const [customers, setCustomers] = useState([]);
+    const [openDisplayOpportunities, setOpenDisplayOpportunities] = useState(false);
+    const [openAssignOpportunities, setOpenAssignOpportunities] = useState(false);
 
-    const handleOpen = (id = null) => {
-        setSelectedMember(id);
+    const handleOpen = (data = null) => {
+        setSelectedMember(data);
         setOpen(true);
     }
 
     const handleClose = () => {
+        setSelectedMember(null);
         setOpen(false);
+    }
+
+    const handleOpenModelDisplayOpportunities = (data = null) => {
+        setSelectedMember(data);
+        setOpenDisplayOpportunities(true);
+    }
+
+    const handleCloseModelDisplayOpportunities = () => {
+        setSelectedMember(null);
+        setOpenDisplayOpportunities(false);
+    }
+
+    const handleOpenAssignOpportunities = (data = null) => {
+        setSelectedMember(data);
+        setOpenAssignOpportunities(true);
+    }
+
+    const handleCloseAssignOpportunities = () => {
+        setSelectedMember(null);
+        setOpenAssignOpportunities(false);
     }
 
     const handleOpenDeleteDialog = (data) => {
@@ -57,7 +82,9 @@ const AddTeamMembers = ({ setAlert }) => {
             id: null,
             name: null,
             assignMember: null,
-            teamMembers: []
+            teamMembers: [],
+            assignMemberName: null,
+            assignedOpportunities: null
         },
     });
 
@@ -89,7 +116,8 @@ const AddTeamMembers = ({ setAlert }) => {
     const handleSave = async (data) => {
         const newData = {
             ...data,
-            teamMembers: data.teamMembers.map((item) => {
+            assignedOpportunities: watch("assignedOpportunities"),
+            teamMembers: data.teamMembers?.map((item) => {
                 delete item.rowId;
                 return {
                     ...item,
@@ -131,6 +159,8 @@ const AddTeamMembers = ({ setAlert }) => {
                     ...item,
                     teamMemberId: item.id,
                     opportunities: item.opportunities ? JSON.parse(item.opportunities) : [],
+                    title: item?.title || '-',
+                    assignMemberName: res?.result?.assignMemberName || '-',                    
                 }
             })
             reset({
@@ -138,6 +168,8 @@ const AddTeamMembers = ({ setAlert }) => {
                 name: res?.result?.name || null,
                 teamMembers: teamMembersData || [],
                 assignMember: res?.result?.assignMember || null,
+                assignMemberName: res?.result?.assignMemberName || null,
+                assignedOpportunities: res?.result?.assignedOpportunities ? res?.result?.assignedOpportunities : null
             });
         }
     }
@@ -169,20 +201,58 @@ const AddTeamMembers = ({ setAlert }) => {
             headerName: 'Member Name',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 300,
+            minWidth: 200,
             sortable: false,
+        },
+        {
+            field: 'title',
+            headerName: 'Title',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 100,
+            sortable: false,
+        },
+        {
+            field: 'assignMemberName',
+            headerName: 'Reports To',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 200,
+            renderCell: (params) => {
+                return (
+                    <div>
+                        {watch("assignMemberName") || '-'}
+                    </div>
+                )
+            }
         },
         {
             field: 'role',
             headerName: 'Role',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200,
+            minWidth: 100,
+        },
+        {
+            field: 'totalOpportunities',
+            headerName: 'Total Opportunities',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 150,
+            renderCell: (params) => {
+                return (
+                    <div>
+                        {params.row?.opportunities?.length || 0}
+                    </div>
+                )
+            }
         },
         {
             field: 'action',
             headerName: 'action',
             headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 150,
             sortable: false,
             renderCell: (params) => {
                 return (
@@ -192,6 +262,11 @@ const AddTeamMembers = ({ setAlert }) => {
                             moduleName="Contacts"
                             actionId={2}
                             component={ */}
+                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row)}>
+                                <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
                         <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                             <Components.IconButton onClick={() => handleOpen(params.row)}>
                                 <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
@@ -207,6 +282,11 @@ const AddTeamMembers = ({ setAlert }) => {
                         <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                             <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row)}>
                                 <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
+                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenModelDisplayOpportunities(params.row)}>
+                                <CustomIcons iconName={'fa-solid fa-list-ul'} css='cursor-pointer text-white h-4 w-4' />
                             </Components.IconButton>
                         </div>
                         {/* }
@@ -270,6 +350,7 @@ const AddTeamMembers = ({ setAlert }) => {
                                     onChange={(_, newValue) => {
                                         if (newValue?.id) {
                                             field.onChange(newValue.id);
+                                            setValue("assignMemberName", newValue.title);
                                         } else {
                                             setValue("assignMember", null);
                                         }
@@ -301,6 +382,9 @@ const AddTeamMembers = ({ setAlert }) => {
                 handleClose={() => handleCloseDeleteDialog()}
             />
             <AddTeamMemberModel open={open} handleClose={handleClose} selectedMember={selectedMember} members={fields} append={append} update={update} />
+            <OpenDisplayOpportunities open={openDisplayOpportunities} handleClose={handleCloseModelDisplayOpportunities} selectedMember={selectedMember} />
+            <OpenAssignOpportunities open={openAssignOpportunities} handleClose={handleCloseAssignOpportunities} selectedMember={selectedMember} members={fields} append={append} update={update} />
+
         </div>
     )
 }
