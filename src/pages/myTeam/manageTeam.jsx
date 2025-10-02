@@ -9,6 +9,7 @@ import DataTable from '../../components/common/table/table'
 import Button from '../../components/common/buttons/button'
 import AlertDialog from '../../components/common/alertDialog/alertDialog'
 import AssignTeamOpportunities from '../../components/models/teamMember/assignTeamOpportunities'
+import OpenDisplayOpportunities from '../../components/models/teamMember/displayOpportunities'
 
 const ManageTeam = ({ setAlert }) => {
     const navigate = useNavigate()
@@ -17,6 +18,18 @@ const ManageTeam = ({ setAlert }) => {
     const [selectedTeamId, setSelectedTeamId] = useState(null)
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [openAssignOpportunities, setOpenAssignOpportunities] = useState(false);
+    const [openDisplayOpportunities, setOpenDisplayOpportunities] = useState(false);
+    const [selectedOpportunity, setSelectedOpportunity] = useState(null)
+
+    const handleOpenModelDisplayOpportunities = (data = null) => {
+        setSelectedOpportunity({ opportunities: data?.assignedOpportunities });
+        setOpenDisplayOpportunities(true);
+    }
+
+    const handleCloseModelDisplayOpportunities = () => {
+        setSelectedOpportunity(null);
+        setOpenDisplayOpportunities(false);
+    }
 
     const handleOpenAssignOpportunities = (id = null) => {
         setSelectedTeamId(id);
@@ -126,6 +139,11 @@ const ManageTeam = ({ setAlert }) => {
                             moduleName="Contacts"
                             actionId={2}
                             component={ */}
+                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenModelDisplayOpportunities(params.row)}>
+                                <CustomIcons iconName={'fa-solid fa-list-ul'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
                         <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                             <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row.id)}>
                                 <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
@@ -189,6 +207,8 @@ const ManageTeam = ({ setAlert }) => {
                 handleClose={() => handleCloseDeleteDialog()}
             />
             <AssignTeamOpportunities open={openAssignOpportunities} handleClose={handleCloseAssignOpportunities} teamId={selectedTeamId} />
+            <OpenDisplayOpportunities open={openDisplayOpportunities} handleClose={handleCloseModelDisplayOpportunities} selectedMember={selectedOpportunity} type={"Team"} />
+
         </div>
     )
 }

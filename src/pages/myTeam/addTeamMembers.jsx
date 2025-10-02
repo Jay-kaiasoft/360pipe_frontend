@@ -160,7 +160,7 @@ const AddTeamMembers = ({ setAlert }) => {
                     teamMemberId: item.id,
                     opportunities: item.opportunities ? JSON.parse(item.opportunities) : [],
                     title: item?.title || '-',
-                    assignMemberName: res?.result?.assignMemberName || '-',                    
+                    assignMemberName: res?.result?.assignMemberName || '-',
                 }
             })
             reset({
@@ -179,7 +179,7 @@ const AddTeamMembers = ({ setAlert }) => {
         const data = res?.data?.result?.map((item) => {
             return {
                 id: item.id,
-                title: item.username || item.name,
+                title: item.name,
                 role: item.subUserTypeDto?.name || ''
             }
         })
@@ -262,6 +262,11 @@ const AddTeamMembers = ({ setAlert }) => {
                             moduleName="Contacts"
                             actionId={2}
                             component={ */}
+                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenModelDisplayOpportunities(params.row)}>
+                                <CustomIcons iconName={'fa-solid fa-list-ul'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
                         <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                             <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row)}>
                                 <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
@@ -284,11 +289,7 @@ const AddTeamMembers = ({ setAlert }) => {
                                 <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
                             </Components.IconButton>
                         </div>
-                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenModelDisplayOpportunities(params.row)}>
-                                <CustomIcons iconName={'fa-solid fa-list-ul'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
+
                         {/* }
                         /> */}
                     </div>
@@ -345,7 +346,7 @@ const AddTeamMembers = ({ setAlert }) => {
                                 <Select
                                     options={customers}
                                     label={"Assign Team Lead"}
-                                    placeholder="Select account"
+                                    placeholder="Select member"
                                     value={parseInt(watch("assignMember")) || null}
                                     onChange={(_, newValue) => {
                                         if (newValue?.id) {

@@ -95,7 +95,7 @@ const Login = ({ setAlert, loading }) => {
     const onSubmit = async (data) => {
         const res = await userLogin(data)
         if (res?.data?.result?.loginPreference) {
-            setLoginPreference(res?.data?.result?.loginPreference)
+            setLoginPreference(res?.data?.result?.loginPreference || "password")
             if (res?.data?.result?.loginPreference === "authId") {
                 handleSubmitAuth()
             }

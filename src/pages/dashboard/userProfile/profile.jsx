@@ -124,7 +124,7 @@ const Profile = ({ setAlert }) => {
             setAlert({
                 open: true,
                 type: "success",
-                message: res?.data?.message || "Profile updated successfully.",
+                message: `Profile updated successfully.`,
             });
         } else {
             setAlert({

@@ -163,8 +163,8 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
                                     render={({ field }) => (
                                         <Select
                                             options={customers}
-                                            label={"Account"}
-                                            placeholder="Select account"
+                                            label={"Member"}
+                                            placeholder="Select member"
                                             value={parseInt(watch("memberId")) || null}
                                             onChange={(_, newValue) => {
                                                 if (newValue?.id) {

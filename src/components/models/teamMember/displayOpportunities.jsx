@@ -122,7 +122,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   },
 }));
 
-function OpenDisplayOpportunities({ open, handleClose, selectedMember }) {
+function OpenDisplayOpportunities({ open, handleClose, selectedMember, type }) {
   const theme = useTheme();
   const [opportunities, setOpportunities] = useState([]);
 
@@ -162,7 +162,7 @@ function OpenDisplayOpportunities({ open, handleClose, selectedMember }) {
           sx={{ m: 0, p: 2, color: theme.palette.text.primary }}
           id="customized-dialog-title"
         >
-          Assigned Opportunities To {selectedMember?.memberName}
+          Assigned Opportunities To {type === "Team" ? "Team" : selectedMember?.memberName}
         </Components.DialogTitle>
 
         <Components.IconButton
