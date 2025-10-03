@@ -10,7 +10,7 @@ import AlertDialog from '../../components/common/alertDialog/alertDialog';
 import Components from '../../components/muiComponents/components';
 
 import PermissionWrapper from '../../components/common/permissionWrapper/PermissionWrapper';
-import { deleteCustomer, getAllSubUsers } from '../../service/customers/customersService';
+import { deleteCustomer, getAllSubUsers, sendRegisterInvitation } from '../../service/customers/customersService';
 import SubUserModel from '../../components/models/subUser/subUserModel';
 
 const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
@@ -19,6 +19,9 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
   const [open, setOpen] = useState(false);
+  const [invitationData, setInvitationData] = useState(null);
+  const [inviteDialog, setInviteDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
 
   const handleClickOpen = (id = null) => {
     if (id) {
@@ -30,6 +33,21 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   const handleClose = () => {
     setOpen(false);
     setSelectedUserId(null);
+  }
+
+  const handleOpenInviteDialog = (data) => {
+    const newData = {
+      email: data.emailAddress,
+      name: data.name,
+      userId: data.id,
+    }
+    setInvitationData(newData);
+    setInviteDialog({ open: true, title: 'Send Invitation', message: 'Are you sure! Do you want to send an invitation to this account?', actionButtonText: 'Send Invitation' });
+  }
+
+  const handleCloseInviteDialog = () => {
+    setInvitationData(null);
+    setInviteDialog({ open: false, title: '', message: '', actionButtonText: '' });
   }
 
   const handleOpenDeleteDialog = (id) => {
@@ -44,10 +62,9 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
   const handleDeleteAccount = async () => {
     const res = await deleteCustomer(selectedUserId);
-    if (res.status === 200) {
-      setSyncingPushStatus(true);
-      handleGetAllAccounts();
+    if (res?.data?.status === 200) {
       handleCloseDeleteDialog();
+      handleGetAllAccounts();
     } else {
       setAlert({
         open: true,
@@ -64,8 +81,35 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         ...subUser,
         rowId: index + 1,
         subUserType: subUser?.subUserTypeDto?.name,
+        status: ((subUser?.userName !== "" && subUser?.userName !== null) && (subUser?.password !== '' && subUser?.password !== null)) ? 'Active' : 'Pending'
       }));
       setSubUsers(formattedSubUsers);
+    }
+  }
+
+  const handleSendInvitation = async () => {
+    if (invitationData.email !== "" && invitationData.email != null) {
+      const response = await sendRegisterInvitation(invitationData);
+      if (response?.data?.status === 200) {
+        setAlert({
+          open: true,
+          type: "success",
+          message: response?.data?.message || "Invitation sent successfully.",
+        });
+        handleCloseInviteDialog();
+      } else {
+        setAlert({
+          open: true,
+          type: "error",
+          message: response?.data?.message || "An error occurred. Please try again.",
+        });
+      }
+    } else {
+      setAlert({
+        open: true,
+        type: "error",
+        message: "Email is required to send invitation.",
+      });
     }
   }
 
@@ -113,12 +157,21 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         )
       }
     },
+
     {
       field: 'subUserType',
       headerName: 'Role',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 800,
+      maxWidth: 400,
+      sortable: false,
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      headerClassName: 'uppercase',
+      flex: 1,
+      maxWidth: 200,
       sortable: false,
     },
     {
@@ -131,9 +184,18 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       renderCell: (params) => {
         return (
           <div className='flex items-center gap-2 justify-end h-full'>
+            {
+              params?.row?.status === 'Pending' && (
+                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                  <Components.IconButton onClick={() => handleOpenInviteDialog(params.row)}>
+                    <CustomIcons iconName={'fa-solid fa-share-from-square'} css='cursor-pointer text-white h-4 w-4' />
+                  </Components.IconButton>
+                </div>
+              )
+            }
             <PermissionWrapper
-              functionalityName="Account"
-              moduleName="Account"
+              functionalityName="Members"
+              moduleName="Members"
               actionId={2}
               component={
                 <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
@@ -144,8 +206,8 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
               }
             />
             <PermissionWrapper
-              functionalityName="Account"
-              moduleName="Account"
+              functionalityName="Members"
+              moduleName="Members"
               actionId={3}
               component={
                 <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
@@ -168,8 +230,8 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   const actionButtons = () => {
     return (
       <PermissionWrapper
-        functionalityName="Account"
-        moduleName="Account"
+        functionalityName="Members"
+        moduleName="Members"
         actionId={1}
         component={
           <div>
@@ -192,6 +254,14 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         actionButtonText={dialog.actionButtonText}
         handleAction={() => handleDeleteAccount()}
         handleClose={() => handleCloseDeleteDialog()}
+      />
+      <AlertDialog
+        open={inviteDialog.open}
+        title={inviteDialog.title}
+        message={inviteDialog.message}
+        actionButtonText={inviteDialog.actionButtonText}
+        handleAction={() => handleSendInvitation()}
+        handleClose={() => handleCloseInviteDialog()}
       />
       <SubUserModel open={open} handleClose={handleClose} id={selectedUserId} handleGetAllUsers={handleGetAllAccounts} />
     </div>

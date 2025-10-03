@@ -217,7 +217,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             } else {
                 const res = await createOpportunity(newData);
                 if (res?.status === 201) {
-                    const createdOpportunityId = res?.result?.id;
                     setSyncingPushStatus(true);
                     setLoading(false);
                     setAlert({
@@ -274,7 +273,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-3 gap-4'>
+                        <div className='grid md:grid-cols-3 gap-4'>
                             <Controller
                                 name="accountId"
                                 control={control}
@@ -374,8 +373,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                 )}
                             />
                         </div>
+                        <div className="flex items-center my-2 col-span-2 md:col-span-3">
+                            <div className="flex-grow border-t border-black"></div>
+                            <span className="mx-4 text-black font-medium">Partner Details</span>
+                            <div className="flex-grow border-t border-black"></div>
+                        </div>
                         <div>
-                            <div className='font-semibold my-5'>Opportunity Partner Details</div>
                             {fields?.map((item, index) => (
                                 <div className='grid grid-cols-3 gap-4' key={index}>
                                     <div className='mb-3'>
@@ -446,12 +449,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             </div>
                                             <div>
                                                 {
-                                                    (item.role || item.accountId) && (
-                                                    <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleDeletePartner(item, index)}>
-                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                        </Components.IconButton>
-                                                    </div>
+                                                    (item.role || item.accountId || fields?.length > 1) && (
+                                                        <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleDeletePartner(item, index)}>
+                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                            </Components.IconButton>
+                                                        </div>
                                                     )
                                                 }
                                             </div>

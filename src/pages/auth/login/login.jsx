@@ -106,7 +106,7 @@ const Login = ({ setAlert, loading }) => {
                 email: res?.data?.result?.email,
                 userId: res?.data?.result?.userId,
                 roleId: res?.data?.result?.roleId,
-                rolename: res?.data?.result?.roleName,
+                roleName: res?.data?.result?.roleName,
                 permissions: res?.data?.result?.permissions?.rolesActions,
                 subUser: res?.data?.result?.subUser
             };

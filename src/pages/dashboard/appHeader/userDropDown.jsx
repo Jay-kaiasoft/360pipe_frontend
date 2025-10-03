@@ -63,7 +63,7 @@ export default function UserDropdown() {
                 <span className="block mr-1 text-sm font-bold text-start min-w-28">
                     {userdata?.username ? userdata?.username : userdata?.name}<br />
                     <span className="capitalize">
-                        {userdata?.rolename ? userdata?.rolename?.toLowerCase() : ""}
+                        {userdata?.roleName ? userdata?.roleName?.toLowerCase() : ""}
                     </span>
                 </span>
                 <svg

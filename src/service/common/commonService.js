@@ -262,7 +262,7 @@ export const getStaticRolesWithPermissions = () => {
                             },
                         ]
                     },
-                    ...isSalesManager && {
+                    {
                         "functionalityId": 5,
                         "functionalityName": "My Team",
                         "modules": [
@@ -273,8 +273,19 @@ export const getStaticRolesWithPermissions = () => {
                                 "roleAssignedActions": [1, 2, 3, 4]
                             },
                         ]
-                    }
-
+                    },
+                    {
+                        "functionalityId": 6,
+                        "functionalityName": "Members",
+                        "modules": [
+                            {
+                                "moduleId": 6,
+                                "moduleName": "Members",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": isSalesRep ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
                 ]
             }
         }

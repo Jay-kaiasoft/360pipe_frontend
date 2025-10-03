@@ -146,7 +146,7 @@ const AddMemberRoles = () => {
             }
             const res = await updateSubUserType(id, newData);
             if (res.data.status === 200) {
-                navigate('/dashboard/accounts');
+                navigate('/dashboard/members');
             } else {
                 setAlert({ open: true, message: res.data.message, type: 'error' });
 
@@ -160,7 +160,7 @@ const AddMemberRoles = () => {
             }
             const res = await createSubUserType(newData);
             if (res.data.status === 201) {
-                navigate('/dashboard/accounts');
+                navigate('/dashboard/members');
             } else {
                 setAlert({ open: true, message: res.data.message, type: 'error' });
             }

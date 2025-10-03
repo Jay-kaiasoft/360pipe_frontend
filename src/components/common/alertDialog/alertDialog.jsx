@@ -13,7 +13,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-export default function AlertDialog({ open, handleClose, title, message, handleAction, actionButtonText, loading, note = null, closeIcon = true }) {
+export default function AlertDialog({ open, handleClose, title, message, handleAction, actionButtonText, loading, closeIcon = true }) {
     const theme = useTheme();
 
     const onClose = () => {
@@ -54,10 +54,7 @@ export default function AlertDialog({ open, handleClose, title, message, handleA
                     </Components.Typography>
                 </Components.DialogContent>
                 <Components.DialogActions>
-                    <div className='flex justify-between items-center gap-4 w-full'>
-                        <p className='text-sm text-red-400 w-3/4'>
-                            {note ? `Note: ${note}` : ''}
-                        </p>
+                    <div className='flex justify-end items-center gap-4 w-full'>                      
                         <div>
                             <Button useFor={`error`} type={`button`} text={actionButtonText} onClick={handleAction} isLoading={loading} />
                         </div>

@@ -402,7 +402,8 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
                                                             type={`text`}
                                                             error={errors?.username}
                                                             onChange={(e) => {
-                                                                field.onChange(e);
+                                                                const value = e.target.value.replace(/\s/g, "");
+                                                                field.onChange(value);
                                                             }}
                                                             onBlur={() => {
                                                                 handleVerifyUsername();
@@ -738,9 +739,13 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
                             )
                         }
                         <div className="mt-6 flex justify-center items-center gap-3 cap">
-                            <div>
-                                <Button type="button" onClick={() => handleBack()} text={"Back"} disabled={stopRegisterProcess} />
-                            </div>
+                            {
+                                activeStep > 0 && (
+                                    <div>
+                                        <Button type="button" onClick={() => handleBack()} text={"Back"} disabled={stopRegisterProcess} />
+                                    </div>
+                                )
+                            }
 
                             <div>
                                 <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 2 ? "Let's Go" : "next"} disabled={stopRegisterProcess} />
