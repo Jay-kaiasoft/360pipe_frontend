@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSelector, useDispatch, connect } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus } from "../../../redux/commonReducers/commonReducers"
@@ -12,14 +12,70 @@ import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsServi
 import Button from "../../../components/common/buttons/button"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
 import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
+import { Tabs } from "../../../components/common/tabs/tabs"
+import { useTheme } from "@mui/material"
 
 const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus }) => {
+  const theme = useTheme();
+
   const { isMobileOpen } = useSelector((state) => state.common)
+  const userDetails = getUserDetails();
+  const salesforceUserDetails = getSalesforceUserDetails();
+
   const dispatch = useDispatch()
   const navigate = useNavigate();
 
-  const userDetails = getUserDetails();
-  const salesforceUserDetails = getSalesforceUserDetails();
+  const [tabsData, setTabsData] = useState([]);
+  const [selectedTab, setSelectedTab] = useState(0);
+
+  const handleChangeTab = (value) => {
+    const selectedPath = tabsData[value]?.path;
+    if (selectedPath) {
+      navigate(selectedPath);
+      setSelectedTab(value);
+    }
+  }
+
+  const handleSetNavItems = () => {
+    setTabsData([
+      {
+        label: "Dashboard",
+        path: "/dashboard",
+      },
+      {
+        label: "Accounts",
+        path: "/dashboard/accounts",
+      },
+      {
+        label: "Opportunities",
+        path: "/dashboard/opportunities",
+      },
+      {
+        label: "Contacts",
+        path: "/dashboard/contacts",
+      },
+      {
+        label: "Members",
+        path: "/dashboard/members",
+      },
+      {
+        label: "My Team",
+        path: "/dashboard/myteam",
+      },
+      ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
+        ? [
+          {
+            label: "My CRM",
+            path: "/dashboard/mycrm",
+          }
+        ]
+        : []),
+      {
+        label: "Sync History",
+        path: "/dashboard/syncHistory",
+      },
+    ])
+  }
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -49,6 +105,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   }
 
   useEffect(() => {
+    handleSetNavItems()
     handleGetAllSyncRecords()
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -61,8 +118,6 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       document.removeEventListener("keydown", handleKeyDown)
     }
   }, [])
-
-
 
   const handlePushData = async () => {
     setLoading(true);
@@ -139,10 +194,14 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
 
 
   return (
-    <header className="sticky top-0 flex w-full z-40 bg-white border-b shadow-sm">
-      <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
+    <header className="w-full bg-white border-b-2 shadow-sm" style={{ borderColor: theme.palette.secondary.main }}>
+      <div className="flex items-end justify-start grow lg:px-6">
+        <div className="hidden xl:block">
+          <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" />
+        </div>
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
-          <div className="grow">
+
+          <div className="grow xl:hidden">
             <button
               className="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11"
               onClick={handleToggle}
@@ -183,6 +242,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
               )}
             </button>
           </div>
+
           <div className="flex items-center justify-end gap-6 w-full">
             {
               ((userDetails?.userId === salesforceUserDetails?.userId) && localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
@@ -198,13 +258,13 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
                     </Components.Badge>
                   </div>
 
-                  <span className="cursor-pointer flex items-center" onClick={() => navigate('/dashboard/syncHistory')}>
+                  {/* <span className="cursor-pointer flex items-center" onClick={() => navigate('/dashboard/syncHistory')}>
                     <Components.Tooltip title="Sync History">
                       <span>
                         <CustomIcons iconName={'fa-solid fa-arrows-rotate'} css={"text-lg"} />
                       </span>
                     </Components.Tooltip>
-                  </span>
+                  </span> */}
                 </>
               )
             }

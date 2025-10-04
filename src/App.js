@@ -23,15 +23,13 @@ import Opportunities from "./pages/dashboard/opportunities/opportunities";
 import Contacts from "./pages/dashboard/contacts/contacts";
 import Crm from "./pages/crm/crm";
 import UserProfile from "./pages/dashboard/userProfile/userProfile";
-import ManageUser from "./pages/dashboard/manageUser/manageUser";
-import AddSubUser from "./pages/dashboard/manageUser/addSubUser";
 import SubUserRegister from "./pages/auth/subUserRegister/subUserRegister";
 import SyncHistory from "./pages/dashboard/syncHistory/syncHistory";
-import ManageAccounts from "./pages/dashboard/accounts/manageAccounts";
 import ManageTeam from "./pages/myTeam/manageTeam";
 import AddTeamMembers from "./pages/myTeam/addTeamMembers";
 import ManageMembers from "./pages/members/manageMembers";
 import AddMemberRoles from "./pages/members/addMemberRoles";
+import Accounts from "./pages/dashboard/accounts/accounts";
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
@@ -74,7 +72,7 @@ const App = ({ setLoading }) => {
       children: [
         {
           path: "accounts",
-          element: <ManageAccounts />,
+          element: <Accounts />,
         },
         {
           path: "opportunities",
@@ -91,19 +89,7 @@ const App = ({ setLoading }) => {
         {
           path: "profile",
           element: <UserProfile />,
-        },
-        {
-          path: "manageusers",
-          element: <ManageUser />,
-        },
-        {
-          path: "accounts/add",
-          element: <AddSubUser />,
-        },
-        {
-          path: "accounts/edit/:id",
-          element: <AddSubUser />,
-        },
+        },              
         {
           path: "syncHistory",
           element: <SyncHistory />,
@@ -156,7 +142,7 @@ const App = ({ setLoading }) => {
   return (
     <>
       <MuiThemeProvider>
-        <div className="h-screen">
+        <div className="min-h-screen">
           <Loader />
           <GlobalAlert />
           <RouterProvider router={router} fallbackElement={<Loader />} />

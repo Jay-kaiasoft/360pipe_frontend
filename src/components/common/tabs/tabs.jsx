@@ -1,21 +1,41 @@
 import Components from "../../muiComponents/components";
 import { useTheme } from "@mui/material";
 
-export const Tabs = ({ selectedTab, handleChange, tabsData }) => {
+export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default" }) => {
   const theme = useTheme();
 
-  // Underline-style tabs with animated underline
-  const getTabStyle = (index) => ({
-    color: selectedTab === index ? theme.palette.text.primary : "#9E9E9E",
-    fontWeight: selectedTab === index ? "600" : "normal",
-    textTransform: "none",
-    paddingBottom: "8px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    position: "relative",
-  });
+  const getTabStyle = (index) => {
+    const isSelected = selectedTab === index;
+    const isHeaderType = type === "header";
+
+    return {
+      color: isSelected
+        ? theme.palette.text.primary
+        : theme.palette.text.primary,
+      fontWeight: isSelected ? 600 : 400,
+      fontSize: "14px",
+      textTransform: "none",
+      padding: "8px 16px",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "7px",
+      position: "relative",
+      borderTop: isHeaderType
+        ? isSelected
+          ? `3px solid ${theme.palette.secondary.main}`
+          : "3px solid transparent"
+        : "none",
+      backgroundColor: isHeaderType
+        ? isSelected
+          ? "rgba(33, 150, 243, 0.08)" // light blue background
+          : "transparent"
+        : "transparent",
+      // borderRadius: isHeaderType ? "6px 6px 0 0" : 0,
+      // transition: "all 0.3s ease",
+      fontFamily: '"Inter", sans-serif'
+    };
+  };
 
   const underlineStyle = (index) => ({
     content: '""',
@@ -25,7 +45,8 @@ export const Tabs = ({ selectedTab, handleChange, tabsData }) => {
     height: "2px",
     width: selectedTab === index ? "100%" : "0%",
     backgroundColor: theme.palette.secondary.main,
-    transition: "width 0.3s ease", // underline animation
+    transition: "width 0.3s ease",
+    fontFamily: '"Inter", sans-serif'
   });
 
   return (
@@ -33,14 +54,15 @@ export const Tabs = ({ selectedTab, handleChange, tabsData }) => {
       sx={{
         width: "100%",
         display: "flex",
-        gap: "40px",
-        borderBottom: "1px solid #E0E0E0",
-        overflowX: "auto",          // enable horizontal scroll
-        whiteSpace: "nowrap",       // prevent wrapping
-        scrollbarWidth: "none",     // hide scrollbar (Firefox)
-        "&::-webkit-scrollbar": {   // hide scrollbar (Chrome/Safari)
-          display: "none",
-        },
+        gap: "20px",
+        borderBottom: type === "default" ? "1px solid #E0E0E0" : "none",
+        overflowX: "auto",
+        whiteSpace: "nowrap",
+        scrollbarWidth: "none",
+        "&::-webkit-scrollbar": { display: "none" },
+        backgroundColor: type === "header" ? "#ffffff" : "transparent",
+        // padding: type === "header" ? "8px 0" : 0,
+        fontFamily: '"Inter", sans-serif'
       }}
     >
       {[...new Map(tabsData?.map((item) => [item.label, item])).values()].map(
@@ -50,12 +72,10 @@ export const Tabs = ({ selectedTab, handleChange, tabsData }) => {
             style={getTabStyle(index)}
             onClick={() => handleChange(index)}
           >
-            {/* Icon (optional) */}
             {item.icon && <span>{item.icon}</span>}
             <span>{item.label}</span>
 
-            {/* Animated underline */}
-            <span style={underlineStyle(index)} />
+            {type === "default" && <span style={underlineStyle(index)} />}
           </div>
         )
       )}

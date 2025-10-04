@@ -18,11 +18,9 @@ const Sidebar = ({
     isMobileOpen,
     isHovered,
     openSubmenu,
-    toggleSidebar,
-    toggleMobileSidebar,
     setIsHovered,
-    setActiveItem,
-    toggleSubmenu
+    toggleSubmenu,
+    toggleMobileSidebar
 }) => {
     const userDetails = getUserDetails();
     const salesforceUserDetails = getSalesforceUserDetails();
@@ -168,6 +166,7 @@ const Sidebar = ({
                     ) : (
                         nav.path && (
                             <NavLink
+                                onClick={() => toggleMobileSidebar()}
                                 to={nav.path}
                                 className={({ isActive }) =>
                                     `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 group ${isActive
@@ -216,6 +215,7 @@ const Sidebar = ({
                                 {nav.subItems.map(subItem => (
                                     <li key={subItem.name}>
                                         <NavLink
+                                            onClick={() => toggleMobileSidebar()}
                                             to={subItem.path}
                                             className={({ isActive }) =>
                                                 `flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-200 ${isActive
@@ -273,8 +273,7 @@ const Sidebar = ({
             onMouseLeave={() => setIsHovered(false)}
         >
             <div
-                className={`py-6 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
-                    }`}
+                className={`py-6 flex justify-center items-center`}
             >
                 <NavLink to="/dashboard">
                     {isExpanded || isHovered || isMobileOpen ? (
@@ -313,10 +312,10 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     toggleSidebar,
-    toggleMobileSidebar,
     setIsHovered,
     setActiveItem,
-    toggleSubmenu
+    toggleSubmenu,
+    toggleMobileSidebar
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Sidebar)

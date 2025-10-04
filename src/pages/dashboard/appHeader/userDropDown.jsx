@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom"
 import { getUserDetails } from "../../../utils/getUserDetails";
 import Cookies from 'js-cookie';
 
-import UserIcon from "../../../assets/svgs/user-alt.svg"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
 import AlertDialog from "../../../components/common/alertDialog/alertDialog";
 
@@ -56,17 +55,17 @@ export default function UserDropdown() {
                 onClick={toggleDropdown}
                 className="flex items-center text-gray-700 dropdown-toggle"
             >
-                <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-                    <img src={UserIcon} alt="User" />
+                <span className="mr-3 overflow-hidden rounded-full">
+                    <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-gray-500 group-hover:text-gray-700 h-6 w-6"} />
                 </span>
 
-                <span className="block mr-1 text-sm font-bold text-start min-w-28">
+                {/* <span className="block mr-1 text-sm font-bold text-start min-w-28">
                     {userdata?.username ? userdata?.username : userdata?.name}<br />
                     <span className="capitalize">
                         {userdata?.roleName ? userdata?.roleName?.toLowerCase() : ""}
                     </span>
-                </span>
-                <svg
+                </span> */}
+                {/* <svg
                     className={`stroke-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
                         }`}
                     width="18"
@@ -82,7 +81,7 @@ export default function UserDropdown() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     />
-                </svg>
+                </svg> */}
             </button>
 
             {/* Dropdown Menu */}
@@ -90,11 +89,14 @@ export default function UserDropdown() {
                 <div className="absolute right-0 mt-4 flex w-64 flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-lg">
                     {/* User Info */}
                     <div className="pb-3 border-b border-gray-200">
-                        <span className="block text-sm font-medium text-gray-700">
+                        <span className="block text-lg font-medium text-gray-700">
                             {userdata?.username ? userdata?.username : userdata?.name}
                         </span>
-                        <span className="block mt-1 text-xs text-gray-500">
-                            {userdata?.email ? userdata?.email : ""}
+                        <span className="block mt-1 text-sm text-gray-500">
+                            {/* {userdata?.email ? userdata?.email : ""} <br /> */}
+                            <span className="capitalize">
+                                {userdata?.roleName ? userdata?.roleName?.toLowerCase() : ""}
+                            </span>
                         </span>
                     </div>
 

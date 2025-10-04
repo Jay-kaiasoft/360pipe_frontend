@@ -35,6 +35,7 @@ const calendarType = [
     { id: 1, title: "Calendar Year" },
     { id: 2, title: "Financial Year" },
 ]
+
 function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handleClose, id, handleGetAllUsers }) {
     const theme = useTheme()
     const [validEmail, setValidEmail] = useState(null);
@@ -484,7 +485,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
-                            <div>
+                            {/* <div>
                                 <Controller
                                     name="username"
                                     control={control}
@@ -519,7 +520,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                         />
                                     )}
                                 />
-                            </div>
+                            </div> */}
                             <div>
                                 <Controller
                                     name="emailAddress"
@@ -562,7 +563,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                 />
                             </div>
 
-                            <div className="relative">
+                            {/* <div className="relative">
                                 <Controller
                                     name="password"
                                     control={control}
@@ -629,7 +630,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
 
                                     )
                                 }
-                            </div>
+                            </div> */}
 
                             <div>
                                 <Controller
@@ -660,7 +661,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
-                            <div className="flex items-center my-0.5 col-span-2 md:col-span-2">
+                            {/* <div className="flex items-center my-0.5 col-span-2 md:col-span-2">
                                 <div className="flex-grow border-t border-black"></div>
                                 <span className="mx-4 text-black font-medium">Quota Details</span>
                                 <div className="flex-grow border-t border-black"></div>
@@ -743,7 +744,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                         />
                                     </div>
                                 ));
-                            })()}
+                            })()} */}
                             {/* <div>
                                 <Controller
                                     name="crmId"

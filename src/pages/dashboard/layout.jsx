@@ -3,37 +3,41 @@ import { connect } from "react-redux"
 import AlertDialog from "../../components/common/alertDialog/alertDialog"
 
 import AppHeader from "./appHeader/appHeader"
+import Dashboard from "./dashboard"
 import SideBar from "./sideBar/sideBar"
 import BackDrop from "./sideBar/backDrop"
-import Dashboard from "./dashboard"
 
-const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
+const Layout = ({ sessionEndModel }) => {
+
   const navigate = useNavigate()
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-gray-50 lg:flex">
-      <div>
-        <SideBar />
-        <BackDrop />
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <AppHeader />
       </div>
 
-      <div
-        className={`flex-1 transition-all duration-300 ease-in-out overflow-x-hidden ${isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[80px]"} ${isMobileOpen ? "ml-0" : ""}`}
-      >
-        <div>
-          <AppHeader />
+      {/* Main Content Area */}
+      <div className="flex flex-1 pt-20"> {/* pt-16 to account for fixed header height */}
+        {/* Sidebar for mobile */}
+        <div className="lg:hidden">
+          <SideBar />
+          <BackDrop />
         </div>
 
-        <div className="p-4 mx-auto">
-          {
-            location.pathname === '/dashboard' && (
-              <Dashboard />
-            )
-          }
-          <Outlet />
-        </div>
+        {/* Scrollable Content */}
+        <main className="flex-1">
+          <div className="h-full overflow-y-auto">
+            <div className="p-4 mx-auto">
+              <Outlet />
+              {location.pathname === '/dashboard' && <Dashboard />}
+            </div>
+          </div>
+        </main>
       </div>
+
       <AlertDialog
         open={sessionEndModel}
         title="Session Expired"
@@ -47,9 +51,6 @@ const Layout = ({ isExpanded, isHovered, isMobileOpen, sessionEndModel }) => {
 }
 
 const mapStateToProps = (state) => ({
-  isExpanded: state.common.isExpanded,
-  isHovered: state.common.isHovered,
-  isMobileOpen: state.common.isMobileOpen,
   sessionEndModel: state.common.sessionEndModel,
 })
 
