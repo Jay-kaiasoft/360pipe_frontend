@@ -35,4 +35,6 @@ export const subUserTypeURL = baseURL + '/subUserType'
 export const teamDetailsURL = baseURL + '/teamDetails'
 export const teamMembersURL = baseURL + '/teamMembers'
 export const customerQuotaURL = baseURL + '/customerQuota'
+export const todoURL = baseURL + '/todo'
+export const todoAssignURL = baseURL + '/todoAssign'
 

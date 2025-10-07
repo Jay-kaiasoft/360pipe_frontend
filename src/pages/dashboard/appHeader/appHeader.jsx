@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useSelector, useDispatch, connect } from "react-redux"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus } from "../../../redux/commonReducers/commonReducers"
 
 import UserDropdown from "./userDropDown"
@@ -24,6 +24,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
 
   const dispatch = useDispatch()
   const navigate = useNavigate();
+  const locaiton = useLocation();
 
   const [tabsData, setTabsData] = useState([]);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -37,7 +38,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   }
 
   const handleSetNavItems = () => {
-    setTabsData([
+    const tabItems = [
       {
         label: "Dashboard",
         path: "/dashboard",
@@ -49,6 +50,10 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       {
         label: "Opportunities",
         path: "/dashboard/opportunities",
+      },
+      {
+        label: "Todos",
+        path: "/dashboard/todos",
       },
       {
         label: "Contacts",
@@ -74,7 +79,13 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         label: "Sync History",
         path: "/dashboard/syncHistory",
       },
-    ])
+    ]
+    setTabsData(tabItems)
+    const currentPath = locaiton.pathname;
+    const currentTabIndex = tabItems?.findIndex(tab => tab.path === currentPath);
+    if (currentTabIndex !== -1) {
+      setSelectedTab(currentTabIndex);
+    }
   }
 
   const handleToggle = () => {
