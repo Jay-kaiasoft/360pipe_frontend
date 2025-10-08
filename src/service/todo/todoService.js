@@ -10,6 +10,15 @@ export const getAllTodos = async () => {
     }
 };
 
+export const getTodoByFilter = async (data) => {
+    try {
+        const response = await axiosInterceptor().post(`${todoURL}/getByFilter`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getTodo = async (id) => {
     try {
         const response = await axiosInterceptor().get(`${todoURL}/get/${id}`);
@@ -45,3 +54,12 @@ export const deleteTodo = async (id) => {
         throw error;
     }
 }
+
+export const setTodoToday = async (data) => {
+    try {
+        const response = await axiosInterceptor().post(`${todoURL}/setTodoToday`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

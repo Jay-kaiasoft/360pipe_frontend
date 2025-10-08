@@ -15,9 +15,11 @@ import { createTodo, getTodo, updateTodo } from '../../../service/todo/todoServi
 import DatePickerComponent from '../../common/datePickerComponent/datePickerComponent';
 import dayjs from 'dayjs';
 import { getAllSubUsers } from '../../../service/customers/customersService';
-import { getAllTeams } from '../../../service/teamDetails/teamDetailsService';
+import { getAllTeamAndMembers, getAllTeams } from '../../../service/teamDetails/teamDetailsService';
 import { createTodoAssign, getTodoAssignByTodoId, updateTodoAssign } from '../../../service/todoAssign/todoAssignService';
 import { getUserDetails } from '../../../utils/getUserDetails';
+import TeamMemberSelect from './teamMemberSelect';
+import { getAllTeamMembers } from '../../../service/teamMembers/teamMembersService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -43,17 +45,6 @@ const status = [
     }
 ]
 
-const taskType = [
-    {
-        id: 1,
-        title: "Work"
-    },
-    {
-        id: 2,
-        title: "Personal"
-    },
-]
-
 const assignedType = [
     {
         id: 1,
@@ -69,6 +60,21 @@ const assignedType = [
     }
 ]
 
+const todoType = [
+    {
+        id: 1,
+        title: "Assigned"
+    },
+    {
+        id: 2,
+        title: "Work"
+    },
+    {
+        id: 3,
+        title: "Personal"
+    }
+]
+
 function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     const theme = useTheme()
     const userData = getUserDetails()
@@ -77,6 +83,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     // const [opportunities, setOpportunities] = useState([]);
     const [teams, setTeams] = useState([]);
     const [customers, setCustomers] = useState([]);
+    const [teamAndMembers, setTeamAndMembers] = useState({ teams: [], individuals: [] })
 
     const {
         handleSubmit,
@@ -102,7 +109,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             assignedId: null,
             teamId: null,
             customerId: null,
-            assignedType: null,
+            assignedType: 1,
         },
     });
 
@@ -124,7 +131,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             assignedId: null,
             teamId: null,
             customerId: null,
-            assignedType: null,
+            assignedType: 1,
         });
         handleClose();
     };
@@ -147,12 +154,21 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     //     }
     // }
 
+    const handleGetAllTeamAndMembers = async () => {
+        if (open) {
+            const res = await getAllTeamAndMembers()
+            if (res?.status === 200) {
+                setTeamAndMembers(res?.result || { teams: [], individuals: [] })
+            }
+        }
+    }
+
     const handleGetTodoDetails = async () => {
         if (todoId && open) {
             const res = await getTodo(todoId);
             if (res?.status === 200) {
                 reset(res?.result);
-                setValue("task", taskType?.find(t => t.title === res?.result?.task)?.id);
+                setValue("source", todoType?.find(t => t.title === res?.result?.source)?.id);
                 setValue("status", status?.find(s => s.title === res?.result?.status)?.id);
                 const response = await getTodoAssignByTodoId(todoId);
                 if (response?.status === 200) {
@@ -160,18 +176,22 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     setValue("assignedId", assignData?.id);
                     setValue("teamId", assignData?.teamId);
                     setValue("customerId", assignData?.customerId);
-                    if (assignData?.customerId !== null && assignData?.teamId === null) {
-                        if (assignData?.customerId === userData?.userId) {
-                            setValue("assignedType", 1);
-                            return;
-                        }
-                    } else if (assignData?.teamId && assignData?.customerId) {
+                    if (assignData?.teamId) {
+                        const members = await getAllTeamMembers(assignData?.teamId);
+                        const data = members?.result?.map((item) => {
+                            return {
+                                id: item.memberId,
+                                title: item.memberName || ''
+                            }
+                        })
+                        setCustomers(data || [])
                         setValue("assignedType", 2);
-                        return;
+                    } else if (assignData?.customerId === userData?.userId) {
+                        setValue("assignedType", 1);
                     } else if (assignData?.customerId) {
                         setValue("assignedType", 3);
-                        return;
                     }
+
                 }
             }
         }
@@ -197,26 +217,27 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             const data = res?.result?.map((item) => {
                 return {
                     id: item.id,
-                    title: item.name || ''
+                    title: item.name || '',
+                    teamMembers: item.teamMembers || []
                 }
             })
-            const customers = res?.result?.teamMembers?.map((item) => {
-                return {
-                    id: item.memberId,
-                    title: item.memberName || ''
-                }
-            })
-            setCustomers(customers || [])
+            setCustomers([])
             setTeams(data || [])
         }
     }
 
     useEffect(() => {
-        handleGetAllCustomers()
+        handleGetAllTeamAndMembers()
         handleGetAllTeams()
         // handleGetAllOpportunities()
         handleGetTodoDetails()
     }, [open])
+
+    useEffect(() => {
+        if (watch("assignedType") === 3) {
+            handleGetAllCustomers()
+        }
+    }, [watch("assignedType")])
 
     const assignTodo = async (data) => {
         if (watch("assignedId")) {
@@ -259,7 +280,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     : dayjs().format("MM/DD/YYYY"))
                 : null,
             status: status?.find(s => s.id === parseInt(watch("status")))?.title,
-            task: taskType?.find(t => t.id === parseInt(watch("task")))?.title,
+            source: todoType?.find(t => t.id === parseInt(watch("source")))?.title,
         };
         try {
             if (todoId) {
@@ -308,7 +329,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         }
     };
 
-
     return (
         <React.Fragment>
             <BootstrapDialog
@@ -318,7 +338,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {todoId ? "Update" : "Add New "}Todo
+                    {todoId ? "Update " : "Add New "}Todo
                 </Components.DialogTitle>
 
                 <Components.IconButton
@@ -379,7 +399,21 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 )}
                             />
-
+                            <Controller
+                                name="task"
+                                control={control}
+                                rules={{
+                                    required: "Task is required",
+                                }}
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        label="Task"
+                                        type={`text`}
+                                        error={errors.task}
+                                    />
+                                )}
+                            />
                             <div>
                                 <DatePickerComponent setValue={setValue} control={control} name='dueDate' label={`Due Date`} />
                             </div>
@@ -411,6 +445,30 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     )}
                                 />
                             </div>
+                            <div>
+                                <Controller
+                                    name="source"
+                                    control={control}
+                                    rules={{ required: true }}
+
+                                    render={({ field }) => (
+                                        <Select
+                                            options={todoType}
+                                            label={"Task Type"}
+                                            placeholder="Select Task Type"
+                                            value={parseInt(watch("source")) || null}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("source", null);
+                                                }
+                                            }}
+                                            error={errors.source}
+                                        />
+                                    )}
+                                />
+                            </div>
 
                             <div>
                                 <Controller
@@ -426,9 +484,16 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             value={parseInt(watch("assignedType")) || null}
                                             onChange={(_, newValue) => {
                                                 if (newValue?.id) {
+                                                    setValue("customerId", null);
+                                                    setValue("teamId", null);
                                                     field.onChange(newValue.id);
+                                                    if (newValue?.id === 1 || newValue?.id === 2) {
+                                                        setCustomers([])
+                                                    }
                                                 } else {
                                                     setValue("assignedType", null);
+                                                    setValue("customerId", null);
+                                                    setValue("teamId", null);
                                                 }
                                             }}
                                             error={errors.assignedType}
@@ -454,8 +519,16 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                         onChange={(_, newValue) => {
                                                             if (newValue?.id) {
                                                                 field.onChange(newValue.id);
+                                                                const customers = newValue?.teamMembers?.map((item) => {
+                                                                    return {
+                                                                        id: item.memberId,
+                                                                        title: item.memberName || ''
+                                                                    }
+                                                                })
+                                                                setCustomers(customers || [])
                                                             } else {
                                                                 setValue("teamId", null);
+                                                                setCustomers([])
                                                             }
                                                         }}
                                                         error={errors.teamId}
@@ -466,12 +539,12 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                         <Controller
                                             name="customerId"
                                             control={control}
-                                            rules={{ required: true }}
                                             render={({ field }) => (
                                                 <Select
+                                                    disabled={customers?.length === 0}
                                                     options={customers}
-                                                    label={"Customer"}
-                                                    placeholder="Select Customer"
+                                                    label={"Member"}
+                                                    placeholder="Select Member"
                                                     value={parseInt(watch("customerId")) || null}
                                                     onChange={(_, newValue) => {
                                                         if (newValue?.id) {
@@ -480,7 +553,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                             setValue("customerId", null);
                                                         }
                                                     }}
-                                                    error={errors.customerId}
                                                 />
                                             )}
                                         />
@@ -495,21 +567,16 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             name="customerId"
                                             control={control}
                                             rules={{ required: true }}
-                                            render={({ field }) => (
-                                                <Select
-                                                    options={customers}
-                                                    label={"Customer"}
-                                                    placeholder="Select Customer"
-                                                    value={parseInt(watch("customerId")) || null}
-                                                    onChange={(_, newValue) => {
-                                                        if (newValue?.id) {
-                                                            field.onChange(newValue.id);
-                                                            setValue("teamId", null);
-                                                        } else {
-                                                            setValue("customerId", null);
-                                                        }
+                                            render={({ field, fieldState: { error } }) => (
+                                                <TeamMemberSelect
+                                                    label={"Member"}
+                                                    placeholder="Select Member"
+                                                    options={teamAndMembers}
+                                                    value={field.value || ""}
+                                                    onChange={(e) => {
+                                                        field.onChange(e?.id)
                                                     }}
-                                                    error={errors.customerId}
+                                                    error={!!error}
                                                 />
                                             )}
                                         />

@@ -6,7 +6,7 @@ import CustomIcons from '../icons/CustomIcons';
 
 const paginationModel = { page: 0, pageSize: 10 };
 
-export default function DataTable({ checkboxSelection = false, showSearch = false, showButtons = false, rows, columns, getRowId, height, buttons }) {
+export default function DataTable({ getRowClassName, checkboxSelection = false, showSearch = false, showButtons = false, rows, columns, getRowId, height, buttons }) {
     const theme = useTheme();
     return (
         <>
@@ -42,6 +42,7 @@ export default function DataTable({ checkboxSelection = false, showSearch = fals
                     pageSizeOptions={[10, 25, 50, { value: -1, label: 'All' }]}
                     disableRowSelectionOnClick
                     hideFooterSelectedRowCount
+                    getRowClassName={getRowClassName}
                     // disableColumnSorting
                     getRowId={getRowId}
                     // hideFooter

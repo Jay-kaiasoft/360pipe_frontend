@@ -9,31 +9,37 @@ import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
-import { deleteTodo, getAllTodos } from '../../../service/todo/todoService';
+import { deleteTodo, getTodoByFilter, setTodoToday } from '../../../service/todo/todoService';
+
 import AddTodo from '../../../components/models/todo/addTodo';
+import Checkbox from '../../../components/common/checkBox/checkbox';
+import { Tabs } from '../../../components/common/tabs/tabs';
+
+const filterTab = [
+    { id: 1, label: "Master", },
+    { id: 2, label: "Today", },
+    { id: 3, label: "Assigned", },
+    { id: 4, label: "Work" },
+    { id: 5, label: "Personal", },
+]
 
 const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
+    const [activeFilterTab, setActiveFilterTab] = useState(0);
 
     const [todos, setTodos] = useState([]);
     const [open, setOpen] = useState(false);
-    // const [openAssignTodoModel, setOpenAssignTodoModel] = useState(false);
     const [selectedTodoId, setSelectedTodoId] = useState(null);
-    // const [selectedTodo, setSelectedTodo] = useState(null);
+    const [checkTodoIds, setCheckTodoIds] = useState([]);
+    const [showSaveButton, setShowSaveButton] = useState(false);
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
-    const handleGetTodos = async () => {
-        try {
-            const todos = await getAllTodos();
-            const formattedTodos = todos?.result?.map((todo, index) => ({
-                ...todo,
-                rowId: index + 1
-            }));
-            setTodos(formattedTodos);
-        } catch (error) {
-            console.error("Error fetching todos:", error);
-        }
+    const handleSetActiveFilterTab = (id) => {
+        setTodos([]);
+        setCheckTodoIds([]);
+        setShowSaveButton(false);
+        setActiveFilterTab(id);
     }
 
     const handleOpen = (todoId = null) => {
@@ -45,16 +51,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         setSelectedTodoId(null);
         setOpen(false);
     }
-
-    // const handleOpenTodoAssignModel = (todo) => {
-    //     setSelectedTodo(todo);
-    //     setOpenAssignTodoModel(true);
-    // }
-
-    // const handleCloseTodoAssignModel = () => {
-    //     setSelectedTodo(null);
-    //     setOpenAssignTodoModel(false);
-    // }
 
     const handleOpenDeleteDialog = (todoId) => {
         setSelectedTodoId(todoId);
@@ -70,12 +66,12 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         const res = await deleteTodo(selectedTodoId);
         if (res.status === 200) {
             setSyncingPushStatus(true);
-            setAlert({
-                open: true,
-                message: "Todo deleted successfully",
-                type: "success"
-            });
-            handleGetTodos();
+            // setAlert({
+            //     open: true,
+            //     message: "Todo deleted successfully",
+            //     type: "success"
+            // });
+            handleGetTodoByFilter();
             handleCloseDeleteDialog();
         } else {
             setAlert({
@@ -86,15 +82,114 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         }
     }
 
+    const handleGetTodoByFilter = async () => {
+        const filterData = {
+            source: "",
+            isToday: false
+        };
+        if (activeFilterTab === 0) {
+            filterData.source = "All";
+            filterData.isToday = false;
+        }
+        else if (activeFilterTab === 1) {
+            filterData.source = "";
+            filterData.isToday = true;
+        }
+        else if (activeFilterTab === 2) {
+            filterData.source = "Assigned";
+            filterData.isToday = false;
+        }
+        else if (activeFilterTab === 3) {
+            filterData.source = "Work";
+            filterData.isToday = false;
+        }
+        else if (activeFilterTab === 4) {
+            filterData.source = "Personal";
+            filterData.isToday = false;
+        }
+        const res = await getTodoByFilter(filterData);
+        if (res.status === 200) {
+            const formattedTodos = res?.result?.map((todo, index) => ({
+                ...todo,
+                rowId: index + 1,
+                isToday: todo.isToday || false,
+                complete: todo.status?.toLowerCase() === 'completed' ? true : false,
+            }));
+            formattedTodos?.forEach(todo => {
+                if (todo.isToday) {
+                    setCheckTodoIds(prev =>
+                        prev.includes(todo.id) ? prev : [...prev, todo.id]
+                    );
+                }
+            });
+            setTodos(formattedTodos);
+        }
+    }
+
+    const handleSave = async () => {
+        const data = {
+            source: "",
+            isToday: false,
+            todoIds: checkTodoIds
+        };
+        if (activeFilterTab === 0) {
+            data.source = "All";
+            data.isToday = false;
+        }
+        else if (activeFilterTab === 1) {
+            data.source = "";
+            data.isToday = true;
+        }
+        else if (activeFilterTab === 2) {
+            data.source = "Assigned";
+            data.isToday = false;
+        }
+        else if (activeFilterTab === 3) {
+            data.source = "Work";
+            data.isToday = false;
+        }
+        else if (activeFilterTab === 4) {
+            data.source = "Personal";
+            data.isToday = false;
+        }
+        const res = await setTodoToday(data);
+        if (res.status === 200) {
+            setCheckTodoIds([]);
+            setShowSaveButton(false);
+            setAlert({
+                open: true,
+                message: "Todo updated successfully",
+                type: "success"
+            });
+            handleGetTodoByFilter()
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to update todo",
+                type: "error"
+            });
+        }
+    }
+
     useEffect(() => {
-        handleGetTodos();
-    }, []);
+        handleGetTodoByFilter()
+    }, [activeFilterTab])
 
     useEffect(() => {
         if (syncingPullStatus && location.pathname === '/dashboard/todos') {
-            handleGetTodos();
+            handleGetTodoByFilter();
         }
     }, [syncingPullStatus]);
+
+    useEffect(() => {
+        let isChanged = [];
+        todos?.map(todo => {
+            if (todo.isToday) {
+                isChanged.push(todo.id);
+            }
+        })
+        setShowSaveButton(JSON.stringify(isChanged.sort()) !== JSON.stringify(checkTodoIds?.sort()));
+    }, [checkTodoIds])
 
     const columns = [
         {
@@ -106,8 +201,42 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             sortable: false,
         },
         {
-            field: 'topic',
-            headerName: 'Topic Name',
+            field: 'isToday',
+            headerName: activeFilterTab === 1 ? 'Complete' : 'Today',
+            headerClassName: 'uppercase',
+            flex: 1,
+            maxWidth: 100,
+            sortable: false,
+            renderCell: (params) => {
+                return (
+                    <div className='h-full flex justify-center items-center'>
+                        <Checkbox
+                            checked={checkTodoIds?.includes(params.row.id)}
+                            onChange={async (e) => {
+                                const newValue = e.target.checked;
+                                let newCheckTodoIds = [...checkTodoIds];
+                                if (newValue) {
+                                    newCheckTodoIds.push(params.row.id);
+                                } else {
+                                    newCheckTodoIds = newCheckTodoIds?.filter(id => id !== params.row.id);
+                                }
+                                setCheckTodoIds(newCheckTodoIds);
+                            }}
+                        />
+                    </div>
+                )
+            }
+        },
+        {
+            field: 'source',
+            headerName: 'Source',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 200
+        },
+        {
+            field: 'task',
+            headerName: 'Task',
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 400,
@@ -118,7 +247,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'Status',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200
+            minWidth: 200,
         },
         {
             field: 'dueDate',
@@ -131,7 +260,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                     <span>{params.value ? new Date(params.value).toLocaleDateString() : '-'}</span>
                 )
             }
-        },        
+        },
         {
             field: 'action',
             headerName: 'action',
@@ -141,18 +270,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
-                        {/* <PermissionWrapper
-                            functionalityName="Opportunities"
-                            moduleName="Opportunities"
-                            actionId={2}
-                            component={
-                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpenTodoAssignModel(params.row)}>
-                                        <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
-                            }
-                        /> */}
                         <PermissionWrapper
                             functionalityName="Opportunities"
                             moduleName="Opportunities"
@@ -189,25 +306,58 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
     const actionButtons = () => {
         return (
-            <PermissionWrapper
-                functionalityName="Opportunities"
-                moduleName="Opportunities"
-                actionId={1}
-                component={
-                    <div>
-                        <Button type={`button`} text={'Add Todo'} onClick={() => handleOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
-                    </div>
+            <div className='flex gap-4'>
+                {
+                    showSaveButton && (
+                        <div>
+                            <Button useFor='success' type={`button`} text={'Save'} onClick={() => handleSave()} startIcon={<CustomIcons iconName="fa-solid fa-save" css="h-5 w-5 mr-2" />} />
+                        </div>
+                    )
                 }
-            />
+                <PermissionWrapper
+                    functionalityName="Opportunities"
+                    moduleName="Opportunities"
+                    actionId={1}
+                    component={
+                        <div>
+                            <Button type={`button`} text={'Add Todo'} onClick={() => handleOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                        </div>
+                    }
+                />
+            </div>
         )
     }
 
     return (
         <>
-            <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={todos} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
+            <div className="hidden xl:block mb-2">
+                <Tabs tabsData={filterTab} selectedTab={activeFilterTab} handleChange={handleSetActiveFilterTab} />
             </div>
-            <AddTodo open={open} handleClose={handleClose} todoId={selectedTodoId} handleGetAllTodos={handleGetTodos} />
+            <div className='border rounded-lg bg-white w-full lg:w-full '>
+                <DataTable
+                    getRowClassName={(params) => {
+                        const status = params.row.status?.toLowerCase();
+                        if (status === 'completed') return '';
+
+                        const dueDate = params.row.dueDate ? new Date(params.row.dueDate) : null;
+                        if (!dueDate) return '';
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        dueDate.setHours(0, 0, 0, 0);
+
+                        return dueDate < today ? 'warning-row' : '';
+                    }}
+
+                    columns={columns}
+                    rows={todos}
+                    getRowId={getRowId}
+                    height={500}
+                    showButtons={true}
+                    buttons={actionButtons}
+                />
+
+            </div>
+            <AddTodo open={open} handleClose={handleClose} todoId={selectedTodoId} handleGetAllTodos={handleGetTodoByFilter} />
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

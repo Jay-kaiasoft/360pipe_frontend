@@ -1,6 +1,16 @@
 import { teamDetailsURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
+
+export const getAllTeamAndMembers = async () => {
+    try {
+        const response = await axiosInterceptor().get(`${teamDetailsURL}/getAllTeamAndMembers`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getAllTeams = async () => {
     try {
         const response = await axiosInterceptor().get(`${teamDetailsURL}/get/all`);
