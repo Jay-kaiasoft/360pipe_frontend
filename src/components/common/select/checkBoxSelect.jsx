@@ -87,16 +87,7 @@ const CheckBoxSelect = forwardRef(
                             color: `#ffffff !important`,
                           },
                         },
-                      },
-                      // maxWidth: '120px',
-                      // backgroundColor: theme.palette.secondary.main,
-                      // color: '#ffffff',
-                      // '& .MuiChip-deleteIcon': {
-                      //   color: '#ffffff',
-                      //   '&:hover': {
-                      //     color: '#e0e0e0',
-                      //   },
-                      // },
+                      },                     
                     }}
                   />
                 ))}

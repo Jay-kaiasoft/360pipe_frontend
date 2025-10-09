@@ -54,3 +54,31 @@ export const deleteTodoAssign = async (id) => {
         throw error;
     }
 }
+
+
+export const getTodoByTeamId = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${todoAssignURL}/getTodoByTeamId/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const createTodoTeam = async (data) => {
+    try {
+        const response = await axiosInterceptor().post(`${todoAssignURL}/teamAssign`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const updateTodoTeam = async (id, data) => {
+    try {
+        const response = await axiosInterceptor().patch(`${todoAssignURL}/teamAssign/${id}`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

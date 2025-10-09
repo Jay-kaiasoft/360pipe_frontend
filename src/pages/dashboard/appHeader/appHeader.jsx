@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useSelector, useDispatch, connect } from "react-redux"
-import { useLocation, useNavigate } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus } from "../../../redux/commonReducers/commonReducers"
 
 import UserDropdown from "./userDropDown"
@@ -206,12 +206,22 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
 
   return (
     <header className="w-full bg-white border-b-2 shadow-sm" style={{ borderColor: theme.palette.secondary.main }}>
-      <div className="flex items-end justify-start grow lg:px-6">
-        <div className="hidden xl:block">
-          <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" />
-        </div>
-        <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
+      <div className="flex justify-start items-center gap-4 lg:px-6">
+        <div className="flex justify-start items-center gap-8 grow">
+          <div className="hidden xl:block">
+            <div className="text-2xl font-bold text-blue-600">
+              <NavLink to={'/dashboard'}>
+                360Pipe
+              </NavLink>
+            </div>
+          </div>
 
+          <div className="hidden xl:block">
+            <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" />
+          </div>
+        </div>
+
+        <div className="w-full xl:w-0 flex items-center justify-between gap-2 px-3 py-3 border-b border-gray-200 sm:gap-4 lg:justify-end lg:border-b-0 lg:px-0 lg:py-4">
           <div className="grow xl:hidden">
             <button
               className="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11"
@@ -254,7 +264,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
             </button>
           </div>
 
-          <div className="flex items-center justify-end gap-6 w-full">
+          <div className="flex items-center justify-end gap-6">
             {
               ((userDetails?.userId === salesforceUserDetails?.userId) && localStorage.getItem("accessToken_salesforce") && localStorage.getItem("instanceUrl_salesforce")) && (
                 <>

@@ -1,3 +1,34 @@
+// import { getUserDetails } from "../../../utils/getUserDetails";
+
+// const PermissionWrapper = ({
+//     component,
+//     fallbackComponent = null,
+//     functionalityName,
+//     moduleName,
+//     actionId
+// }) => {
+//     const userData = getUserDetails() || [];
+
+//     // Allow Admins
+//     if (userData?.rolename === "SALES REPRESENTIVE" || userData?.subUser === false) {
+//         return <>{component}</>;
+//     }
+
+//     // Check permission
+//     const hasPermission = userData?.permissions?.functionalities?.some((item) =>
+//         item?.functionalityName?.toLowerCase() === functionalityName?.toLowerCase() &&
+//         item?.modules?.some((row) =>
+//             row?.moduleName?.toLowerCase() === moduleName?.toLowerCase() &&
+//             row?.roleAssignedActions?.includes(actionId)
+//         )
+//     );
+//     return hasPermission ? <>{component}</> : fallbackComponent;
+// };
+
+// export default PermissionWrapper;
+
+
+// PermissionWrapper component
 import { getUserDetails } from "../../../utils/getUserDetails";
 
 const PermissionWrapper = ({
@@ -5,23 +36,32 @@ const PermissionWrapper = ({
     fallbackComponent = null,
     functionalityName,
     moduleName,
-    actionId
+    actionId, // Single action
+    actionIds, // Multiple actions
+    checkAll = false // If true, require ALL actions; if false, require ANY action
 }) => {
     const userData = getUserDetails() || [];
 
     // Allow Admins
-    if (userData?.rolename === "Admin" || userData?.rolename === "Owner" || userData?.subUser === false) {
+    if (userData?.rolename === "SALES REPRESENTIVE" || userData?.subUser === false) {
         return <>{component}</>;
     }
+
+    // Determine which actions to check
+    const actionsToCheck = actionIds || (actionId ? [actionId] : []);
 
     // Check permission
     const hasPermission = userData?.permissions?.functionalities?.some((item) =>
         item?.functionalityName?.toLowerCase() === functionalityName?.toLowerCase() &&
         item?.modules?.some((row) =>
             row?.moduleName?.toLowerCase() === moduleName?.toLowerCase() &&
-            row?.roleAssignedActions?.includes(actionId)
+            (checkAll
+                ? actionsToCheck.every(action => row?.roleAssignedActions?.includes(action))
+                : actionsToCheck.some(action => row?.roleAssignedActions?.includes(action))
+            )
         )
     );
+
     return hasPermission ? <>{component}</> : fallbackComponent;
 };
 

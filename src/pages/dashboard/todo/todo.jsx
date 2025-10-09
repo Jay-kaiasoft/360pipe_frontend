@@ -9,11 +9,13 @@ import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
-import { deleteTodo, getTodoByFilter, setTodoToday } from '../../../service/todo/todoService';
+import { deleteTodo, getTodoByFilter, setTodoToday, updateTodo } from '../../../service/todo/todoService';
 
 import AddTodo from '../../../components/models/todo/addTodo';
 import Checkbox from '../../../components/common/checkBox/checkbox';
 import { Tabs } from '../../../components/common/tabs/tabs';
+import { text } from '@fortawesome/fontawesome-svg-core';
+import BorderLinearProgress from '../../../components/common/borderLinearProgress/BorderLinearProgress';
 
 const filterTab = [
     { id: 1, label: "Master", },
@@ -21,6 +23,7 @@ const filterTab = [
     { id: 3, label: "Assigned", },
     { id: 4, label: "Work" },
     { id: 5, label: "Personal", },
+    { id: 6, label: "Completed", },
 ]
 
 const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
@@ -34,6 +37,8 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const [showSaveButton, setShowSaveButton] = useState(false);
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [dialogCompleteTodo, setDialogCompleteTodo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [selectedTodo, setSelectedTodo] = useState(null);
 
     const handleSetActiveFilterTab = (id) => {
         setTodos([]);
@@ -60,6 +65,34 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const handleCloseDeleteDialog = () => {
         setSelectedTodoId(null);
         setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleOpenCompleteTodoDialog = (todo) => {
+        setSelectedTodo(todo);
+        setDialogCompleteTodo({ open: true, title: 'Complete Todo', message: 'Are you sure! Do you want to complete this todo?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseCompleteTodoDialog = () => {
+        setSelectedTodo(null);
+        setDialogCompleteTodo({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleCompleteTodo = async () => {
+        const data = {
+            ...selectedTodo,
+            status: 'Completed'
+        }
+        const res = await updateTodo(selectedTodo?.id, data)
+        if (res.status === 200) {
+            handleGetTodoByFilter();
+            handleCloseCompleteTodoDialog();
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to update todo",
+                type: "error"
+            });
+        }
     }
 
     const handleDeleteTodo = async () => {
@@ -105,6 +138,10 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         }
         else if (activeFilterTab === 4) {
             filterData.source = "Personal";
+            filterData.isToday = false;
+        }
+        else if (activeFilterTab === 5) {
+            filterData.source = "Completed";
             filterData.isToday = false;
         }
         const res = await getTodoByFilter(filterData);
@@ -202,11 +239,13 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         },
         {
             field: 'isToday',
-            headerName: activeFilterTab === 1 ? 'Complete' : 'Today',
+            headerName: 'Today',
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 100,
             sortable: false,
+            align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => {
                 return (
                     <div className='h-full flex justify-center items-center'>
@@ -232,14 +271,14 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'Source',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200
+            maxWidth: 150
         },
         {
             field: 'task',
             headerName: 'Task',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 400,
+            maxWidth: 500,
             sortable: false,
         },
         {
@@ -247,17 +286,31 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'Status',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200,
+            maxWidth: 200
         },
         {
             field: 'dueDate',
             headerName: 'Due Date',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 150,
+            maxWidth: 150,
             renderCell: (params) => {
                 return (
                     <span>{params.value ? new Date(params.value).toLocaleDateString() : '-'}</span>
+                )
+            }
+        },
+        {
+            field: 'complectedWork',
+            headerName: 'Completed Work',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 150,
+            renderCell: (params) => {
+                return (
+                    <div className='flex justify-center items-center h-full'>
+                        <BorderLinearProgress value={params.value ? parseInt(params.value) : 0} />
+                    </div>
                 )
             }
         },
@@ -270,9 +323,26 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
+                        {
+                            params.row.status?.toLowerCase() !== 'completed' ? (
+                                <PermissionWrapper
+                                    functionalityName="Todo"
+                                    moduleName="Todo"
+                                    actionId={2}
+                                    component={
+                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                            <Components.IconButton onClick={() => handleOpenCompleteTodoDialog(params.row)}>
+                                                <CustomIcons iconName={'fa-solid fa-check'} css='cursor-pointer text-white h-4 w-4' />
+                                            </Components.IconButton>
+                                        </div>
+                                    }
+                                />
+                            ) : null
+
+                        }
                         <PermissionWrapper
-                            functionalityName="Opportunities"
-                            moduleName="Opportunities"
+                            functionalityName="Todo"
+                            moduleName="Todo"
                             actionId={2}
                             component={
                                 <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
@@ -283,8 +353,8 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             }
                         />
                         <PermissionWrapper
-                            functionalityName="Opportunities"
-                            moduleName="Opportunities"
+                            functionalityName="Todo"
+                            moduleName="Todo"
                             actionId={3}
                             component={
                                 <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
@@ -309,14 +379,21 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             <div className='flex gap-4'>
                 {
                     showSaveButton && (
-                        <div>
-                            <Button useFor='success' type={`button`} text={'Save'} onClick={() => handleSave()} startIcon={<CustomIcons iconName="fa-solid fa-save" css="h-5 w-5 mr-2" />} />
-                        </div>
+                        <PermissionWrapper
+                            functionalityName="Todo"
+                            moduleName="Todo"
+                            actionId={2}
+                            component={
+                                <div>
+                                    <Button useFor='success' type={`button`} text={'Save'} onClick={() => handleSave()} startIcon={<CustomIcons iconName="fa-solid fa-save" css="h-5 w-5 mr-2" />} />
+                                </div>
+                            }
+                        />
                     )
                 }
                 <PermissionWrapper
-                    functionalityName="Opportunities"
-                    moduleName="Opportunities"
+                    functionalityName="Todo"
+                    moduleName="Todo"
                     actionId={1}
                     component={
                         <div>
@@ -365,6 +442,14 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                 actionButtonText={dialog.actionButtonText}
                 handleAction={() => handleDeleteTodo()}
                 handleClose={() => handleCloseDeleteDialog()}
+            />
+            <AlertDialog
+                open={dialogCompleteTodo.open}
+                title={dialogCompleteTodo.title}
+                message={dialogCompleteTodo.message}
+                actionButtonText={dialogCompleteTodo.actionButtonText}
+                handleAction={() => handleCompleteTodo()}
+                handleClose={() => handleCloseCompleteTodoDialog()}
             />
         </>
     )

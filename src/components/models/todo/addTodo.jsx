@@ -10,7 +10,6 @@ import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/co
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
-import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import { createTodo, getTodo, updateTodo } from '../../../service/todo/todoService';
 import DatePickerComponent from '../../common/datePickerComponent/datePickerComponent';
 import dayjs from 'dayjs';
@@ -20,6 +19,8 @@ import { createTodoAssign, getTodoAssignByTodoId, updateTodoAssign } from '../..
 import { getUserDetails } from '../../../utils/getUserDetails';
 import TeamMemberSelect from './teamMemberSelect';
 import { getAllTeamMembers } from '../../../service/teamMembers/teamMembersService';
+import CheckBoxSelect from '../../common/select/checkBoxSelect';
+import PermissionWrapper from '../../common/permissionWrapper/PermissionWrapper';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -105,11 +106,13 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             completedDate: null,
             status: null,
             comments: null,
+            complectedWork: 0,
 
             assignedId: null,
             teamId: null,
             customerId: null,
             assignedType: 1,
+            customers: [],
         },
     });
 
@@ -127,32 +130,16 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             completedDate: null,
             status: null,
             comments: null,
+            complectedWork: 0,
 
             assignedId: null,
             teamId: null,
             customerId: null,
             assignedType: 1,
+            customers: [],
         });
         handleClose();
     };
-
-    // const handleGetAllOpportunities = async () => {
-    //     if (open) {
-    //         const res = await getAllOpportunities("fetchType=Options")
-    //         const data = res?.result?.map((item) => {
-    //             return {
-    //                 id: item.id,
-    //                 title: item.opportunity,
-    //                 salesforceOpportunityId: item.salesforceOpportunityId || null,
-    //             }
-    //         })
-    //         const uniqueData = Array.from(
-    //             new Map(data.map(item => [item.title, item])).values()
-    //         );
-
-    //         setOpportunities(uniqueData);
-    //     }
-    // }
 
     const handleGetAllTeamAndMembers = async () => {
         if (open) {
@@ -168,6 +155,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             const res = await getTodo(todoId);
             if (res?.status === 200) {
                 reset(res?.result);
+
                 setValue("source", todoType?.find(t => t.title === res?.result?.source)?.id);
                 setValue("status", status?.find(s => s.title === res?.result?.status)?.id);
                 const response = await getTodoAssignByTodoId(todoId);
@@ -175,8 +163,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     const assignData = response?.result;
                     setValue("assignedId", assignData?.id);
                     setValue("teamId", assignData?.teamId);
-                    setValue("customerId", assignData?.customerId);
                     if (assignData?.teamId) {
+                        setValue("customers", assignData?.customerId != null ? JSON.parse(assignData?.customerId) : []);
                         const members = await getAllTeamMembers(assignData?.teamId);
                         const data = members?.result?.map((item) => {
                             return {
@@ -186,9 +174,11 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         })
                         setCustomers(data || [])
                         setValue("assignedType", 2);
-                    } else if (assignData?.customerId === userData?.userId) {
+                    } else if (parseInt(assignData?.customerId) === userData?.userId) {
+                        setValue("customerId", parseInt(assignData?.customerId));
                         setValue("assignedType", 1);
-                    } else if (assignData?.customerId) {
+                    } else if (parseInt(assignData?.customerId)) {
+                        setValue("customerId", parseInt(assignData?.customerId));
                         setValue("assignedType", 3);
                     }
 
@@ -229,7 +219,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     useEffect(() => {
         handleGetAllTeamAndMembers()
         handleGetAllTeams()
-        // handleGetAllOpportunities()
         handleGetTodoDetails()
     }, [open])
 
@@ -289,7 +278,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     const assignData = {
                         assignedId: watch("assignedId"),
                         teamId: watch("assignedType") === 2 ? watch("teamId") : null,
-                        customerId: watch("assignedType") === 1 ? userData?.userId : watch("customerId"),
+                        customerId: watch("assignedType") === 1 ? userData?.userId?.toString() : watch("assignedType") === 2 ? watch("customers")?.length > 0 ? JSON.stringify(watch("customers")) : null : watch("customerId")?.toString(),
                         todoId: todoId,
                     }
                     assignTodo(assignData)
@@ -306,7 +295,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     const assignData = {
                         assignedId: null,
                         teamId: watch("assignedType") === 2 ? watch("teamId") : null,
-                        customerId: watch("assignedType") === 1 ? userData?.userId : watch("customerId"),
+                        customerId: watch("assignedType") === 1 ? userData?.userId?.toString() : watch("assignedType") === 2 ? watch("customers")?.length > 0 ? JSON.stringify(watch("customers")) : null : watch("customerId")?.toString(),
                         todoId: res?.result?.id,
                     }
                     assignTodo(assignData)
@@ -357,33 +346,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='grid grid-cols-2 gap-4'>
-                            {/* <div>
-                                <Controller
-                                    name="opportunityId"
-                                    control={control}
-                                    rules={{ required: true }}
-
-                                    render={({ field }) => (
-                                        <Select
-                                            options={opportunities}
-                                            label={"Opportunity"}
-                                            placeholder="Select Opportunity"
-                                            value={parseInt(watch("opportunityId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    setValue("salesforceOpportunityId", newValue.salesforceOpportunityId);
-                                                } else {
-                                                    setValue("opportunityId", null);
-                                                    setValue("salesforceOpportunityId", null);
-                                                }
-                                            }}
-                                            error={errors.opportunityId}
-                                        />
-                                    )}
-                                />
-                            </div> */}
-
                             <Controller
                                 name="topic"
                                 control={control}
@@ -445,6 +407,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     )}
                                 />
                             </div>
+
                             <div>
                                 <Controller
                                     name="source"
@@ -470,37 +433,63 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                 />
                             </div>
 
-                            <div>
-                                <Controller
-                                    name="assignedType"
-                                    control={control}
-                                    rules={{ required: true }}
+                            <PermissionWrapper
+                                functionalityName="Todo"
+                                moduleName="Assign Todo"
+                                actionIds={[2, 1]}
+                                checkAll={false}
+                                component={
+                                    <div>
+                                        <Controller
+                                            name="assignedType"
+                                            control={control}
+                                            rules={{ required: true }}
 
-                                    render={({ field }) => (
-                                        <Select
-                                            options={assignedType}
-                                            label={"Assigned To"}
-                                            placeholder="Select Assigned To"
-                                            value={parseInt(watch("assignedType")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    setValue("customerId", null);
-                                                    setValue("teamId", null);
-                                                    field.onChange(newValue.id);
-                                                    if (newValue?.id === 1 || newValue?.id === 2) {
-                                                        setCustomers([])
-                                                    }
-                                                } else {
-                                                    setValue("assignedType", null);
-                                                    setValue("customerId", null);
-                                                    setValue("teamId", null);
-                                                }
-                                            }}
-                                            error={errors.assignedType}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={assignedType}
+                                                    label={"Assigned To"}
+                                                    placeholder="Select Assigned To"
+                                                    value={parseInt(watch("assignedType")) || null}
+                                                    onChange={(_, newValue) => {
+                                                        if (newValue?.id) {
+                                                            setValue("customerId", null);
+                                                            setValue("teamId", null);
+                                                            field.onChange(newValue.id);
+                                                            if (newValue?.id === 1 || newValue?.id === 2) {
+                                                                setCustomers([])
+                                                            }
+                                                        } else {
+                                                            setValue("assignedType", null);
+                                                            setValue("customerId", null);
+                                                            setValue("teamId", null);
+                                                        }
+                                                    }}
+                                                    error={errors.assignedType}
+                                                />
+                                            )}
                                         />
-                                    )}
-                                />
-                            </div>
+                                    </div>
+                                }
+                                fallbackComponent={
+                                    <div>
+                                        <Controller
+                                            name="assignedType"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Select
+                                                    disabled={true}
+                                                    options={assignedType}
+                                                    label={"Assigned To"}
+                                                    placeholder="Select Assigned To"
+                                                    value={parseInt(watch("assignedType")) || null}                                                 
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                }
+                            />
+
 
                             {
                                 watch("assignedType") === 2 && (
@@ -536,26 +525,33 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 )}
                                             />
                                         </div>
-                                        <Controller
-                                            name="customerId"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Select
-                                                    disabled={customers?.length === 0}
-                                                    options={customers}
-                                                    label={"Member"}
-                                                    placeholder="Select Member"
-                                                    value={parseInt(watch("customerId")) || null}
-                                                    onChange={(_, newValue) => {
-                                                        if (newValue?.id) {
-                                                            field.onChange(newValue.id);
-                                                        } else {
-                                                            setValue("customerId", null);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        />
+                                        <div>
+                                            <Controller
+                                                name="customers"
+                                                control={control}
+                                                render={({ field }) => {
+                                                    const selectedOptions = customers.filter((cust) =>
+                                                        (field.value || []).includes(cust.id)
+                                                    );
+
+                                                    return (
+                                                        <CheckBoxSelect
+                                                            disabled={customers?.length === 0}
+                                                            options={customers}
+                                                            label="Members"
+                                                            placeholder="Select members"
+                                                            value={selectedOptions}
+                                                            onChange={(event, newValue) => {
+                                                                const newIds = newValue.map((opt) => opt.id);
+                                                                field.onChange(newIds);
+                                                            }}
+                                                            checkAll={true}
+                                                            maxVisibleChips={1}
+                                                        />
+                                                    );
+                                                }}
+                                            />
+                                        </div>
                                     </>
                                 )
                             }
@@ -583,6 +579,33 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     </div>
                                 )
                             }
+                            <div>
+                                <Controller
+                                    name="complectedWork"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Completed Work"
+                                            type="text"
+                                            onChange={(e) => {
+                                                let numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                if (numericValue === '') {
+                                                    field.onChange('');
+                                                    return;
+                                                }
+                                                let value = parseInt(numericValue, 10);
+
+                                                if (Math.abs(value) <= 100) {
+                                                    field.onChange(value);
+                                                }
+                                            }}
+                                            value={field.value ?? ""}
+                                            endIcon="%"
+                                        />
+                                    )}
+                                />
+                            </div>
                             <div className='col-span-2'>
                                 <Controller
                                     name="comments"

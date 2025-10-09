@@ -15,7 +15,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
             name={name}
             label={label}
             placeholder={placeholder}
-            value={type === 'date' ? value || new Date().toISOString().split('T')[0] : value}
+            value={type === 'date' ? value || new Date().toISOString().split('T')[0] : value || ''}
             type={type}
             onChange={onChange}
             inputRef={ref}
