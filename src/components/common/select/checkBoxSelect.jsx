@@ -2,7 +2,6 @@ import React, { forwardRef } from 'react';
 import { useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 import Checkbox from '../checkBox/checkbox';
-import CustomIcons from '../icons/CustomIcons';
 
 const CheckBoxSelect = forwardRef(
   (

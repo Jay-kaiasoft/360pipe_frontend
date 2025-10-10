@@ -14,7 +14,6 @@ import { deleteTodo, getTodoByFilter, setTodoToday, updateTodo } from '../../../
 import AddTodo from '../../../components/models/todo/addTodo';
 import Checkbox from '../../../components/common/checkBox/checkbox';
 import { Tabs } from '../../../components/common/tabs/tabs';
-import { text } from '@fortawesome/fontawesome-svg-core';
 import BorderLinearProgress from '../../../components/common/borderLinearProgress/BorderLinearProgress';
 
 const filterTab = [
@@ -80,7 +79,8 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const handleCompleteTodo = async () => {
         const data = {
             ...selectedTodo,
-            status: 'Completed'
+            status: 'Completed',
+            complectedWork: 100
         }
         const res = await updateTodo(selectedTodo?.id, data)
         if (res.status === 200) {
@@ -117,7 +117,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
     const handleGetTodoByFilter = async () => {
         const filterData = {
-            source: "",
+            source: null,
             isToday: false
         };
         if (activeFilterTab === 0) {
@@ -125,7 +125,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             filterData.isToday = false;
         }
         else if (activeFilterTab === 1) {
-            filterData.source = "";
+            filterData.source = null;
             filterData.isToday = true;
         }
         else if (activeFilterTab === 2) {
@@ -154,11 +154,18 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             }));
             formattedTodos?.forEach(todo => {
                 if (todo.isToday) {
-                    setCheckTodoIds(prev =>
-                        prev.includes(todo.id) ? prev : [...prev, todo.id]
-                    );
+                    setCheckTodoIds(prev => {
+                        // Check if object with same ID already exists
+                        const exists = prev.some(item => item.id === todo.id);
+
+                        if (exists) return prev;
+
+                        // Add new object
+                        return [...prev, { id: todo.id, customId: todo.customId }];
+                    });
                 }
             });
+
             setTodos(formattedTodos);
         }
     }
@@ -167,7 +174,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         const data = {
             source: "",
             isToday: false,
-            todoIds: checkTodoIds
+            todoIds: checkTodoIds,
         };
         if (activeFilterTab === 0) {
             data.source = "All";
@@ -250,18 +257,28 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                 return (
                     <div className='h-full flex justify-center items-center'>
                         <Checkbox
-                            checked={checkTodoIds?.includes(params.row.id)}
-                            onChange={async (e) => {
+                            checked={checkTodoIds?.some(item => item.id === params.row.id)}
+                            onChange={(e) => {
                                 const newValue = e.target.checked;
-                                let newCheckTodoIds = [...checkTodoIds];
-                                if (newValue) {
-                                    newCheckTodoIds.push(params.row.id);
-                                } else {
-                                    newCheckTodoIds = newCheckTodoIds?.filter(id => id !== params.row.id);
-                                }
-                                setCheckTodoIds(newCheckTodoIds);
+                                setCheckTodoIds(prev => {
+                                    let updated = [...prev];
+
+                                    if (newValue) {
+                                        // ✅ Add if not already present
+                                        const exists = updated.some(item => item.id === params.row.id);
+                                        if (!exists) {
+                                            updated.push({ id: params.row.id, customId: params.row.customId });
+                                        }
+                                    } else {
+                                        // ❌ Remove if unchecked
+                                        updated = updated.filter(item => item.id !== params.row.id);
+                                    }
+
+                                    return updated;
+                                });
                             }}
                         />
+
                     </div>
                 )
             }

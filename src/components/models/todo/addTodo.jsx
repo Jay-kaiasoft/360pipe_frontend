@@ -112,7 +112,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             teamId: null,
             customerId: null,
             assignedType: 1,
-            customers: [],
+            customerIds: [],
+            removeCustomerIds: [],
+            removeTeam: null
         },
     });
 
@@ -136,7 +138,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             teamId: null,
             customerId: null,
             assignedType: 1,
-            customers: [],
+            customerIds: [],
+            removeCustomerIds: [],
+            removeTeam: null
         });
         handleClose();
     };
@@ -164,7 +168,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     setValue("assignedId", assignData?.id);
                     setValue("teamId", assignData?.teamId);
                     if (assignData?.teamId) {
-                        setValue("customers", assignData?.customerId != null ? JSON.parse(assignData?.customerId) : []);
+                        setValue("customerIds", assignData?.customerIds != null ? assignData?.customerIds : []);
                         const members = await getAllTeamMembers(assignData?.teamId);
                         const data = members?.result?.map((item) => {
                             return {
@@ -276,10 +280,13 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 const res = await updateTodo(todoId, newData);
                 if (res?.status === 200) {
                     const assignData = {
-                        assignedId: watch("assignedId"),
+                        id: watch("assignedId"),
                         teamId: watch("assignedType") === 2 ? watch("teamId") : null,
-                        customerId: watch("assignedType") === 1 ? userData?.userId?.toString() : watch("assignedType") === 2 ? watch("customers")?.length > 0 ? JSON.stringify(watch("customers")) : null : watch("customerId")?.toString(),
+                        customerId: watch("assignedType") === 1 ? userData?.userId?.toString() : watch("assignedType") === 2 ? null : watch("customerId"),
+                        customerIds: watch("assignedType") === 2 ? watch("customerIds") : [],
                         todoId: todoId,
+                        removeCustomerIds: watch("removeCustomerIds") || [],
+                        removeTeam: watch("removeTeam") || null,
                     }
                     assignTodo(assignData)
                 } else {
@@ -293,10 +300,13 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 const res = await createTodo(newData);
                 if (res?.status === 201) {
                     const assignData = {
-                        assignedId: null,
+                        id: null,
                         teamId: watch("assignedType") === 2 ? watch("teamId") : null,
-                        customerId: watch("assignedType") === 1 ? userData?.userId?.toString() : watch("assignedType") === 2 ? watch("customers")?.length > 0 ? JSON.stringify(watch("customers")) : null : watch("customerId")?.toString(),
+                        customerId: watch("assignedType") === 1 ? userData?.userId?.toString() : watch("assignedType") === 2 ? null : watch("customerId"),
+                        customerIds: watch("assignedType") === 2 ? watch("customerIds") : [],
                         todoId: res?.result?.id,
+                        removeCustomerIds: watch("removeCustomerIds") || [],
+                        removeTeam: watch("removeTeam") || null,
                     }
                     assignTodo(assignData)
                 } else {
@@ -388,7 +398,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     name="status"
                                     control={control}
                                     rules={{ required: true }}
-
                                     render={({ field }) => (
                                         <Select
                                             options={status}
@@ -398,8 +407,15 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             onChange={(_, newValue) => {
                                                 if (newValue?.id) {
                                                     field.onChange(newValue.id);
+                                                    if (newValue?.title === "Completed") {
+                                                        setValue("complectedWork", 100);
+                                                    }
+                                                    if (newValue?.title === "Not Started") {
+                                                        setValue("complectedWork", 0);
+                                                    }
                                                 } else {
                                                     setValue("status", null);
+                                                    setValue("complectedWork", 0);
                                                 }
                                             }}
                                             error={errors.status}
@@ -452,6 +468,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                     placeholder="Select Assigned To"
                                                     value={parseInt(watch("assignedType")) || null}
                                                     onChange={(_, newValue) => {
+                                                        const currentRemoved = watch("customerIds") || [];
+                                                        setValue("removeCustomerIds", currentRemoved);
+                                                        setValue("removeTeam", watch("teamId") || null);
                                                         if (newValue?.id) {
                                                             setValue("customerId", null);
                                                             setValue("teamId", null);
@@ -482,7 +501,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                     options={assignedType}
                                                     label={"Assigned To"}
                                                     placeholder="Select Assigned To"
-                                                    value={parseInt(watch("assignedType")) || null}                                                 
+                                                    value={parseInt(watch("assignedType")) || null}
                                                 />
                                             )}
                                         />
@@ -515,9 +534,12 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                                     }
                                                                 })
                                                                 setCustomers(customers || [])
+                                                                const customerIds = customers?.map(cust => cust.id);                                                                
+                                                                setValue("customerIds", customerIds || []);
                                                             } else {
                                                                 setValue("teamId", null);
                                                                 setCustomers([])
+                                                                setValue("customerIds", []);
                                                             }
                                                         }}
                                                         error={errors.teamId}
@@ -527,7 +549,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                         </div>
                                         <div>
                                             <Controller
-                                                name="customers"
+                                                name="customerIds"
                                                 control={control}
                                                 render={({ field }) => {
                                                     const selectedOptions = customers.filter((cust) =>
@@ -542,8 +564,18 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                             placeholder="Select members"
                                                             value={selectedOptions}
                                                             onChange={(event, newValue) => {
-                                                                const newIds = newValue.map((opt) => opt.id);
+                                                                const newIds = newValue.map(opt => opt.id);
+                                                                const removedIds = (field.value || []).filter(id => !newIds.includes(id));
+
+                                                                // ✅ Update main selected IDs
                                                                 field.onChange(newIds);
+
+                                                                // ✅ Also update removeCustomerIds in the form
+                                                                if (todoId) {
+                                                                    const currentRemoved = watch("removeCustomerIds") || [];
+                                                                    setValue("removeCustomerIds", [...new Set([...currentRemoved, ...removedIds])]);
+                                                                    setValue("removeTeam", watch("teamId") || null);
+                                                                }
                                                             }}
                                                             checkAll={true}
                                                             maxVisibleChips={1}
@@ -586,6 +618,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     render={({ field }) => (
                                         <Input
                                             {...field}
+                                            disabled={parseInt(watch("status")) === 1}
                                             label="Completed Work"
                                             type="text"
                                             onChange={(e) => {
@@ -606,6 +639,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     )}
                                 />
                             </div>
+
                             <div className='col-span-2'>
                                 <Controller
                                     name="comments"
