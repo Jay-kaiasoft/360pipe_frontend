@@ -107,6 +107,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             status: null,
             comments: null,
             complectedWork: 0,
+            createdBy: null,
 
             assignedId: null,
             teamId: null,
@@ -133,6 +134,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             status: null,
             comments: null,
             complectedWork: 0,
+            createdBy: null,
 
             assignedId: null,
             teamId: null,
@@ -159,7 +161,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             const res = await getTodo(todoId);
             if (res?.status === 200) {
                 reset(res?.result);
-
+                setValue("createdBy", res?.result?.createdBy || null);
                 setValue("source", todoType?.find(t => t.title === res?.result?.source)?.id);
                 setValue("status", status?.find(s => s.title === res?.result?.status)?.id);
                 const response = await getTodoAssignByTodoId(todoId);
@@ -168,6 +170,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     setValue("assignedId", assignData?.id);
                     setValue("teamId", assignData?.teamId);
                     if (assignData?.teamId) {
+                        setValue("status", status?.find(s => s.title === assignData?.status)?.id);
                         setValue("customerIds", assignData?.customerIds != null ? assignData?.customerIds : []);
                         const members = await getAllTeamMembers(assignData?.teamId);
                         const data = members?.result?.map((item) => {
@@ -277,8 +280,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         };
         try {
             if (todoId) {
-                const res = await updateTodo(todoId, newData);
-                if (res?.status === 200) {
+                if (watch("createdBy") !== userData?.userId) {
                     const assignData = {
                         id: watch("assignedId"),
                         teamId: watch("assignedType") === 2 ? watch("teamId") : null,
@@ -287,14 +289,23 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         todoId: todoId,
                         removeCustomerIds: watch("removeCustomerIds") || [],
                         removeTeam: watch("removeTeam") || null,
+                        status: status?.find(s => s.id === parseInt(watch("status")))?.title,
+                        dueDate: dueDateVal.format("MM/DD/YYYY"),
+                        complectedWork: parseInt(watch("complectedWork")) || 0
                     }
                     assignTodo(assignData)
                 } else {
-                    setAlert({
-                        open: true,
-                        message: res?.message || "Failed to update todo",
-                        type: "error",
-                    });
+                    const res = await updateTodo(todoId, newData);
+                    if (res?.status === 200) {
+                        handleGetAllTodos();
+                        onClose();
+                    } else {
+                        setAlert({
+                            open: true,
+                            message: res?.message || "Failed to update todo",
+                            type: "error",
+                        });
+                    }
                 }
             } else {
                 const res = await createTodo(newData);
@@ -307,6 +318,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         todoId: res?.result?.id,
                         removeCustomerIds: watch("removeCustomerIds") || [],
                         removeTeam: watch("removeTeam") || null,
+                        status: status?.find(s => s.id === parseInt(watch("status")))?.title,
+                        dueDate: dueDateVal.format("MM/DD/YYYY"),
+                        complectedWork: parseInt(watch("complectedWork")) || 0
                     }
                     assignTodo(assignData)
                 } else {
@@ -334,7 +348,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
-                maxWidth='sm'
+                maxWidth='md'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {todoId ? "Update " : "Add New "}Todo
@@ -355,37 +369,26 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 gap-4'>
-                            <Controller
-                                name="topic"
-                                control={control}
-                                rules={{
-                                    required: "Topic is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Topic"
-                                        type={`text`}
-                                        error={errors.topic}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="task"
-                                control={control}
-                                rules={{
-                                    required: "Task is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Task"
-                                        type={`text`}
-                                        error={errors.task}
-                                    />
-                                )}
-                            />
+                        <div className='grid grid-cols-3 gap-6'>
+                            <div className='col-span-2'>
+                                <Controller
+                                    name="task"
+                                    control={control}
+                                    rules={{
+                                        required: "Task is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                            {...field}
+                                            label="Task"
+                                            type={`text`}
+                                            error={errors.task}
+                                        />
+                                    )}
+                                />
+                            </div>
+
                             <div>
                                 <DatePickerComponent setValue={setValue} control={control} name='dueDate' label={`Due Date`} />
                             </div>
@@ -429,9 +432,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     name="source"
                                     control={control}
                                     rules={{ required: true }}
-
                                     render={({ field }) => (
                                         <Select
+                                            disabled={todoId ? watch("createdBy") !== userData?.userId : false}
                                             options={todoType}
                                             label={"Task Type"}
                                             placeholder="Select Task Type"
@@ -460,9 +463,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             name="assignedType"
                                             control={control}
                                             rules={{ required: true }}
-
                                             render={({ field }) => (
                                                 <Select
+                                                    disabled={todoId ? watch("createdBy") !== userData?.userId : false}
                                                     options={assignedType}
                                                     label={"Assigned To"}
                                                     placeholder="Select Assigned To"
@@ -520,6 +523,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 rules={{ required: true }}
                                                 render={({ field }) => (
                                                     <Select
+                                                        // disabled={todoId ? watch("createdBy") !== userData?.userId : false}
                                                         options={teams}
                                                         label={"Team"}
                                                         placeholder="Select Team"
@@ -534,7 +538,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                                     }
                                                                 })
                                                                 setCustomers(customers || [])
-                                                                const customerIds = customers?.map(cust => cust.id);                                                                
+                                                                const customerIds = customers?.map(cust => cust.id);
                                                                 setValue("customerIds", customerIds || []);
                                                             } else {
                                                                 setValue("teamId", null);
@@ -547,6 +551,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 )}
                                             />
                                         </div>
+
                                         <div>
                                             <Controller
                                                 name="customerIds"
@@ -558,7 +563,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
                                                     return (
                                                         <CheckBoxSelect
-                                                            disabled={customers?.length === 0}
+                                                            disabled={todoId ? watch("createdBy") !== userData?.userId : customers?.length === 0}
                                                             options={customers}
                                                             label="Members"
                                                             placeholder="Select members"
@@ -597,6 +602,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             rules={{ required: true }}
                                             render={({ field, fieldState: { error } }) => (
                                                 <TeamMemberSelect
+                                                    disabled={todoId ? watch("createdBy") !== userData?.userId : false}
                                                     label={"Member"}
                                                     placeholder="Select Member"
                                                     options={teamAndMembers}
@@ -640,12 +646,13 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                 />
                             </div>
 
-                            <div className='col-span-2'>
+                            <div className='col-span-3'>
                                 <Controller
                                     name="comments"
                                     control={control}
                                     render={({ field }) => (
                                         <Input
+                                            disabled={todoId ? watch("createdBy") !== userData?.userId : false}
                                             {...field}
                                             label="Comments"
                                             type={`text`}

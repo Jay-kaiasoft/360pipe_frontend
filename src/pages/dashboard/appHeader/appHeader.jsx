@@ -43,30 +43,30 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         label: "Dashboard",
         path: "/dashboard",
       },
-      {
-        label: "Accounts",
-        path: "/dashboard/accounts",
-      },
+      // {
+      //   label: "Accounts",
+      //   path: "/dashboard/accounts",
+      // },
       {
         label: "Opportunities",
         path: "/dashboard/opportunities",
-      },
-      {
-        label: "Todos",
-        path: "/dashboard/todos",
       },
       {
         label: "Contacts",
         path: "/dashboard/contacts",
       },
       {
-        label: "Members",
-        path: "/dashboard/members",
+        label: "Todos",
+        path: "/dashboard/todos",
       },
-      {
-        label: "My Team",
-        path: "/dashboard/myteam",
-      },
+      // {
+      //   label: "Members",
+      //   path: "/dashboard/members",
+      // },
+      // {
+      //   label: "My Team",
+      //   path: "/dashboard/myteam",
+      // },
       ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
         ? [
           {

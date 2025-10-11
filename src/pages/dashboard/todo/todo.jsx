@@ -15,6 +15,7 @@ import AddTodo from '../../../components/models/todo/addTodo';
 import Checkbox from '../../../components/common/checkBox/checkbox';
 import { Tabs } from '../../../components/common/tabs/tabs';
 import BorderLinearProgress from '../../../components/common/borderLinearProgress/BorderLinearProgress';
+import { setStatusToCompleted } from '../../../service/todoAssign/todoAssignService';
 
 const filterTab = [
     { id: 1, label: "Master", },
@@ -33,6 +34,8 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const [open, setOpen] = useState(false);
     const [selectedTodoId, setSelectedTodoId] = useState(null);
     const [checkTodoIds, setCheckTodoIds] = useState([]);
+    const [removeTodoIds, setRemoveTodoIds] = useState([]);
+
     const [showSaveButton, setShowSaveButton] = useState(false);
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
@@ -82,16 +85,31 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             status: 'Completed',
             complectedWork: 100
         }
-        const res = await updateTodo(selectedTodo?.id, data)
-        if (res.status === 200) {
-            handleGetTodoByFilter();
-            handleCloseCompleteTodoDialog();
+        if (selectedTodo?.customId?.startsWith('A')) {
+            const id = selectedTodo?.customId?.split('A-')[1];
+            const res = await setStatusToCompleted(id)
+            if (res.status === 200) {
+                handleGetTodoByFilter();
+                handleCloseCompleteTodoDialog();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to update todo",
+                    type: "error"
+                });
+            }
         } else {
-            setAlert({
-                open: true,
-                message: res?.message || "Failed to update todo",
-                type: "error"
-            });
+            const res = await updateTodo(selectedTodo?.id, data)
+            if (res.status === 200) {
+                handleGetTodoByFilter();
+                handleCloseCompleteTodoDialog();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to update todo",
+                    type: "error"
+                });
+            }
         }
     }
 
@@ -152,6 +170,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                 isToday: todo.isToday || false,
                 complete: todo.status?.toLowerCase() === 'completed' ? true : false,
             }));
+            setRemoveTodoIds([]);
             formattedTodos?.forEach(todo => {
                 if (todo.isToday) {
                     setCheckTodoIds(prev => {
@@ -165,7 +184,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                     });
                 }
             });
-
             setTodos(formattedTodos);
         }
     }
@@ -175,6 +193,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             source: "",
             isToday: false,
             todoIds: checkTodoIds,
+            removeTodoIds: removeTodoIds
         };
         if (activeFilterTab === 0) {
             data.source = "All";
@@ -199,6 +218,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         const res = await setTodoToday(data);
         if (res.status === 200) {
             setCheckTodoIds([]);
+            setRemoveTodoIds([]);
             setShowSaveButton(false);
             setAlert({
                 open: true,
@@ -229,9 +249,10 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         let isChanged = [];
         todos?.map(todo => {
             if (todo.isToday) {
-                isChanged.push(todo.id);
+                isChanged.push({ id: todo.id, customId: todo.customId });
             }
         })
+
         setShowSaveButton(JSON.stringify(isChanged.sort()) !== JSON.stringify(checkTodoIds?.sort()));
     }, [checkTodoIds])
 
@@ -260,20 +281,36 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             checked={checkTodoIds?.some(item => item.id === params.row.id)}
                             onChange={(e) => {
                                 const newValue = e.target.checked;
+                                const currentId = params.row.id;
+                                const currentCustomId = params.row.customId;
+
                                 setCheckTodoIds(prev => {
                                     let updated = [...prev];
 
                                     if (newValue) {
                                         // ✅ Add if not already present
-                                        const exists = updated.some(item => item.id === params.row.id);
+                                        const exists = updated.some(item => item.id === currentId);
                                         if (!exists) {
-                                            updated.push({ id: params.row.id, customId: params.row.customId });
+                                            updated.push({ id: currentId, customId: currentCustomId });
                                         }
+
+                                        // 🔁 Also remove from removeTodoIds if it was previously unchecked
+                                        setRemoveTodoIds(prevRemove =>
+                                            prevRemove.filter(item => item.id !== currentId)
+                                        );
+
                                     } else {
                                         // ❌ Remove if unchecked
-                                        updated = updated.filter(item => item.id !== params.row.id);
+                                        updated = updated.filter(item => item.id !== currentId);
+
+                                        // ➕ Add to removeTodoIds list
+                                        setRemoveTodoIds(prevRemove => [
+                                            ...prevRemove,
+                                            { id: currentId, customId: currentCustomId }
+                                        ]);
                                     }
 
+                                    console.log("updated", updated);
                                     return updated;
                                 });
                             }}
@@ -322,7 +359,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'Completed Work',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 150,
+            maxWidth: 200,
             renderCell: (params) => {
                 return (
                     <div className='flex justify-center items-center h-full'>
@@ -390,7 +427,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const getRowId = (row) => {
         return row.rowId;
     }
-
     const actionButtons = () => {
         return (
             <div className='flex gap-4'>
@@ -441,7 +477,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
                         return dueDate < today ? 'warning-row' : '';
                     }}
-
                     columns={columns}
                     rows={todos}
                     getRowId={getRowId}

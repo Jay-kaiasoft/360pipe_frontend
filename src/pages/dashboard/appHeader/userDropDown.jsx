@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 
 import CustomIcons from "../../../components/common/icons/CustomIcons"
 import AlertDialog from "../../../components/common/alertDialog/alertDialog";
+import PermissionWrapper from "../../../components/common/permissionWrapper/PermissionWrapper";
 
 export default function UserDropdown() {
     const userdata = getUserDetails();
@@ -112,6 +113,41 @@ export default function UserDropdown() {
                                 Edit profile
                             </NavLink>
                         </li>
+                        <PermissionWrapper
+                            functionalityName="My Team"
+                            moduleName="My Team"
+                            actionId={4}
+                            component={
+                                <li>
+                                    <NavLink
+                                        to="/dashboard/myteam"
+                                        onClick={closeDropdown}
+                                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
+                                    >
+                                        <CustomIcons iconName="fa-solid fa-users" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
+                                        My Team
+                                    </NavLink>
+                                </li>
+                            }
+                        />
+                        <PermissionWrapper
+                            functionalityName="Members"
+                            moduleName="Members"
+                            actionId={4}
+                            component={
+                                <li>
+                                    <NavLink
+                                        to="/dashboard/members"
+                                        onClick={closeDropdown}
+                                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
+                                    >
+                                        <CustomIcons iconName="fa-solid fa-user-plus" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
+                                        Members
+                                    </NavLink>
+                                </li>
+                            }
+                        />
+
                         {/* {
                             !userdata?.subUser && (
                                 <li>

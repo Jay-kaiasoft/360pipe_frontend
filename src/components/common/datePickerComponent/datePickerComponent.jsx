@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { useTheme } from '@mui/material';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false }) => {
+const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false ,disabled = false}) => {
   const theme = useTheme();
 
   const customTheme = createTheme({
@@ -76,6 +76,7 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
           render={({ field, fieldState }) => (
             <DatePicker
               {...field}
+              disabled={disabled}
               label={label}
               format="MM/DD/YYYY"
               value={field.value ? dayjs(field.value) : dayjs(maxDate)}

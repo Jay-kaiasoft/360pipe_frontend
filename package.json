@@ -35,9 +35,11 @@
     "react-router-dom": "^6.28.0",
     "react-scripts": "5.0.1",
     "react-slick": "^0.31.0",
+    "react-sortablejs": "^6.1.4",
     "react-toastify": "^11.0.5",
     "redux": "^5.0.1",
     "slick-carousel": "^1.8.1",
+    "sortablejs": "^1.15.6",
     "uuid": "^11.1.0"
   },
   "scripts": {
