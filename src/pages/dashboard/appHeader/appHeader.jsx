@@ -67,7 +67,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       //   label: "My Team",
       //   path: "/dashboard/myteam",
       // },
-      ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
+      ...((userDetails?.userId === salesforceUserDetails?.userId || userDetails?.roleName === "SALES REPRESENTIVE" || !userDetails?.subUser)
         ? [
           {
             label: "My CRM",

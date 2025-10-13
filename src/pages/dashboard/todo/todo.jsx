@@ -138,55 +138,56 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             source: null,
             isToday: false
         };
+
         if (activeFilterTab === 0) {
             filterData.source = "All";
-            filterData.isToday = false;
-        }
-        else if (activeFilterTab === 1) {
-            filterData.source = null;
+        } else if (activeFilterTab === 1) {
             filterData.isToday = true;
-        }
-        else if (activeFilterTab === 2) {
+        } else if (activeFilterTab === 2) {
             filterData.source = "Assigned";
-            filterData.isToday = false;
-        }
-        else if (activeFilterTab === 3) {
+        } else if (activeFilterTab === 3) {
             filterData.source = "Work";
-            filterData.isToday = false;
-        }
-        else if (activeFilterTab === 4) {
+        } else if (activeFilterTab === 4) {
             filterData.source = "Personal";
-            filterData.isToday = false;
-        }
-        else if (activeFilterTab === 5) {
+        } else if (activeFilterTab === 5) {
             filterData.source = "Completed";
-            filterData.isToday = false;
         }
+
         const res = await getTodoByFilter(filterData);
         if (res.status === 200) {
-            const formattedTodos = res?.result?.map((todo, index) => ({
+            let formattedTodos = res?.result?.map((todo, index) => ({
                 ...todo,
                 rowId: index + 1,
                 isToday: todo.isToday || false,
-                complete: todo.status?.toLowerCase() === 'completed' ? true : false,
-            }));
+                complete: todo.status?.toLowerCase() === 'completed',
+            })) || [];
+
+            // ✅ Apply sorting ONLY when Today tab is active
+            if (activeFilterTab === 1) {
+                formattedTodos?.sort((a, b) => {
+                    const aPriority = a.priority ?? Infinity;
+                    const bPriority = b.priority ?? Infinity;
+                    return aPriority - bPriority;
+                });
+            }
+
             setRemoveTodoIds([]);
+
             formattedTodos?.forEach(todo => {
                 if (todo.isToday) {
                     setCheckTodoIds(prev => {
-                        // Check if object with same ID already exists
                         const exists = prev.some(item => item.id === todo.id);
-
                         if (exists) return prev;
-
-                        // Add new object
                         return [...prev, { id: todo.id, customId: todo.customId }];
                     });
                 }
             });
+
             setTodos(formattedTodos);
         }
-    }
+    };
+
+
 
     const handleSave = async () => {
         const data = {
@@ -460,7 +461,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
     return (
         <>
-            <div className="hidden xl:block mb-2">
+            <div className="mb-2">
                 <Tabs tabsData={filterTab} selectedTab={activeFilterTab} handleChange={handleSetActiveFilterTab} />
             </div>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
@@ -483,6 +484,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                     height={500}
                     showButtons={true}
                     buttons={actionButtons}
+                    allowSorting={activeFilterTab === 1}
                 />
 
             </div>
