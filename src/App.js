@@ -31,15 +31,12 @@ import ManageMembers from "./pages/members/manageMembers";
 import AddMemberRoles from "./pages/members/addMemberRoles";
 import Accounts from "./pages/dashboard/accounts/accounts";
 import Todo from "./pages/dashboard/todo/todo";
-import SortableList from "./reactSortable";
+import ManageMails from "./pages/mailScraper/manageMails";
+
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
   const router = createBrowserRouter([
-     {
-      path: "/sortableList",
-      element: <SortableList />,
-    },
     {
       path: "*",
       element: <PageNotFound />,
@@ -127,6 +124,10 @@ const App = ({ setLoading }) => {
         {
           path: "todos",
           element: <Todo />,
+        },
+        {
+          path: "managemails",
+          element: <ManageMails />,
         },
       ],
     },

@@ -38,5 +38,8 @@ export const customerQuotaURL = baseURL + '/customerQuota'
 export const todoURL = baseURL + '/todo'
 export const todoAssignURL = baseURL + '/todoAssign'
 export const todoPriorityURL = baseURL + '/todoPriority'
+export const tempMailURL = baseURL + '/tempMail'
+export const emailScrapingRequestURL = baseURL + '/emailScrapingRequest'
+
 
 

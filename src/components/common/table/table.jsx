@@ -8,6 +8,8 @@ import CustomIcons from '../icons/CustomIcons';
 import { getUserDetails } from '../../../utils/getUserDetails';
 import { changeTodoPriority } from '../../../service/todoPriority/todoPriorityService';
 
+const paginationModel = { page: 0, pageSize: 10 };
+
 export default function DataTable({
     getRowClassName,
     checkboxSelection = false,
@@ -163,8 +165,8 @@ export default function DataTable({
                     <DataGrid
                         rows={rows}
                         columns={columns}
-                        initialState={{ pagination: { page: 0, pageSize: 10 } }}
-                        pageSizeOptions={[10, 25, 50, { value: -1, label: 'All' }]}
+                        initialState={{ pagination: { paginationModel } }}
+                        pageSizeOptions={[10, 25, 50]}
                         disableRowSelectionOnClick
                         hideFooterSelectedRowCount
                         getRowClassName={getRowClassName}

@@ -663,3 +663,17 @@ body {
   color: #ec0400 !important;
   font-weight: bold;
 }
+
+/* subtle glow pulse for "waiting" */
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1);   filter: drop-shadow(0 0 0 rgba(234,179,8,.0)); }
+  50%      { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(234,179,8,.45)); }
+}
+.pulse-glow { animation: pulseGlow 1.4s ease-in-out infinite; }
+
+/* quick pop when job finishes */
+@keyframes popIn {
+  0% { transform: scale(.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pop-in { animation: popIn .35s ease-out both; }

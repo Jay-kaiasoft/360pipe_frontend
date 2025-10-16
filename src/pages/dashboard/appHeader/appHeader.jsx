@@ -10,7 +10,6 @@ import { syncToQ4Magic } from "../../../service/salesforce/syncToQ4Magic/syncToQ
 import { syncFromQ4magic } from "../../../service/salesforce/syncFromQ4magic/syncFromQ4magicService"
 import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsService"
 import Button from "../../../components/common/buttons/button"
-import CustomIcons from "../../../components/common/icons/CustomIcons"
 import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
 import { Tabs } from "../../../components/common/tabs/tabs"
 import { useTheme } from "@mui/material"
@@ -43,10 +42,6 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         label: "Dashboard",
         path: "/dashboard",
       },
-      // {
-      //   label: "Accounts",
-      //   path: "/dashboard/accounts",
-      // },
       {
         label: "Opportunities",
         path: "/dashboard/opportunities",
@@ -59,14 +54,6 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         label: "Todos",
         path: "/dashboard/todos",
       },
-      // {
-      //   label: "Members",
-      //   path: "/dashboard/members",
-      // },
-      // {
-      //   label: "My Team",
-      //   path: "/dashboard/myteam",
-      // },
       ...((userDetails?.userId === salesforceUserDetails?.userId || userDetails?.roleName === "SALES REPRESENTIVE" || !userDetails?.subUser)
         ? [
           {
@@ -78,6 +65,10 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       {
         label: "Sync History",
         path: "/dashboard/syncHistory",
+      },
+      {
+        label: "Mail Scraper",
+        path: "/dashboard/managemails",
       },
     ]
     setTabsData(tabItems)
