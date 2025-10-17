@@ -5,26 +5,39 @@ import { getAllTempMails } from '../../service/tempMail/tempMail';
 import MailScraper from './mailScraper';
 import { Tabs } from '../../components/common/tabs/tabs';
 import MailScrapingRequests from './mailScrapingRequests';
+import { createAllContact } from '../../service/contact/contactService';
+import { connect } from 'react-redux';
+import { setAlert } from '../../redux/commonReducers/commonReducers';
+import Button from '../../components/common/buttons/button';
+import CustomIcons from '../../components/common/icons/CustomIcons';
 
 const tableData = [
-    { label: 'Mail Scraping Requests' },
-    { label: 'Mails' },
-    { label: 'Mail Scraper' },
+    { label: 'E-Mail Scraping Requests' },
+    { label: 'E-Mails' },
+    { label: 'E-Mail Scraper' },
 ]
 
-const ManageMails = () => {
+const ManageMails = ({ setAlert }) => {
     const [mails, setMails] = useState([]);
     const [selectedTab, setSelectedTab] = useState(0);
+    const [rowSelectionModel, setRowSelectionModel] = useState([]); // <-- array of IDs only
+
+
+    const handleChangeRowSelectionModel = (newModel) => {
+        setRowSelectionModel(newModel);
+    }
 
     const handleChangeTab = (value) => {
         setSelectedTab(value);
+        setRowSelectionModel([]); // Clear selection when changing tabs
     }
 
     const handleGetAllMails = async () => {
+        if (selectedTab !== 1) return; // Only fetch mails when the Mails tab is selected
         const res = await getAllTempMails();
         if (res?.status === 200) {
             const mailsWithId = res.result.map((mail, index) => ({
-                // ...mail,
+                id: mail.id || null,
                 rowId: index + 1,
                 email: mail.email || "-",
                 companyName: mail.companyName || "-",
@@ -36,9 +49,31 @@ const ManageMails = () => {
         }
     }
 
+    const handleCreateAllContacts = async () => {
+        // rowSelectionModel contains DataGrid rowIds (row.rowId). Convert to mail.id values expected by the API.
+        const selectedMailIds = rowSelectionModel
+            .map(rid => {
+                const mail = mails.find(m => m.rowId === rid);
+                return mail ? mail.id : null;
+            })
+            .filter(Boolean);
+
+        const res = await createAllContact(selectedMailIds);
+        if (res?.status !== 201) {
+            setAlert({
+                open: true,
+                type: 'error',
+                message: res?.message || 'Failed to add in contacts.',
+            })
+        } else {
+            handleGetAllMails();
+            setRowSelectionModel([]);
+        }
+    }
+
     useEffect(() => {
         handleGetAllMails();
-    }, [])
+    }, [selectedTab])
 
     const columns = [
         {
@@ -52,6 +87,14 @@ const ManageMails = () => {
         {
             field: 'email',
             headerName: 'Sender Email',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 180,
+            sortable: false,
+        },
+        {
+            field: 'jobTitle',
+            headerName: 'Job Title',
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 180,
@@ -85,6 +128,13 @@ const ManageMails = () => {
         return row.rowId;
     }
 
+    const actionButtons = () => {
+        return (
+            <div>
+                <Button type={`button`} text={'Add Contact'} onClick={() => handleCreateAllContacts()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+            </div>
+        )
+    }
     return (
         <>
             <div>
@@ -97,7 +147,7 @@ const ManageMails = () => {
                 selectedTab === 1 &&
                 (
                     <div className='border rounded-lg bg-white mt-4'>
-                        <DataTable columns={columns} rows={mails} getRowId={getRowId} height={550} />
+                        <DataTable columns={columns} rows={mails} getRowId={getRowId} height={rowSelectionModel?.length > 0 ? 480 : 550} checkboxSelection={true} setRowSelectionModel={handleChangeRowSelectionModel} rowSelectionModel={rowSelectionModel} showButtons={rowSelectionModel?.length > 0} buttons={actionButtons} />
                     </div>
                 )
             }
@@ -107,5 +157,8 @@ const ManageMails = () => {
         </>
     )
 }
+const mapDispatchToProps = {
+    setAlert,
+};
 
-export default ManageMails
+export default connect(null, mapDispatchToProps)(ManageMails)

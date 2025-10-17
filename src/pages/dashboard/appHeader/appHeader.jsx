@@ -67,7 +67,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         path: "/dashboard/syncHistory",
       },
       {
-        label: "Mail Scraper",
+        label: "E-Mail Scraper",
         path: "/dashboard/managemails",
       },
     ]

@@ -50,3 +50,13 @@ export const deleteContact = async (contactId) => {
         throw error;
     }
 };
+
+export const createAllContact = async (contactData) => {
+    try {
+        const response = await axiosInterceptor().post(`${contactURL}/create/all`, contactData);
+        return response.data;
+    } catch (error) {
+        console.error("Error creating contact:", error);
+        throw error;
+    }
+};

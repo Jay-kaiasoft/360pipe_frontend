@@ -21,6 +21,8 @@ export default function DataTable({
     height,
     buttons,
     allowSorting = false,
+    setRowSelectionModel,
+    rowSelectionModel
 }) {
     const userInfo = getUserDetails();
     const theme = useTheme();
@@ -172,6 +174,11 @@ export default function DataTable({
                         getRowClassName={getRowClassName}
                         getRowId={getRowId}
                         checkboxSelection={checkboxSelection}
+                        onRowSelectionModelChange={(newRowSelectionModel) => {
+                            // Pass DataGrid's selected rowIds directly to parent (they correspond to getRowId(row))
+                            setRowSelectionModel(newRowSelectionModel);
+                        }}
+                        rowSelectionModel={rowSelectionModel}
                         sx={{
                             color: theme.palette.text.primary,
                             overflow: 'auto',

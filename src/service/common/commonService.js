@@ -1,4 +1,4 @@
-import { fileUploadURL } from "../../config/config";
+import { fileUploadURL, dnsMxURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
 import dayjs from "dayjs";
@@ -25,7 +25,6 @@ export const partnerRoles = [
     { id: 12, title: "Dealer" },
     { id: 13, title: "Consultant" }
 ];
-
 
 export const opportunityStages = [
     { id: 1, title: "Prospecting" },
@@ -221,7 +220,7 @@ export const getStaticRoles = () => {
 export const getStaticRolesWithPermissions = () => {
     return getStaticRoles()?.map((item) => {
         const isSalesRep = item.title === 'Sales Representative';
-        const isSalesManager = item.title === "Sales Manager"
+        // const isSalesManager = item.title === "Sales Manager"
         return {
             name: item.title,
             rolesActions: {
@@ -290,4 +289,14 @@ export const getStaticRolesWithPermissions = () => {
             }
         }
     })
+}
+
+export const fetchDNSMXRecords = async (domain) => {
+    try {
+        const response = await axiosInterceptor().get(`${dnsMxURL}?domain=${domain}`);
+        return response;
+    } catch (error) {
+        console.error("Error fetching DNS MX records:", error);
+        throw error;
+    }
 }

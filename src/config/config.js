@@ -14,6 +14,7 @@ export const authIdURL = baseURL + '/authIdDetails'
 export const countryURL = baseURL + '/country'
 export const stateURL = baseURL + '/state'
 export const fileUploadURL = baseURL + '/uploadFile'
+export const dnsMxURL = baseURL + '/dns/mx'
 
 export const customersURL = baseURL + '/customers'
 export const rolesURL = baseURL + '/roles'

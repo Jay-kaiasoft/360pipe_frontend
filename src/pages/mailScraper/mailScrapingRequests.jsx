@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import { getAllScrapingRequests } from '../../service/emailScrapingRequest/emailScrapingRequest';
+import { changeStatusToActive, getAllScrapingRequests } from '../../service/emailScrapingRequest/emailScrapingRequest';
 import DataTable from '../../components/common/table/table';
 import CustomIcons from '../../components/common/icons/CustomIcons';
+import Button from '../../components/common/buttons/button';
+import { connect } from 'react-redux';
+import { setAlert } from '../../redux/commonReducers/commonReducers';
+import AlertDialog from '../../components/common/alertDialog/alertDialog';
 
 
 const StatusIcon = ({ value }) => {
-    if (value === 0) {
+    if (value === 1) {
         // waiting
         return (
-            <span title="Pending" className="pulse-glow">
-                <CustomIcons iconName="fa-solid fa-hourglass-start" css="text-yellow-500 text-xl" />
+
+            <span title="Completed" className="pop-in">
+                <CustomIcons iconName="fa-solid fa-circle-check" css="text-green-500 text-xl" />
             </span>
         );
     }
@@ -24,19 +29,48 @@ const StatusIcon = ({ value }) => {
     }
     // done
     return (
-        <span title="Completed" className="pop-in">
-            <CustomIcons iconName="fa-solid fa-circle-check" css="text-green-500 text-xl" />
+        <span title="Pending" className="pulse-glow">
+            <CustomIcons iconName="fa-solid fa-hourglass-start" css="text-yellow-500 text-xl" />
         </span>
     );
 };
 
-const MailScrapingRequests = () => {
+const MailScrapingRequests = ({ setAlert }) => {
     const [mails, setMails] = useState([]);
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [selectedEmail, setSelectedEmail] = useState(null);
+
+    const handleOpenDeleteDialog = (row) => {
+        const email = row.email;
+        setSelectedEmail(row.id);
+        setDialog({ open: true, title: 'Start Scraping', message: `Are you sure! Do you want to start scraping for this email: ${email}?`, actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setSelectedEmail(null);
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleChangeStatus = async () => {
+        const res = await changeStatusToActive(selectedEmail);
+        if (res?.status !== 200) {
+            // Handle unsuccessful status change
+            setAlert({
+                open: true,
+                type: 'error',
+                message: res?.message || 'Failed to change status to active.',
+            })
+        } else {
+            handleCloseDeleteDialog();
+            handleGetAllMails();
+        }
+    }
 
     const handleGetAllMails = async () => {
         const res = await getAllScrapingRequests();
         if (res?.status === 200) {
             const mailsWithId = res.result.map((mail, index) => ({
+                id: mail.id,
                 rowId: index + 1,
                 email: mail.email || "-",
                 maxMessages: mail.maxMessages || "-",
@@ -47,7 +81,14 @@ const MailScrapingRequests = () => {
     }
 
     useEffect(() => {
+        // initial fetch
         handleGetAllMails();
+        // poll every 1 minute
+        const interval = setInterval(() => {
+            handleGetAllMails();
+        }, 60000); // 60,000 ms = 1 minute
+
+        return () => clearInterval(interval);
     }, [])
 
     const columns = [
@@ -83,10 +124,24 @@ const MailScrapingRequests = () => {
             sortable: false,
             renderCell: (params) => (
                 <div className="flex justify-center items-center w-full">
-                    <StatusIcon value={parseInt(params.value)} />
+                    <StatusIcon value={params.value === 0 ? 0 : params.value} />
                 </div>
             ),
-        }
+        },
+        {
+            field: 'action',
+            headerName: 'action',
+            headerClassName: 'uppercase',
+            sortable: false,
+            minWidth: 150,
+            renderCell: (params) => {
+                return (
+                    <div className='flex items-center gap-2 justify-center h-full'>
+                        <Button disabled={params.row.status === 0 || params.row.status === 2} text={"Scraping"} onClick={() => handleOpenDeleteDialog(params.row)} useFor='error' />
+                    </div>
+                );
+            },
+        },
     ];
 
     const getRowId = (row) => {
@@ -98,8 +153,20 @@ const MailScrapingRequests = () => {
             <div className='border rounded-lg bg-white mt-4'>
                 <DataTable columns={columns} rows={mails} getRowId={getRowId} height={550} />
             </div>
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleChangeStatus()}
+                handleClose={() => handleCloseDeleteDialog()}
+            />
         </>
     )
 }
 
-export default MailScrapingRequests
+const mapDispatchToProps = {
+    setAlert,
+};
+
+export default connect(null, mapDispatchToProps)(MailScrapingRequests)

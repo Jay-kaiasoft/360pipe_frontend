@@ -18,3 +18,12 @@ export const createScrapingRequest = async (data) => {
         throw error;
     }
 };
+
+export const changeStatusToActive = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${emailScrapingRequestURL}/changeStatus/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

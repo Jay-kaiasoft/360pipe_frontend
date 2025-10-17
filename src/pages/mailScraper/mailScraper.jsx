@@ -8,6 +8,14 @@ import CustomIcons from "../../components/common/icons/CustomIcons";
 import Select from "../../components/common/select/select";
 import Button from "../../components/common/buttons/button";
 import { createScrapingRequest } from "../../service/emailScrapingRequest/emailScrapingRequest";
+import { fetchDNSMXRecords } from "../../service/common/commonService";
+
+const MAIL_HOST_MAP = {
+    gmail: "imap.gmail.com",
+    outlook: "outlook.office365.com",
+    yahoo: "imap.mail.yahoo.com",
+    zoho: "imap.zoho.com",
+};
 
 const PROVIDER_PRESETS = {
     gmail: {
@@ -113,8 +121,16 @@ function Step({ n, title, children }) {
     );
 }
 
-function Accordion({ items }) {
-    const [openId, setOpenId] = useState(items[0]?.id ?? null);
+function Accordion({ items, openId: controlledOpenId, onChangeOpenId }) {
+    const [uncontrolledOpenId, setUncontrolledOpenId] = useState(items[0]?.id ?? null);
+    const openId = controlledOpenId ?? uncontrolledOpenId;
+
+    const toggle = (id) => {
+        const next = openId === id ? null : id;
+        if (onChangeOpenId) onChangeOpenId(next);
+        else setUncontrolledOpenId(next);
+    };
+
     return (
         <div className="divide-y divide-gray-200 rounded-2xl border border-gray-200 bg-white">
             {items.map((it) => (
@@ -122,15 +138,15 @@ function Accordion({ items }) {
                     <button
                         type="button"
                         className={`w-full text-left px-5 py-4 flex items-center justify-between gap-3 transition ${openId === it.id ? "bg-gray-50" : "hover:bg-gray-50"}`}
-                        onClick={() => setOpenId((prev) => (prev === it.id ? null : it.id))}
+                        onClick={() => toggle(it.id)}
                         aria-expanded={openId === it.id}
                         aria-controls={`panel-${it.id}`}
                     >
                         <span className="font-medium text-gray-900">{it.title}</span>
                         <span
                             className={`p-1 rounded-full border flex justify-center items-center 
-        transition-all duration-500 ease-in-out
-        ${openId === it.id ? "rotate-180 bg-blue-600 border-blue-600" : "rotate-0 bg-white border-gray-300"}`}
+                            transition-all duration-500 ease-in-out
+                            ${openId === it.id ? "rotate-180 bg-blue-600 border-blue-600" : "rotate-0 bg-white border-gray-300"}`}
                         >
                             {openId === it.id ? (
                                 <CustomIcons iconName="fa-solid fa-minus" css="text-white w-4 h-4" />
@@ -138,14 +154,10 @@ function Accordion({ items }) {
                                 <CustomIcons iconName="fa-solid fa-plus" css="text-black w-4 h-4" />
                             )}
                         </span>
-                        {/* <span className="text-gray-500">{openId === it.id ?
-                            <CustomIcons iconName="fa-solid fa-minus" css="text-gray-500 w-5 h-5" />
-                            : <CustomIcons iconName="fa-solid fa-plus" css="text-gray-500 w-5 h-5" />}</span> */}
                     </button>
                     <div
                         id={`panel-${it.id}`}
-                        className={`overflow-hidden transition-all duration-700 ease-in-out ${openId === it.id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-                            }`}
+                        className={`overflow-hidden transition-all duration-700 ease-in-out ${openId === it.id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
                     >
                         <div className="px-5 pb-5 text-sm text-gray-700 leading-relaxed">{it.content}</div>
                     </div>
@@ -155,9 +167,12 @@ function Accordion({ items }) {
     );
 }
 
+
 function MailScraper({ setAlert, setLoading }) {
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [openAccordionId, setOpenAccordionId] = useState(null); // NEW
+    const [message, setMessage] = useState(null);
 
     const {
         control,
@@ -177,12 +192,61 @@ function MailScraper({ setAlert, setLoading }) {
         }
     });
 
+    // Map well-known hosts to accordion section ids
+    const hostToSection = (host) => {
+        const h = (host || "").toLowerCase();
+        if (h.includes("gmail.com")) return "gmail";
+        if (h.includes("google")) return "gmail";
+        if (h.includes("office365") || h.includes("outlook")) return "outlook";
+        if (h.includes("yahoo")) return "yahoo";
+        if (h.includes("zoho")) return "zoho";
+        return "custom";
+    };
+
+    const handleGetMx = async () => {
+        const email = watch("email");
+        if (!email) return;
+
+        try {
+            const res = await fetchDNSMXRecords(email);
+            const mxRecords = res?.data || [];
+            const mxString = mxRecords.join(" ").toLowerCase();
+
+            let selectedHost = null;
+            if (mxString.includes("google") || mxString.includes("gmail")) {
+                selectedHost = MAIL_HOST_MAP.gmail;
+            } else if (
+                mxString.includes("outlook") ||
+                mxString.includes("office365") ||
+                mxString.includes("protection.outlook.com")
+            ) {
+                selectedHost = MAIL_HOST_MAP.outlook;
+            } else if (mxString.includes("yahoo")) {
+                selectedHost = MAIL_HOST_MAP.yahoo;
+            } else if (mxString.includes("zoho")) {
+                selectedHost = MAIL_HOST_MAP.zoho;
+            }
+
+            if (selectedHost) {
+                setValue("imap_host", selectedHost);
+                setOpenAccordionId(hostToSection(selectedHost)); // NEW: open correct accordion
+                setMessage("We detected your email provider and it is pre-filled below IMAP / POP Host field. If you don't have app password, please select the appropriate provider from the Provider Setup Instructions.");
+            } else {
+                setOpenAccordionId("custom");
+                setMessage("We could not detect your email provider. Please refer to the Provider Setup Instructions for custom domains to manually fill in the IMAP / POP Host details.");
+            }
+        } catch (err) {
+            console.error("Error fetching MX:", err);
+        }
+    };
+
     const onPreset = (key) => {
         const preset = PROVIDER_PRESETS[key];
         if (!preset) return;
         setValue("protocol", preset.protocol);
         setValue("imap_host", preset.host);
         setValue("imap_port", preset.port);
+        setOpenAccordionId(key === "outlook" ? "outlook" : key === "gmail" ? "gmail" : key === "yahoo" ? "yahoo" : key === "zoho" ? "zoho" : "custom"); // NEW
     };
 
     const onSubmit = async (values) => {
@@ -222,47 +286,6 @@ function MailScraper({ setAlert, setLoading }) {
                     message: response?.message || "Mail scraping request created successfully",
                 })
             }
-            // const res = await axios.post(`${API_BASE}/fetch-signatures`, values, {
-            //     headers: { "Content-Type": "application/json" },
-            // });
-
-            // if (res.status !== 200) {
-            //     setLoading(false);
-            //     setAlert({
-            //         open: true,
-            //         type: "error",
-            //         message: res?.data?.detail || "Something went wrong",
-            //     })
-            // } else {
-            //     const signatures = res?.data?.signatures?.map((item, index) => {
-            //         return {
-            //             email: item?.emailAddress,
-            //             companyName: item?.companyName,
-            //             jobTitle: item?.jobTitle,
-            //             address: item?.address,
-            //             website: item?.website,
-            //             phone: item?.phoneNumber,
-            //         };
-            //     });
-            //     console.log("signatures", signatures)
-            //     const response = await createMail(signatures);
-            //     if (response?.status !== 201) {
-            //         setLoading(false);
-            //         setAlert({
-            //             open: true,
-            //             type: "error",
-            //             message: res?.message || "Something went wrong while saving signatures",
-            //         })
-            //     } else {
-            //         setSubmitting(false);
-            //         setLoading(false);
-            //         setAlert({
-            //             open: true,
-            //             type: "success",
-            //             message: res?.data?.message || "Mail scraping done successfully",
-            //         })
-            //     }
-            // }
         } catch (e) {
             console.log(" e?.response", e?.response)
             setLoading(false);
@@ -277,7 +300,7 @@ function MailScraper({ setAlert, setLoading }) {
         }
     };
 
-    
+
     return (
         <div className="my-2">
             <section className="mx-auto max-w-6xl px-4">
@@ -331,11 +354,17 @@ function MailScraper({ setAlert, setLoading }) {
                                                 error={errors?.email}
                                                 onChange={(e) => {
                                                     const value = e.target.value.replace(/\s/g, "");
-                                                    field.onChange(value);
+                                                    field.onChange(value);                                                  
+                                                }}
+                                                onBlur={() => {
+                                                    handleGetMx();
                                                 }}
                                             />
                                         )}
                                     />
+                                    <HelperText>
+                                        {message}
+                                    </HelperText>
                                 </div>
 
                                 {/* Password / App Password */}
@@ -449,7 +478,9 @@ function MailScraper({ setAlert, setLoading }) {
                                                     type={`text`}
                                                     error={errors?.imap_host}
                                                     onChange={(e) => {
-                                                        field.onChange(e.target.value);
+                                                        const v = e.target.value;
+                                                        field.onChange(v);
+                                                        setOpenAccordionId(hostToSection(v)); // NEW: react to manual typing
                                                     }}
                                                 />
                                             )}
@@ -564,6 +595,8 @@ function MailScraper({ setAlert, setLoading }) {
                                             ),
                                         },
                                     ]}
+                                    openId={openAccordionId}                 // NEW
+                                    onChangeOpenId={setOpenAccordionId}      // NEW
                                 />
                             </CardBody>
                         </Card>
