@@ -176,9 +176,17 @@ export default function DataTable({
                         checkboxSelection={checkboxSelection}
                         onRowSelectionModelChange={(newRowSelectionModel) => {
                             // Pass DataGrid's selected rowIds directly to parent (they correspond to getRowId(row))
+                            console.log("newRowSelectionModel", newRowSelectionModel)
                             setRowSelectionModel(newRowSelectionModel);
                         }}
                         rowSelectionModel={rowSelectionModel}
+                        // slots={{ toolbar: CustomToolbar }}
+                        slotProps={{
+                            toolbar: {
+                                showQuickFilter: true,          // ✅ adds a search box
+                                quickFilterProps: { debounceMs: 500 },
+                            },
+                        }}
                         sx={{
                             color: theme.palette.text.primary,
                             overflow: 'auto',
@@ -202,7 +210,26 @@ export default function DataTable({
                             },
                             '& .MuiDataGrid-overlay': {
                                 backgroundColor: theme.palette.background.paper,
-                            }
+                            },
+
+                            "& .MuiCheckbox-root": {
+                                color: theme.palette.secondary.main,
+                            },
+                            "& .MuiCheckbox-root.Mui-checked": {
+                                color: `${theme.palette.secondary.main} !important`,
+                            },
+
+                            "& .MuiDataGrid-row.Mui-selected": {
+                                backgroundColor: "rgba(4,120,220,0.08) !important",
+                            },
+                            "& .MuiDataGrid-row.Mui-selected:hover": {
+                                backgroundColor: "rgba(4,120,220,0.12) !important",
+                            },
+                            "& .MuiDataGrid-toolbarContainer": {
+                                p: 1.5,
+                                backgroundColor: "#f7f9fb",
+                                borderBottom: "1px solid #e0e0e0",
+                            },
                         }}
                     />
                 </div>

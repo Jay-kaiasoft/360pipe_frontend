@@ -10,6 +10,15 @@ export const getAllTempMails = async () => {
     }
 };
 
+export const getMailByGroup = async () => {
+    try {
+        const response = await axiosInterceptor().get(`${tempMailURL}/getAllByGroup `);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getTempMail = async (id) => {
     try {
         const response = await axiosInterceptor().get(`${tempMailURL}/get/${id}`);
@@ -40,6 +49,24 @@ export const updateMail = async (id, data) => {
 export const deleteMail = async (id) => {
     try {
         const response = await axiosInterceptor().delete(`${tempMailURL}/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteAllMails = async (ids) => {
+    try {
+        const response = await axiosInterceptor().post(`${tempMailURL}/delete/all`, ids);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteAllMailsByRequestId = async (id) => {
+    try {
+        const response = await axiosInterceptor().delete(`${tempMailURL}/deleteByRequestId/${id}`);
         return response.data;
     } catch (error) {
         throw error;

@@ -54,9 +54,12 @@ export default function AlertDialog({ open, handleClose, title, message, handleA
                     </Components.Typography>
                 </Components.DialogContent>
                 <Components.DialogActions>
-                    <div className='flex justify-end items-center gap-4 w-full'>                      
+                    <div className='flex justify-end items-center gap-2 w-full'>
                         <div>
                             <Button useFor={`error`} type={`button`} text={actionButtonText} onClick={handleAction} isLoading={loading} />
+                        </div>
+                        <div>
+                            <Button useFor={`disabled`} type={`button`} text={"No"} onClick={handleClose} isLoading={loading} />
                         </div>
                     </div>
                 </Components.DialogActions>

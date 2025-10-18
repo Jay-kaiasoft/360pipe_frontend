@@ -6,7 +6,7 @@ import Button from '../../components/common/buttons/button';
 import { connect } from 'react-redux';
 import { setAlert } from '../../redux/commonReducers/commonReducers';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
-
+import MailScrapingRequestsModel from '../../components/models/mailScrapingRequest/mailScrapingRequestsModel';
 
 const StatusIcon = ({ value }) => {
     if (value === 1) {
@@ -21,7 +21,7 @@ const StatusIcon = ({ value }) => {
     if (value === 2) {
         // processing
         return (
-            <span title="Processing" className="">
+            <span title="Processing" className="pulse-glow">
                 {/* use FA built-in spin or Tailwind animate-spin (pick one). Using FA here: */}
                 <CustomIcons iconName="fa-solid fa-spinner fa-spin" css="text-blue-500 text-xl" />
             </span>
@@ -39,14 +39,26 @@ const MailScrapingRequests = ({ setAlert }) => {
     const [mails, setMails] = useState([]);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedEmail, setSelectedEmail] = useState(null);
+    const [open, setOpen] = useState(false);
+    const [selectedMailId, setSelectedMailId] = useState(null);
 
-    const handleOpenDeleteDialog = (row) => {
+    const handleOpen = (id) => {
+        setSelectedMailId(id);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setSelectedMailId(null);
+        setOpen(false);
+    };
+
+    const handleOpenDialog = (row) => {
         const email = row.email;
         setSelectedEmail(row.id);
         setDialog({ open: true, title: 'Start Scraping', message: `Are you sure! Do you want to start scraping for this email: ${email}?`, actionButtonText: 'yes' });
     }
 
-    const handleCloseDeleteDialog = () => {
+    const handleCloseDialog = () => {
         setSelectedEmail(null);
         setDialog({ open: false, title: '', message: '', actionButtonText: '' });
     }
@@ -61,7 +73,7 @@ const MailScrapingRequests = ({ setAlert }) => {
                 message: res?.message || 'Failed to change status to active.',
             })
         } else {
-            handleCloseDeleteDialog();
+            handleCloseDialog();
             handleGetAllMails();
         }
     }
@@ -133,11 +145,12 @@ const MailScrapingRequests = ({ setAlert }) => {
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
-            minWidth: 150,
+            minWidth: 230,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
-                        <Button disabled={params.row.status === 0 || params.row.status === 2} text={"Scraping"} onClick={() => handleOpenDeleteDialog(params.row)} useFor='error' />
+                        <Button disabled={params.row.status !== 1 || params.row.status === 2} text={"Edit"} onClick={() => handleOpen(params.row?.id)} />
+                        <Button disabled={params.row.status !== 1 || params.row.status === 2} text={"Scraping"} onClick={() => handleOpenDialog(params.row)} useFor='error' />
                     </div>
                 );
             },
@@ -159,8 +172,9 @@ const MailScrapingRequests = ({ setAlert }) => {
                 message={dialog.message}
                 actionButtonText={dialog.actionButtonText}
                 handleAction={() => handleChangeStatus()}
-                handleClose={() => handleCloseDeleteDialog()}
+                handleClose={() => handleCloseDialog()}
             />
+            <MailScrapingRequestsModel open={open} handleClose={handleClose} id={selectedMailId} handleGetAllRecords={handleGetAllMails} />
         </>
     )
 }
