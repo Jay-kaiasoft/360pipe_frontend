@@ -97,7 +97,6 @@ const Brand = ({ setAlert }) => {
     }, []);
 
     const submit = async (newData) => {
-        console.log("Data", newData);
         handleUploadImage(watch("id"));
         const res = await updateBusinessInfo(watch("id"), newData);
         if (res?.data?.status === 200) {

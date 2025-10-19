@@ -63,3 +63,12 @@ export const setTodoToday = async (data) => {
         throw error;
     }
 };
+
+export const deleteImagesById = async (id) => {
+    try {
+        const response = await axiosInterceptor().delete(`${todoURL}/image/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
