@@ -32,6 +32,8 @@ import AddMemberRoles from "./pages/members/addMemberRoles";
 import Accounts from "./pages/dashboard/accounts/accounts";
 import Todo from "./pages/dashboard/todo/todo";
 import ManageMails from "./pages/mailScraper/manageMails";
+import MyCalendar from "./pages/calendar/myCalendar";
+import GoogleCalendarOauthRedirect from "./pages/calendar/googleCalendarOauthRedirect";
 
 library.add(fas, far, fab)
 
@@ -129,7 +131,15 @@ const App = ({ setLoading }) => {
           path: "managemails",
           element: <ManageMails />,
         },
+        {
+          path: "mycalendar",
+          element: <MyCalendar />,
+        },
       ],
+    },
+    {
+      path: "/googlecalendaroauthredirect",
+      element: <GoogleCalendarOauthRedirect />,
     },
   ])
 

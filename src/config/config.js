@@ -42,5 +42,5 @@ export const todoPriorityURL = baseURL + '/todoPriority'
 export const tempMailURL = baseURL + '/tempMail'
 export const emailScrapingRequestURL = baseURL + '/emailScrapingRequest'
 
-
+export const googleCalendarUrl = baseURL + '/googleCalendar'
 
