@@ -61,9 +61,9 @@ const Header = () => {
                 `}
         >
             <div className="flex items-center justify-between 4k:justify-center 4k:gap-32 px-5 lg:px-20 py-4">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="w-40 flex items-center h-12">
                     <NavLink to={'/'}>
-                        360Pipe
+                        <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="mt-3"/>
                     </NavLink>
                 </div>
 

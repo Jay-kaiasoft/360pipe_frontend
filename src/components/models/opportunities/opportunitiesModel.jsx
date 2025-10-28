@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
@@ -14,7 +14,11 @@ import Select from '../../../components/common/select/select';
 import { createOpportunity, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
 import { opportunityStages, partnerRoles } from '../../../service/common/commonService';
-import { createOpportunitiesPartner, deleteOpportunitiesPartner, updateOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
+import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
+import AlertDialog from '../../common/alertDialog/alertDialog';
+import OpportunitiesPartnersModel from "./opportunityPartnerModel";
+import { deleteOpportunitiesProducts, getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
+import OpportunitiesProductsModel from './opportunitiesProductsModel';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -29,6 +33,59 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
+    const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
+
+    const [openPartnerModel, setOpenPartnerModel] = useState(false);
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [selectedOppPartnerId, setSelectedOppPartnerId] = useState(null);
+
+    const [openProductModel, setOpenProductModel] = useState(false);
+    const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [selectedProductId, setSelectedProductId] = useState(null);
+
+
+    const handleOpenPartnerModel = (id) => {
+        setSelectedOppPartnerId(id);
+        setOpenPartnerModel(true);
+    };
+
+    const handleClosePartnerModel = () => {
+        setSelectedOppPartnerId(null);
+        setOpenPartnerModel(false);
+    };
+
+    const handleOpenDeleteDialog = (id) => {
+        setSelectedOppPartnerId(id);
+        setDialog({ open: true, title: 'Delete Partner', message: 'Are you sure! Do you want to delete this partner?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setSelectedOppPartnerId(null);
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleOpenProductModel = (id) => {
+        setSelectedProductId(id);
+        setOpenProductModel(true);
+    };
+
+    const handleCloseProductModel = () => {
+        setSelectedProductId(null);
+        setOpenProductModel(false);
+    };
+
+    const handleOpenDeleteProductDialog = (id) => {
+        setSelectedProductId(id);
+        setDialogProduct({ open: true, title: 'Delete Product', message: 'Are you sure! Do you want to delete this product?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteProductDialog = () => {
+        setSelectedProductId(null);
+        setDialogProduct({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
     const {
         handleSubmit,
         control,
@@ -45,30 +102,16 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             nextSteps: null,
             accountId: null,
             salesforceOpportunityId: null,
-            opportunityPartnerDetails: [{
-                id: null,
-                salesforceOpportunityPartnerId: null,
-                opportunityId: null,
-                accountToId: null,
-                accountId: null,
-                role: null,
-                roleid: null,
-                isPrimary: false,
-                isDeleted: false,
-            }],
         },
     });
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: 'opportunityPartnerDetails',
-    });
 
-    const handleDeletePartner = async (item, index) => {
-        if (item?.partnerId) {
-            const res = await deleteOpportunitiesPartner(item?.partnerId);
+    const handleDeletePartner = async () => {
+        if (selectedOppPartnerId) {
+            const res = await deleteOpportunitiesPartner(selectedOppPartnerId);
             if (res?.status === 200) {
-                remove(index);
                 setSyncingPushStatus(true);
+                handleGetAllOpportunitiesPartner()
+                handleCloseDeleteDialog()
             } else {
                 setAlert({
                     open: true,
@@ -76,21 +119,23 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     type: "error"
                 });
             }
-        } else {
-            remove(index);
         }
-        if (index === 0 && fields.length === 1) {
-            append({
-                id: null,
-                salesforceOpportunityPartnerId: null,
-                opportunityId: null,
-                accountToId: null,
-                accountId: null,
-                role: null,
-                roleid: null,
-                isPrimary: false,
-                isDeleted: false,
-            });
+    }
+
+    const handleDeleteProduct = async () => {
+        if (selectedProductId) {
+            const res = await deleteOpportunitiesProducts(selectedProductId);
+            if (res?.status === 200) {
+                setSyncingPushStatus(true);
+                handleGetOppProduct()
+                handleCloseDeleteProductDialog()
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete opportunity product",
+                    type: "error"
+                });
+            }
         }
     }
 
@@ -104,17 +149,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             closeDate: null,
             nextSteps: null,
             salesforceOpportunityId: null,
-            opportunityPartnerDetails: [{
-                id: null,
-                salesforceOpportunityPartnerId: null,
-                opportunityId: null,
-                accountToId: null,
-                accountId: null,
-                role: null,
-                roleid: null,
-                isPrimary: false,
-                isDeleted: false,
-            }],
         });
         handleClose();
     };
@@ -172,7 +206,23 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         }
     };
 
+    const handleGetAllOpportunitiesPartner = async () => {
+        if (open && opportunityId) {
+            const res = await getAllOpportunitiesPartner(opportunityId)
+            setOpportunitiesPartner(res?.result)
+        }
+    }
+
+    const handleGetOppProduct = async () => {
+        if (open && opportunityId) {
+            const res = await getAllOpportunitiesProducts(opportunityId)
+            setOpportunitiesProducts(res.result)
+        }
+    }
+
     useEffect(() => {
+        handleGetOppProduct()
+        handleGetAllOpportunitiesPartner()
         handleGetAllAccounts()
         handleGetOpportunityDetails()
     }, [open])
@@ -182,13 +232,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         const newData = {
             ...data,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
-            opportunityPartnerDetails: watch("opportunityPartnerDetails")?.length > 0 ? watch("opportunityPartnerDetails")?.map((item, index) => {
-                delete item.id
-                return {
-                    ...item,
-                    id: item?.partnerId || null,
-                }
-            }) : []
         }
         try {
             if (opportunityId) {
@@ -204,7 +247,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         type: "success"
                     });
                     handleGetAllOpportunities();
-                    // handleGetAllSyncRecords();
                     onClose();
                 } else {
                     setLoading(false);
@@ -225,7 +267,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         type: "success"
                     });
                     handleGetAllOpportunities();
-                    // handleGetAllSyncRecords();
                     onClose();
                 } else {
                     setLoading(false);
@@ -251,8 +292,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             <BootstrapDialog
                 open={open}
                 aria-labelledby="customized-dialog-title"
-                fullWidth
-                maxWidth='md'
+                fullScreen
+                maxWidth='lg'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {opportunityId ? "Update" : "Create"} Opportunity
@@ -271,9 +312,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
                 </Components.IconButton>
 
-                <form noValidate onSubmit={handleSubmit(submit)}>
+                <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
                     <Components.DialogContent dividers>
-                        <div className='grid md:grid-cols-3 gap-4'>
+                        <div className='grid md:grid-cols-4 gap-4 mb-4'>
                             <Controller
                                 name="accountId"
                                 control={control}
@@ -373,105 +414,188 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                 )}
                             />
                         </div>
-                        <div className="flex items-center my-2 col-span-2 md:col-span-3">
-                            <div className="flex-grow border-t border-black"></div>
-                            <span className="mx-4 text-black font-medium">Partner Details</span>
-                            <div className="flex-grow border-t border-black"></div>
-                        </div>
-                        <div>
-                            {fields?.map((item, index) => (
-                                <div className='grid grid-cols-3 gap-4' key={index}>
-                                    <div className='mb-3'>
-                                        <Controller
-                                            name={`opportunityPartnerDetails.${index}.accountId`}
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Select
-                                                    options={accounts?.filter(acc => acc.id !== parseInt(watch("accountId"))) || []} // Prevent selecting the same account in both fields
-                                                    label={"Account"}
-                                                    placeholder="Select Account"
-                                                    value={parseInt(watch(`opportunityPartnerDetails.${index}.accountId`)) || null}
-                                                    onChange={(_, newValue) => {
-                                                        if (newValue?.id) {
-                                                            field.onChange(newValue.id);
-                                                            setValue(`opportunityPartnerDetails.${index}.accountToId`, newValue.salesforceAccountId || null);
-                                                        } else {
-                                                            setValue(`opportunityPartnerDetails.${index}.accountToId`, null);
-                                                            setValue(`opportunityPartnerDetails.${index}.accountId`, null);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </div>
+                        <div className='grid md:grid-cols-2 gap-4'>
+                            <div>
+                                {/* <div className="flex items-center my-2 col-span-2 md:col-span-3">
+                                    <div className="flex-grow border-t border-black"></div>
+                                    <span className="mx-4 text-black font-medium">Partner Details</span>
+                                    <div className="flex-grow border-t border-black"></div>
+                                </div> */}
 
-                                    <div>
-                                        <Controller
-                                            name={`opportunityPartnerDetails.${index}.role`}
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Select
-                                                    options={partnerRoles}
-                                                    label={"Role"}
-                                                    placeholder="Select Role"
-                                                    value={parseInt(watch(`opportunityPartnerDetails.${index}.roleid`)) || null}
-                                                    onChange={(_, newValue) => {
-                                                        if (newValue?.id) {
-                                                            field.onChange(newValue.id);
-                                                            setValue(`opportunityPartnerDetails.${index}.roleid`, newValue.id);
-                                                            setValue(`opportunityPartnerDetails.${index}.role`, newValue.title);
-                                                        } else {
-                                                            setValue(`opportunityPartnerDetails.${index}.role`, null);
-                                                            setValue(`opportunityPartnerDetails.${index}.roleid`, null);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <div className='flex items-center justify-start gap-2'>
-                                            <div className='bg-blue-600 h-8 w-8 rounded-full text-white'>
-                                                <Components.IconButton onClick={() => append({
-                                                    id: null,
-                                                    salesforceOpportunityPartnerId: null,
-                                                    opportunityId: opportunityId,
-                                                    accountToId: null,
-                                                    accountId: null,
-                                                    role: null,
-                                                    roleid: null,
-                                                    isPrimary: false,
-                                                    isDeleted: false,
-                                                })}>
-                                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                </Components.IconButton>
-                                            </div>
-                                            <div>
-                                                {
-                                                    (item.role || item.accountId || fields?.length > 1) && (
-                                                        <div className='bg-red-600 h-8 w-8 rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleDeletePartner(item, index)}>
-                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                <div className="max-h-96 overflow-y-auto">
+                                    <table className="min-w-full border-collapse border">
+                                        <thead className="bg-gray-50 sticky top-0 z-10 ">
+                                            <tr>
+                                                <th colSpan={3} className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                    Partners
+                                                </th>
+                                                <th className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                    <div className='flex items-center gap-2 justify-end h-full'>
+                                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleOpenPartnerModel()}>
+                                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
                                                             </Components.IconButton>
                                                         </div>
-                                                    )
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    #
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Name
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Role
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        {
+                                            opportunitiesPartner?.length > 0 ? (
+                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                    {opportunitiesPartner?.map((row, i) => (
+                                                        <tr key={i} className="hover:bg-gray-50">
+                                                            <td className="px-4 py-3 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.accountName || "—"}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.role || "—"}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">
+                                                                <div className='flex items-center gap-2 justify-end h-full'>
+                                                                    <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
+                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            ) : (
+                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                    <tr className="hover:bg-gray-50">
+                                                        <td colSpan={4} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                            No records
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            )
+                                        }
+                                    </table>
                                 </div>
-                            ))}
+                            </div>
+
+                            <div>
+                                <div className="max-h-96 overflow-y-auto">
+                                    <table className="min-w-full border-collapse border">
+                                        <thead className="bg-gray-50 sticky top-0 z-10 ">
+                                            <tr>
+                                                <th colSpan={4} className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                    Products
+                                                </th>
+                                                <th className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                    <div className='flex items-center gap-2 justify-end h-full'>
+                                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleOpenProductModel()}>
+                                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    #
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Name
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Qty
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Price
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        {
+                                            opportunitiesProducts?.length > 0 ? (
+                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                    {opportunitiesProducts?.map((row, i) => (
+                                                        <tr key={i} className="hover:bg-gray-50">
+                                                            <td className="px-4 py-3 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.name || "—"}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.qty || "—"}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.price || "—"}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-800">
+                                                                <div className='flex items-center gap-2 justify-end h-full'>
+                                                                    <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
+                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            ) : (
+                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                    <tr className="hover:bg-gray-50">
+                                                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                            No records
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            )
+                                        }
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </Components.DialogContent>
 
-                    <Components.DialogActions>
+                    <Components.DialogActions className='absolute bottom-2 right-2'>
                         <div className='flex justify-end'>
                             <Button type={`submit`} text={opportunityId ? "Update" : "Submit"} isLoading={loading} />
                         </div>
                     </Components.DialogActions>
                 </form>
             </BootstrapDialog>
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleDeletePartner()}
+                handleClose={() => handleCloseDeleteDialog()}
+            />
+            <AlertDialog
+                open={dialogProduct.open}
+                title={dialogProduct.title}
+                message={dialogProduct.message}
+                actionButtonText={dialogProduct.actionButtonText}
+                handleAction={() => handleDeleteProduct()}
+                handleClose={() => handleCloseDeleteProductDialog()}
+            />
+            <OpportunitiesPartnersModel open={openPartnerModel} handleClose={handleClosePartnerModel} id={selectedOppPartnerId} opportunityId={opportunityId} handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner} />
+            <OpportunitiesProductsModel open={openProductModel} handleClose={handleCloseProductModel} id={selectedProductId} opportunityId={opportunityId} handleGetAllOpportunitiesProducts={handleGetOppProduct} />
         </React.Fragment>
     );
 }

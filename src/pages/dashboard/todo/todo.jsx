@@ -187,8 +187,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         }
     };
 
-
-
     const handleSave = async () => {
         const data = {
             source: "",

@@ -70,6 +70,10 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         label: "E-Mail Scraper",
         path: "/dashboard/managemails",
       },
+      {
+        label: "Products",
+        path: "/dashboard/products",
+      },
     ]
     setTabsData(tabItems)
     const currentPath = locaiton.pathname;
@@ -200,9 +204,9 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       <div className="flex justify-start items-center gap-4 lg:px-6">
         <div className="flex justify-start items-center gap-8 grow">
           <div className="hidden xl:block">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="w-40 flex items-center h-12">
               <NavLink to={'/dashboard'}>
-                360Pipe
+                <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="mt-3" />
               </NavLink>
             </div>
           </div>

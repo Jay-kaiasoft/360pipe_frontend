@@ -34,6 +34,7 @@ import Todo from "./pages/dashboard/todo/todo";
 import ManageMails from "./pages/mailScraper/manageMails";
 import MyCalendar from "./pages/calendar/myCalendar";
 import GoogleCalendarOauthRedirect from "./pages/calendar/googleCalendarOauthRedirect";
+import Products from "./pages/dashboard/products/products";
 
 library.add(fas, far, fab)
 
@@ -134,6 +135,10 @@ const App = ({ setLoading }) => {
         {
           path: "mycalendar",
           element: <MyCalendar />,
+        },
+        {
+          path: "products",
+          element: <Products />,
         },
       ],
     },

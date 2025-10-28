@@ -278,9 +278,9 @@ const Sidebar = ({
                 <NavLink to="/dashboard">
                     {isExpanded || isHovered || isMobileOpen ? (
                         <>
-                            <div className="text-2xl font-bold text-blue-600">
+                            <div className="w-40 flex items-center h-2">
                                 <NavLink to={'/dashboard'}>
-                                    360Pipe
+                                    <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo"/>
                                 </NavLink>
                             </div>
                         </>

@@ -6,7 +6,6 @@ export const radarAPIURL = process.env.REACT_APP_RADAR_API_BASE_URL
 export const radarSKAPIKey = process.env.REACT_APP_RADAR_SK_API_KEY
 export const radarPKAPIKey = process.env.REACT_APP_RADAR_PK_API_KEY
 
-
 export const q4magicSyncURL = baseURL + '/syncToQ4Magic'
 export const syncFromQ4magicURL = baseURL + '/syncFromQ4Magic'
 
@@ -41,6 +40,6 @@ export const todoAssignURL = baseURL + '/todoAssign'
 export const todoPriorityURL = baseURL + '/todoPriority'
 export const tempMailURL = baseURL + '/tempMail'
 export const emailScrapingRequestURL = baseURL + '/emailScrapingRequest'
-
 export const googleCalendarUrl = baseURL + '/googleCalendar'
-
+export const productsUrl = baseURL + '/products'
+export const opportunitiesProductURL = baseURL + '/opportunitiesProduct'
