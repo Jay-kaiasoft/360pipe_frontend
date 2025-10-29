@@ -22,6 +22,16 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
+const productType = [
+    {
+        id: 1,
+        title: "Product"
+    },
+    {
+        id: 2,
+        title: "Service"
+    }
+]
 
 function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts }) {
     const theme = useTheme()
@@ -36,6 +46,7 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
     } = useForm({
         defaultValues: {
             id: "",
+            type: "",
             name: "",
             code: "",
             price: "",
@@ -47,6 +58,7 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
     const onClose = () => {
         reset({
             id: "",
+            type: "",
             name: "",
             code: "",
             price: "",
@@ -61,18 +73,23 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
             const response = await getProducts(id);
             if (response?.data?.status === 200) {
                 reset(response?.data?.result)
+                setValue("type", productType?.find(row => row.title === response?.data?.result?.type)?.id || null);
             }
         }
     }
-
 
     useEffect(() => {
         handleGetProduct();
     }, [open]);
 
     const submit = async (data) => {
+        const newData = {
+            ...data,
+            type: productType?.find(row => row.id === parseInt(data.type))?.title || null,
+        }
+
         if (id) {
-            const res = await updateProducts(id, data)
+            const res = await updateProducts(id, newData)
             if (res.data.status === 200) {
                 handleGetAllProducts()
                 onClose()
@@ -83,7 +100,7 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
                 }))
             }
         } else {
-            const res = await createProducts(data)
+            const res = await createProducts(newData)
             if (res.data.status === 201) {
                 handleGetAllProducts()
                 onClose()
@@ -123,6 +140,28 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='grid grid-cols-2 md:grid-cols-2 gap-4'>
+                            <div>
+                                <Controller
+                                    name="type"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            options={productType}
+                                            label={"Type"}
+                                            placeholder="Select type"
+                                            value={parseInt(watch("type")) || null}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("type", null);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </div>
+
                             <div>
                                 <Controller
                                     name="name"

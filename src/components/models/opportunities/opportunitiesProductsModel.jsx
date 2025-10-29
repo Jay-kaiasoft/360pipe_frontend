@@ -74,7 +74,6 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
             const res = await getOpportunitiesProducts(id)
             if (res.status === 200) {
                 reset(res.result)
-                setValue("productId", products?.find((row) => row.name === res.result?.name)?.id)
             }
         }
     }
@@ -88,7 +87,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
         const newData = {
             ...data,
             qty: parseInt(data.qty),
-            oppId: opportunityId
+            oppId: opportunityId,
         }
         if (id) {
             const res = await updateOpportunitiesProducts(id, newData)

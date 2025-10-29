@@ -13,12 +13,14 @@ import Select from '../../../components/common/select/select';
 
 import { createOpportunity, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { opportunityStages, partnerRoles } from '../../../service/common/commonService';
+import { opportunityStages, opportunityStatus, partnerRoles } from '../../../service/common/commonService';
 import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 import AlertDialog from '../../common/alertDialog/alertDialog';
 import OpportunitiesPartnersModel from "./opportunityPartnerModel";
 import { deleteOpportunitiesProducts, getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import OpportunitiesProductsModel from './opportunitiesProductsModel';
+import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import Checkbox from '../../common/checkBox/checkbox';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -36,6 +38,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
     const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
+    const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
 
     const [openPartnerModel, setOpenPartnerModel] = useState(false);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
@@ -44,6 +47,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [openProductModel, setOpenProductModel] = useState(false);
     const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedProductId, setSelectedProductId] = useState(null);
+
+    const [checkTodoIds, setCheckTodoIds] = useState([]);
 
 
     const handleOpenPartnerModel = (id) => {
@@ -102,6 +107,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             nextSteps: null,
             accountId: null,
             salesforceOpportunityId: null,
+            status: 1,
         },
     });
 
@@ -149,6 +155,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             closeDate: null,
             nextSteps: null,
             salesforceOpportunityId: null,
+            status: 1,
         });
         handleClose();
     };
@@ -165,6 +172,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setValue("nextSteps", res?.result?.nextSteps || null);
                 setValue("salesforceOpportunityId", res?.result?.salesforceOpportunityId || null);
                 setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.id || null);
+                setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
@@ -220,10 +228,16 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         }
     }
 
+    const handleGetOppContacts = async () => {
+        const res = await getAllOpportunitiesContact(opportunityId)
+        setOpportunitiesContacts(res.result)
+    }
+
     useEffect(() => {
         handleGetOppProduct()
         handleGetAllOpportunitiesPartner()
         handleGetAllAccounts()
+        handleGetOppContacts()
         handleGetOpportunityDetails()
     }, [open])
 
@@ -232,6 +246,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         const newData = {
             ...data,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
+            status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
         }
         try {
             if (opportunityId) {
@@ -292,8 +307,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             <BootstrapDialog
                 open={open}
                 aria-labelledby="customized-dialog-title"
-                fullScreen
-                maxWidth='lg'
+                fullScreen={opportunityId != null}
+                maxWidth={opportunityId ? 'lg' : "md"}
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {opportunityId ? "Update" : "Create"} Opportunity
@@ -314,7 +329,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                 <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
                     <Components.DialogContent dividers>
-                        <div className='grid md:grid-cols-4 gap-4 mb-4'>
+                        <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4`}>
                             <Controller
                                 name="accountId"
                                 control={control}
@@ -413,165 +428,259 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     />
                                 )}
                             />
+                            <Controller
+                                name="status"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        options={opportunityStatus}
+                                        label={"Status"}
+                                        placeholder="Select status"
+                                        value={parseInt(watch("status")) || null}
+                                        onChange={(_, newValue) => {
+                                            if (newValue?.id) {
+                                                field.onChange(newValue.id);
+                                            } else {
+                                                setValue("status", null);
+                                            }
+                                        }}
+                                    />
+                                )}
+                            />
                         </div>
-                        <div className='grid md:grid-cols-2 gap-4'>
-                            <div>
-                                {/* <div className="flex items-center my-2 col-span-2 md:col-span-3">
+                        {
+                            opportunityId != null && (
+                                <div className='grid md:grid-cols-2 gap-4'>
+                                    <div>
+                                        {/* <div className="flex items-center my-2 col-span-2 md:col-span-3">
                                     <div className="flex-grow border-t border-black"></div>
                                     <span className="mx-4 text-black font-medium">Partner Details</span>
                                     <div className="flex-grow border-t border-black"></div>
                                 </div> */}
 
-                                <div className="max-h-96 overflow-y-auto">
-                                    <table className="min-w-full border-collapse border">
-                                        <thead className="bg-gray-50 sticky top-0 z-10 ">
-                                            <tr>
-                                                <th colSpan={3} className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
-                                                    Partners
-                                                </th>
-                                                <th className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
-                                                    <div className='flex items-center gap-2 justify-end h-full'>
-                                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleOpenPartnerModel()}>
-                                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                            </Components.IconButton>
-                                                        </div>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    #
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Name
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Role
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        {
-                                            opportunitiesPartner?.length > 0 ? (
-                                                <tbody className="divide-y divide-gray-200 bg-white">
-                                                    {opportunitiesPartner?.map((row, i) => (
-                                                        <tr key={i} className="hover:bg-gray-50">
-                                                            <td className="px-4 py-3 text-sm text-gray-800 font-bold">{i + 1}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.accountName || "—"}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.role || "—"}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">
-                                                                <div className='flex items-center gap-2 justify-end h-full'>
-                                                                    <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                        <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
-                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                                        </Components.IconButton>
-                                                                    </div>
-                                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                        </Components.IconButton>
-                                                                    </div>
+                                        <div className="max-h-64 overflow-y-auto">
+                                            <table className="min-w-full border-collapse border">
+                                                <thead className="bg-gray-50 sticky top-0 z-10">
+                                                    <tr>
+                                                        <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                            <div className='flex items-center'>
+                                                                <p className='text-center grow'>
+                                                                    Partners
+                                                                </p>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenPartnerModel()}>
+                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                                    </Components.IconButton>
                                                                 </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            ) : (
-                                                <tbody className="divide-y divide-gray-200 bg-white">
-                                                    <tr className="hover:bg-gray-50">
-                                                        <td colSpan={4} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-                                                            No records
-                                                        </td>
+                                                            </div>
+                                                        </th>
                                                     </tr>
-                                                </tbody>
-                                            )
-                                        }
-                                    </table>
-                                </div>
-                            </div>
+                                                    <tr>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                                            #
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                                            Name
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                                            Role
+                                                        </th>
+                                                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                                            Actions
+                                                        </th>
+                                                    </tr>
+                                                </thead>
 
-                            <div>
-                                <div className="max-h-96 overflow-y-auto">
-                                    <table className="min-w-full border-collapse border">
-                                        <thead className="bg-gray-50 sticky top-0 z-10 ">
-                                            <tr>
-                                                <th colSpan={4} className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
-                                                    Products
-                                                </th>
-                                                <th className="text-center px-4 py-3 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
-                                                    <div className='flex items-center gap-2 justify-end h-full'>
-                                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleOpenProductModel()}>
-                                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                            </Components.IconButton>
-                                                        </div>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    #
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Name
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Qty
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Price
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        {
-                                            opportunitiesProducts?.length > 0 ? (
                                                 <tbody className="divide-y divide-gray-200 bg-white">
-                                                    {opportunitiesProducts?.map((row, i) => (
-                                                        <tr key={i} className="hover:bg-gray-50">
-                                                            <td className="px-4 py-3 text-sm text-gray-800 font-bold">{i + 1}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.name || "—"}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.qty || "—"}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">{row.price || "—"}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-800">
-                                                                <div className='flex items-center gap-2 justify-end h-full'>
-                                                                    <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                        <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
-                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                                        </Components.IconButton>
+                                                    {opportunitiesPartner?.length > 0 ? (
+                                                        opportunitiesPartner.map((row, i) => (
+                                                            <tr key={i} className="hover:bg-gray-50">
+                                                                <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                                <td className="px-4 py-1 text-sm text-gray-800">{row.accountName || "—"}</td>
+                                                                <td className="px-4 py-1 text-sm text-gray-800">{row.role || "—"}</td>
+                                                                <td className="px-4 py-1 text-sm text-gray-800">
+                                                                    <div className='flex items-center gap-2 justify-end h-full'>
+                                                                        <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                            <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
+                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                            </Components.IconButton>
+                                                                        </div>
+                                                                        <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                            </Components.IconButton>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                        <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
-                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                        </Components.IconButton>
-                                                                    </div>
-                                                                </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    ) : (
+                                                        <tr className="hover:bg-gray-50">
+                                                            <td colSpan={4} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                                No records
                                                             </td>
                                                         </tr>
-                                                    ))}
+                                                    )}
                                                 </tbody>
-                                            ) : (
-                                                <tbody className="divide-y divide-gray-200 bg-white">
-                                                    <tr className="hover:bg-gray-50">
-                                                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-                                                            No records
-                                                        </td>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="max-h-64 overflow-y-auto">
+                                            <table className="min-w-full border-collapse border">
+                                                <thead className="bg-gray-50 sticky top-0 z-10 ">
+                                                    <tr>
+                                                        <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                            <div className='flex items-center'>
+                                                                <p className='text-center grow'>
+                                                                    Contacts
+                                                                </p>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenPartnerModel()}>
+                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </div>
+                                                        </th>
                                                     </tr>
-                                                </tbody>
-                                            )
-                                        }
-                                    </table>
+                                                    <tr>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            #
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Name
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Key Contact
+                                                        </th>
+                                                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Actions
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                {
+                                                    opportunitiesContacts?.length > 0 ? (
+                                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                                            {opportunitiesContacts?.map((row, i) => (
+                                                                <tr key={i} className="hover:bg-gray-50">
+                                                                    <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.contactName || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">
+                                                                        <div className='w-10'>
+                                                                            <Checkbox
+                                                                                checked={row.isKey}
+                                                                            />
+                                                                        </div>
+
+                                                                    </td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">
+                                                                        <div className='flex items-center gap-2 justify-end h-full'>
+                                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    ) : (
+                                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                                            <tr className="hover:bg-gray-50">
+                                                                <td colSpan={4} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                                    No records
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    )
+                                                }
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div className='col-span-2'>
+                                        <div className="min-h-64 overflow-y-auto">
+                                            <table className="min-w-full border-collapse border">
+                                                <thead className="bg-gray-50 sticky top-0 z-10 ">
+                                                    <tr>
+                                                        <th colSpan={5} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                            <div className='flex items-center'>
+                                                                <p className='text-center grow'>
+                                                                    Products
+                                                                </p>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenProductModel()}>
+                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            #
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Name
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Qty
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Price
+                                                        </th>
+                                                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Actions
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                {
+                                                    opportunitiesProducts?.length > 0 ? (
+                                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                                            {opportunitiesProducts?.map((row, i) => (
+                                                                <tr key={i} className="hover:bg-gray-50">
+                                                                    <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.name || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.qty || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.price || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">
+                                                                        <div className='flex items-center gap-2 justify-end h-full'>
+                                                                            <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    ) : (
+                                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                                            <tr className="hover:bg-gray-50">
+                                                                <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                                    No records
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    )
+                                                }
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            )
+                        }
                     </Components.DialogContent>
 
-                    <Components.DialogActions className='absolute bottom-2 right-2'>
+                    <Components.DialogActions className={`${opportunityId != null ? "absolute bottom-2 right-2" : ""}`}>
                         <div className='flex justify-end'>
                             <Button type={`submit`} text={opportunityId ? "Update" : "Submit"} isLoading={loading} />
                         </div>

@@ -65,6 +65,14 @@ export const opportunityContactRoles = [
     { id: 8, title: "Technical Buyer" },
 ];
 
+export const opportunityStatus = [
+    { id: 1, title: "Pipline" },
+    { id: 2, title: "Upside" },
+    { id: 3, title: "Commit" },
+    { id: 4, title: "Lost" },
+    { id: 5, title: "Won" },
+];
+
 export const uploadFiles = async (data) => {
     try {
         const response = axiosInterceptor().post(`${fileUploadURL}`, data)
