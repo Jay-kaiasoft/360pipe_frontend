@@ -51,14 +51,20 @@ const Sidebar = ({
             },
             {
                 icon: <CustomIcons iconName="th-large" />,
-                name: "Members",
-                path: "/dashboard/members",
+                name: "Todos",
+                path: "/dashboard/todos",
                 pro: false
             },
             {
                 icon: <CustomIcons iconName="th-large" />,
-                name: "My Team",
-                path: "/dashboard/myteam",
+                name: "E-Mail Scraper",
+                path: "/dashboard/managemails",
+                pro: false
+            },
+            {
+                icon: <CustomIcons iconName="th-large" />,
+                name: "Products",
+                path: "/dashboard/products",
                 pro: false
             },
             ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
@@ -280,7 +286,7 @@ const Sidebar = ({
                         <>
                             <div className="w-40 flex items-center h-2">
                                 <NavLink to={'/dashboard'}>
-                                    <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo"/>
+                                    <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" />
                                 </NavLink>
                             </div>
                         </>

@@ -25,19 +25,19 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             const contacts = await getAllContacts();
             const formattedContacts = contacts?.result?.map((contact, index) => ({
                 rowId: index + 1,
-                "id": contact.id || null,
-                "opportunityId": contact.opportunityId || "-",
-                "salesforceContactId": contact.salesforceContactId || "-",
-                "firstName": contact.firstName || "-",
-                "middleName": contact.middleName || "-",
-                "lastName": contact.lastName || "-",
-                "linkedinProfile": contact.linkedinProfile || "-",
-                "title": contact.title || "-",
-                "emailAddress": contact.emailAddress || "-",
-                "role": contact.role || "-",
-                "notes": contact.notes || "-",
-                "keyContact": contact.keyContact || "-",
-                "recordStatus": contact.recordStatus || "-",
+                id: contact.id || null,
+                opportunityId: contact.opportunityId || "-",
+                salesforceContactId: contact.salesforceContactId || "-",
+                firstName: contact.firstName || "-",
+                middleName: contact.middleName || "-",
+                lastName: contact.lastName || "-",
+                linkedinProfile: contact.linkedinProfile || "-",
+                title: contact.title || "-",
+                emailAddress: contact.emailAddress || "-",
+                role: contact.role || "-",
+                notes: contact.notes || "-",
+                keyContact: contact.keyContact || "-",
+                recordStatus: contact.recordStatus || "-",
             }));
             setContacts(formattedContacts);
         } catch (error) {

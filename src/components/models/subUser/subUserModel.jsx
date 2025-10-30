@@ -6,14 +6,15 @@ import { connect } from 'react-redux';
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
 import Input from '../../../components/common/input/input';
-import { setAlert, setLoading, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../common/select/select';
 import { createSubUser, getCustomer, sendRegisterInvitation, updateSubUser, verifyEmail, verifyUsername } from '../../../service/customers/customersService';
 import { getAllSubUserTypes } from '../../../service/subUserType/subUserTypeService';
-import { getAllCRM } from '../../../service/crm/crmService';
+// import { getAllCRM } from '../../../service/crm/crmService';
 import { createQuota, updateQuota } from '../../../service/customerQuota/customerQuotaService';
-
+import DatePickerComponent from '../../common/datePickerComponent/datePickerComponent';
+import dayjs from 'dayjs';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -36,7 +37,7 @@ const calendarType = [
     { id: 2, title: "Financial Year" },
 ]
 
-function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handleClose, id, handleGetAllUsers }) {
+function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, handleGetAllUsers }) {
     const theme = useTheme()
     const [validEmail, setValidEmail] = useState(null);
     const [validUsername, setValidUsername] = useState(null);
@@ -44,34 +45,34 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
     const [subUsersTypes, setSubUsersTypes] = useState([]);
     const [emailAddress, setEmailAddress] = useState(null);
     const [isEmailExits, setIsEmailExits] = useState(false);
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const [showPasswordRequirement, setShowPasswordRequirement] = useState(false);
+    // const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    // const [showPasswordRequirement, setShowPasswordRequirement] = useState(false);
 
     // const [crm, setCrm] = useState([]);
 
 
-    const [passwordError, setPasswordError] = useState([
-        {
-            condition: (value) => value.length >= 8,
-            message: 'Minimum 8 characters long',
-            showError: true,
-        },
-        {
-            condition: (value) => /[a-z]/.test(value),
-            message: 'At least one lowercase character',
-            showError: true,
-        },
-        {
-            condition: (value) => /[A-Z]/.test(value),
-            message: 'At least one uppercase character',
-            showError: true,
-        },
-        {
-            condition: (value) => /[\d@$!%*?&]/.test(value),
-            message: 'At least one number or special character',
-            showError: true,
-        },
-    ]);
+    // const [passwordError, setPasswordError] = useState([
+    //     {
+    //         condition: (value) => value.length >= 8,
+    //         message: 'Minimum 8 characters long',
+    //         showError: true,
+    //     },
+    //     {
+    //         condition: (value) => /[a-z]/.test(value),
+    //         message: 'At least one lowercase character',
+    //         showError: true,
+    //     },
+    //     {
+    //         condition: (value) => /[A-Z]/.test(value),
+    //         message: 'At least one uppercase character',
+    //         showError: true,
+    //     },
+    //     {
+    //         condition: (value) => /[\d@$!%*?&]/.test(value),
+    //         message: 'At least one number or special character',
+    //         showError: true,
+    //     },
+    // ]);
 
     const {
         handleSubmit,
@@ -92,6 +93,8 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
             cellPhone: "",
             calendarYearType: "",
 
+            startEvalPeriod: null,
+            endEvalPeriod: null,
             quotaId: "",
             quota: "",
             term: "",
@@ -110,18 +113,18 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
         },
     });
 
-    const validatePassword = (value) => {
-        const updatedErrors = passwordError.map((error) => ({
-            ...error,
-            showError: !error.condition(value),
-        }));
-        setPasswordError(updatedErrors);
-        return updatedErrors.every((error) => !error.showError) || 'Password does not meet all requirements.';
-    };
+    // const validatePassword = (value) => {
+    //     const updatedErrors = passwordError.map((error) => ({
+    //         ...error,
+    //         showError: !error.condition(value),
+    //     }));
+    //     setPasswordError(updatedErrors);
+    //     return updatedErrors.every((error) => !error.showError) || 'Password does not meet all requirements.';
+    // };
 
-    const togglePasswordVisibility = () => {
-        setIsPasswordVisible((prev) => !prev);
-    };
+    // const togglePasswordVisibility = () => {
+    //     setIsPasswordVisible((prev) => !prev);
+    // };
 
     const onClose = () => {
         reset({
@@ -134,7 +137,9 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
             password: "",
             cellPhone: "",
             calendarYearType: "",
-
+            
+            startEvalPeriod: null,
+            endEvalPeriod: null,
             quotaId: "",
             quota: "",
             term: "",
@@ -158,22 +163,22 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
         handleClose();
     };
 
-    const handleVerifyUsername = async () => {
-        const username = watch("username");
-        if (username) {
-            const response = await verifyUsername(username);
-            if (response?.data?.status === 200) {
-                setValidUsername(true);
-            } else {
-                setAlert({
-                    open: true,
-                    type: "error",
-                    message: response?.data?.message || "An error occurred. Please try again.",
-                });
-                setValidUsername(false);
-            }
-        }
-    };
+    // const handleVerifyUsername = async () => {
+    //     const username = watch("username");
+    //     if (username) {
+    //         const response = await verifyUsername(username);
+    //         if (response?.data?.status === 200) {
+    //             setValidUsername(true);
+    //         } else {
+    //             setAlert({
+    //                 open: true,
+    //                 type: "error",
+    //                 message: response?.data?.message || "An error occurred. Please try again.",
+    //             });
+    //             setValidUsername(false);
+    //         }
+    //     }
+    // };
 
     const handleVerifyEmail = async () => {
         const email = watch("emailAddress");
@@ -210,6 +215,17 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                 setValue("password", response?.data?.result?.password || "");
                 setValue("cellPhone", response?.data?.result?.cellPhone || "");
                 setValue("calendarYearType", response?.data?.result?.calendarYearType ? calendarType?.find((item) => item.title === response?.data?.result?.calendarYearType)?.id : null);
+                if (response?.data?.result?.calendarYearType) {
+                    setValue("startEvalPeriod", response?.data?.result?.startEvalPeriod)
+                    setValue("endEvalPeriod", response?.data?.result?.endEvalPeriod)
+                } else {
+                    const currentYear = dayjs().year();
+                    const firstDay = dayjs(`${currentYear}-01-01`).format("MM/DD/YYYY");
+                    const lastDay = dayjs(`${currentYear}-12-31`).format("MM/DD/YYYY");
+                    setValue("startEvalPeriod", firstDay);
+                    setValue("endEvalPeriod", lastDay);
+                }
+
                 // setValue("crmId", response?.data?.result?.crmId || null);
                 if (response?.data?.result?.customerQuotaDto) {
                     setValue("quotaId", response?.data?.result?.customerQuotaDto?.id || "");
@@ -294,6 +310,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
         handleGetUser();
     }, [open]);
 
+
     const submit = async (data) => {
         const newData = {
             name: watch("name") || "",
@@ -304,6 +321,8 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
             password: watch("password") || "",
             cellPhone: watch("cellPhone") || "",
             calendarYearType: calendarType?.find((item) => item.id === watch("calendarYearType"))?.title || "",
+            startEvalPeriod: watch("startEvalPeriod"),
+            endEvalPeriod: watch("endEvalPeriod"),
         }
         if ((id && watch("emailAddress") === emailAddress) || validEmail || validUsername) {
             if (id) {
@@ -468,6 +487,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
+
                             <div>
                                 <Controller
                                     name="subUserTypeId"
@@ -485,6 +505,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
+
                             {/* <div>
                                 <Controller
                                     name="username"
@@ -661,11 +682,13 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
-                            {/* <div className="flex items-center my-0.5 col-span-2 md:col-span-2">
+
+                            <div className="flex items-center my-0.5 col-span-2 md:col-span-2">
                                 <div className="flex-grow border-t border-black"></div>
                                 <span className="mx-4 text-black font-medium">Quota Details</span>
                                 <div className="flex-grow border-t border-black"></div>
                             </div>
+
                             <div className='col-span-2'>
                                 <Controller
                                     name="calendarYearType"
@@ -675,7 +698,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                         <Select
                                             options={calendarType}
                                             label="Calendar Type"
-                                            placeholder="Select Calendar Type"
+                                            placeholder="Select calendar type"
                                             value={parseInt(watch("calendarYearType")) || null}
                                             onChange={(_, newValue) => field.onChange(newValue?.id || null)}
                                             error={errors?.calendarYearType}
@@ -683,6 +706,22 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
+
+                            {
+                                watch("calendarYearType") && (
+                                    <div>
+                                        <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
+                                    </div>
+                                )
+                            }
+
+                            {
+                                watch("calendarYearType") && (
+                                    <div>
+                                        <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                    </div>
+                                )
+                            }
                             <div>
                                 <Controller
                                     name="quota"
@@ -700,6 +739,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
+
                             <div>
                                 <Controller
                                     name="term"
@@ -717,6 +757,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                     )}
                                 />
                             </div>
+
                             {(() => {
                                 const selectedTerm = terms.find(t => t.id === parseInt(watch("term")));
                                 const count = selectedTerm?.value || 0;
@@ -744,7 +785,8 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
                                         />
                                     </div>
                                 ));
-                            })()} */}
+                            })()}
+
                             {/* <div>
                                 <Controller
                                     name="crmId"
@@ -797,7 +839,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, setLoading, open, handle
 const mapDispatchToProps = {
     setAlert,
     setSyncingPushStatus,
-    setLoading
 };
 
 export default connect(null, mapDispatchToProps)(SubUserModel)

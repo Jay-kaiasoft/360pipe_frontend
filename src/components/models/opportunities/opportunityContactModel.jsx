@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import { Controller, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 
 import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
-import Select from '../../common/select/select';
 import { getAllContacts } from '../../../service/contact/contactService';
+import Checkbox from '../../common/checkBox/checkbox';
+import { addOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -19,54 +19,97 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function OpportunitiesContactModel({ setAlert, open, handleClose, opportunityId, handleGetAllContact }) {
+function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, handleGetAllOppContact }) {
     const theme = useTheme()
     const [contacts, setContacts] = useState([])
-
-    const {
-        handleSubmit,
-        control,
-        reset,
-        watch,
-        setValue,
-        formState: { errors },
-    } = useForm({
-        defaultValues: {
-            id: null,
-            oppId: null,
-            contactId: null,
-            isKey: null,
-        },
-    });
+    const [selectedRows, setSetectedRows] = useState([])
 
     const onClose = () => {
-        reset({
-            id: null,
-            oppId: null,
-            contactId: null,
-            isKey: null,
-        });
+        setSetectedRows([])
+        setContacts([])
         handleClose();
     };
 
     const handleGetAllContact = async () => {
-        const res = await getAllContacts()
-        const data = res?.result?.map((item, row) => {
-            return {
-                id: item.id,
-                title: item?.firstName + item?.lastName
-            }
-        })
-        setContacts(data)
+        if (open) {
+            const res = await getAllContacts()
+            const data = res?.result?.map((item, row) => {
+                return {
+                    id: item.id,
+                    title: item?.firstName + " " + item?.lastName,
+                    oppId: opportunityId,
+                    contactId: item.id,
+                    isKey: false,
+                    isAdd: false,
+                }
+            })
+            setContacts(data)
+        }
     }
+
+    const getKeyCount = (arr) => arr.filter(r => r.isKey === true).length;
+
+    const handleAddRow = (row, checked) => {
+        setContacts(prev => {
+            const next = prev.map(item =>
+                item.contactId === row.contactId
+                    ? { ...item, isAdd: checked, isKey: checked ? item.isKey : false } // unselect clears key
+                    : item
+            );
+            setSetectedRows(next.filter(c => c.isAdd));
+            return next;
+        });
+    };
+
+    const handleToggleKey = (row, checked) => {
+        setContacts(prev => {
+            const target = prev.find(i => i.contactId === row.contactId);
+            if (!target?.isAdd) {
+                setAlert({ open: true, type: "warning", message: "Select the contact first." });
+                return prev;
+            }
+            const prospectiveSelected = prev.filter(c => c.isAdd);
+            const currentKeyCount = getKeyCount(prospectiveSelected);
+            const alreadyKey = !!target.isKey;
+
+            if (checked && !alreadyKey && currentKeyCount >= 4) {
+                setAlert({ open: true, type: "warning", message: "You can not mark up to 4 key contacts." });
+                return prev;
+            }
+
+            const next = prev.map(item =>
+                item.contactId === row.contactId
+                    ? { ...item, isKey: checked, isAdd: true } // keep selected if keying
+                    : item
+            );
+
+            // sync selectedRows (includes isKey updates)
+            setSetectedRows(next.filter(c => c.isAdd));
+            return next;
+        });
+    };
+
+
 
     useEffect(() => {
-
+        handleGetAllContact()
     }, [open])
 
-    const submit = async (data) => {
-        console.log(data)
-    }
+    const submit = async () => {
+        const res = await addOpportunitiesContact(selectedRows)
+        if (res?.status === 201) {
+            handleGetAllOppContact()
+            onClose()
+        } else {
+            setAlert({
+                open: true,
+                message: res.message || "Fail to add contact",
+                type: "error"
+            })
+        }
+    };
+
+
 
     return (
         <React.Fragment>
@@ -93,39 +136,91 @@ function OpportunitiesContactModel({ setAlert, open, handleClose, opportunityId,
                     <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
                 </Components.IconButton>
 
-                <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
-                    <Components.DialogContent dividers>
-                        <div className='grid md:grid-cols-1 gap-4'>
-                            <div className='mb-3'>
-                                <Controller
-                                    name={`contactId`}
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={contacts || []}
-                                            label={"Account"}
-                                            placeholder="Select Account"
-                                            value={parseInt(watch(`contactId`)) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue(`contactId`, null);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-                        </div>
-                    </Components.DialogContent>
+                <Components.DialogContent
+                    dividers
+                    sx={{
+                        height: "70vh",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <div className="max-h-[70vh] overflow-y-auto">
+                        <table className="min-w-full border-collapse border">
+                            <thead className="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                        #
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                        Name
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                        Key Contact
+                                    </th>
+                                </tr>
+                            </thead>
 
-                    <Components.DialogActions>
-                        <div className='flex justify-end'>
-                            <Button type={`submit`} text={"Submit"} />
-                        </div>
-                    </Components.DialogActions>
-                </form>
+                            <tbody className="divide-y divide-gray-200 bg-white">
+                                {contacts?.length > 0 ? (
+                                    contacts.map((row, i) => (
+                                        <tr key={i} className="hover:bg-gray-50">
+                                            <td className="px-4 py-1 text-sm text-gray-800">
+                                                <Checkbox
+                                                    onChange={(e) => handleAddRow(row, e.target.checked)}
+                                                    checked={!!row.isAdd}
+                                                />
+                                            </td>
+                                            <td className="px-4 py-1 text-sm text-gray-800">
+                                                {row.title || "—"}
+                                            </td>
+                                            <td className="px-4 py-1 text-sm text-gray-800">
+                                                <Checkbox
+                                                    onChange={(e) => handleToggleKey(row, e.target.checked)}
+                                                    checked={!!row.isKey}
+                                                    disabled={
+                                                        !row.isAdd ||
+                                                        (!row.isKey && selectedRows.filter((r) => r.isKey).length >= 4)
+                                                    }
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={3}
+                                            className="px-4 py-3 text-sm text-gray-800 font-bold text-center"
+                                        >
+                                            No records
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+
+                            {/* ✅ Table Footer Summary */}
+                            <tfoot className="bg-gray-100 sticky bottom-0">
+                                <tr>
+                                    <td colSpan={3} className="px-4 py-2 text-sm font-semibold text-gray-700">
+                                        <div className="flex justify-between items-center">
+                                            <span>Added: {selectedRows?.length}</span>
+                                            <span>
+                                                Key Contacts: {selectedRows?.filter((r) => r.isKey).length} / 4
+                                            </span>
+                                            <span>Total Contacts: {contacts.length}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                </Components.DialogContent>
+
+                <Components.DialogActions>
+                    <div className='flex justify-end'>
+                        <Button type={`button`} text={"Submit"} onClick={() => submit()} />
+                    </div>
+                </Components.DialogActions>
             </BootstrapDialog>
         </React.Fragment>
     );
@@ -135,4 +230,4 @@ const mapDispatchToProps = {
     setAlert,
 };
 
-export default connect(null, mapDispatchToProps)(OpportunitiesContactModel)
+export default connect(null, mapDispatchToProps)(OpportunityContactModel)

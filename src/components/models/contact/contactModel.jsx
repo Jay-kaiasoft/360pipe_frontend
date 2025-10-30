@@ -11,7 +11,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
-import { createContact, getContactDetails, updateContact } from '../../../service/contact/contactService';
+import { createContact, getAllContacts, getContactDetails, updateContact } from '../../../service/contact/contactService';
 import { opportunityContactRoles } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -28,6 +28,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
 
     const [loading, setLoading] = useState(false);
     const [opportunities, setOpportunities] = useState([]);
+    const [contacts, setContacts] = useState([]);
 
     const {
         handleSubmit,
@@ -40,6 +41,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
         defaultValues: {
             id: null,
             opportunityId: null,
+            reportContactId: null,
             salesforceContactId: null,
             firstName: null,
             middleName: null,
@@ -59,6 +61,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
         reset({
             id: null,
             opportunityId: null,
+            reportContactId: null,
             salesforceContactId: null,
             firstName: null,
             middleName: null,
@@ -103,7 +106,23 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
         }
     }
 
+    const handleGetContacts = async () => {
+        if (open) {
+            try {
+                const contacts = await getAllContacts();
+                const formattedContacts = contacts?.result?.map((contact) => ({
+                    "id": contact.id || null,
+                    "title": contact.firstName + " " + contact.lastName,
+                }));
+                setContacts(formattedContacts);
+            } catch (error) {
+                console.error("Error fetching contacts:", error);
+            }
+        }
+    }
+
     useEffect(() => {
+        handleGetContacts()
         handleGetAllOpportunities()
         handleGetContactDetails()
     }, [open])
@@ -217,6 +236,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                     )}
                                 />
                             </div>
+
                             <Controller
                                 name="firstName"
                                 control={control}
@@ -281,6 +301,27 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                     />
                                 )}
                             />
+                            <div>
+                                <Controller
+                                    name="reportContactId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            options={contacts}
+                                            label={"Reports To"}
+                                            placeholder="Select contact"
+                                            value={parseInt(watch("reportContactId")) || null}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("reportContactId", null);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </div>
                             {/* <div>
                                 <Controller
                                     name="role"

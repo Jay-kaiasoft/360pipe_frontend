@@ -6,7 +6,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons'
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper'
 import AddProductModel from '../../../components/models/products/addProductModel'
 import AlertDialog from '../../../components/common/alertDialog/alertDialog'
-import Components from '../../../components/muiComponents/components'
+// import Components from '../../../components/muiComponents/components'
 import { connect } from 'react-redux'
 import { setAlert } from '../../../redux/commonReducers/commonReducers'
 
@@ -27,10 +27,10 @@ const Products = ({ setAlert }) => {
     setOpen(false);
   }
 
-  const handleOpenDeleteDialog = (id) => {
-    setSelectedProductId(id);
-    setDialog({ open: true, title: 'Delete Product', message: 'Are you sure! Do you want to delete this product?', actionButtonText: 'yes' });
-  }
+  // const handleOpenDeleteDialog = (id) => {
+  //   setSelectedProductId(id);
+  //   setDialog({ open: true, title: 'Delete Product', message: 'Are you sure! Do you want to delete this product?', actionButtonText: 'yes' });
+  // }
 
   const handleCloseDeleteDialog = () => {
     setSelectedProductId(null);
@@ -57,7 +57,8 @@ const Products = ({ setAlert }) => {
       const data = res?.data?.result?.map((item, index) => {
         return {
           ...item,
-          rowId: index + 1
+          rowId: index + 1,
+          description: item.description || "-"
         }
       })
       setProducts(data)
@@ -86,6 +87,13 @@ const Products = ({ setAlert }) => {
       sortable: false,
     },
     {
+      field: 'code',
+      headerName: 'Code',
+      headerClassName: 'uppercase',
+      flex: 1,
+      minWidth: 150
+    },
+    {
       field: 'price',
       headerName: 'Price',
       headerClassName: 'uppercase',
@@ -93,59 +101,66 @@ const Products = ({ setAlert }) => {
       minWidth: 150
     },
     {
-      field: 'isActive',
-      headerName: 'Active',
+      field: 'description',
+      headerName: 'Description',
       headerClassName: 'uppercase',
       flex: 1,
-      minWidth: 500,
-      sortable: false,
-      renderCell: (params) => {
-        return (
-          <div className='flex items-center gap-2 h-full'>            
-            <div className={`${params.value === true ? "bg-green-500" : "bg-red-500"} flex justify-center items-center p-1 h-8 w-8 rounded-full`}>
-              <CustomIcons iconName={params.value === true ? "fa-solid fa-check" : "fa-solid fa-xmark"} css='cursor-pointer text-white text-xl' />
-            </div>
-          </div>
-        );
-      },
+      minWidth: 150
     },
-    {
-      field: 'action',
-      headerName: 'action',
-      headerClassName: 'uppercase',
-      sortable: false,
-      minWidth: 150,
-      renderCell: (params) => {
-        return (
-          <div className='flex items-center gap-2 justify-center h-full'>
-            <PermissionWrapper
-              functionalityName="Todo"
-              moduleName="Todo"
-              actionId={2}
-              component={
-                <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                  <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                  </Components.IconButton>
-                </div>
-              }
-            />
-            <PermissionWrapper
-              functionalityName="Todo"
-              moduleName="Todo"
-              actionId={3}
-              component={
-                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                  <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                  </Components.IconButton>
-                </div>
-              }
-            />
-          </div>
-        );
-      },
-    },
+    // {
+    //   field: 'isActive',
+    //   headerName: 'Active',
+    //   headerClassName: 'uppercase',
+    //   flex: 1,
+    //   minWidth: 500,
+    //   sortable: false,
+    //   renderCell: (params) => {
+    //     return (
+    //       <div className='flex items-center gap-2 h-full'>
+    //         <div className={`${params.value === true ? "bg-green-500" : "bg-red-500"} flex justify-center items-center p-1 h-8 w-8 rounded-full`}>
+    //           <CustomIcons iconName={params.value === true ? "fa-solid fa-check" : "fa-solid fa-xmark"} css='cursor-pointer text-white text-xl' />
+    //         </div>
+    //       </div>
+    //     );
+    //   },
+    // },
+    // {
+    //   field: 'action',
+    //   headerName: 'action',
+    //   headerClassName: 'uppercase',
+    //   sortable: false,
+    //   minWidth: 150,
+    //   renderCell: (params) => {
+    //     return (
+    //       <div className='flex items-center gap-2 justify-center h-full'>
+    //         <PermissionWrapper
+    //           functionalityName="Todo"
+    //           moduleName="Todo"
+    //           actionId={2}
+    //           component={
+    //             <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+    //               <Components.IconButton onClick={() => handleOpen(params.row.id)}>
+    //                 <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+    //               </Components.IconButton>
+    //             </div>
+    //           }
+    //         />
+    //         <PermissionWrapper
+    //           functionalityName="Todo"
+    //           moduleName="Todo"
+    //           actionId={3}
+    //           component={
+    //             <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+    //               <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+    //                 <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+    //               </Components.IconButton>
+    //             </div>
+    //           }
+    //         />
+    //       </div>
+    //     );
+    //   },
+    // },
   ];
 
   const getRowId = (row) => {
@@ -173,8 +188,8 @@ const Products = ({ setAlert }) => {
           columns={columns}
           rows={products}
           getRowId={getRowId}
-          height={500}
-          showButtons={true}
+          height={600}
+          showButtons={false}
           buttons={actionButtons}
         />
         <AddProductModel open={open} handleClose={handleClose} id={selectedProductId} handleGetAllProducts={handleGetAllProducts} />

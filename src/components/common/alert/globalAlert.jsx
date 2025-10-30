@@ -42,6 +42,11 @@ function GlobalAlert({ alert, setAlert }) {
       draggable
       theme="light"  // gives the colored style like your screenshot
       limit={1}        // ensures only ONE toast shows at a time
+      toastStyle={{
+        width: alert.type === "error" ? "420px" : "full",        // 🔥 increase width
+        minHeight: "60px",     // optional – taller look
+        fontSize: "15px",      // optional – better readability
+      }}
     />
   );
 }

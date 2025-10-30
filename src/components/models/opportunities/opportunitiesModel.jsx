@@ -19,8 +19,9 @@ import AlertDialog from '../../common/alertDialog/alertDialog';
 import OpportunitiesPartnersModel from "./opportunityPartnerModel";
 import { deleteOpportunitiesProducts, getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import OpportunitiesProductsModel from './opportunitiesProductsModel';
-import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import Checkbox from '../../common/checkBox/checkbox';
+import OpportunityContactModel from './opportunityContactModel';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -48,8 +49,19 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedProductId, setSelectedProductId] = useState(null);
 
-    const [checkTodoIds, setCheckTodoIds] = useState([]);
+    const [initialIsKey, setInitialIsKey] = useState({});         // id -> original isKey
+    const [editedContacts, setEditedContacts] = useState([]);     // [{ id, isKey }, ...]
+    const [openContactModel, setOpenContactModel] = useState(false);
+    const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [selectedContactId, setSelectedContactId] = useState(null);
 
+    const handleOpenContactModel = () => {
+        setOpenContactModel(true);
+    };
+
+    const handleCloseContactModel = () => {
+        setOpenContactModel(false);
+    };
 
     const handleOpenPartnerModel = (id) => {
         setSelectedOppPartnerId(id);
@@ -89,6 +101,16 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const handleCloseDeleteProductDialog = () => {
         setSelectedProductId(null);
         setDialogProduct({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleOpenDeleteContactDialog = (id) => {
+        setSelectedContactId(id);
+        setDialogContact({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteContactDialog = () => {
+        setSelectedContactId(null);
+        setDialogContact({ open: false, title: '', message: '', actionButtonText: '' });
     }
 
     const {
@@ -139,6 +161,22 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setAlert({
                     open: true,
                     message: res?.message || "Failed to delete opportunity product",
+                    type: "error"
+                });
+            }
+        }
+    }
+
+    const handleDeleteContact = async () => {
+        if (selectedContactId) {
+            const res = await deleteOpportunitiesContact(selectedContactId);
+            if (res?.status === 200) {
+                handleGetOppContacts()
+                handleCloseDeleteContactDialog()
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete opportunity contact",
                     type: "error"
                 });
             }
@@ -228,10 +266,81 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         }
     }
 
+    // 2) AFTER you load contacts (inside handleGetOppContacts)
     const handleGetOppContacts = async () => {
-        const res = await getAllOpportunitiesContact(opportunityId)
-        setOpportunitiesContacts(res.result)
-    }
+        const res = await getAllOpportunitiesContact(opportunityId);
+        const list = Array.isArray(res?.result) ? res.result : [];
+        setOpportunitiesContacts(list);
+
+        // build original map
+        const map = {};
+        list.forEach(c => {
+            if (c?.id != null) map[c.id] = !!c.isKey;
+        });
+        setInitialIsKey(map);
+        setEditedContacts([]); // reset edits when refreshed
+    };
+
+    const handleToggleKeyContact = (rowId) => {
+        const current = opportunitiesContacts.find(r => r.id === rowId);
+        if (!current) return;
+
+        const newVal = !current.isKey;
+        const keyCount = opportunitiesContacts.filter(c => c.isKey).length;
+
+        // 🧠 Prevent enabling beyond 4
+        if (newVal && keyCount >= 4) {
+            setAlert({
+                open: true,
+                type: "warning",
+                message: "You can select up to 4 key contacts only.",
+            });
+            return;
+        }
+
+        // ✅ Update UI state
+        setOpportunitiesContacts(prev =>
+            prev.map(r => (r.id === rowId ? { ...r, isKey: newVal } : r))
+        );
+
+        // ✅ Track edits
+        setEditedContacts(prev => {
+            const originally = initialIsKey[rowId];
+            const existsIdx = prev.findIndex(e => e.id === rowId);
+
+            if (newVal === originally) {
+                if (existsIdx >= 0) {
+                    const copy = prev.slice();
+                    copy.splice(existsIdx, 1);
+                    return copy;
+                }
+                return prev;
+            }
+
+            if (existsIdx >= 0) {
+                const copy = prev.slice();
+                copy[existsIdx] = { id: rowId, isKey: newVal };
+                return copy;
+            }
+            return [...prev, { id: rowId, isKey: newVal }];
+        });
+    };
+
+
+    // 4) BULK UPDATE HANDLER (wire to your API as needed)
+    const handleBulkUpdateKeyContacts = async () => {
+        try {
+            const res = await updateOpportunitiesContact(editedContacts)
+            if (res.status === 200) {
+                setAlert({ open: true, type: "success", message: "Contacts updated" });
+                await handleGetOppContacts();
+            } else {
+                setAlert({ open: true, type: "error", message: "Fail to update contacts" });
+            }
+        } catch (e) {
+            setAlert({ open: true, type: "error", message: "Failed to update contacts" });
+        }
+    };
 
     useEffect(() => {
         handleGetOppProduct()
@@ -327,7 +436,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
                 </Components.IconButton>
 
-                <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
+                <form noValidate onSubmit={handleSubmit(submit)} className='overflow-y-auto'>
                     <Components.DialogContent dividers>
                         <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4`}>
                             <Controller
@@ -450,7 +559,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         </div>
                         {
                             opportunityId != null && (
-                                <div className='grid md:grid-cols-2 gap-4'>
+                                <div className='grid md:grid-cols-2 gap-6'>
                                     <div>
                                         {/* <div className="flex items-center my-2 col-span-2 md:col-span-3">
                                     <div className="flex-grow border-t border-black"></div>
@@ -458,7 +567,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     <div className="flex-grow border-t border-black"></div>
                                 </div> */}
 
-                                        <div className="max-h-64 overflow-y-auto">
+                                        <div className="max-h-56 overflow-y-auto">
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10">
                                                     <tr>
@@ -527,7 +636,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     </div>
 
                                     <div>
-                                        <div className="max-h-64 overflow-y-auto">
+                                        <div className="max-h-56 overflow-y-auto">
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
                                                     <tr>
@@ -536,10 +645,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 <p className='text-center grow'>
                                                                     Contacts
                                                                 </p>
-                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenPartnerModel()}>
-                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                                    </Components.IconButton>
+                                                                <div className='flex justify-end items-center gap-3'>
+                                                                    {editedContacts.length > 0 && (
+                                                                        <div className='bg-blue-600 h-8 w-8 px-3 flex justify-center items-center rounded-full text-white'>
+                                                                            <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
+                                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
+                                                                            </Components.IconButton>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenContactModel()}>
+                                                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </th>
@@ -569,15 +688,18 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     <td className="px-4 py-1 text-sm text-gray-800">
                                                                         <div className='w-10'>
                                                                             <Checkbox
-                                                                                checked={row.isKey}
+                                                                                checked={!!row.isKey}
+                                                                                disabled={
+                                                                                    opportunitiesContacts.filter(c => c.isKey).length >= 4 && !row.isKey
+                                                                                }
+                                                                                onChange={() => handleToggleKeyContact(row.id)}
                                                                             />
                                                                         </div>
-
                                                                     </td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
                                                                             <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
                                                                                     <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
                                                                                 </Components.IconButton>
                                                                             </div>
@@ -601,7 +723,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     </div>
 
                                     <div className='col-span-2'>
-                                        <div className="min-h-64 overflow-y-auto">
+                                        <div className="max-h-56 overflow-y-auto">
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
                                                     <tr>
@@ -680,7 +802,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         }
                     </Components.DialogContent>
 
-                    <Components.DialogActions className={`${opportunityId != null ? "absolute bottom-2 right-2" : ""}`}>
+                    <Components.DialogActions className={`${opportunityId != null ? "absolute bottom-0 right-2" : ""}`}>
                         <div className='flex justify-end'>
                             <Button type={`submit`} text={opportunityId ? "Update" : "Submit"} isLoading={loading} />
                         </div>
@@ -703,8 +825,17 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 handleAction={() => handleDeleteProduct()}
                 handleClose={() => handleCloseDeleteProductDialog()}
             />
+            <AlertDialog
+                open={dialogContact.open}
+                title={dialogContact.title}
+                message={dialogContact.message}
+                actionButtonText={dialogContact.actionButtonText}
+                handleAction={() => handleDeleteContact()}
+                handleClose={() => handleCloseDeleteContactDialog()}
+            />
             <OpportunitiesPartnersModel open={openPartnerModel} handleClose={handleClosePartnerModel} id={selectedOppPartnerId} opportunityId={opportunityId} handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner} />
             <OpportunitiesProductsModel open={openProductModel} handleClose={handleCloseProductModel} id={selectedProductId} opportunityId={opportunityId} handleGetAllOpportunitiesProducts={handleGetOppProduct} />
+            <OpportunityContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={opportunityId} handleGetAllOppContact={handleGetOppContacts} />
         </React.Fragment>
     );
 }
