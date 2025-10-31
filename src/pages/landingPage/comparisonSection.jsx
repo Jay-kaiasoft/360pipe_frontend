@@ -42,7 +42,7 @@ const ComparisonSection = () => {
                                 <th className="px-3 py-2 md:px-6 md:py-4 text-black text-lg md:text-[28px] font-semibold">
                                     Features
                                 </th>
-                                <th className="px-3 py-2 md:px-6 md:py-4 text-center text-lg md:text-[28px] font-semibold bg-blue-600 text-white rounded-tr-2xl rounded-tl-2xl border-[#e7e8ec66] border-b">
+                                <th className="px-3 py-2 md:px-6 md:py-4 text-center text-lg md:text-[28px] font-semibold bg-[#1072E0] text-white rounded-tr-2xl rounded-tl-2xl border-[#e7e8ec66] border-b">
                                     360Pipe
                                 </th>
                                 <th className="px-3 py-2 md:px-6 md:py-4 text-center text-black text-lg md:text-[28px] font-semibold">
@@ -55,7 +55,7 @@ const ComparisonSection = () => {
                                 <tr key={idx}>
                                     <td className="px-3 py-2 md:px-6 md:py-4 text-md md:text-xl font-medium text-black">{feature.name}</td>
 
-                                    <td className={`px-3 py-2 md:px-6 md:py-4 text-center bg-blue-600 border-[#e7e8ec66] border-b text-xl font-medium`}>
+                                    <td className={`px-3 py-2 md:px-6 md:py-4 text-center bg-[#1072E0] border-[#e7e8ec66] border-b text-xl font-medium`}>
                                         {feature.pipe ? (
                                             <img
                                                 src={Check}

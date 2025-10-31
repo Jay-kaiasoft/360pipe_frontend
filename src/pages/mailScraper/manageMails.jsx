@@ -16,9 +16,9 @@ import Components from '../../components/muiComponents/components';
 import Summary from './summary';
 
 const tableData = [
+    { label: 'E-Mail Scraper' },
     { label: 'E-Mail Scraping Requests' },
     { label: 'E-Mails' },
-    { label: 'E-Mail Scraper' },
     { label: 'Summary' },
 ]
 
@@ -206,7 +206,7 @@ const ManageMails = ({ setAlert }) => {
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-end h-full'>
-                        <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                        <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                             <Components.IconButton onClick={() => handleOpen(params.row.id)}>
                                 <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                             </Components.IconButton>
@@ -239,7 +239,7 @@ const ManageMails = ({ setAlert }) => {
                 <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} />
             </div>
             {
-                selectedTab === 0 && <MailScrapingRequests />
+                selectedTab === 0 && <MailScraper />
             }
             {
                 selectedTab === 1 &&
@@ -250,7 +250,7 @@ const ManageMails = ({ setAlert }) => {
                 )
             }
             {
-                selectedTab === 2 && <MailScraper />
+                selectedTab === 2 && <MailScrapingRequests setSelectedTab={setSelectedTab}/>
             }
             {
                 selectedTab === 3 && <Summary />

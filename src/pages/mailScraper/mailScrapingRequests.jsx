@@ -35,7 +35,7 @@ const StatusIcon = ({ value }) => {
     );
 };
 
-const MailScrapingRequests = ({ setAlert }) => {
+const MailScrapingRequests = ({ setAlert, setSelectedTab }) => {
     const [mails, setMails] = useState([]);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedEmail, setSelectedEmail] = useState(null);
@@ -145,12 +145,13 @@ const MailScrapingRequests = ({ setAlert }) => {
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
-            minWidth: 230,
+            minWidth: 380,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
                         <Button disabled={params.row.status !== 1 || params.row.status === 2} text={"Edit"} onClick={() => handleOpen(params.row?.id)} />
-                        <Button disabled={params.row.status !== 1 || params.row.status === 2} text={"Scraping"} onClick={() => handleOpenDialog(params.row)} useFor='error' />
+                        <Button disabled={params.row.status !== 1 || params.row.status === 2} text={"Show Mails"} onClick={() => setSelectedTab(3)} useFor='success' />
+                        <Button disabled={params.row.status !== 1 || params.row.status === 2} text={"Re-Scrap"} onClick={() => handleOpenDialog(params.row)} useFor='error' />
                     </div>
                 );
             },

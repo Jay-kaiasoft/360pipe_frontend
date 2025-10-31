@@ -2,7 +2,7 @@
 const CTABanner = () => {
     return (
         <div className="4k:flex 4k:justify-center">
-            <section className="w-full py-8 px-6 md:px-14 rounded-xl bg-blue-700">
+            <section className="w-full py-8 px-6 md:px-14 rounded-xl bg-[#1072E0]">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-12">
                     <div className="max-w-lg flex flex-col gap-6 text-white">
                         <h2 className="text-4xl md:text-5xl font-bold leading-[1.2]">
@@ -15,7 +15,7 @@ const CTABanner = () => {
                         <div>
                             <button
                                 type="button"
-                                className="relative mt-8 px-5 py-3 rounded group overflow-hidden font-medium bg-[#FFD600] text-[#222] shadow-md"
+                                className="relative mt-8 px-5 py-3 rounded group overflow-hidden font-medium text-white border border-white"
                             >
                                 <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-white group-hover:h-full"></span>
 

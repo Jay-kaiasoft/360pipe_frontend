@@ -609,7 +609,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 <td className="px-4 py-1 text-sm text-gray-800">{row.role || "—"}</td>
                                                                 <td className="px-4 py-1 text-sm text-gray-800">
                                                                     <div className='flex items-center gap-2 justify-end h-full'>
-                                                                        <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                                                             <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
                                                                                 <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                                                             </Components.IconButton>
@@ -647,7 +647,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 </p>
                                                                 <div className='flex justify-end items-center gap-3'>
                                                                     {editedContacts.length > 0 && (
-                                                                        <div className='bg-blue-600 h-8 w-8 px-3 flex justify-center items-center rounded-full text-white'>
+                                                                        <div className='bg-[#1072E0] h-8 w-8 px-3 flex justify-center items-center rounded-full text-white'>
                                                                             <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
                                                                                 <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
                                                                             </Components.IconButton>
@@ -769,7 +769,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     <td className="px-4 py-1 text-sm text-gray-800">{row.price || "—"}</td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
-                                                                            <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                            <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                                                                 <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
                                                                                     <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                                                                 </Components.IconButton>

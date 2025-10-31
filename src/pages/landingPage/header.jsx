@@ -63,7 +63,7 @@ const Header = () => {
             <div className="flex items-center justify-between 4k:justify-center 4k:gap-32 px-5 lg:px-20 py-4">
                 <div className="w-40 flex items-center h-12">
                     <NavLink to={'/'}>
-                        <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="mt-3"/>
+                        <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="mt-3" />
                     </NavLink>
                 </div>
 
@@ -106,13 +106,13 @@ const Header = () => {
                     <div className="hidden xl:flex space-x-3">
                         <button
                             onClick={() => navigate("/pricing")}
-                            className="bg-blue-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+                            className="bg-[#1072E0] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#1072E0] transition"
                         >
                             Sign Up
                         </button>
                         <button
                             onClick={() => navigate("/login")}
-                            className="px-5 py-2 rounded-md font-semibold transition bg-yellow-400 text-gray-900 hover:bg-yellow-500"
+                            className="px-5 py-2 rounded-md font-semibold transition-colors duration-300 border border-[#1072E0] text-[#1072E0] hover:bg-[#1072E0] hover:text-white"
                         >
                             Sign In
                         </button>
@@ -141,8 +141,12 @@ const Header = () => {
                 className={`fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50 p-5 overflow-y-auto transform transition-transform duration-300 ease-in-out
                 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
-                <div className="flex justify-between items-center mb-4 pb-3 border-b">
-                    <div className="text-2xl font-bold text-blue-600">360Pipe</div>
+                <div className="flex justify-end items-center mb-4 pb-3 border-b">
+                    {/* <div>
+                        <NavLink to={'/'}>
+                            <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="mt-3 h-20" />
+                        </NavLink>
+                    </div> */}
                     <button onClick={() => setIsOpen(false)}>
                         <CustomIcons
                             iconName={"fa-solid fa-xmark"}

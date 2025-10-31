@@ -12,7 +12,7 @@ const projects = [
         bgImage: "/images/landingpage/woman.jpg",
         stats: [
             { number: "515%", text: "ROI increase over 3 years", color: "bg-orange-500" },
-            { number: "$218k", text: "In value due to increased team productivity", color: "bg-blue-600" },
+            { number: "$218k", text: "In value due to increased team productivity", color: "bg-[#1072E0]" },
             { number: "522%", text: "Saved due to reduced administration time", color: "bg-cyan-400" },
         ],
         link: "/casestudy-details",
@@ -24,7 +24,7 @@ const projects = [
         bgImage: "/images/landingpage/woman.jpg",
         stats: [
             { number: "410%", text: "ROI increase over 3 years", color: "bg-orange-500" },
-            { number: "$121k", text: "In value due to increased team productivity", color: "bg-blue-600" },
+            { number: "$121k", text: "In value due to increased team productivity", color: "bg-[#1072E0]" },
             { number: "410%", text: "Saved due to reduced administration time", color: "bg-cyan-400" },
         ],
         link: "/casestudy-details",
@@ -102,10 +102,10 @@ const CaseStudy = () => {
 
                 <button
                     type="button"
-                    className="relative px-5 py-3 rounded group overflow-hidden font-medium bg-blue-600 text-white shadow-md"
+                    className="relative px-5 py-3 rounded group overflow-hidden font-medium text-[#1072E0] border border-[#1072E0]"
                 >
-                    <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#FFD600] text-[#222] group-hover:h-full"></span>
-                    <span className="relative z-10 transition-colors duration-300 group-hover:text-[#222] text-lg font-bold capitalize">
+                    <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#1072E0] text-white group-hover:h-full"></span>
+                    <span className="relative z-10 transition-colors duration-300 group-hover:text-[#fff] text-lg font-bold capitalize">
                         View more success stories
                     </span>
                 </button>

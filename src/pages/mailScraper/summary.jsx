@@ -281,7 +281,7 @@ function AccordionItem({
                     className="flex-1 flex flex-col sm:flex-row sm:items-center sm:gap-3 text-left"
                 >
                     <span className="text-base font-medium text-gray-900">{title}</span>
-                    <span className="mt-1 sm:mt-0 inline-flex items-center rounded-full border border-blue-600 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+                    <span className="mt-1 sm:mt-0 inline-flex items-center rounded-full border border-[#1072E0] bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-[#1072E0]">
                         Records: {emails.length}
                     </span>
                 </button>
@@ -435,7 +435,7 @@ function EmailTable({
                                                     <td className="px-4 py-3 text-sm text-gray-800">{r.email || "—"}</td>
                                                     <td className="px-4 py-3 text-sm text-gray-800">{r.companyName || "—"}</td>
                                                     <td className="px-4 py-3 text-sm text-gray-800">{r.jobTitle || "—"}</td>
-                                                    <td className="px-4 py-3 text-sm text-blue-600 truncate max-w-[220px]">
+                                                    <td className="px-4 py-3 text-sm text-[#1072E0] truncate max-w-[220px]">
                                                         {r.website ? (
                                                             <a
                                                                 href={r.website.startsWith("http") ? r.website : `https://${r.website}`}
@@ -470,7 +470,7 @@ function EmailTable({
                                     Clear
                                 </button>
                                 <button
-                                    className="px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                    className="px-3 py-1.5 rounded bg-[#1072E0] text-white hover:bg-blue-700"
                                     onClick={() => onToggleAll(ids, true)}
                                     title={JSON.stringify({ requestId, emailsId: ids })}
                                 >

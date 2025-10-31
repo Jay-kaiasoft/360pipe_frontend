@@ -146,7 +146,7 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             moduleName="Contacts"
                             actionId={2}
                             component={
-                                <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                     <Components.IconButton onClick={() => handleOpen(params.row.id)}>
                                         <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                     </Components.IconButton>

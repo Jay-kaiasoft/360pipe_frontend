@@ -175,8 +175,6 @@ export default function DataTable({
                         getRowId={getRowId}
                         checkboxSelection={checkboxSelection}
                         onRowSelectionModelChange={(newRowSelectionModel) => {
-                            // Pass DataGrid's selected rowIds directly to parent (they correspond to getRowId(row))
-                            console.log("newRowSelectionModel", newRowSelectionModel)
                             setRowSelectionModel(newRowSelectionModel);
                         }}
                         rowSelectionModel={rowSelectionModel}

@@ -122,10 +122,13 @@ const Main = () => {
             {showScrollBtn && (
                 <button
                     onClick={scrollToTop}
-                    className="fixed bottom-6 right-6 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg flex justify-center items-center 
-                               transition transform hover:scale-110 hover:bg-blue-700 duration-300 animate-bounce"
+                    className="group fixed bottom-6 right-6 text-[#1072E0] border border-[#1072E0] w-12 h-12 rounded-full shadow-lg flex justify-center items-center 
+             transition transform hover:scale-110 hover:bg-[#1072E0] duration-300 animate-bounce"
                 >
-                    <CustomIcons iconName="fa-solid fa-arrow-up" css="text-white w-5 h-5" />
+                    <CustomIcons
+                        iconName="fa-solid fa-arrow-up"
+                        css="w-5 h-5 text-[#1072E0] group-hover:text-white"
+                    />
                 </button>
             )}
         </>

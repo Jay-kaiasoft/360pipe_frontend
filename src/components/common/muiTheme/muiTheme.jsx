@@ -2,9 +2,9 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 
 const colors = {
-  primary: "#ffd600",        // yellow
+  primary: "#ffffff",        // yellow
   primaryRgb: "255, 214, 0",
-  secondary: "#0f55dc",      // blue
+  secondary: "#1072E0",      // blue
   secondaryRgb: "15, 83, 220",
 
   primaryTwo: "#d44a00",

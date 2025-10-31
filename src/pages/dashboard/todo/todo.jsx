@@ -314,7 +314,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                                 });
                             }}
                         />
-
                     </div>
                 )
             }
@@ -359,6 +358,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 200,
+
             renderCell: (params) => {
                 return (
                     <div className='flex justify-center items-center h-full'>
@@ -373,9 +373,11 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerClassName: 'uppercase',
             sortable: false,
             minWidth: 150,
+            align: 'right',
+            headerAlign: 'right',
             renderCell: (params) => {
                 return (
-                    <div className='flex items-center gap-2 justify-center h-full'>
+                    <div className='flex items-center gap-2 justify-end h-full'>
                         {
                             params.row.status?.toLowerCase() !== 'completed' ? (
                                 <PermissionWrapper
@@ -398,7 +400,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             moduleName="Todo"
                             actionId={2}
                             component={
-                                <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                     <Components.IconButton onClick={() => handleOpen(params.row.id)}>
                                         <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                     </Components.IconButton>
