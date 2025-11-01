@@ -8,18 +8,12 @@ import { createAllContact } from "../../service/contact/contactService";
 import Button from "../../components/common/buttons/button";
 import { connect } from "react-redux";
 import AlertDialog from "../../components/common/alertDialog/alertDialog";
+import SelectMultiple from "../../components/common/select/selectMultiple";
 
 const Summary = ({ setAlert }) => {
     const [groups, setGroups] = useState([]);
     const [openAccordionId, setOpenAccordionId] = useState(null);
 
-    /**
-     * Array aligned to groups:
-     * - selectedByGroup[i] can be:
-     *    - []                -> none selected
-     *    - number[]          -> partial selection (email IDs only)
-     *    - { requestId, emailsId:number[] } -> "Select All" for that group
-     */
     const [selectedByGroup, setSelectedByGroup] = useState([]);
     const [dialogAddContacts, setDialogAddContacts] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
@@ -63,9 +57,7 @@ const Summary = ({ setAlert }) => {
             const res = await getMailByGroup();
             const arr = res?.result?.result ?? res?.data?.result ?? [];
             setGroups(arr);
-            // init selection array to correct length
             setSelectedByGroup(Array(arr.length).fill([]));
-            // if (!openAccordionId && arr.length) setOpenAccordionId(arr[0]?.email ?? null);
         } catch (err) {
             setGroups([]);
             setSelectedByGroup([]);
@@ -74,7 +66,6 @@ const Summary = ({ setAlert }) => {
     };
 
     const handleCreateAllContacts = async () => {
-        // rowSelectionModel contains DataGrid rowIds (row.rowId). Convert to mail.id values expected by the API.
         const data = getAllSelectedEmailIds()
         const res = await createAllContact(data);
         if (res?.status !== 201) {
@@ -95,7 +86,6 @@ const Summary = ({ setAlert }) => {
         handleGetAllMails();
     }, []);
 
-    // helpers to read/write entry by index with correct shape
     const getEntryArray = (entry) => {
         if (!entry) return [];
         return Array.isArray(entry) ? entry : (entry.emailsId ?? []);
@@ -113,7 +103,6 @@ const Summary = ({ setAlert }) => {
         });
     };
 
-    /** Toggle a single row (always stores plain array of IDs for that group) */
     const toggleRow = (groupIndex, emailId, checked) => {
         setSelectedByGroup((prev) => {
             const curr = prev[groupIndex];
@@ -122,16 +111,11 @@ const Summary = ({ setAlert }) => {
             else ids.delete(emailId);
 
             const next = prev.slice();
-            next[groupIndex] = Array.from(ids); // partial selection shape
+            next[groupIndex] = Array.from(ids);
             return next;
         });
     };
 
-    /**
-     * Toggle ALL rows in a group.
-     * checked=true  -> store object { requestId, emailsId: allIds }
-     * checked=false -> store [] (empty array)
-     */
     const toggleAllInGroup = (groupIndex, requestId, allIds, checked) => {
         if (checked) {
             setEntry(groupIndex, { requestId, emailsId: allIds });
@@ -141,9 +125,7 @@ const Summary = ({ setAlert }) => {
     };
 
     const handleDeleteGroup = async () => {
-        const entry = selectedByGroup[groupIndex]; // could be [] OR [ids] OR {requestId, emailsId}
-
-        // nothing selected for this group
+        const entry = selectedByGroup[groupIndex];
         if (!entry || (Array.isArray(entry) && entry.length === 0)) {
             setAlert({
                 open: true,
@@ -154,20 +136,16 @@ const Summary = ({ setAlert }) => {
         }
 
         try {
-            // If entry is the "check all" object -> delete by requestId
             if (!Array.isArray(entry) && entry.requestId) {
                 await deleteAllMailsByRequestId(entry.requestId);
 
-                // remove entire group from UI
                 setSelectedByGroup(prev => prev.filter((_, i) => i !== groupIndex));
                 if (openAccordionId === selectedEmails) setOpenAccordionId(null);
                 handleGetAllMails()
                 handleCloseDeleteDialog()
             } else {
-                // Otherwise it's an array of selected email IDs -> delete those only
                 await deleteAllMails(entry);
 
-                // clear selection for this group
                 setSelectedByGroup(prev => {
                     const next = [...prev];
                     next[groupIndex] = [];
@@ -346,7 +324,7 @@ function AccordionItem({
 }
 
 /* ---------------------------------------------------------------
-   Email Table (fixed header + scroll body + array-based selection)
+   Email Table (filters + fixed header + scroll body)
 --------------------------------------------------------------- */
 function EmailTable({
     rows,
@@ -357,135 +335,230 @@ function EmailTable({
     onToggleRow,
     onToggleAll,
 }) {
-    // All email IDs from rows[].id
+    // ---------- build unique options ----------
+    const { emailOptions, companyOptions } = useMemo(() => {
+        const emailSet = new Set();
+        const companySet = new Set();
+
+        for (const r of rows || []) {
+            if (r?.email) emailSet.add(String(r.email).trim());
+            if (r?.companyName) companySet.add(String(r.companyName).trim());
+        }
+
+        const toOptions = (set) =>
+            Array.from(set)
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b))
+                .map((val) => ({ id: val, title: val }));
+
+        return {
+            emailOptions: toOptions(emailSet),
+            companyOptions: toOptions(companySet),
+        };
+    }, [rows]);
+
+    // ---------- local filter state (ids are the raw string values) ----------
+    const [emailFilterIds, setEmailFilterIds] = useState([]);
+    const [companyFilterIds, setCompanyFilterIds] = useState([]);
+
+    // If rows change (new group loaded), reset filters
+    useEffect(() => {
+        setEmailFilterIds([]);
+        setCompanyFilterIds([]);
+    }, [rows]);
+
+    // ---------- apply filters ----------
+    const filteredRows = useMemo(() => {
+        return (rows || []).filter((r) => {
+            const byEmail =
+                emailFilterIds.length === 0 ||
+                (r?.email ? emailFilterIds.includes(String(r.email).trim()) : false);
+
+            const byCompany =
+                companyFilterIds.length === 0 ||
+                (r?.companyName
+                    ? companyFilterIds.includes(String(r.companyName).trim())
+                    : false);
+
+            return byEmail && byCompany;
+        });
+    }, [rows, emailFilterIds, companyFilterIds]);
+
+    // ---------- selection helpers ----------
     const ids = useMemo(
-        () => rows.map((r) => r?.id).filter((x) => x !== null && x !== undefined),
-        [rows]
+        () =>
+            filteredRows
+                .map((r) => r?.id)
+                .filter((x) => x !== null && x !== undefined),
+        [filteredRows]
     );
 
     const selectedArr = getEntryArray(selectedEntry);
     const total = ids.length;
-    const selectedCount = selectedArr.length;
-    const allChecked = total > 0 && selectedCount === total; // treat full coverage as "all"
+    const selectedCount = ids.filter((id) => selectedArr.includes(id)).length;
+
+    const allChecked = total > 0 && selectedCount === total;
     const indeterminate = selectedCount > 0 && selectedCount < total;
 
+    // ---------- UI ----------
     return (
         <div className="mt-3 border border-gray-200 rounded overflow-hidden">
-            {
-                rows?.length > 0 ? (
-                    <>
-                        <div className="overflow-x-auto">
-                            <div className="max-h-96 overflow-y-auto">
-                                <table className="min-w-full border-collapse">
-                                    <thead className="bg-gray-50 sticky top-0 z-10">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                <Checkbox
-                                                    checked={allChecked && isAllShape(selectedEntry)}
-                                                    indeterminate={indeterminate || (allChecked && !isAllShape(selectedEntry))}
-                                                    onChange={(e) => onToggleAll(ids, e.target.checked)}
-                                                    aria-label="Select all rows"
-                                                    title={
-                                                        e => { } // avoid title flicker
-                                                    }
-                                                />
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                #
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                First Name
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                Last Name
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                Email
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                Company
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                Job Title
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                Website
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                                Phone
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 bg-white">
-                                        {rows.map((r, i) => {
-                                            const emailId = r?.id;
-                                            const isChecked = selectedArr.includes(emailId);
-                                            return (
-                                                <tr key={emailId ?? i} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-3">
-                                                        <Checkbox
-                                                            checked={isChecked}
-                                                            onChange={(e) => onToggleRow(emailId, e.target.checked)}
-                                                            aria-label={`Select row ${i + 1}`}
-                                                        />
-                                                    </td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800 font-bold">{i + 1}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800">{r.firstName || "—"}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800">{r.lastName || "—"}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800">{r.email || "—"}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800">{r.companyName || "—"}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800">{r.jobTitle || "—"}</td>
-                                                    <td className="px-4 py-3 text-sm text-[#1072E0] truncate max-w-[220px]">
-                                                        {r.website ? (
-                                                            <a
-                                                                href={r.website.startsWith("http") ? r.website : `https://${r.website}`}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="hover:underline"
-                                                                title={r.website}
-                                                            >
-                                                                {r.website}
-                                                            </a>
-                                                        ) : "—"}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-sm text-gray-800">{r.phone || "—"}</td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Footer summary */}
-                        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-200 text-sm text-gray-700">
-                            <span>
-                                Selected: <strong>{selectedCount}</strong> / {total}
-                            </span>
-                            <div className="space-x-2">
-                                <button
-                                    className="px-3 py-1.5 rounded border border-gray-300 hover:bg-white"
-                                    onClick={() => onToggleAll([], false)}
-                                >
-                                    Clear
-                                </button>
-                                <button
-                                    className="px-3 py-1.5 rounded bg-[#1072E0] text-white hover:bg-blue-700"
-                                    onClick={() => onToggleAll(ids, true)}
-                                    title={JSON.stringify({ requestId, emailsId: ids })}
-                                >
-                                    Select all
-                                </button>
-                            </div>
-                        </div>
-                    </>
-                ) :
-                    <div className="my-10">
-                        <p className="text-center font-bold">
-                            No records
-                        </p>
+            {/* Filter bar */}
+            <div className=" p-3 bg-gray-50 border-b border-gray-200 flex justify-start items-center">
+                <div className="flex justify-start items-center grow gap-3">
+                    <div className="w-72">
+                        <SelectMultiple
+                            label="Filter by Email"
+                            placeholder="Choose email(s)"
+                            options={emailOptions}
+                            value={emailFilterIds}
+                            onChange={setEmailFilterIds}
+                        />
                     </div>
-            }
+
+                    <div className="w-72">
+                        <SelectMultiple
+                            label="Filter by Company"
+                            placeholder="Choose company(s)"
+                            options={companyOptions}
+                            value={companyFilterIds}
+                            onChange={setCompanyFilterIds}
+                        />
+                    </div>
+
+                    <div>
+                        <button
+                            className="h-10 px-3 rounded border border-gray-300 hover:bg-white"
+                            onClick={() => {
+                                setEmailFilterIds([]);
+                                setCompanyFilterIds([]);
+                            }}
+                        >
+                            Clear filters
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-end gap-2">
+                    <div className="ml-auto text-sm text-gray-700 self-center">
+                        <span>
+                            Selected : <strong>{selectedCount}</strong> / {total}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {filteredRows.length > 0 ? (
+                <>
+                    <div className="overflow-x-auto">
+                        <div className="max-h-96 overflow-y-auto">
+                            <table className="min-w-full border-collapse">
+                                <thead className="bg-gray-50 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            <Checkbox
+                                                checked={allChecked && isAllShape(selectedEntry)}
+                                                indeterminate={
+                                                    indeterminate || (allChecked && !isAllShape(selectedEntry))
+                                                }
+                                                onChange={(e) => onToggleAll(ids, e.target.checked)}
+                                                aria-label="Select all rows"
+                                                title={() => { }}
+                                            />
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            #
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            First Name
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            Last Name
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            Email
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            Company
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            Job Title
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            Website
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                            Phone
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 bg-white">
+                                    {filteredRows.map((r, i) => {
+                                        const emailId = r?.id;
+                                        const isChecked = selectedArr.includes(emailId);
+
+                                        return (
+                                            <tr key={emailId ?? i} className="hover:bg-gray-50">
+                                                <td className="px-4 py-3">
+                                                    <Checkbox
+                                                        checked={isChecked}
+                                                        onChange={(e) => onToggleRow(emailId, e.target.checked)}
+                                                        aria-label={`Select row ${i + 1}`}
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800 font-bold">
+                                                    {i + 1}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800">
+                                                    {r.firstName || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800">
+                                                    {r.lastName || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800">
+                                                    {r.email || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800">
+                                                    {r.companyName || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800">
+                                                    {r.jobTitle || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-[#1072E0] truncate max-w-[220px]">
+                                                    {r.website ? (
+                                                        <a
+                                                            href={
+                                                                r.website.startsWith("http")
+                                                                    ? r.website
+                                                                    : `https://${r.website}`
+                                                            }
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="hover:underline"
+                                                            title={r.website}
+                                                        >
+                                                            {r.website}
+                                                        </a>
+                                                    ) : (
+                                                        "—"
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-800">
+                                                    {r.phone || "—"}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <div className="py-10">
+                    <p className="text-center font-bold">No records</p>
+                </div>
+            )}
         </div>
     );
 }

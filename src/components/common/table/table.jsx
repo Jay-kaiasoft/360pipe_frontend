@@ -31,8 +31,14 @@ export default function DataTable({
     const [sortedRows, setSortedRows] = useState([]);
 
     useEffect(() => {
-        setSortedRows(rows);
+        // keep original ids, just rewrite the display index (use your field name)
+        const resequenced = (rows || []).filter(Boolean).map((r, i) => ({
+            ...r,
+            rowId: i + 1,            // <-- or slNo if that’s your column key
+        }));
+        setSortedRows(resequenced);
     }, [rows]);
+
 
     const handleChangeTodoPriority = async () => {
         if (priority) {
@@ -51,15 +57,25 @@ export default function DataTable({
     const renderSortableTable = (sortedRows, setSortedRows) => {
         const handleChangeValue = (newList) => {
             const filteredList = (newList || []).filter(Boolean);
-            setSortedRows(filteredList);
-            const logArr = filteredList.map((row, idx) => ({
+
+            // resequence the display index after reorder
+            const resequenced = filteredList.map((row, idx) => ({
+                ...row,
+                rowId: idx + 1,          // <-- match your index column's field name
+            }));
+
+            setSortedRows(resequenced);
+
+            // keep using the true ids for your server payload — unchanged
+            const logArr = resequenced?.map((row, idx) => ({
                 id: row.priorityId || null,
                 todoId: row.id,
                 priority: idx,
                 userId: userInfo.userId
             }));
             setPriorityData(logArr);
-        }
+        };
+
 
         return (
             <div className="overflow-x-auto" style={{ height: height || "full", width: '100%' }}>

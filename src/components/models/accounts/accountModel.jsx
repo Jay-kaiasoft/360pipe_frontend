@@ -250,8 +250,9 @@ function AccountModel({ setSyncingPushStatus, setAlert, open, handleClose, accou
                     </Components.DialogContent>
 
                     <Components.DialogActions>
-                        <div className='flex justify-end'>
+                        <div className='flex justify-end items-center gap-4'>
                             <Button type={`submit`} text={accountId ? "Update" : "Submit"} isLoading={loading} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
                         </div>
                     </Components.DialogActions>
                 </form>

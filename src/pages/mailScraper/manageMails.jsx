@@ -242,7 +242,7 @@ const ManageMails = ({ setAlert }) => {
                 selectedTab === 0 && <MailScraper />
             }
             {
-                selectedTab === 1 &&
+                selectedTab === 2 &&
                 (
                     <div className='border rounded-lg bg-white mt-4'>
                         <DataTable columns={columns} rows={mails} getRowId={getRowId} height={rowSelectionModel?.length > 0 ? 480 : 550} checkboxSelection={true} setRowSelectionModel={handleChangeRowSelectionModel} rowSelectionModel={rowSelectionModel} showButtons={rowSelectionModel?.length > 0} buttons={actionButtons} />
@@ -250,7 +250,7 @@ const ManageMails = ({ setAlert }) => {
                 )
             }
             {
-                selectedTab === 2 && <MailScrapingRequests setSelectedTab={setSelectedTab}/>
+                selectedTab === 1 && <MailScrapingRequests setSelectedTab={setSelectedTab}/>
             }
             {
                 selectedTab === 3 && <Summary />

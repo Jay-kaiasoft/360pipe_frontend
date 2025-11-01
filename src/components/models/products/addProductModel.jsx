@@ -261,6 +261,7 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
                         <div className={`flex justify-end items-center gap-4`}>
                             <div>
                                 <Button type={`submit`} text={id ? "Update" : "Submit"} />
+                                <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
                             </div>
                         </div>
                     </Components.DialogActions>

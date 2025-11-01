@@ -60,3 +60,13 @@ export const createAllContact = async (contactData) => {
         throw error;
     }
 };
+
+export const getReportHierarch = async (contactId) => {
+    try {
+        const response = await axiosInterceptor().get(`${contactURL}/getReportHierarch/${contactId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching contact details:", error);
+        throw error;
+    }
+};

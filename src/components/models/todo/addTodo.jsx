@@ -215,7 +215,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     }, [watch("assignedType")]);
 
     const assignTodo = async (data) => {
-        console.log("data", data)
         if (watch("assignedId")) {
             const res = await updateTodoAssign(watch("assignedId"), data);
             if (res?.status === 200) { handleGetAllTodos(); onClose(); }
@@ -278,6 +277,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             ...(Array.isArray(existingImages) ? existingImages : []),
             ...uploaded
         ];
+        console.log("first", mergedImages)
         const newData = {
             ...data,
             images: mergedImages, // <-- your API expects the array of uploadedFile objects
@@ -290,33 +290,33 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             status: status?.find(s => s.id === parseInt(watch("status")))?.title,
             source: todoType?.find(t => t.id === parseInt(watch("source")))?.title,
         };
-
         try {
             if (todoId) {
-                if (parseInt(watch("createdBy")) === parseInt(userData?.userId)) {
-                    const assignData = {
-                        id: watch("assignedId"),
-                        teamId: watch("assignedType") === 2 ? watch("teamId") : null,
-                        customerId:
-                            watch("assignedType") === 1
-                                ? userData?.userId?.toString()
-                                : watch("assignedType") === 2
-                                    ? null
-                                    : watch("customerId"),
-                        customerIds: watch("assignedType") === 2 ? watch("customerIds") : [],
-                        todoId: todoId,
-                        removeCustomerIds: watch("removeCustomerIds") || [],
-                        removeTeam: watch("removeTeam") || null,
-                        status: status?.find(s => s.id === parseInt(watch("status")))?.title,
-                        dueDate: dueDateVal.format("MM/DD/YYYY"),
-                        complectedWork: parseInt(watch("complectedWork")) || 0
-                    };
-                    await assignTodo(assignData);
-                } else {
-                    const res = await updateTodo(todoId, newData);
-                    if (res?.status === 200) { handleGetAllTodos(); onClose(); }
-                    else setAlert({ open: true, message: res?.message || "Failed to update todo", type: "error" });
+                const res = await updateTodo(todoId, newData);
+                if (res?.status === 200) {
+                    if (parseInt(watch("createdBy")) === parseInt(userData?.userId)) {
+                        const assignData = {
+                            id: watch("assignedId"),
+                            teamId: watch("assignedType") === 2 ? watch("teamId") : null,
+                            customerId:
+                                watch("assignedType") === 1
+                                    ? userData?.userId?.toString()
+                                    : watch("assignedType") === 2
+                                        ? null
+                                        : watch("customerId"),
+                            customerIds: watch("assignedType") === 2 ? watch("customerIds") : [],
+                            todoId: todoId,
+                            removeCustomerIds: watch("removeCustomerIds") || [],
+                            removeTeam: watch("removeTeam") || null,
+                            status: status?.find(s => s.id === parseInt(watch("status")))?.title,
+                            dueDate: dueDateVal.format("MM/DD/YYYY"),
+                            complectedWork: parseInt(watch("complectedWork")) || 0
+                        };
+                        await assignTodo(assignData);
+                    }
+                    handleGetAllTodos(); onClose();
                 }
+                else setAlert({ open: true, message: res?.message || "Failed to update todo", type: "error" });
             } else {
                 const res = await createTodo(newData);
                 if (res?.status === 201) {
@@ -684,8 +684,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     </Components.DialogContent>
 
                     <Components.DialogActions>
-                        <div className='flex justify-end'>
+                        <div className='flex justify-end items-center gap-4'>
                             <Button type="submit" text={todoId ? "Update" : "Submit"} isLoading={loading} />
+                            <Button type="button" text={"Cancel"} disabled={loading} useFor='disabled' onClick={() => onClose()} />
                         </div>
                     </Components.DialogActions>
                 </form>

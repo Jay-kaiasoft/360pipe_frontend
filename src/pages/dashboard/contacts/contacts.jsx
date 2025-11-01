@@ -11,12 +11,14 @@ import { deleteContact, getAllContacts } from '../../../service/contact/contactS
 import ContactModel from '../../../components/models/contact/contactModel';
 import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
+import ContactReportHierarch from '../../../components/models/contact/contactReportHierarch';
 
 const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
 
     const [contacts, setContacts] = useState([]);
     const [open, setOpen] = useState(false);
+    const [openHierarchy, setOpenHierarchy] = useState(false);
     const [selectedContactId, setSelectedContactId] = useState(null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
@@ -43,6 +45,16 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         } catch (error) {
             console.error("Error fetching contacts:", error);
         }
+    }
+
+    const handleOpenHierarchy = (contactId) => {
+        setSelectedContactId(contactId);
+        setOpenHierarchy(true);
+    }
+
+    const handleCloseHierarchy = () => {
+        setSelectedContactId(null);
+        setOpenHierarchy(false);
     }
 
     const handleOpen = (contactId = null) => {
@@ -138,9 +150,16 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
+            flex: 1,
+            maxWidth: 250,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
+                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenHierarchy(params.row.id)}>
+                                <CustomIcons iconName={'fa-solid fa-sitemap'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
                         <PermissionWrapper
                             functionalityName="Contacts"
                             moduleName="Contacts"
@@ -196,6 +215,8 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                 <DataTable columns={columns} rows={contacts} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
             </div>
             <ContactModel open={open} handleClose={handleClose} contactId={selectedContactId} handleGetAllContacts={handleGetContacts} />
+            <ContactReportHierarch open={openHierarchy} handleClose={handleCloseHierarchy} contactId={selectedContactId} />
+
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

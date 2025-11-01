@@ -367,10 +367,10 @@ const AddTeamMembers = ({ setAlert }) => {
                 </div>
                 <div className='flex justify-end mt-5 gap-3'>
                     <div>
-                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/myteam")} />
+                        <Button type="submit" text={id ? "Update" : "Submit"} />
                     </div>
                     <div>
-                        <Button type="submit" text={id ? "Update" : "Submit"} />
+                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/myteam")} />
                     </div>
                 </div>
             </form>

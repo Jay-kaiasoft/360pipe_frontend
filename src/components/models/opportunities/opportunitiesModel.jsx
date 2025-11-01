@@ -803,8 +803,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     </Components.DialogContent>
 
                     <Components.DialogActions className={`${opportunityId != null ? "absolute bottom-0 right-2" : ""}`}>
-                        <div className='flex justify-end'>
+                        <div className='flex justify-end items-center gap-4'>
                             <Button type={`submit`} text={opportunityId ? "Update" : "Submit"} isLoading={loading} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
                         </div>
                     </Components.DialogActions>
                 </form>

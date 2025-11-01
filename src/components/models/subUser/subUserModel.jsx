@@ -137,7 +137,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
             password: "",
             cellPhone: "",
             calendarYearType: "",
-            
+
             startEvalPeriod: null,
             endEvalPeriod: null,
             quotaId: "",
@@ -813,21 +813,22 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                 />
                             </div> */}
                         </div>
-
+                        <div className='w-60 mt-5'>
+                            {
+                                id && (
+                                    <Button disabled={!isEmailExits} type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
+                                )
+                            }
+                        </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className={`flex justify-end items-center gap-4`}>
-                            <div>
-                                {
-                                    id && (
-                                        <Button disabled={!isEmailExits} type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
-                                    )
-                                }
-                            </div>
+
                             <div>
                                 <Button type={`submit`} text={id ? "Update" : "Submit"} />
                             </div>
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
                         </div>
                     </Components.DialogActions>
                 </form>
