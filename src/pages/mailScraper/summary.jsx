@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { deleteAllMails, deleteAllMailsByRequestId, getMailByGroup } from "../../service/tempMail/tempMail";
+import { deleteAllMails, deleteAllMailsByRequestId, deleteAllMailsInbox, deleteByRequestIdInbox, getMailByGroup } from "../../service/tempMail/tempMail";
 import Checkbox from "../../components/common/checkBox/checkbox";
 import { setAlert } from "../../redux/commonReducers/commonReducers";
 import Components from "../../components/muiComponents/components";
@@ -19,6 +19,21 @@ const Summary = ({ setAlert }) => {
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedEmails, setSelectedEmails] = useState(null)
     const [groupIndex, setGroupIndex] = useState(null)
+
+    const [dialogDeleteInbox, setDialogDeleteInbox] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+
+    const handleOpenDeleteDialogInbox = (email, groupIndex) => {
+        setSelectedEmails(email)
+        setGroupIndex(groupIndex)
+        setDialogDeleteInbox({ open: true, title: 'Delete Mail', message: 'Are you sure! Do you want to delete all this mails?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialogInbox = () => {
+        setSelectedEmails(null)
+        setGroupIndex(null)
+        setDialogDeleteInbox({ open: false, title: '', message: '', actionButtonText: '' });
+    }
 
 
     const handleOpenDeleteDialog = (email, groupIndex) => {
@@ -160,6 +175,42 @@ const Summary = ({ setAlert }) => {
         }
     };
 
+    const handleDeleteGroupInbox = async () => {
+        const entry = selectedByGroup[groupIndex];
+        if (!entry || (Array.isArray(entry) && entry.length === 0)) {
+            setAlert({
+                open: true,
+                type: "error",
+                message: "Please select emails first"
+            })
+            return;
+        }
+
+        try {
+            if (!Array.isArray(entry) && entry.requestId) {
+                await deleteByRequestIdInbox(entry.requestId);
+
+                setSelectedByGroup(prev => prev.filter((_, i) => i !== groupIndex));
+                if (openAccordionId === selectedEmails) setOpenAccordionId(null);
+                handleGetAllMails()
+                handleCloseDeleteDialogInbox()
+            } else {
+                await deleteAllMailsInbox(entry);
+
+                setSelectedByGroup(prev => {
+                    const next = [...prev];
+                    next[groupIndex] = [];
+                    return next;
+                });
+                handleGetAllMails()
+                handleCloseDeleteDialogInbox()
+            }
+        } catch (err) {
+            console.error("Delete failed", err);
+            alert("Delete failed. Please try again.");
+        }
+    };
+
     return (
         <section className="mx-auto py-6 lg:max-h-[540px] 4k:max-h-[700px] overflow-y-auto">
             {groups?.length === 0 ? (
@@ -190,6 +241,7 @@ const Summary = ({ setAlert }) => {
                                 toggleAllInGroup(index, g.requestId, allIds, checked)
                             }
                             onDeleteGroup={() => handleOpenDeleteDialog(g.email, index)}
+                            onDeleteGroupInbox={() => handleOpenDeleteDialogInbox(g.email, index)}
                             handleCreateAllContacts={handleOpenAddContactsDialog}
                         />
                     ))}
@@ -210,6 +262,14 @@ const Summary = ({ setAlert }) => {
                 actionButtonText={dialog.actionButtonText}
                 handleAction={() => handleDeleteGroup()}
                 handleClose={() => handleCloseDeleteDialog()}
+            />
+              <AlertDialog
+                open={dialogDeleteInbox.open}
+                title={dialogDeleteInbox.title}
+                message={dialogDeleteInbox.message}
+                actionButtonText={dialogDeleteInbox.actionButtonText}
+                handleAction={() => handleDeleteGroupInbox()}
+                handleClose={() => handleCloseDeleteDialogInbox()}
             />
         </section>
     );
@@ -239,6 +299,7 @@ function AccordionItem({
     onToggleRow,
     onToggleAll,
     onDeleteGroup,
+    onDeleteGroupInbox,
     handleCreateAllContacts
 }) {
     const hasSelection =
@@ -266,8 +327,10 @@ function AccordionItem({
 
                 <div className="flex items-center gap-3">
                     {open && hasSelection && (
-                        <div className="flex justify-center items-center gap-5">
+                        <div className="flex justify-center items-center gap-5 w-[450px]">
                             <Button type={`button`} text={'Add to Contacts'} onClick={() => handleCreateAllContacts()} />
+
+                            <Button useFor='error' type={`button`} text={'Delete From Inbox'} onClick={onDeleteGroupInbox} />
 
                             <div className="bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white">
                                 <Components.IconButton onClick={onDeleteGroup}>

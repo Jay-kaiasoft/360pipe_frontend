@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import DataTable from '../../components/common/table/table';
 
-import { deleteMail, getAllTempMails } from '../../service/tempMail/tempMail';
+import { deleteAllMailsInbox, deleteMail, getAllTempMails } from '../../service/tempMail/tempMail';
 import MailScraper from './mailScraper';
 import { Tabs } from '../../components/common/tabs/tabs';
 import MailScrapingRequests from './mailScrapingRequests';
@@ -30,6 +30,7 @@ const ManageMails = ({ setAlert }) => {
     const [selectedMailId, setSelectedMailId] = useState(null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [dialogAddContacts, setDialogAddContacts] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [dialogDeleteMailInbox, setDialogDeleteMailInbox] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const handleOpen = (id) => {
         setSelectedMailId(id);
@@ -40,6 +41,14 @@ const ManageMails = ({ setAlert }) => {
         setSelectedMailId(null);
         setOpen(false);
     };
+
+    const handleOpenDeleteInboxDialog = () => {
+        setDialogDeleteMailInbox({ open: true, title: 'Delete Mail', message: 'Are you sure! Do you want to delete this mails from Inbox?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeletInboxeDialog = () => {
+        setDialogDeleteMailInbox({ open: false, title: '', message: '', actionButtonText: '' });
+    }
 
     const handleOpenDeleteDialog = (mailId) => {
         setSelectedMailId(mailId);
@@ -88,21 +97,22 @@ const ManageMails = ({ setAlert }) => {
     }
 
     const handleGetAllMails = async () => {
-        if (selectedTab !== 1) return; // Only fetch mails when the Mails tab is selected
-        const res = await getAllTempMails();
-        if (res?.status === 200) {
-            const mailsWithId = res.result.map((mail, index) => ({
-                id: mail.id || null,
-                rowId: index + 1,
-                email: mail.email || "-",
-                companyName: mail.companyName || "-",
-                jobTitle: mail.jobTitle || "-",
-                website: mail.website || "-",
-                phone: mail.phone || "-",
-                firstName: mail.firstName || "-",
-                lastName: mail.lastName || "-",
-            }));
-            setMails(mailsWithId);
+        if (selectedTab === 2) {
+            const res = await getAllTempMails();
+            if (res?.status === 200) {
+                const mailsWithId = res.result.map((mail, index) => ({
+                    id: mail.id || null,
+                    rowId: index + 1,
+                    email: mail.email || "-",
+                    companyName: mail.companyName || "-",
+                    jobTitle: mail.jobTitle || "-",
+                    website: mail.website || "-",
+                    phone: mail.phone || "-",
+                    firstName: mail.firstName || "-",
+                    lastName: mail.lastName || "-",
+                }));
+                setMails(mailsWithId);
+            }
         }
     }
 
@@ -125,6 +135,30 @@ const ManageMails = ({ setAlert }) => {
             handleCloseContactsDialog()
         } else {
             handleCloseContactsDialog()
+            handleGetAllMails();
+            setRowSelectionModel([]);
+        }
+    }
+
+    const handleDeleteAllInbox = async () => {
+        // rowSelectionModel contains DataGrid rowIds (row.rowId). Convert to mail.id values expected by the API.
+        const selectedMailIds = rowSelectionModel
+            .map(rid => {
+                const mail = mails.find(m => m.rowId === rid);
+                return mail ? mail.id : null;
+            })
+            .filter(Boolean);
+
+        const res = await deleteAllMailsInbox(selectedMailIds);
+        if (res?.status !== 200) {
+            setAlert({
+                open: true,
+                type: 'error',
+                message: res?.message || 'Failed to delete mails from inbox.',
+            })
+            handleCloseDeletInboxeDialog()
+        } else {
+            handleCloseDeletInboxeDialog()
             handleGetAllMails();
             setRowSelectionModel([]);
         }
@@ -216,6 +250,11 @@ const ManageMails = ({ setAlert }) => {
                                 <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
                             </Components.IconButton>
                         </div>
+                        {/* <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                                <CustomIcons iconName="fa-solid fa-envelope-circle-xmark" css="text-white" />
+                            </Components.IconButton>
+                        </div> */}
                     </div>
                 );
             },
@@ -228,8 +267,9 @@ const ManageMails = ({ setAlert }) => {
 
     const actionButtons = () => {
         return (
-            <div>
+            <div className='flex justify-end items-center gap-4 w-[400px]'>
                 <Button type={`button`} text={'Add to Contacts'} onClick={() => handleOpenAddContactsDialog()} />
+                <Button useFor='error' type={`button`} text={'Delete From Inbox'} onClick={() => handleOpenDeleteInboxDialog()} />
             </div>
         )
     }
@@ -250,7 +290,7 @@ const ManageMails = ({ setAlert }) => {
                 )
             }
             {
-                selectedTab === 1 && <MailScrapingRequests setSelectedTab={setSelectedTab}/>
+                selectedTab === 1 && <MailScrapingRequests setSelectedTab={setSelectedTab} />
             }
             {
                 selectedTab === 3 && <Summary />
@@ -272,6 +312,15 @@ const ManageMails = ({ setAlert }) => {
                 actionButtonText={dialogAddContacts.actionButtonText}
                 handleAction={() => handleCreateAllContacts()}
                 handleClose={() => handleCloseContactsDialog()}
+            />
+
+             <AlertDialog
+                open={dialogDeleteMailInbox.open}
+                title={dialogDeleteMailInbox.title}
+                message={dialogDeleteMailInbox.message}
+                actionButtonText={dialogDeleteMailInbox.actionButtonText}
+                handleAction={() => handleDeleteAllInbox()}
+                handleClose={() => handleCloseDeletInboxeDialog()}
             />
         </>
     )

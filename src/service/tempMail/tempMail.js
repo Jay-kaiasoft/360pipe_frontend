@@ -55,6 +55,15 @@ export const deleteMail = async (id) => {
     }
 };
 
+export const deleteMailInbox = async (id) => {
+    try {
+        const response = await axiosInterceptor().delete(`${tempMailURL}/deleteInbox/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const deleteAllMails = async (ids) => {
     try {
         const response = await axiosInterceptor().post(`${tempMailURL}/delete/all`, ids);
@@ -67,6 +76,24 @@ export const deleteAllMails = async (ids) => {
 export const deleteAllMailsByRequestId = async (id) => {
     try {
         const response = await axiosInterceptor().delete(`${tempMailURL}/deleteByRequestId/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteByRequestIdInbox = async (id) => {
+    try {
+        const response = await axiosInterceptor().delete(`${tempMailURL}/deleteByRequestIdInbox/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteAllMailsInbox = async (ids) => {
+    try {
+        const response = await axiosInterceptor().post(`${tempMailURL}/delete/all/inbox`, ids);
         return response.data;
     } catch (error) {
         throw error;

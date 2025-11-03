@@ -125,10 +125,10 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
     }
   }, [])
 
-  const handlePushData = async () => {
+  const handleSync = async () => {
     setLoading(true);
     try {
-      const res = await syncFromQ4magic();
+      const res = await syncToQ4Magic();
       if (res?.status === 200) {
         setLoading(false);
         setAlert({
@@ -156,12 +156,12 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
     }
   }
 
-  const handleSync = async () => {
+  const handlePushData = async () => {
     setLoading(true);
     try {
-      const res = await syncToQ4Magic();
+      const res = await syncFromQ4magic();
       if (res?.status === 200) {
-        handlePushData();
+        handleSync();
       } else if (res?.status === 401) {
         setLoading(false);
         localStorage.removeItem("accessToken_salesforce");
@@ -266,7 +266,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
                   <div>
                     <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
                       <Button
-                        onClick={() => handleSync()}
+                        onClick={() => handlePushData()}
                         text={"SYNC"}
                         useFor="success"
                       />
