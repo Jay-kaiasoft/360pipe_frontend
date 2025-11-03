@@ -436,7 +436,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
                 </Components.IconButton>
 
-                <form noValidate onSubmit={handleSubmit(submit)} className='overflow-y-auto'>
+                <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4`}>
                             <Controller
@@ -557,21 +557,19 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                 )}
                             />
                         </div>
+
+                        {opportunityId != null && (
+                            <div className="border-b-2 border-gray-600 mb-6"></div>
+                        )}
                         {
                             opportunityId != null && (
                                 <div className='grid md:grid-cols-2 gap-6'>
-                                    <div>
-                                        {/* <div className="flex items-center my-2 col-span-2 md:col-span-3">
-                                    <div className="flex-grow border-t border-black"></div>
-                                    <span className="mx-4 text-black font-medium">Partner Details</span>
-                                    <div className="flex-grow border-t border-black"></div>
-                                </div> */}
-
+                                    <div className='border-r-2 border-gray-600 pr-6'>
                                         <div className="max-h-56 overflow-y-auto">
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10">
                                                     <tr>
-                                                        <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                        <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
                                                             <div className='flex items-center'>
                                                                 <p className='text-center grow'>
                                                                     Partners
@@ -640,7 +638,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
                                                     <tr>
-                                                        <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                        <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
                                                             <div className='flex items-center'>
                                                                 <p className='text-center grow'>
                                                                     Contacts
@@ -723,11 +721,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     </div>
 
                                     <div className='col-span-2'>
+                                        <div className="border-b-2 border-gray-600 my-4"></div>
                                         <div className="max-h-56 overflow-y-auto">
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
                                                     <tr>
-                                                        <th colSpan={5} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                        <th colSpan={5} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
                                                             <div className='flex items-center'>
                                                                 <p className='text-center grow'>
                                                                     Products
@@ -802,7 +801,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         }
                     </Components.DialogContent>
 
-                    <Components.DialogActions className={`${opportunityId != null ? "absolute bottom-0 right-2" : ""}`}>
+                    <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
                             <Button type={`submit`} text={opportunityId ? "Update" : "Submit"} isLoading={loading} />
                             <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />

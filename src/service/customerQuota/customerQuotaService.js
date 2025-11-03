@@ -13,7 +13,7 @@ export const getAllCustomerQuotas = async (id) => {
 
 export const getQuota = async (id) => {
     try {
-        const response = await axiosInterceptor().get(`${customerQuotaURL}/get/${id}`);
+        const response = await axiosInterceptor().get(`${customerQuotaURL}/getQuota/${id}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching customer quota data:", error);

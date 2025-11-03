@@ -9,12 +9,13 @@ import Input from '../../../components/common/input/input';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../common/select/select';
-import { createSubUser, getCustomer, sendRegisterInvitation, updateSubUser, verifyEmail, verifyUsername } from '../../../service/customers/customersService';
+import { createSubUser, getCustomer, sendRegisterInvitation, updateSubUser, verifyEmail } from '../../../service/customers/customersService';
 import { getAllSubUserTypes } from '../../../service/subUserType/subUserTypeService';
-// import { getAllCRM } from '../../../service/crm/crmService';
-import { createQuota, updateQuota } from '../../../service/customerQuota/customerQuotaService';
 import DatePickerComponent from '../../common/datePickerComponent/datePickerComponent';
 import dayjs from 'dayjs';
+import AddQuotaModel from './addQuotaModel';
+import { deleteQuota, getAllCustomerQuotas } from '../../../service/customerQuota/customerQuotaService';
+import AlertDialog from '../../common/alertDialog/alertDialog';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -25,12 +26,6 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-const terms = [
-    { id: 1, title: "Monthly", value: 1 },
-    { id: 2, title: "Quarterly", value: 3 },
-    { id: 3, title: "Semi-Annual", value: 6 },
-    { id: 4, title: "Yearly", value: 12 },
-]
 
 const calendarType = [
     { id: 1, title: "Calendar Year" },
@@ -45,34 +40,10 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     const [subUsersTypes, setSubUsersTypes] = useState([]);
     const [emailAddress, setEmailAddress] = useState(null);
     const [isEmailExits, setIsEmailExits] = useState(false);
-    // const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    // const [showPasswordRequirement, setShowPasswordRequirement] = useState(false);
-
-    // const [crm, setCrm] = useState([]);
-
-
-    // const [passwordError, setPasswordError] = useState([
-    //     {
-    //         condition: (value) => value.length >= 8,
-    //         message: 'Minimum 8 characters long',
-    //         showError: true,
-    //     },
-    //     {
-    //         condition: (value) => /[a-z]/.test(value),
-    //         message: 'At least one lowercase character',
-    //         showError: true,
-    //     },
-    //     {
-    //         condition: (value) => /[A-Z]/.test(value),
-    //         message: 'At least one uppercase character',
-    //         showError: true,
-    //     },
-    //     {
-    //         condition: (value) => /[\d@$!%*?&]/.test(value),
-    //         message: 'At least one number or special character',
-    //         showError: true,
-    //     },
-    // ]);
+    const [customerQuotaDtos, setCustomerQuotaDto] = useState([])
+    const [openModel, setOpenModel] = useState(false)
+    const [selectedQuotaId, setSelectedQuotaId] = useState(null)
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const {
         handleSubmit,
@@ -95,36 +66,42 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
             startEvalPeriod: null,
             endEvalPeriod: null,
-            quotaId: "",
-            quota: "",
-            term: "",
-            amount1: "",
-            amount2: "",
-            amount3: "",
-            amount4: "",
-            amount5: "",
-            amount6: "",
-            amount7: "",
-            amount8: "",
-            amount9: "",
-            amount10: "",
-            amount11: "",
-            amount12: "",
         },
     });
 
-    // const validatePassword = (value) => {
-    //     const updatedErrors = passwordError.map((error) => ({
-    //         ...error,
-    //         showError: !error.condition(value),
-    //     }));
-    //     setPasswordError(updatedErrors);
-    //     return updatedErrors.every((error) => !error.showError) || 'Password does not meet all requirements.';
-    // };
+    const handleOpenModel = (id = null) => {
+        setSelectedQuotaId(id)
+        setOpenModel(true)
+    }
 
-    // const togglePasswordVisibility = () => {
-    //     setIsPasswordVisible((prev) => !prev);
-    // };
+    const handleCloseModel = () => {
+        setSelectedQuotaId(null)
+        setOpenModel(false)
+    }
+
+    const handleOpenDeleteDialog = (id) => {
+        setSelectedQuotaId(id);
+        setDialog({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this quota?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setSelectedQuotaId(null);
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteQuota = async () => {
+        const res = await deleteQuota(selectedQuotaId);
+        if (res.status === 200) {
+            handleGetUserQuota();
+            handleCloseDeleteDialog();
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to delete contact",
+                type: "error"
+            });
+        }
+    }
 
     const onClose = () => {
         reset({
@@ -140,21 +117,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
             startEvalPeriod: null,
             endEvalPeriod: null,
-            quotaId: "",
-            quota: "",
-            term: "",
-            amount1: "",
-            amount2: "",
-            amount3: "",
-            amount4: "",
-            amount5: "",
-            amount6: "",
-            amount7: "",
-            amount8: "",
-            amount9: "",
-            amount10: "",
-            amount11: "",
-            amount12: "",
         });
         setValidEmail(null);
         setValidUsername(null);
@@ -162,23 +124,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         setEmailAddress(null);
         handleClose();
     };
-
-    // const handleVerifyUsername = async () => {
-    //     const username = watch("username");
-    //     if (username) {
-    //         const response = await verifyUsername(username);
-    //         if (response?.data?.status === 200) {
-    //             setValidUsername(true);
-    //         } else {
-    //             setAlert({
-    //                 open: true,
-    //                 type: "error",
-    //                 message: response?.data?.message || "An error occurred. Please try again.",
-    //             });
-    //             setValidUsername(false);
-    //         }
-    //     }
-    // };
 
     const handleVerifyEmail = async () => {
         const email = watch("emailAddress");
@@ -226,25 +171,18 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                     setValue("endEvalPeriod", lastDay);
                 }
 
-                // setValue("crmId", response?.data?.result?.crmId || null);
-                if (response?.data?.result?.customerQuotaDto) {
-                    setValue("quotaId", response?.data?.result?.customerQuotaDto?.id || "");
-                    setValue("quota", response?.data?.result?.customerQuotaDto?.quota || "");
-                    const termData = terms?.find((item) => item.title === response?.data?.result?.customerQuotaDto?.term);
-                    setValue("term", termData?.id || "");
-                    setValue("amount1", response?.data?.result?.customerQuotaDto?.amount1 || "");
-                    setValue("amount2", response?.data?.result?.customerQuotaDto?.amount2 || "");
-                    setValue("amount3", response?.data?.result?.customerQuotaDto?.amount3 || "");
-                    setValue("amount4", response?.data?.result?.customerQuotaDto?.amount4 || "");
-                    setValue("amount5", response?.data?.result?.customerQuotaDto?.amount5 || "");
-                    setValue("amount6", response?.data?.result?.customerQuotaDto?.amount6 || "");
-                    setValue("amount7", response?.data?.result?.customerQuotaDto?.amount7 || "");
-                    setValue("amount8", response?.data?.result?.customerQuotaDto?.amount8 || "");
-                    setValue("amount9", response?.data?.result?.customerQuotaDto?.amount9 || "");
-                    setValue("amount10", response?.data?.result?.customerQuotaDto?.amount10 || "");
-                    setValue("amount11", response?.data?.result?.customerQuotaDto?.amount11 || "");
-                    setValue("amount12", response?.data?.result?.customerQuotaDto?.amount12 || "");
+            }
+        }
+    }
+
+    const handleGetUserQuota = async () => {
+        if (id && open) {
+            const response = await getAllCustomerQuotas(id);
+            if (response?.status === 200) {
+                if (response?.result) {
+                    setCustomerQuotaDto(response?.result)
                 }
+
             }
         }
     }
@@ -292,22 +230,10 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         }
     }
 
-    // const handleGetAllCrm = async () => {
-    //     if (open) {
-    //         const res = await getAllCRM()
-    //         const data = res?.result?.map((item) => {
-    //             return {
-    //                 id: item.crmId,
-    //                 title: item.name
-    //             }
-    //         })
-    //         setCrm(data)
-    //     }
-    // }
-
     useEffect(() => {
         handleGetSubUserTypes();
         handleGetUser();
+        handleGetUserQuota()
     }, [open]);
 
 
@@ -328,52 +254,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
             if (id) {
                 const res = await updateSubUser(id, newData);
                 if (res?.data.status === 200) {
-                    if (watch("term") !== "" && watch("term") !== null && watch("quota") !== undefined) {
-                        const quotaData = {
-                            customerId: watch("id"),
-                            quota: watch("quota") || "",
-                            term: terms?.find((item) => item.id === watch("term"))?.title || null,
-                            amount1: watch("amount1") || "",
-                            amount2: watch("amount2") || "",
-                            amount3: watch("amount3") || "",
-                            amount4: watch("amount4") || "",
-                            amount5: watch("amount5") || "",
-                            amount6: watch("amount6") || "",
-                            amount7: watch("amount7") || "",
-                            amount8: watch("amount8") || "",
-                            amount9: watch("amount9") || "",
-                            amount10: watch("amount10") || "",
-                            amount11: watch("amount11") || "",
-                            amount12: watch("amount12") || "",
-                        };
-                        if (watch("quotaId")) {
-                            const response = await updateQuota(watch("quotaId"), quotaData);
-                            if (response?.status === 200) {
-                                handleGetAllUsers();
-                                onClose();
-                            } else {
-                                setAlert({
-                                    open: true,
-                                    type: "error",
-                                    message: response?.message || "An error occurred while updating quota. Please try again.",
-                                });
-                                return;
-                            }
-                        } else {
-                            const response = await createQuota(quotaData);
-                            if (response?.status === 201) {
-                                handleGetAllUsers();
-                                onClose();
-                            } else {
-                                setAlert({
-                                    open: true,
-                                    type: "error",
-                                    message: response?.message || "An error occurred while creating quota. Please try again.",
-                                });
-                                return;
-                            }
-                        }
-                    }
                     setSyncingPushStatus(true);
                     handleGetAllUsers();
                     onClose();
@@ -389,37 +269,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                 if (res?.data.status === 201) {
                     setValue("id", res?.data?.result?.id || "");
                     setSyncingPushStatus(true);
-                    if (watch("term") !== "" && watch("term") !== null && watch("quota") !== undefined) {
-                        const quotaData = {
-                            customerId: res?.data?.result?.id,
-                            quota: watch("quota") || "",
-                            term: watch("term") || null,
-                            amount1: watch("amount1") || "",
-                            amount2: watch("amount2") || "",
-                            amount3: watch("amount3") || "",
-                            amount4: watch("amount4") || "",
-                            amount5: watch("amount5") || "",
-                            amount6: watch("amount6") || "",
-                            amount7: watch("amount7") || "",
-                            amount8: watch("amount8") || "",
-                            amount9: watch("amount9") || "",
-                            amount10: watch("amount10") || "",
-                            amount11: watch("amount11") || "",
-                            amount12: watch("amount12") || "",
-                        };
-                        const response = await createQuota(quotaData);
-                        if (response?.status === 201) {
-                            handleGetAllUsers();
-                            onClose();
-                        } else {
-                            setAlert({
-                                open: true,
-                                type: "error",
-                                message: response?.message || "An error occurred while creating quota. Please try again.",
-                            });
-                            return;
-                        }
-                    }
                     handleGetAllUsers();
                     onClose();
                 } else {
@@ -439,6 +288,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
             });
         }
     }
+
     return (
         <React.Fragment>
             <BootstrapDialog
@@ -505,43 +355,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                     )}
                                 />
                             </div>
-
-                            {/* <div>
-                                <Controller
-                                    name="username"
-                                    control={control}
-                                    // rules={{
-                                    //     required: "Username is required",
-                                    //     pattern: {
-                                    //         value: /^\S+$/, // no spaces allowed
-                                    //         message: "Username cannot contain spaces"
-                                    //     }
-                                    // }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Username"
-                                            type="text"
-                                            // error={errors?.username}
-                                            onChange={(e) => {
-                                                // remove spaces as user types
-                                                const value = e.target.value.replace(/\s/g, "");
-                                                field.onChange(value);
-                                            }}
-                                            onBlur={() => {
-                                                handleVerifyUsername();
-                                            }}
-                                            endIcon={
-                                                validUsername === true ? (
-                                                    <CustomIcons iconName={'fa-solid fa-check'} css={`text-green-500`} />
-                                                ) : validUsername === false ? (
-                                                    <CustomIcons iconName={'fa-solid fa-xmark'} css={`text-red-500`} />
-                                                ) : null
-                                            }
-                                        />
-                                    )}
-                                />
-                            </div> */}
                             <div>
                                 <Controller
                                     name="emailAddress"
@@ -583,75 +396,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                     )}
                                 />
                             </div>
-
-                            {/* <div className="relative">
-                                <Controller
-                                    name="password"
-                                    control={control}
-                                    rules={{
-                                        required: (watch("username") != null && watch("username") !== "") ? "Password is required" : false,
-                                        validate: (watch("username") != null && watch("username") !== "") ? {
-                                            minLength: (value) =>
-                                                value.length >= 8 || "Minimum 8 characters long",
-                                            hasLowercase: (value) =>
-                                                /[a-z]/.test(value) || "At least one lowercase character",
-                                            hasUppercase: (value) =>
-                                                /[A-Z]/.test(value) || "At least one uppercase character",
-                                            hasNumberOrSpecial: (value) =>
-                                                /[\d@$!%*?&]/.test(value) || "At least one number or special character",
-                                        } : undefined
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Password"
-                                            type={isPasswordVisible ? "text" : "password"}
-                                            error={errors?.password?.message}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\s/g, "");
-                                                field.onChange(value);
-                                                validatePassword(value);
-                                            }}
-                                            onFocus={() => setShowPasswordRequirement(true)}
-                                            onBlur={() => setShowPasswordRequirement(false)}
-                                            endIcon={
-                                                <span
-                                                    onClick={togglePasswordVisibility}
-                                                    style={{ cursor: "pointer", color: "black" }}
-                                                >
-                                                    {isPasswordVisible ? (
-                                                        <CustomIcons iconName="fa-solid fa-eye" css="cursor-pointer text-black" />
-                                                    ) : (
-                                                        <CustomIcons iconName="fa-solid fa-eye-slash" css="cursor-pointer text-black" />
-                                                    )}
-                                                </span>
-                                            }
-                                        />
-                                    )}
-                                />
-
-                                {
-                                    showPasswordRequirement && (
-                                        <div
-                                            className={`absolute -top-44 border-2 bg-white shadow z-[9999] md:w-96 rounded-md p-2 transform ${showPasswordRequirement ? 'translate-y-12 opacity-100' : 'translate-y-0 opacity-0'}`}
-                                        >
-                                            {passwordError.map((error, index) => (
-                                                <div key={index} className="flex items-center">
-                                                    <p className="grow text-black text-sm">{error.message}</p>
-                                                    <p>
-                                                        {error.showError ? (
-                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-red-600' />
-                                                        ) : (
-                                                            <CustomIcons iconName={'fa-solid fa-check'} css='cursor-pointer text-green-600' />
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                    )
-                                }
-                            </div> */}
 
                             <div>
                                 <Controller
@@ -722,96 +466,82 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                     </div>
                                 )
                             }
-                            <div>
-                                <Controller
-                                    name="quota"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Quota"
-                                            type={`text`}
-                                            onChange={(e) => {
-                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                field.onChange(numericValue);
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-
-                            <div>
-                                <Controller
-                                    name="term"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={terms}
-                                            label="Term"
-                                            placeholder="Select term"
-                                            value={parseInt(watch("term")) || null}
-                                            onChange={(_, newValue) => {
-                                                field.onChange(newValue?.id || null)
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-
-                            {(() => {
-                                const selectedTerm = terms.find(t => t.id === parseInt(watch("term")));
-                                const count = selectedTerm?.value || 0;
-
-                                return Array.from({ length: count }, (_, index) => (
-                                    <div key={index}>
-                                        <Controller
-                                            name={`amount${index + 1}`}
-                                            control={control}
-                                            rules={{
-                                                required: watch("term") ? `Amount ${index + 1} is required` : false
-                                            }}
-                                            render={({ field }) => (
-                                                <Input
-                                                    {...field}
-                                                    label={`Amount ${index + 1}`}
-                                                    type="text"
-                                                    onChange={(e) => {
-                                                        const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                        field.onChange(numericValue);
-                                                    }}
-                                                    error={errors?.[`amount${index + 1}`]}
-                                                />
-                                            )}
-                                        />
-                                    </div>
-                                ));
-                            })()}
-
-                            {/* <div>
-                                <Controller
-                                    name="crmId"
-                                    control={control}
-                                    rules={{
-                                        required: "CRM is required"
-                                    }}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={crm}
-                                            label={"CRM"}
-                                            placeholder="Select CRM"
-                                            value={parseInt(watch("crmId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue("crmId", null);
+                            {
+                                id && (
+                                    <div className='col-span-2'>
+                                        <div className="max-h-56 overflow-y-auto">
+                                            <table className="min-w-full border-collapse border">
+                                                <thead className="bg-gray-50 sticky top-0 z-10 ">
+                                                    <tr>
+                                                        <th colSpan={5} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-50 sticky top-0 border-b">
+                                                            <div className='flex items-center'>
+                                                                <p className='text-center grow'>
+                                                                    Quota Details
+                                                                </p>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenModel()}>
+                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            #
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Term
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Quota
+                                                        </th>
+                                                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Actions
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                {
+                                                    customerQuotaDtos?.length > 0 ? (
+                                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                                            {customerQuotaDtos?.map((row, i) => (
+                                                                <tr key={i} className="hover:bg-gray-50">
+                                                                    <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.term || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.quota || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">
+                                                                        <div className='flex items-center gap-2 justify-end h-full'>
+                                                                            <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenModel(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    ) : (
+                                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                                            <tr className="hover:bg-gray-50">
+                                                                <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                                    No records
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    )
                                                 }
-                                            }}
-                                            error={errors?.crmId}
-                                        />
-                                    )}
-                                />
-                            </div> */}
+                                            </table>
+                                        </div>
+                                    </div>
+                                )
+                            }
+
                         </div>
                         <div className='w-60 mt-5'>
                             {
@@ -833,6 +563,15 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                     </Components.DialogActions>
                 </form>
             </BootstrapDialog>
+            <AddQuotaModel open={openModel} handleClose={handleCloseModel} customerId={id} id={selectedQuotaId} startEvalPeriod={watch("startEvalPeriod")} endEvalPeriod={watch("endEvalPeriod")} handleGetUser={handleGetUser} handleGetAllQuota={handleGetUserQuota} />
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleDeleteQuota()}
+                handleClose={() => handleCloseDeleteDialog()}
+            />
         </React.Fragment>
     );
 }
