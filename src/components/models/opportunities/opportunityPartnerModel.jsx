@@ -79,8 +79,9 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
     const handleGetOppPartner = async () => {
         if (open && id) {
             const res = await getOpportunitiesPartner(id);
-            if (res?.status === 200) {                
+            if (res?.status === 200) {
                 reset(res.result)
+                setValue("roleid", partnerRoles?.find((row) => row.title === res.result?.role)?.id || null)
             }
         }
     };

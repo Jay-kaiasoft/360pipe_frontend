@@ -171,6 +171,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         if (selectedContactId) {
             const res = await deleteOpportunitiesContact(selectedContactId);
             if (res?.status === 200) {
+                setSyncingPushStatus(true)
                 handleGetOppContacts()
                 handleCloseDeleteContactDialog()
             } else {
@@ -332,6 +333,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         try {
             const res = await updateOpportunitiesContact(editedContacts)
             if (res.status === 200) {
+                setSyncingPushStatus(true)
                 setAlert({ open: true, type: "success", message: "Contacts updated" });
                 await handleGetOppContacts();
             } else {

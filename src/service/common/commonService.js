@@ -23,7 +23,9 @@ export const partnerRoles = [
     { id: 10, title: "Institution" },
     { id: 11, title: "Contractor" },
     { id: 12, title: "Dealer" },
-    { id: 13, title: "Consultant" }
+    { id: 13, title: "Consultant" },
+    { id: 14, title: "Vendor" },
+    { id: 15, title: "Client" },
 ];
 
 export const opportunityStages = [

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { connect } from 'react-redux';
-import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
 import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
@@ -19,11 +19,10 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, handleGetAllOppContact }) {
+function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, handleGetAllOppContact, setSyncingPushStatus }) {
     const theme = useTheme()
     const [contacts, setContacts] = useState([])
     const [selectedRows, setSetectedRows] = useState([])
-
     const onClose = () => {
         setSetectedRows([])
         setContacts([])
@@ -33,7 +32,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
     const handleGetAllContact = async () => {
         if (open) {
             const res = await getAllContacts()
-            const data = res?.result?.map((item, row) => {
+            const data = res?.result?.map((item) => {
                 return {
                     id: item.id,
                     title: item?.firstName + " " + item?.lastName,
@@ -41,6 +40,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
                     contactId: item.id,
                     isKey: false,
                     isAdd: false,
+                    salesforceOpportunityContactId: item?.salesforceContactId
                 }
             })
             setContacts(data)
@@ -53,7 +53,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
         setContacts(prev => {
             const next = prev.map(item =>
                 item.contactId === row.contactId
-                    ? { ...item, isAdd: checked, isKey: checked ? item.isKey : false } // unselect clears key
+                    ? { ...item, isAdd: checked, isKey: checked ? item.isKey : false, salesforceOpportunityContactId: item?.salesforceOpportunityContactId } // unselect clears key
                     : item
             );
             setSetectedRows(next.filter(c => c.isAdd));
@@ -79,7 +79,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
 
             const next = prev.map(item =>
                 item.contactId === row.contactId
-                    ? { ...item, isKey: checked, isAdd: true } // keep selected if keying
+                    ? { ...item, isKey: checked, isAdd: true, salesforceOpportunityContactId: item?.salesforceOpportunityContactId } // keep selected if keying
                     : item
             );
 
@@ -98,6 +98,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
     const submit = async () => {
         const res = await addOpportunitiesContact(selectedRows)
         if (res?.status === 201) {
+            setSyncingPushStatus(true)
             handleGetAllOppContact()
             onClose()
         } else {
@@ -229,6 +230,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
 
 const mapDispatchToProps = {
     setAlert,
+    setSyncingPushStatus
 };
 
 export default connect(null, mapDispatchToProps)(OpportunityContactModel)
