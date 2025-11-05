@@ -2,16 +2,23 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import dayjs from 'dayjs';
 
 import Input from '../../../components/common/input/input';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 import Button from '../../../components/common/buttons/button';
+import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 
 import { getCustomer, updateCustomer, verifyEmail, verifyUsername } from '../../../service/customers/customersService';
 import { getAllStateByCountry } from '../../../service/state/stateService';
 import { getAllCountry } from '../../../service/country/countryService';
 import { getUserDetails } from '../../../utils/getUserDetails';
+
+const calendarType = [
+    { id: 1, title: "Calendar Year" },
+    { id: 2, title: "Financial Year" },
+]
 
 const Profile = ({ setAlert }) => {
     const data = getUserDetails();
@@ -42,6 +49,10 @@ const Profile = ({ setAlert }) => {
             state: "",
             country: "",
             zipCode: "",
+            calendarYearType: "",
+
+            startEvalPeriod: null,
+            endEvalPeriod: null,
         },
     });
 
@@ -111,14 +122,28 @@ const Profile = ({ setAlert }) => {
     const handleGetUserDetails = async () => {
         const res = await getCustomer(data?.userId);
         if (res?.data?.status === 200) {
-            reset(res?.data?.result);
-            // const selectedCountry = countrys?.find((row) => row?.title === res?.data?.result?.country) || null
-            // console.log("selectedCountry", selectedCountry)
-            // handleGetAllStatesByCountryId(selectedCountry?.id);
+            reset(res?.data?.result);            
+            setValue("calendarYearType", res?.data?.result?.calendarYearType ? calendarType?.find((item) => item.title === res?.data?.result?.calendarYearType)?.id : null);
+            if (res?.data?.result?.calendarYearType) {
+                setValue("startEvalPeriod", res?.data?.result?.startEvalPeriod)
+                setValue("endEvalPeriod", res?.data?.result?.endEvalPeriod)
+            } else {
+                const currentYear = dayjs().year();
+                const firstDay = dayjs(`${currentYear}-01-01`).format("MM/DD/YYYY");
+                const lastDay = dayjs(`${currentYear}-12-31`).format("MM/DD/YYYY");
+                setValue("startEvalPeriod", firstDay);
+                setValue("endEvalPeriod", lastDay);
+            }
         }
     }
 
-    const onSubmit = async (newData) => {
+    const onSubmit = async (values) => {
+        const newData = {
+            ...values,
+            calendarYearType: calendarType?.find((item) => item.id === watch("calendarYearType"))?.title || "",
+            startEvalPeriod: watch("startEvalPeriod"),
+            endEvalPeriod: watch("endEvalPeriod"),
+        }
         const res = await updateCustomer(data?.userId, newData);
         if (res?.data?.status === 200) {
             setAlert({
@@ -397,6 +422,40 @@ const Profile = ({ setAlert }) => {
                                 )}
                             />
                         </div>
+
+                        <div>
+                            <Controller
+                                name="calendarYearType"
+                                control={control}
+                                rules={{ required: "Calendar Year Type is required" }}
+                                render={({ field }) => (
+                                    <Select
+                                        options={calendarType}
+                                        label="Calendar Type"
+                                        placeholder="Select calendar type"
+                                        value={parseInt(watch("calendarYearType")) || null}
+                                        onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                        error={errors?.calendarYearType}
+                                    />
+                                )}
+                            />
+                        </div>
+
+                        {
+                            watch("calendarYearType") && (
+                                <div>
+                                    <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
+                                </div>
+                            )
+                        }
+
+                        {
+                            watch("calendarYearType") && (
+                                <div>
+                                    <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                </div>
+                            )
+                        }
                     </div>
                 </div>
 

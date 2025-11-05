@@ -40,7 +40,8 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
                     contactId: item.id,
                     isKey: false,
                     isAdd: false,
-                    salesforceOpportunityContactId: item?.salesforceContactId
+                    salesforceContactId: item?.salesforceContactId,
+                    isDeleted: false
                 }
             })
             setContacts(data)
@@ -53,7 +54,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
         setContacts(prev => {
             const next = prev.map(item =>
                 item.contactId === row.contactId
-                    ? { ...item, isAdd: checked, isKey: checked ? item.isKey : false, salesforceOpportunityContactId: item?.salesforceOpportunityContactId } // unselect clears key
+                    ? { ...item, isAdd: checked, isKey: checked ? item.isKey : false, salesforceContactId: item?.salesforceContactId, isDeleted: false } // unselect clears key
                     : item
             );
             setSetectedRows(next.filter(c => c.isAdd));
@@ -79,7 +80,7 @@ function OpportunityContactModel({ setAlert, open, handleClose, opportunityId, h
 
             const next = prev.map(item =>
                 item.contactId === row.contactId
-                    ? { ...item, isKey: checked, isAdd: true, salesforceOpportunityContactId: item?.salesforceOpportunityContactId } // keep selected if keying
+                    ? { ...item, isKey: checked, isAdd: true, salesforceContactId: item?.salesforceContactId, isDeleted: false } // keep selected if keying
                     : item
             );
 

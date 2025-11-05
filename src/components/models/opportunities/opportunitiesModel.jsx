@@ -267,19 +267,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         }
     }
 
-    // 2) AFTER you load contacts (inside handleGetOppContacts)
     const handleGetOppContacts = async () => {
-        const res = await getAllOpportunitiesContact(opportunityId);
-        const list = Array.isArray(res?.result) ? res.result : [];
-        setOpportunitiesContacts(list);
+        if (open && opportunityId) {
+            const res = await getAllOpportunitiesContact(opportunityId);
+            const list = Array.isArray(res?.result) ? res.result : [];
+            setOpportunitiesContacts(list);
 
-        // build original map
-        const map = {};
-        list.forEach(c => {
-            if (c?.id != null) map[c.id] = !!c.isKey;
-        });
-        setInitialIsKey(map);
-        setEditedContacts([]); // reset edits when refreshed
+            // build original map
+            const map = {};
+            list.forEach(c => {
+                if (c?.id != null) map[c.id] = !!c.isKey;
+            });
+            setInitialIsKey(map);
+            setEditedContacts([]); // reset edits when refreshed
+        }
     };
 
     const handleToggleKeyContact = (rowId) => {

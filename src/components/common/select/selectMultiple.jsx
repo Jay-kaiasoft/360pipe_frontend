@@ -89,29 +89,50 @@ const SelectMultiple = forwardRef(
                     />
                 )}
                 // ✅ Use `slotProps` instead of deprecated `componentsProps`
-                slotProps={{
+                // slotProps={{
+                //     paper: {
+                //         sx: {
+                //             "& .MuiAutocomplete-option": {
+                //                 padding: "0.5rem 1rem",
+                //                 transition: "background-color 0.2s, color 0.2s",
+                //                 // hover effect
+                //                 "&:hover": {
+                //                     backgroundColor: theme.palette.secondary.main,
+                //                     color: "#fff",
+                //                 },
+                //                 // when focused by keyboard
+                //                 "&.Mui-focused": {
+                //                     backgroundColor: theme.palette.secondary.main,
+                //                     color: "#fff",
+                //                 },
+                //                 // when selected
+                //                 "&[aria-selected='true'], &.Mui-selected": {
+                //                     backgroundColor: theme.palette.secondary.main,
+                //                     color: "#fff",
+                //                     "&:hover": {
+                //                         backgroundColor: theme.palette.secondary.main,
+                //                         color: "#fff",
+                //                     },
+                //                 },
+                //             },
+                //         },
+                //     },
+                // }}
+                componentsProps={{
                     paper: {
                         sx: {
-                            "& .MuiAutocomplete-option": {
-                                padding: "0.5rem 1rem",
-                                transition: "background-color 0.2s, color 0.2s",
-                                // hover effect
-                                "&:hover": {
-                                    backgroundColor: theme.palette.secondary.main,
-                                    color: "#fff",
+                            '& .MuiAutocomplete-option': {
+                                padding: '0.5rem 1rem',
+                                color: `${theme.palette.text.primary} !important`,
+                                '&:hover': {
+                                    backgroundColor: `${theme.palette.secondary.main} !important`,
+                                    color: `#ffffff !important`,
                                 },
-                                // when focused by keyboard
-                                "&.Mui-focused": {
-                                    backgroundColor: theme.palette.secondary.main,
-                                    color: "#fff",
-                                },
-                                // when selected
-                                "&[aria-selected='true'], &.Mui-selected": {
-                                    backgroundColor: theme.palette.secondary.main,
-                                    color: "#fff",
-                                    "&:hover": {
-                                        backgroundColor: theme.palette.secondary.main,
-                                        color: "#fff",
+                                '&[aria-selected="true"]': {
+                                    backgroundColor: `${theme.palette.secondary.main} !important`,
+                                    color: `#ffffff !important`,
+                                    '& .MuiCheckbox-root': {
+                                        color: `#ffffff !important`,
                                     },
                                 },
                             },

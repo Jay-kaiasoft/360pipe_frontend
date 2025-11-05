@@ -7,6 +7,7 @@ import Security from "./security";
 import ChangePassword from "./changePassword";
 import CreditCard from "./creditCard";
 import { getUserDetails } from "../../../utils/getUserDetails";
+import Quota from "./quota";
 
 const UserProfile = () => {
     const userdata = getUserDetails();
@@ -14,7 +15,7 @@ const UserProfile = () => {
 
     const [selectedTab, setSelectedTab] = useState(0);
     const handleChangeTab = (value) => {
-        
+
         setSelectedTab(value);
     }
 
@@ -34,6 +35,9 @@ const UserProfile = () => {
             },
             {
                 label: 'Credit Card Details', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
+            },
+            {
+                label: 'Quota', icon: <CustomIcons iconName="fa-solid fa-credit-card" />
             },
         ])
         // if (userdata?.rolename.toLowerCase() === 'sales representive') {
@@ -73,6 +77,9 @@ const UserProfile = () => {
                 }
                 {
                     selectedTab === 4 && <CreditCard />
+                }
+                {
+                    selectedTab === 5 && <Quota />
                 }
             </div>
         </>
