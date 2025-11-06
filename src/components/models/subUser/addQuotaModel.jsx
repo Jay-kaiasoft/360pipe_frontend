@@ -238,8 +238,8 @@ function AddQuotaModel({ open, handleClose, customerId, id, handleGetAllQuota, s
                                     render={({ field }) => (
                                         <Select
                                             options={terms}
-                                            label="Term"
-                                            placeholder="Select term"
+                                            label="Period"
+                                            placeholder="Select period"
                                             value={parseInt(watch('term')) || null}
                                             onChange={(_, newValue) => {
                                                 // Clear all amount fields when term changes

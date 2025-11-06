@@ -1,6 +1,16 @@
 import { opportunityURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
+export const getOpportunityOptions = async () => {
+    try {
+        const response = await axiosInterceptor().get(`${opportunityURL}/get/all/options`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching opportunities:", error);
+        throw error;
+    }
+};
+
 export const getAllOpportunities = async (params) => {
     try {
         const response = await axiosInterceptor().get(`${opportunityURL}/get/all${params ? `?${params}` : ''}`);

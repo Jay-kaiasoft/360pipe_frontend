@@ -15,6 +15,8 @@ export default function DataTable({
     checkboxSelection = false,
     showSearch = false,
     showButtons = false,
+    showFilters = false,
+    filtersComponent = null,
     rows,
     columns,
     getRowId,
@@ -145,12 +147,17 @@ export default function DataTable({
     if (allowSorting) {
         return (
             <div>
-                {(showSearch || showButtons) && (
+                {(showSearch || showButtons || showFilters) && (
                     <div className="border border-1 py-4 px-5 rounded-lg rounded-b-none grid md:grid-cols-2">
-                        <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
+                        {/* <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
                             {showSearch && (
                                 <Input name="search" label="Search" endIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
                             )}
+                        </div> */}
+                        <div className='bg-black w-96'>
+                            {
+                                showFilters && filtersComponent && (filtersComponent())
+                            }
                         </div>
                         <div className="w-full flex justify-end md:justify-end items-center gap-3">
                             {showButtons && buttons && buttons()}
@@ -165,14 +172,21 @@ export default function DataTable({
     // Only render DataGrid if allowSorting is false
     return (
         <>
-            {(showSearch || showButtons) && (
-                <div className="border border-1 py-4 px-5 rounded-lg rounded-b-none grid md:grid-cols-2">
-                    <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
+            {(showSearch || showButtons || showFilters) && (
+                <div className="border border-1 py-4 px-5 rounded-lg rounded-b-none flex justify-between items-center gap-4">
+                    <div className='grow'>
                         {showSearch && (
-                            <Input name="search" label="Search" endIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
+                            <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
+                                <Input name="search" label="Search" endIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
+                            </div>
                         )}
+                        <div>
+                            {
+                                showFilters && filtersComponent && (filtersComponent())
+                            }
+                        </div>
                     </div>
-                    <div className="w-full flex justify-end md:justify-end items-center gap-3">
+                    <div>
                         {showButtons && buttons && buttons()}
                     </div>
                 </div>

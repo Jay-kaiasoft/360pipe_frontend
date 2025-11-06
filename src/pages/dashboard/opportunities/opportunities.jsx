@@ -7,10 +7,11 @@ import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { deleteOpportunity, getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
+import { deleteOpportunity, getAllOpportunities, getOpportunityOptions } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
 import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
+import SelectMultiple from '../../../components/common/select/selectMultiple';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -19,10 +20,56 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [open, setOpen] = useState(false);
     const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
+    const [selectedOppName, setSelectedOppName] = useState([])
+    const [selectedOppStage, setSelectedOppStage] = useState([])
+
+    const handleGetOpportunityOptions = async () => {
+        const res = await getOpportunityOptions()
+        setOpportunitiesOptions(res?.result[0])
+    }
+
+    const handleSetName = (event) => {
+        setSelectedOppName(event)
+    }
+
+    const handleSetStages = (event) => {
+        setSelectedOppStage(event)
+    }
 
     const handleGetOpportunities = async () => {
         try {
-            const opportunities = await getAllOpportunities();
+            let opportunityName = []
+            let opportunityStages = []
+
+            if (selectedOppName?.length > 0) {
+                opportunityName = opportunitiesOptions?.opportunitiesNameOptions
+                    ?.map((row) => selectedOppName?.includes(row.id) ? row.title : undefined)
+                    .filter(Boolean);
+            }
+            if (selectedOppStage?.length > 0) {
+                opportunityStages = opportunitiesOptions?.opportunitiesStagesOptions
+                    ?.map((row) => selectedOppStage?.includes(row.id) ? row.title : undefined)
+                    .filter(Boolean);
+            }
+            let params = {
+                opportunity: opportunityName,   // can be ['Opp 1', 'Opp 2']
+                salesStage: opportunityStages,  // can be ['Closed', 'Negotiation']
+            };
+
+            const searchParams = new URLSearchParams();
+
+            // Append each array properly
+            if (params.opportunity?.length) {
+                params.opportunity.forEach((item) => searchParams.append("opportunity", item));
+            }
+            if (params.salesStage?.length) {
+                params.salesStage.forEach((item) => searchParams.append("salesStage", item));
+            }
+
+            const queryString = searchParams.toString();
+
+            const opportunities = await getAllOpportunities(queryString);
             const formattedOpportunities = opportunities?.result?.map((opportunity, index) => ({
                 ...opportunity,
                 rowId: index + 1
@@ -74,8 +121,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     }
 
     useEffect(() => {
-        handleGetOpportunities();
+        handleGetOpportunityOptions()
+        // handleGetOpportunities();
     }, []);
+
+    useEffect(() => {
+        handleGetOpportunities()
+    }, [selectedOppName, selectedOppStage])
 
     useEffect(() => {
         if (syncingPullStatus && location.pathname === '/dashboard/opportunities') {
@@ -188,10 +240,35 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         )
     }
 
+    const filterComponent = () => {
+        return (
+            <div className='w-[550px] flex justify-start items-center gap-4'>
+                <div className='w-full'>
+                    <SelectMultiple
+                        label="Opportunity name"
+                        placeholder="Select opportunity name"
+                        options={opportunitiesOptions?.opportunitiesNameOptions || []}
+                        value={selectedOppName}
+                        onChange={handleSetName}
+                    />
+                </div>
+                <div className='w-full'>
+                    <SelectMultiple
+                        label="Opportunity stages"
+                        placeholder="Select opportunity stages"
+                        options={opportunitiesOptions?.opportunitiesStagesOptions || []}
+                        value={selectedOppStage}
+                        onChange={handleSetStages}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
+                <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} />
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             <AlertDialog
