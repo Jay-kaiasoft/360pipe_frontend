@@ -60,3 +60,13 @@ export const deleteOpportunity = async (opportunityId) => {
         throw error;
     }
 };
+
+export const deleteOpportunityLogo = async (opportunityId) => {
+    try {
+        const response = await axiosInterceptor().delete(`${opportunityURL}/deleteLogo/${opportunityId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting opportunity logo:", error);
+        throw error;
+    }
+};

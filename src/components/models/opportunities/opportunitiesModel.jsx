@@ -11,9 +11,9 @@ import Input from '../../../components/common/input/input';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
-import { createOpportunity, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { createOpportunity, deleteOpportunityLogo, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { opportunityStages, opportunityStatus, partnerRoles } from '../../../service/common/commonService';
+import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
 import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 import AlertDialog from '../../common/alertDialog/alertDialog';
 import OpportunitiesPartnersModel from "./opportunityPartnerModel";
@@ -22,6 +22,8 @@ import OpportunitiesProductsModel from './opportunitiesProductsModel';
 import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import Checkbox from '../../common/checkBox/checkbox';
 import OpportunityContactModel from './opportunityContactModel';
+import FileInputBox from '../../fileInputBox/fileInputBox';
+import { getUserDetails } from '../../../utils/getUserDetails';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -33,6 +35,8 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
 }));
 
 function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, setSyncingPushStatus }) {
+    const userdata = getUserDetails();
+
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -54,6 +58,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [openContactModel, setOpenContactModel] = useState(false);
     const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedContactId, setSelectedContactId] = useState(null);
+    const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
 
     const handleOpenContactModel = () => {
         setOpenContactModel(true);
@@ -73,9 +79,18 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         setOpenPartnerModel(false);
     };
 
+    const handleOpenDeleteLogoDialog = () => {
+        setDialogLogo({ open: true, title: 'Delete Logo', message: 'Are you sure! Do you want to delete this logo?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteLogoDialog = () => {
+        setDialogLogo({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+
     const handleOpenDeleteDialog = (id) => {
         setSelectedOppPartnerId(id);
-        setDialog({ open: true, title: 'Delete Partner', message: 'Are you sure! Do you want to delete this partner?', actionButtonText: 'yes' });
+        setDialog({ open: true, title: 'Delete Partner', message: 'Are you sure! Do you want to delete this logo?', actionButtonText: 'yes' });
     }
 
     const handleCloseDeleteDialog = () => {
@@ -130,8 +145,31 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             accountId: null,
             salesforceOpportunityId: null,
             status: 1,
+            logo: null,
+            newLogo: null
         },
     });
+
+    const handleDeleteOppLogo = async () => {
+        if (opportunityId && watch("logo")) {
+            const res = await deleteOpportunityLogo(opportunityId);
+            if (res?.status === 200) {
+                setValue("newLogo", null)
+                setValue("logo", null)
+                handleCloseDeleteLogoDialog()
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete opportunity logo",
+                    type: "error"
+                });
+            }
+        }
+        if (watch("newLogo")) {
+            setValue("newLogo", null)
+            handleCloseDeleteLogoDialog()
+        }
+    }
 
     const handleDeletePartner = async () => {
         if (selectedOppPartnerId) {
@@ -195,6 +233,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             nextSteps: null,
             salesforceOpportunityId: null,
             status: 1,
+            logo: null,
+            newLogo: null
         });
         handleClose();
     };
@@ -212,6 +252,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setValue("salesforceOpportunityId", res?.result?.salesforceOpportunityId || null);
                 setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.id || null);
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
+                setValue("logo", res?.result?.logo)
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
@@ -328,8 +369,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         });
     };
 
-
-    // 4) BULK UPDATE HANDLER (wire to your API as needed)
     const handleBulkUpdateKeyContacts = async () => {
         try {
             const res = await updateOpportunitiesContact(editedContacts)
@@ -353,12 +392,34 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         handleGetOpportunityDetails()
     }, [open])
 
+    const handleImageChange = async (file) => {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);                    // <-- send the File object
+        formData.append("folderName", "oppLogo");
+        formData.append("userId", String(userdata?.userId || ""));
+
+        // IMPORTANT: don't set Content-Type; the browser sets multipart boundary
+        uploadFiles(formData).then((res) => {
+            if (res.data.status === 200) {
+                const { imageURL } = res?.data?.result?.[0] || {};
+                setValue("logo", null)
+                setValue("newLogo", imageURL || "");
+            } else {
+                setAlert({ open: true, message: res?.data?.message, type: "error" });
+            }
+        });
+    };
+
+
     const submit = async (data) => {
         setLoading(true);
         const newData = {
             ...data,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
+            newLogo: watch("newLogo")
         }
         try {
             if (opportunityId) {
@@ -368,11 +429,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                         setSyncingPushStatus(true);
                     }
                     setLoading(false);
-                    setAlert({
-                        open: true,
-                        message: "Opportunity updated successfully",
-                        type: "success"
-                    });
                     handleGetAllOpportunities();
                     onClose();
                 } else {
@@ -388,11 +444,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 if (res?.status === 201) {
                     setSyncingPushStatus(true);
                     setLoading(false);
-                    setAlert({
-                        open: true,
-                        message: "Opportunity created successfully",
-                        type: "success"
-                    });
                     handleGetAllOpportunities();
                     onClose();
                 } else {
@@ -420,7 +471,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullScreen={opportunityId != null}
-                maxWidth={opportunityId ? 'lg' : "md"}
+                maxWidth={opportunityId ? 'lg' : "lg"}
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {opportunityId ? "Update" : "Create"} Opportunity
@@ -441,128 +492,140 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4`}>
-                            <Controller
-                                name="accountId"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        options={accounts}
-                                        label={"Account"}
-                                        placeholder="Select Account"
-                                        value={parseInt(watch("accountId")) || null}
-                                        onChange={(_, newValue) => {
-                                            if (newValue?.id) {
-                                                field.onChange(newValue.id);
-                                            } else {
-                                                setValue("accountId", null);
-                                            }
-                                        }}
+                        <div className='grid grid-cols-5 gap-4'>
+                            <div className='flex justify-center items-center'>
+                                <FileInputBox
+                                    onFileSelect={handleImageChange}
+                                    onRemove={handleOpenDeleteLogoDialog}
+                                    value={watch("logo") || watch("newLogo")}
+                                    text="Upload opportunity Logo"
+                                />
+                            </div>
+                            <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4 col-span-4`}>
+                                <div className='col-span-2'>
+                                    <Controller
+                                        name="accountId"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={accounts}
+                                                label={"Account"}
+                                                placeholder="Select Account"
+                                                value={parseInt(watch("accountId")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue("accountId", null);
+                                                    }
+                                                }}
+                                            />
+                                        )}
                                     />
-                                )}
-                            />
-                            <Controller
-                                name="opportunity"
-                                control={control}
-                                rules={{
-                                    required: "Opportunity name is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Opportunity Name"
-                                        type={`text`}
-                                        error={errors.opportunity}
-                                        onChange={(e) => {
-                                            field.onChange(e);
-                                        }}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="dealAmount"
-                                control={control}
-                                rules={{
-                                    required: "Deal amount is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Deal Amount"
-                                        type={`text`}
-                                        error={errors.dealAmount}
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/\D/g, '');
-                                            field.onChange(value);
-                                        }}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="salesStage"
-                                control={control}
-                                rules={{
-                                    required: "Sales stage is required",
-                                }}
-                                render={({ field }) => (
-                                    <Select
-                                        options={opportunityStages}
-                                        label={"Stage"}
-                                        placeholder="Select Stage"
-                                        value={parseInt(watch("salesStage")) || null}
-                                        error={errors.salesStage}
-                                        onChange={(_, newValue) => {
-                                            if (newValue?.id) {
-                                                field.onChange(newValue.id);
-                                            } else {
-                                                setValue("salesStage", null);
-                                            }
-                                        }}
-                                    />
-                                )}
-                            />
-                            <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
-                            <Controller
-                                name="nextSteps"
-                                control={control}
-                                rules={{
-                                    required: "Next steps is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Next Steps"
-                                        type={`text`}
-                                        error={errors.nextSteps}
-                                        onChange={(e) => {
-                                            field.onChange(e.target.value);
-                                        }}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="status"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        options={opportunityStatus}
-                                        label={"Status"}
-                                        placeholder="Select status"
-                                        value={parseInt(watch("status")) || null}
-                                        onChange={(_, newValue) => {
-                                            if (newValue?.id) {
-                                                field.onChange(newValue.id);
-                                            } else {
-                                                setValue("status", null);
-                                            }
-                                        }}
-                                    />
-                                )}
-                            />
+                                </div>
+                                <Controller
+                                    name="opportunity"
+                                    control={control}
+                                    rules={{
+                                        required: "Opportunity name is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Opportunity Name"
+                                            type={`text`}
+                                            error={errors.opportunity}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="dealAmount"
+                                    control={control}
+                                    rules={{
+                                        required: "Deal amount is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Deal Amount"
+                                            type={`text`}
+                                            error={errors.dealAmount}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/\D/g, '');
+                                                field.onChange(value);
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="salesStage"
+                                    control={control}
+                                    rules={{
+                                        required: "Sales stage is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Select
+                                            options={opportunityStages}
+                                            label={"Stage"}
+                                            placeholder="Select Stage"
+                                            value={parseInt(watch("salesStage")) || null}
+                                            error={errors.salesStage}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("salesStage", null);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
+                                <Controller
+                                    name="nextSteps"
+                                    control={control}
+                                    rules={{
+                                        required: "Next steps is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Next Steps"
+                                            type={`text`}
+                                            error={errors.nextSteps}
+                                            onChange={(e) => {
+                                                field.onChange(e.target.value);
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            options={opportunityStatus}
+                                            label={"Status"}
+                                            placeholder="Select status"
+                                            value={parseInt(watch("status")) || null}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("status", null);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </div>
                         </div>
 
                         {opportunityId != null && (
-                            <div className="border-b-2 border-gray-600 mb-6"></div>
+                            <div className="border-b-2 border-gray-600 my-6"></div>
                         )}
                         {
                             opportunityId != null && (
@@ -835,6 +898,14 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 actionButtonText={dialogContact.actionButtonText}
                 handleAction={() => handleDeleteContact()}
                 handleClose={() => handleCloseDeleteContactDialog()}
+            />
+            <AlertDialog
+                open={dialogLogo.open}
+                title={dialogLogo.title}
+                message={dialogLogo.message}
+                actionButtonText={dialogLogo.actionButtonText}
+                handleAction={() => handleDeleteOppLogo()}
+                handleClose={() => handleCloseDeleteLogoDialog()}
             />
             <OpportunitiesPartnersModel open={openPartnerModel} handleClose={handleClosePartnerModel} id={selectedOppPartnerId} opportunityId={opportunityId} handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner} />
             <OpportunitiesProductsModel open={openProductModel} handleClose={handleCloseProductModel} id={selectedProductId} opportunityId={opportunityId} handleGetAllOpportunitiesProducts={handleGetOppProduct} />
