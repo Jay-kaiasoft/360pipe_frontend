@@ -71,7 +71,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         path: "/dashboard/managemails",
       },
       {
-        label: "Products",
+        label: "Products & Service",
         path: "/dashboard/products",
       },
     ]

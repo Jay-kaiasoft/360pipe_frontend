@@ -1,8 +1,8 @@
 import React, { forwardRef } from 'react';
-import { useTheme } from '@mui/material';
+import { InputAdornment, useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 
-const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon, InputLabelProps, onFocus, onBlur}, ref) => {
+const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur }, ref) => {
     const theme = useTheme();
     return (
         <Components.TextField
@@ -36,17 +36,17 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
                     },
                 },
                 '& .MuiInputLabel-root': {
-                    color: error ? theme.palette.error.main : theme.palette.text.primary ,
+                    color: error ? theme.palette.error.main : theme.palette.text.primary,
                     textTransform: "capitalize"
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                    color: error ? theme.palette.error.main : theme.palette.text.primary ,
+                    color: error ? theme.palette.error.main : theme.palette.text.primary,
                 },
                 '& .MuiInputBase-input': {
-                    color: theme.palette.text.primary ,
+                    color: theme.palette.text.primary,
                 },
                 '& .Mui-disabled': {
-                    color: theme.palette.text.primary ,
+                    color: theme.palette.text.primary,
                 },
                 '& .MuiFormHelperText-root': {
                     color: theme.palette.error.main,
@@ -58,6 +58,11 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
             }}
             InputLabelProps={InputLabelProps}
             InputProps={{
+                startAdornment: (
+                    <InputAdornment position="start" sx={{ mr: endIcon != null ? 1 : 0 }}> {/* mr=marginRight */}
+                        {startIcon}
+                    </InputAdornment>
+                ),
                 endAdornment: endIcon
             }}
             onBlur={onBlur}

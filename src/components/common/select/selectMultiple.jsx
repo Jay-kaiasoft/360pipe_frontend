@@ -13,6 +13,7 @@ const SelectMultiple = forwardRef(
             value,
             onChange,
             options,
+            limitTags = 2,
         },
         ref
     ) => {
@@ -23,6 +24,7 @@ const SelectMultiple = forwardRef(
         return (
             <Components.Autocomplete
                 multiple
+                disableCloseOnSelect
                 options={selectOptions}
                 size={size}
                 getOptionLabel={(option) => option?.title || ""}
@@ -88,36 +90,6 @@ const SelectMultiple = forwardRef(
                         }}
                     />
                 )}
-                // ✅ Use `slotProps` instead of deprecated `componentsProps`
-                // slotProps={{
-                //     paper: {
-                //         sx: {
-                //             "& .MuiAutocomplete-option": {
-                //                 padding: "0.5rem 1rem",
-                //                 transition: "background-color 0.2s, color 0.2s",
-                //                 // hover effect
-                //                 "&:hover": {
-                //                     backgroundColor: theme.palette.secondary.main,
-                //                     color: "#fff",
-                //                 },
-                //                 // when focused by keyboard
-                //                 "&.Mui-focused": {
-                //                     backgroundColor: theme.palette.secondary.main,
-                //                     color: "#fff",
-                //                 },
-                //                 // when selected
-                //                 "&[aria-selected='true'], &.Mui-selected": {
-                //                     backgroundColor: theme.palette.secondary.main,
-                //                     color: "#fff",
-                //                     "&:hover": {
-                //                         backgroundColor: theme.palette.secondary.main,
-                //                         color: "#fff",
-                //                     },
-                //                 },
-                //             },
-                //         },
-                //     },
-                // }}
                 componentsProps={{
                     paper: {
                         sx: {
@@ -139,7 +111,7 @@ const SelectMultiple = forwardRef(
                         },
                     },
                 }}
-                limitTags={2}
+                limitTags={limitTags}
                 id="multiple-limit-tags"
             />
         );

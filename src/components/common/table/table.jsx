@@ -154,8 +154,8 @@ export default function DataTable({
                                 <Input name="search" label="Search" endIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
                             )}
                         </div> */}
-                        <div className='bg-black w-96'>
-                            {
+                        <div>
+                            {   
                                 showFilters && filtersComponent && (filtersComponent())
                             }
                         </div>

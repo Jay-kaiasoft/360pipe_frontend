@@ -12,6 +12,7 @@ import OpportunitiesModel from '../../../components/models/opportunities/opportu
 import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import SelectMultiple from '../../../components/common/select/selectMultiple';
+import { opportunityStatus } from '../../../service/common/commonService';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -23,6 +24,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
     const [selectedOppName, setSelectedOppName] = useState([])
     const [selectedOppStage, setSelectedOppStage] = useState([])
+    const [selectedOppStatus, setSelectedOppStatus] = useState([])
 
     const handleGetOpportunityOptions = async () => {
         const res = await getOpportunityOptions()
@@ -37,10 +39,15 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setSelectedOppStage(event)
     }
 
+    const handleSetStatus = (event) => {
+        setSelectedOppStatus(event)
+    }
+
     const handleGetOpportunities = async () => {
         try {
             let opportunityName = []
             let opportunityStages = []
+            let oppStatus = []
 
             if (selectedOppName?.length > 0) {
                 opportunityName = opportunitiesOptions?.opportunitiesNameOptions
@@ -52,19 +59,27 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     ?.map((row) => selectedOppStage?.includes(row.id) ? row.title : undefined)
                     .filter(Boolean);
             }
+            if (selectedOppStatus?.length > 0) {
+                oppStatus = opportunityStatus
+                    ?.map((row) => selectedOppStatus?.includes(row.id) ? row.title : undefined)
+                    .filter(Boolean);
+            }
             let params = {
-                opportunity: opportunityName,   // can be ['Opp 1', 'Opp 2']
-                salesStage: opportunityStages,  // can be ['Closed', 'Negotiation']
+                opportunity: opportunityName,
+                salesStage: opportunityStages,
+                status: oppStatus,
             };
 
             const searchParams = new URLSearchParams();
-
             // Append each array properly
             if (params.opportunity?.length) {
                 params.opportunity.forEach((item) => searchParams.append("opportunity", item));
             }
             if (params.salesStage?.length) {
                 params.salesStage.forEach((item) => searchParams.append("salesStage", item));
+            }
+            if (params.status?.length) {
+                params.status.forEach((item) => searchParams.append("status", item));
             }
 
             const queryString = searchParams.toString();
@@ -127,7 +142,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     useEffect(() => {
         handleGetOpportunities()
-    }, [selectedOppName, selectedOppStage])
+    }, [selectedOppName, selectedOppStage, selectedOppStatus])
 
     useEffect(() => {
         if (syncingPullStatus && location.pathname === '/dashboard/opportunities') {
@@ -155,6 +170,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         {
             field: 'salesStage',
             headerName: 'sales Stage',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 200
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 200
@@ -242,7 +264,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const filterComponent = () => {
         return (
-            <div className='w-[550px] flex justify-start items-center gap-4'>
+            <div className='w-[750px] flex justify-start items-center gap-4'>
                 <div className='w-full'>
                     <SelectMultiple
                         label="Opportunity name"
@@ -250,6 +272,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         options={opportunitiesOptions?.opportunitiesNameOptions || []}
                         value={selectedOppName}
                         onChange={handleSetName}
+                        limitTags={1}
                     />
                 </div>
                 <div className='w-full'>
@@ -259,6 +282,17 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         options={opportunitiesOptions?.opportunitiesStagesOptions || []}
                         value={selectedOppStage}
                         onChange={handleSetStages}
+                        limitTags={1}
+                    />
+                </div>
+                <div className='w-full'>
+                    <SelectMultiple
+                        label="Opportunity status"
+                        placeholder="Select opportunity status"
+                        options={opportunityStatus || []}
+                        value={selectedOppStatus}
+                        onChange={handleSetStatus}
+                        limitTags={1}
                     />
                 </div>
             </div>

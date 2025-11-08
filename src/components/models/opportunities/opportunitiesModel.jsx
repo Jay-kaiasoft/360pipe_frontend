@@ -40,6 +40,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [productTotalAmount, setProductTotalAmount] = useState(0)
 
     const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
@@ -86,7 +87,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const handleCloseDeleteLogoDialog = () => {
         setDialogLogo({ open: false, title: '', message: '', actionButtonText: '' });
     }
-
 
     const handleOpenDeleteDialog = (id) => {
         setSelectedOppPartnerId(id);
@@ -305,6 +305,11 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         if (open && opportunityId) {
             const res = await getAllOpportunitiesProducts(opportunityId)
             setOpportunitiesProducts(res.result)
+            const total = res.result?.reduce((sum, item) => {
+                const price = parseFloat(parseFloat(item?.qty) * parseFloat(item?.price)) || 0;
+                return sum + price;
+            }, 0);
+            setProductTotalAmount(Number(total.toFixed(2)));
         }
     }
 
@@ -312,17 +317,26 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         if (open && opportunityId) {
             const res = await getAllOpportunitiesContact(opportunityId);
             const list = Array.isArray(res?.result) ? res.result : [];
-            setOpportunitiesContacts(list);
 
-            // build original map
+            // ✅ Sort: isKey === true first
+            const sortedList = [...list].sort((a, b) => {
+                // true values should come first
+                if (a.isKey === b.isKey) return 0;
+                return a.isKey ? -1 : 1;
+            });
+
+            setOpportunitiesContacts(sortedList);
+
             const map = {};
-            list.forEach(c => {
+            sortedList.forEach(c => {
                 if (c?.id != null) map[c.id] = !!c.isKey;
             });
+
             setInitialIsKey(map);
-            setEditedContacts([]); // reset edits when refreshed
+            setEditedContacts([]);
         }
     };
+
 
     const handleToggleKeyContact = (rowId) => {
         const current = opportunitiesContacts.find(r => r.id === rowId);
@@ -392,6 +406,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         handleGetOpportunityDetails()
     }, [open])
 
+    useEffect(() => {
+        if (Number(productTotalAmount.toFixed(2)) > Number(parseFloat(watch("dealAmount")).toFixed(2))) {
+            setValue("dealAmount", Number(productTotalAmount.toFixed(2)))
+        }
+    }, [productTotalAmount])
+
     const handleImageChange = async (file) => {
         if (!file) return;
 
@@ -411,7 +431,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             }
         });
     };
-
 
     const submit = async (data) => {
         setLoading(true);
@@ -551,12 +570,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                         <Input
                                             {...field}
                                             label="Deal Amount"
-                                            type={`text`}
+                                            type="text"
                                             error={errors.dealAmount}
                                             onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, '');
-                                                field.onChange(value);
+                                                let value = e.target.value;
+                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                    field.onChange(value);
+                                                }
                                             }}
+                                            startIcon={
+                                                <CustomIcons
+                                                    iconName={"fa-solid fa-dollar-sign"}
+                                                    css={"text-lg text-black"}
+                                                />
+                                            }
                                         />
                                     )}
                                 />
@@ -637,10 +664,10 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     <tr>
                                                         <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
                                                             <div className='flex items-center'>
-                                                                <p className='text-center grow'>
+                                                                <p className='w-full text-left'>
                                                                     Partners
                                                                 </p>
-                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-end items-center rounded-full text-white'>
                                                                     <Components.IconButton onClick={() => handleOpenPartnerModel()}>
                                                                         <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
                                                                     </Components.IconButton>
@@ -706,7 +733,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     <tr>
                                                         <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
                                                             <div className='flex items-center'>
-                                                                <p className='text-center grow'>
+                                                                <p className='w-full text-left'>
                                                                     Contacts
                                                                 </p>
                                                                 <div className='flex justify-end items-center gap-3'>
@@ -792,12 +819,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             <table className="min-w-full border-collapse border">
                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
                                                     <tr>
-                                                        <th colSpan={5} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
+                                                        <th colSpan={6} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
                                                             <div className='flex items-center'>
-                                                                <p className='text-center grow'>
-                                                                    Products
+                                                                <p className='w-full text-left'>
+                                                                    Product & Service
                                                                 </p>
-                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-end items-center rounded-full text-white'>
                                                                     <Components.IconButton onClick={() => handleOpenProductModel()}>
                                                                         <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
                                                                     </Components.IconButton>
@@ -818,6 +845,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
                                                             Price
                                                         </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
+                                                            Total Price
+                                                        </th>
                                                         <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
                                                             Actions
                                                         </th>
@@ -831,7 +861,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">{row.name || "—"}</td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">{row.qty || "—"}</td>
-                                                                    <td className="px-4 py-1 text-sm text-gray-800">{row.price || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">${row.price?.toLocaleString() || "—"}</td>
+                                                                    <td className="px-4 py-1 text-sm text-gray-800">${parseFloat(parseFloat(row.qty) * parseFloat(row.price))?.toLocaleString() || "—"}</td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
                                                                             <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
@@ -852,7 +883,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     ) : (
                                                         <tbody className="divide-y divide-gray-200 bg-white">
                                                             <tr className="hover:bg-gray-50">
-                                                                <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                                <td colSpan={6} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
                                                                     No records
                                                                 </td>
                                                             </tr>

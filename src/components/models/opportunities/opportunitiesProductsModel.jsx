@@ -126,7 +126,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {id ? "Update" : "Add"} Product
+                    {id ? "Update" : "Add"} Product & Service
                 </Components.DialogTitle>
 
                 <Components.IconButton

@@ -26,7 +26,7 @@ const Summary = ({ setAlert }) => {
     const handleOpenDeleteDialogInbox = (email, groupIndex) => {
         setSelectedEmails(email)
         setGroupIndex(groupIndex)
-        setDialogDeleteInbox({ open: true, title: 'Delete Mail', message: 'Are you sure! Do you want to delete all this mails?', actionButtonText: 'yes' });
+        setDialogDeleteInbox({ open: true, title: 'Delete Mail', message: 'Are you sure! Do you want to delete all this mails from Inbox?', actionButtonText: 'yes' });
     }
 
     const handleCloseDeleteDialogInbox = () => {
@@ -34,7 +34,6 @@ const Summary = ({ setAlert }) => {
         setGroupIndex(null)
         setDialogDeleteInbox({ open: false, title: '', message: '', actionButtonText: '' });
     }
-
 
     const handleOpenDeleteDialog = (email, groupIndex) => {
         setSelectedEmails(email)
@@ -227,7 +226,7 @@ const Summary = ({ setAlert }) => {
                             title={g.email}
                             totalMessages={g.totalMessages}
                             emails={g.emails || []}
-                            requestId={g.requestId} // ensure your API provides this
+                            requestId={g.requestId}
                             open={openAccordionId === g.email}
                             onToggle={() =>
                                 setOpenAccordionId((prev) => (prev === g.email ? null : g.email))
