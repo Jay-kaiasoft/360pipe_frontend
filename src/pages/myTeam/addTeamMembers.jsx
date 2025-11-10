@@ -18,6 +18,7 @@ import { getAllSubUsers } from '../../service/customers/customersService';
 import Select from '../../components/common/select/select';
 import OpenDisplayOpportunities from '../../components/models/teamMember/displayOpportunities';
 import OpenAssignOpportunities from '../../components/models/teamMember/openAssignOpportunities';
+import { Tooltip } from '@mui/material';
 
 const AddTeamMembers = ({ setAlert }) => {
     const { id } = useParams();
@@ -257,41 +258,34 @@ const AddTeamMembers = ({ setAlert }) => {
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
-                        {/* <PermissionWrapper
-                            functionalityName="Contacts"
-                            moduleName="Contacts"
-                            actionId={2}
-                            component={ */}
-                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenModelDisplayOpportunities(params.row)}>
-                                <CustomIcons iconName={'fa-solid fa-list-ul'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row)}>
-                                <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-                        <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpen(params.row)}>
-                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-                        {/* }
-                        /> */}
-                        {/* <PermissionWrapper
-                            functionalityName="Contacts"
-                            moduleName="Contacts"
-                            actionId={3}
-                            component={ */}
-                        <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row)}>
-                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-
-                        {/* }
-                        /> */}
+                        <Tooltip title="Opportunities List" arrow>
+                            <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenModelDisplayOpportunities(params.row)}>
+                                    <CustomIcons iconName={'fa-solid fa-list-ul'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
+                        <Tooltip title="Assign Opportunities" arrow>
+                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row)}>
+                                    <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
+                        <Tooltip title="Edit" arrow>
+                            <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpen(params.row)}>
+                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
+                        <Tooltip title="Delete" arrow>
+                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row)}>
+                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                     </div>
                 );
             },

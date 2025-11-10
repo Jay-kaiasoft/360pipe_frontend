@@ -14,6 +14,7 @@ import TempMailModel from '../../components/models/tempMail/tempMailModel';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
 import Components from '../../components/muiComponents/components';
 import Summary from './summary';
+import { Tooltip } from '@mui/material';
 
 const tableData = [
     { label: 'E-Mail Scraper' },
@@ -240,21 +241,20 @@ const ManageMails = ({ setAlert }) => {
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-end h-full'>
-                        <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-                        <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-                        {/* <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                                <CustomIcons iconName="fa-solid fa-envelope-circle-xmark" css="text-white" />
-                            </Components.IconButton>
-                        </div> */}
+                        <Tooltip title="Edit" arrow>
+                            <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpen(params.row.id)}>
+                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
+                        <Tooltip title="Delete" arrow>
+                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                     </div>
                 );
             },
@@ -314,7 +314,7 @@ const ManageMails = ({ setAlert }) => {
                 handleClose={() => handleCloseContactsDialog()}
             />
 
-             <AlertDialog
+            <AlertDialog
                 open={dialogDeleteMailInbox.open}
                 title={dialogDeleteMailInbox.title}
                 message={dialogDeleteMailInbox.message}

@@ -13,6 +13,7 @@ import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import SelectMultiple from '../../../components/common/select/selectMultiple';
 import { opportunityStatus } from '../../../service/common/commonService';
+import { Tooltip } from '@mui/material';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -218,11 +219,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                             moduleName="Opportunities"
                             actionId={2}
                             component={
-                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Edit" arrow>
+                                    <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpen(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             }
                         />
                         <PermissionWrapper
@@ -230,11 +233,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                             moduleName="Opportunities"
                             actionId={3}
                             component={
-                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Delete" arrow>
+                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             }
                         />
                     </div>

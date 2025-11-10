@@ -16,6 +16,7 @@ import Checkbox from '../../../components/common/checkBox/checkbox';
 import { Tabs } from '../../../components/common/tabs/tabs';
 import BorderLinearProgress from '../../../components/common/borderLinearProgress/BorderLinearProgress';
 import { setStatusToCompleted } from '../../../service/todoAssign/todoAssignService';
+import { Tooltip } from '@mui/material';
 
 const filterTab = [
     { id: 1, label: "Master", },
@@ -385,11 +386,13 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                                     moduleName="Todo"
                                     actionId={2}
                                     component={
-                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                            <Components.IconButton onClick={() => handleOpenCompleteTodoDialog(params.row)}>
-                                                <CustomIcons iconName={'fa-solid fa-check'} css='cursor-pointer text-white h-4 w-4' />
-                                            </Components.IconButton>
-                                        </div>
+                                        <Tooltip title="Complate Todo" arrow>
+                                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                <Components.IconButton onClick={() => handleOpenCompleteTodoDialog(params.row)}>
+                                                    <CustomIcons iconName={'fa-solid fa-check'} css='cursor-pointer text-white h-4 w-4' />
+                                                </Components.IconButton>
+                                            </div>
+                                        </Tooltip>
                                     }
                                 />
                             ) : null
@@ -400,11 +403,13 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             moduleName="Todo"
                             actionId={2}
                             component={
-                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Edit" arrow>
+                                    <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpen(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             }
                         />
                         <PermissionWrapper
@@ -412,11 +417,13 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             moduleName="Todo"
                             actionId={3}
                             component={
-                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Delete" arrow>
+                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             }
                         />
                     </div>

@@ -12,6 +12,7 @@ import Components from '../../components/muiComponents/components';
 import PermissionWrapper from '../../components/common/permissionWrapper/PermissionWrapper';
 import { deleteCustomer, getAllSubUsers, sendRegisterInvitation } from '../../service/customers/customersService';
 import SubUserModel from '../../components/models/subUser/subUserModel';
+import { Tooltip } from '@mui/material';
 
 const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   const location = useLocation();
@@ -186,11 +187,13 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
           <div className='flex items-center gap-2 justify-end h-full'>
             {
               params?.row?.status === 'Pending' && (
-                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                  <Components.IconButton onClick={() => handleOpenInviteDialog(params.row)}>
-                    <CustomIcons iconName={'fa-solid fa-share-from-square'} css='cursor-pointer text-white h-4 w-4' />
-                  </Components.IconButton>
-                </div>
+                <Tooltip title="Send Invitation" arrow>
+                  <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                    <Components.IconButton onClick={() => handleOpenInviteDialog(params.row)}>
+                      <CustomIcons iconName={'fa-solid fa-share-from-square'} css='cursor-pointer text-white h-4 w-4' />
+                    </Components.IconButton>
+                  </div>
+                </Tooltip>
               )
             }
             <PermissionWrapper
@@ -198,11 +201,13 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
               moduleName="Members"
               actionId={2}
               component={
-                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                  <Components.IconButton onClick={() => handleClickOpen(params.row.id)}>
-                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                  </Components.IconButton>
-                </div>
+                <Tooltip title="Edit" arrow>
+                  <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                    <Components.IconButton onClick={() => handleClickOpen(params.row.id)}>
+                      <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                    </Components.IconButton>
+                  </div>
+                </Tooltip>
               }
             />
             <PermissionWrapper
@@ -210,11 +215,13 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
               moduleName="Members"
               actionId={3}
               component={
-                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                  <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                  </Components.IconButton>
-                </div>
+                <Tooltip title="Delete" arrow>
+                  <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                    <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                      <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                    </Components.IconButton>
+                  </div>
+                </Tooltip>
               }
             />
           </div>

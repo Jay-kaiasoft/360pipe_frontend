@@ -1,19 +1,39 @@
 import React, { useRef } from 'react';
 import CustomIcons from '../common/icons/CustomIcons';
+import { connect } from 'react-redux';
+import { setAlert } from '../../redux/commonReducers/commonReducers';
 
-export default function FileInputBox({ onFileSelect, value, onRemove, text }) {
+function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "160x160" }) {
 
     const fileInputRef = useRef(null);
+
+    const [width, height] = size.split("x").map(Number);
 
     const handleClick = () => {
         fileInputRef.current.click();
     };
 
     const handleFileChange = (e) => {
-        if (onFileSelect && e.target.files[0]) {
-            onFileSelect(e.target.files[0]);
-        }
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const img = new Image();
+        img.onload = () => {
+            // Check image dimensions
+            if (img.width === width && img.height === height) {
+                onFileSelect && onFileSelect(file);
+            } else {
+                setAlert({
+                    open: true,
+                    type: "warning",
+                    message: `Only images with dimensions ${width}x${height}px are allowed.`
+                })
+                fileInputRef.current.value = null; // Reset file input
+            }
+        };
+        img.src = URL.createObjectURL(file);
     };
+
     return (
         <div className="w-40 h-40">
             {value ? (
@@ -52,3 +72,9 @@ export default function FileInputBox({ onFileSelect, value, onRemove, text }) {
         </div>
     );
 }
+
+const mapDispatchToProps = {
+    setAlert,
+};
+
+export default connect(null, mapDispatchToProps)(FileInputBox)

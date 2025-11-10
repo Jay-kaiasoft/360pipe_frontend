@@ -58,11 +58,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
             }}
             InputLabelProps={InputLabelProps}
             InputProps={{
-                startAdornment: (
-                    <InputAdornment position="start" sx={{ mr: endIcon != null ? 1 : 0 }}> {/* mr=marginRight */}
-                        {startIcon}
-                    </InputAdornment>
-                ),
+                startAdornment: startIcon,
                 endAdornment: endIcon
             }}
             onBlur={onBlur}

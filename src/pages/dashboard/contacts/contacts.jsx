@@ -12,6 +12,7 @@ import ContactModel from '../../../components/models/contact/contactModel';
 import { useLocation } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import ContactReportHierarch from '../../../components/models/contact/contactReportHierarch';
+import { Tooltip } from '@mui/material';
 
 const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -155,21 +156,25 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
-                        <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                            <Components.IconButton onClick={() => handleOpenHierarchy(params.row.id)}>
-                                <CustomIcons iconName={'fa-solid fa-sitemap'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
+                        <Tooltip title="Report-Hierarchy" arrow>
+                            <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenHierarchy(params.row.id)}>
+                                    <CustomIcons iconName={'fa-solid fa-sitemap'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                         <PermissionWrapper
                             functionalityName="Contacts"
                             moduleName="Contacts"
                             actionId={2}
                             component={
-                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Edit" arrow>
+                                    <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpen(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             }
                         />
                         <PermissionWrapper
@@ -177,11 +182,13 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             moduleName="Contacts"
                             actionId={3}
                             component={
-                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Delete" arrow>
+                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             }
                         />
                     </div>

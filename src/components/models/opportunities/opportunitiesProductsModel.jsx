@@ -211,7 +211,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                     name="price"
                                     control={control}
                                     rules={{
-                                        required: "Qty name is required",
+                                        required: "price is required",
                                     }}
                                     render={({ field }) => (
                                         <Input
@@ -221,9 +221,17 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                             type={`text`}
                                             error={errors.price}
                                             onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, '');
-                                                field.onChange(value);
+                                                let value = e.target.value;
+                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                    field.onChange(value);
+                                                }
                                             }}
+                                            startIcon={
+                                                <CustomIcons
+                                                    iconName={"fa-solid fa-dollar-sign"}
+                                                    css={"text-lg text-black mr-2"}
+                                                />
+                                            }
                                         />
                                     )}
                                 />

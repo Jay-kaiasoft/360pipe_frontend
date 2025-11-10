@@ -15,6 +15,7 @@ import DatePickerComponent from '../../common/datePickerComponent/datePickerComp
 import dayjs from 'dayjs';
 import { createQuota, deleteQuota, getAllCustomerQuotas, getQuota, updateQuota } from '../../../service/customerQuota/customerQuotaService';
 import AlertDialog from '../../common/alertDialog/alertDialog';
+import { Tooltip } from '@mui/material';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -93,26 +94,6 @@ function buildLabelsForKind(kind, startMonthIndex) {
         default:
             return [];
     }
-}
-
-function buildMonthLabels({ kind, count, startMonthIndex }) {
-
-    // Offsets per term kind
-    const ranges = {
-        monthly: [0],
-        q1: [0, 1, 2],
-        q2: [3, 4, 5],
-        q3: [6, 7, 8],
-        q4: [9, 10, 11],
-        semi: [0, 1, 2, 3, 4, 5],
-        yearly: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-    };
-
-    const offsets = ranges[kind] || Array.from({ length: count }, (_, i) => i);
-    return offsets.slice(0, count).map(off => {
-        const idx = (startMonthIndex + off) % 12;
-        return MONTHS[idx];
-    });
 }
 
 function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, handleGetAllUsers }) {
@@ -456,20 +437,20 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
         const quotaData = {
             id: watch("quotaId"),
-            quota: watch("quota"),
+            quota: Number(parseFloat(watch("quota")).toFixed(2)),
             term: selectedTerm.title, // fix: use our terms array
-            amount1: watch("amount1"),
-            amount2: watch("amount2"),
-            amount3: watch("amount3"),
-            amount4: watch("amount4"),
-            amount5: watch("amount5"),
-            amount6: watch("amount6"),
-            amount7: watch("amount7"),
-            amount8: watch("amount8"),
-            amount9: watch("amount9"),
-            amount10: watch("amount10"),
-            amount11: watch("amount11"),
-            amount12: watch("amount12"),
+            amount1: Number(parseFloat(watch("amount1")).toFixed(2)),
+            amount2: Number(parseFloat(watch("amount2")).toFixed(2)),
+            amount3: Number(parseFloat(watch("amount3")).toFixed(2)),
+            amount4: Number(parseFloat(watch("amount4")).toFixed(2)),
+            amount5: Number(parseFloat(watch("amount5")).toFixed(2)),
+            amount6: Number(parseFloat(watch("amount6")).toFixed(2)),
+            amount7: Number(parseFloat(watch("amount7")).toFixed(2)),
+            amount8: Number(parseFloat(watch("amount8")).toFixed(2)),
+            amount9: Number(parseFloat(watch("amount9")).toFixed(2)),
+            amount10: Number(parseFloat(watch("amount10")).toFixed(2)),
+            amount11: Number(parseFloat(watch("amount11")).toFixed(2)),
+            amount12: Number(parseFloat(watch("amount12")).toFixed(2)),
             customerId: id,
         };
 
@@ -687,9 +668,17 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                         label="Quota"
                                                         type="text"
                                                         onChange={(e) => {
-                                                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                            field.onChange(numericValue);
+                                                            let value = e.target.value;
+                                                            if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                                field.onChange(value);
+                                                            }
                                                         }}
+                                                        startIcon={
+                                                            <CustomIcons
+                                                                iconName={"fa-solid fa-dollar-sign"}
+                                                                css={"text-lg text-black mr-2"}
+                                                            />
+                                                        }
                                                     />
                                                 )}
                                             />
@@ -740,8 +729,10 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                                                 label={`${labelText}`}
                                                                                 type="text"
                                                                                 onChange={(e) => {
-                                                                                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                                                    field.onChange(numericValue);
+                                                                                    let value = e.target.value;
+                                                                                    if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                        field.onChange(value);
+                                                                                    }
                                                                                 }}
                                                                                 error={errors?.[fieldName]}
                                                                             />
@@ -756,18 +747,22 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                         </div>
 
                                         <div className='flex items-center gap-3'>
-                                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                <Components.IconButton onClick={() => submitQuota()}>
-                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
-                                                </Components.IconButton>
-                                            </div>
+                                            <Tooltip title="Save" arrow>
+                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => submitQuota()}>
+                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
                                             {
                                                 showCloseButton && (
-                                                    <div className='bg-gray-800 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleResetQuota()}>
-                                                            <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-4 w-4' />
-                                                        </Components.IconButton>
-                                                    </div>
+                                                    <Tooltip title="Cancel" arrow>
+                                                        <div className='bg-gray-800 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleResetQuota()}>
+                                                                <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-4 w-4' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
                                                 )
                                             }
                                         </div>
@@ -798,19 +793,24 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                                     <tr key={i} className="hover:bg-gray-50">
                                                                         <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
                                                                         <td className="px-4 py-1 text-sm text-gray-800">{row.term || "—"}</td>
-                                                                        <td className="px-4 py-1 text-sm text-gray-800">{row.quota || "—"}</td>
+                                                                        <td className="px-4 py-1 text-sm text-gray-800">${row.quota?.toLocaleString() || "—"}</td>
+
                                                                         <td className="px-4 py-1 text-sm text-gray-800">
                                                                             <div className='flex items-center gap-2 justify-end h-full'>
-                                                                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                                    <Components.IconButton onClick={() => handleSetQuota(row.id)}>
-                                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                                                    </Components.IconButton>
-                                                                                </div>
-                                                                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                                    </Components.IconButton>
-                                                                                </div>
+                                                                                <Tooltip title="Edit" arrow>
+                                                                                    <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                        <Components.IconButton onClick={() => handleSetQuota(row.id)}>
+                                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                        </Components.IconButton>
+                                                                                    </div>
+                                                                                </Tooltip>
+                                                                                <Tooltip title="Delete" arrow>
+                                                                                    <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                        </Components.IconButton>
+                                                                                    </div>
+                                                                                </Tooltip>
                                                                             </div>
                                                                         </td>
                                                                     </tr>

@@ -24,6 +24,7 @@ import Checkbox from '../../common/checkBox/checkbox';
 import OpportunityContactModel from './opportunityContactModel';
 import FileInputBox from '../../fileInputBox/fileInputBox';
 import { getUserDetails } from '../../../utils/getUserDetails';
+import { Tooltip } from '@mui/material';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -407,8 +408,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     }, [open])
 
     useEffect(() => {
-        if (Number(productTotalAmount.toFixed(2)) > Number(parseFloat(watch("dealAmount")).toFixed(2))) {
-            setValue("dealAmount", Number(productTotalAmount.toFixed(2)))
+        if (productTotalAmount > Number(parseFloat(watch("dealAmount")).toFixed(2))) {
+            setValue("dealAmount", productTotalAmount)
         }
     }, [productTotalAmount])
 
@@ -518,6 +519,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     onRemove={handleOpenDeleteLogoDialog}
                                     value={watch("logo") || watch("newLogo")}
                                     text="Upload opportunity Logo"
+                                    size="100x100"
                                 />
                             </div>
                             <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4 col-span-4`}>
@@ -581,7 +583,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             startIcon={
                                                 <CustomIcons
                                                     iconName={"fa-solid fa-dollar-sign"}
-                                                    css={"text-lg text-black"}
+                                                    css={"text-lg text-black mr-2"}
                                                 />
                                             }
                                         />
@@ -667,11 +669,13 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 <p className='w-full text-left'>
                                                                     Partners
                                                                 </p>
-                                                                <div className='bg-green-600 h-8 w-8 flex justify-end items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenPartnerModel()}>
-                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                                    </Components.IconButton>
-                                                                </div>
+                                                                <Tooltip title="Add" arrow>
+                                                                    <div className='bg-green-600 h-7 w-7 flex justify-end items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenPartnerModel()}>
+                                                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </Tooltip>
                                                             </div>
                                                         </th>
                                                     </tr>
@@ -700,16 +704,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 <td className="px-4 py-1 text-sm text-gray-800">{row.role || "—"}</td>
                                                                 <td className="px-4 py-1 text-sm text-gray-800">
                                                                     <div className='flex items-center gap-2 justify-end h-full'>
-                                                                        <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
-                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                                            </Components.IconButton>
-                                                                        </div>
-                                                                        <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                            </Components.IconButton>
-                                                                        </div>
+                                                                        <Tooltip title="Edit" arrow>
+                                                                            <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
+                                                                        <Tooltip title="Delete" arrow>
+                                                                            <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
                                                                     </div>
                                                                 </td>
                                                             </tr>
@@ -738,18 +746,21 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 </p>
                                                                 <div className='flex justify-end items-center gap-3'>
                                                                     {editedContacts.length > 0 && (
-                                                                        <div className='bg-[#1072E0] h-8 w-8 px-3 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
-                                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        <Tooltip title="Save" arrow>
+                                                                            <div className='bg-[#1072E0] h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
+                                                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
+                                                                    )}
+                                                                    <Tooltip title="Add" arrow>
+                                                                        <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                            <Components.IconButton onClick={() => handleOpenContactModel()}>
+                                                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
                                                                             </Components.IconButton>
                                                                         </div>
-                                                                    )}
-
-                                                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                        <Components.IconButton onClick={() => handleOpenContactModel()}>
-                                                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                                        </Components.IconButton>
-                                                                    </div>
+                                                                    </Tooltip>
                                                                 </div>
                                                             </div>
                                                         </th>
@@ -789,11 +800,13 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     </td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
-                                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                                </Components.IconButton>
-                                                                            </div>
+                                                                            <Tooltip title="Delete" arrow>
+                                                                                <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                    <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                    </Components.IconButton>
+                                                                                </div>
+                                                                            </Tooltip>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -824,11 +837,13 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 <p className='w-full text-left'>
                                                                     Product & Service
                                                                 </p>
-                                                                <div className='bg-green-600 h-8 w-8 flex justify-end items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenProductModel()}>
-                                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                                                    </Components.IconButton>
-                                                                </div>
+                                                                <Tooltip title="Add" arrow>
+                                                                    <div className='bg-green-600 h-7 w-7 flex justify-end items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenProductModel()}>
+                                                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </Tooltip>
                                                             </div>
                                                         </th>
                                                     </tr>
@@ -865,15 +880,19 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     <td className="px-4 py-1 text-sm text-gray-800">${parseFloat(parseFloat(row.qty) * parseFloat(row.price))?.toLocaleString() || "—"}</td>
                                                                     <td className="px-4 py-1 text-sm text-gray-800">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
-                                                                            <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                                                </Components.IconButton>
+                                                                            <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Tooltip title="Edit" arrow>
+                                                                                    <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                    </Components.IconButton>
+                                                                                </Tooltip>
                                                                             </div>
-                                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                                </Components.IconButton>
+                                                                            <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Tooltip title="Delete" arrow>
+                                                                                    <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                    </Components.IconButton>
+                                                                                </Tooltip>
                                                                             </div>
                                                                         </div>
                                                                     </td>

@@ -98,7 +98,12 @@ const Products = ({ setAlert }) => {
       headerName: 'Price',
       headerClassName: 'uppercase',
       flex: 1,
-      minWidth: 150
+      minWidth: 150,
+      renderCell: (params) => {
+        return (
+          <span>{params.value ? `$${params.value.toLocaleString()}` : ''}</span>
+        )
+      }
     },
     {
       field: 'description',
