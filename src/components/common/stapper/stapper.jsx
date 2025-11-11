@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material/styles';
 import CustomIcons from '../icons/CustomIcons';
 import Components from '../../muiComponents/components';
 
-export default function Stapper({ steps, activeStep, orientation = "vertical", labelFontSize, width = null, show }) {
+export default function Stapper({ steps, activeStep, orientation = "vertical", labelFontSize, width = null }) {
   const theme = useTheme();
 
   const CustomStepIconRoot = styled('div')(({ theme, ownerState }) => ({
@@ -42,9 +42,9 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
       marginLeft: orientation !== "horizontal" ? 11 : 0,
     },
     [`& .MuiStepConnector-line`]: {
-      borderWidth: orientation !== "horizontal" ? 0 : 3,
+      borderWidth: orientation !== "horizontal" ? 0 : 1,
       borderLeftWidth: orientation !== "horizontal" ? 3 : 0,
-      minHeight: orientation !== "horizontal" ? 24 : 5,
+      minHeight: orientation !== "horizontal" ? 1 : 1,
       transition: 'border-color 0.3s ease',
       borderColor: '#E0E7FF',
     },
@@ -62,7 +62,8 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
     <Components.Box sx={{ width: { sm: width !== null ? width : '100%' } }}>
       <Components.Stepper
         activeStep={activeStep}
-        orientation={orientation}
+        orientation="horizontal"
+        alternativeLabel
         connector={<CustomConnector />}
       >
         {steps?.map((label, index) => (
@@ -71,20 +72,27 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
               StepIconComponent={CustomStepIcon}
               sx={{
                 '& .MuiStepLabel-label': {
-                  color: activeStep >= index
-                    ? theme.palette.text.primary   // ✅ fixed
-                    : theme.palette.text.disabled,
-                  fontSize: labelFontSize || '0.875rem',
-                  textTransform: 'capitalize',
+                  maxWidth: 220,             // force wrapping width (tune to your layout)
+                  whiteSpace: 'normal',
+                  textAlign: 'center',
+                  lineHeight: 1.3,
+                  fontSize: labelFontSize || '14px',
                   fontFamily: '"Inter", sans-serif',
+                  // color & weight by state
+                  color: (theme) =>
+                    activeStep >= index ? theme.palette.text.primary : theme.palette.text.disabled,
+                  fontWeight: activeStep === index ? 700 : (activeStep > index ? 700 : 500),
                 },
+                // optional: add a bit of space below the icon like in your image
+                // '& .MuiStepLabel-iconContainer': { marginBottom: 8 },
               }}
             >
-              {/* {label || index + 1} */}
+              {label || index + 1}
             </Components.StepLabel>
+
           </Components.Step>
         ))}
       </Components.Stepper>
-    </Components.Box>
+    </Components.Box >
   );
 }

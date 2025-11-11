@@ -1,34 +1,3 @@
-// import { getUserDetails } from "../../../utils/getUserDetails";
-
-// const PermissionWrapper = ({
-//     component,
-//     fallbackComponent = null,
-//     functionalityName,
-//     moduleName,
-//     actionId
-// }) => {
-//     const userData = getUserDetails() || [];
-
-//     // Allow Admins
-//     if (userData?.rolename === "SALES REPRESENTIVE" || userData?.subUser === false) {
-//         return <>{component}</>;
-//     }
-
-//     // Check permission
-//     const hasPermission = userData?.permissions?.functionalities?.some((item) =>
-//         item?.functionalityName?.toLowerCase() === functionalityName?.toLowerCase() &&
-//         item?.modules?.some((row) =>
-//             row?.moduleName?.toLowerCase() === moduleName?.toLowerCase() &&
-//             row?.roleAssignedActions?.includes(actionId)
-//         )
-//     );
-//     return hasPermission ? <>{component}</> : fallbackComponent;
-// };
-
-// export default PermissionWrapper;
-
-
-// PermissionWrapper component
 import { getUserDetails } from "../../../utils/getUserDetails";
 
 const PermissionWrapper = ({
@@ -36,8 +5,8 @@ const PermissionWrapper = ({
     fallbackComponent = null,
     functionalityName,
     moduleName,
-    actionId, // Single action
-    actionIds, // Multiple actions
+    actionId,
+    actionIds,
     checkAll = false // If true, require ALL actions; if false, require ANY action
 }) => {
     const userData = getUserDetails() || [];
