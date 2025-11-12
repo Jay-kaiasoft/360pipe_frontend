@@ -371,322 +371,323 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-3 gap-6'>
-                            <div className='col-span-2'>
-                                <Controller
-                                    name="task"
-                                    control={control}
-                                    rules={{
-                                        required: "Task is required",
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            disabled={todoId ? watch("createdBy") !== userData?.userId : false}
-                                            {...field}
-                                            label="Task"
-                                            type={`text`}
-                                            error={errors.task}
-                                        />
-                                    )}
-                                />
-                            </div>
+                        <div className='py-3 px-[30px]'>
+                            <div className='grid md:grid-cols-3 gap-[30px]'>
+                                <div className='col-span-2'>
+                                    <Controller
+                                        name="task"
+                                        control={control}
+                                        rules={{
+                                            required: "Task is required",
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                {...field}
+                                                label="Task"
+                                                type={`text`}
+                                                error={errors.task}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <div>
-                                <DatePickerComponent setValue={setValue} control={control} name='dueDate' label={`Due Date`} />
-                            </div>
+                                <div>
+                                    <DatePickerComponent setValue={setValue} control={control} name='dueDate' label={`Due Date`} />
+                                </div>
 
-                            {/* <div>
+                                {/* <div>
                                 <DatePickerComponent setValue={setValue} control={control} name='completedDate' label={`Completed Date`} />
                             </div> */}
-                            <div>
-                                <Controller
-                                    name="status"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={status}
-                                            label={"Status"}
-                                            placeholder="Select status"
-                                            value={parseInt(watch("status")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    if (newValue?.title === "Completed") {
-                                                        setValue("complectedWork", 100);
-                                                    }
-                                                    if (newValue?.title === "Not Started") {
+                                <div>
+                                    <Controller
+                                        name="status"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={status}
+                                                label={"Status"}
+                                                placeholder="Select status"
+                                                value={parseInt(watch("status")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                        if (newValue?.title === "Completed") {
+                                                            setValue("complectedWork", 100);
+                                                        }
+                                                        if (newValue?.title === "Not Started") {
+                                                            setValue("complectedWork", 0);
+                                                        }
+                                                    } else {
+                                                        setValue("status", null);
                                                         setValue("complectedWork", 0);
                                                     }
-                                                } else {
-                                                    setValue("status", null);
-                                                    setValue("complectedWork", 0);
-                                                }
-                                            }}
-                                            error={errors.status}
-                                        />
-                                    )}
-                                />
-                            </div>
+                                                }}
+                                                error={errors.status}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <div>
-                                <Controller
-                                    name="source"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <Select
-                                            disabled={todoId ? watch("createdBy") !== userData?.userId : false}
-                                            options={todoType}
-                                            label={"Task Type"}
-                                            placeholder="Select Task Type"
-                                            value={parseInt(watch("source")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue("source", null);
-                                                }
-                                            }}
-                                            error={errors.source}
-                                        />
-                                    )}
-                                />
-                            </div>
+                                <div>
+                                    <Controller
+                                        name="source"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                options={todoType}
+                                                label={"Task Type"}
+                                                placeholder="Select Task Type"
+                                                value={parseInt(watch("source")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue("source", null);
+                                                    }
+                                                }}
+                                                error={errors.source}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <PermissionWrapper
-                                functionalityName="Todo"
-                                moduleName="Assign Todo"
-                                actionIds={[2, 1]}
-                                checkAll={false}
-                                component={
-                                    <div>
-                                        <Controller
-                                            name="assignedType"
-                                            control={control}
-                                            rules={{ required: true }}
-                                            render={({ field }) => (
-                                                <Select
-                                                    disabled={todoId ? watch("createdBy") !== userData?.userId : false}
-                                                    options={assignedType}
-                                                    label={"Assigned To"}
-                                                    placeholder="Select Assigned To"
-                                                    value={parseInt(watch("assignedType")) || null}
-                                                    onChange={(_, newValue) => {
-                                                        const currentRemoved = watch("customerIds") || [];
-                                                        setValue("removeCustomerIds", currentRemoved);
-                                                        setValue("removeTeam", watch("teamId") || null);
-                                                        if (newValue?.id) {
-                                                            setValue("customerId", null);
-                                                            setValue("teamId", null);
-                                                            field.onChange(newValue.id);
-                                                            if (newValue?.id === 1 || newValue?.id === 2) {
-                                                                setCustomers([])
-                                                            }
-                                                        } else {
-                                                            setValue("assignedType", null);
-                                                            setValue("customerId", null);
-                                                            setValue("teamId", null);
-                                                        }
-                                                    }}
-                                                    error={errors.assignedType}
-                                                />
-                                            )}
-                                        />
-                                    </div>
-                                }
-                                fallbackComponent={
-                                    <div>
-                                        <Controller
-                                            name="assignedType"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Select
-                                                    disabled={true}
-                                                    options={assignedType}
-                                                    label={"Assigned To"}
-                                                    placeholder="Select Assigned To"
-                                                    value={parseInt(watch("assignedType")) || null}
-                                                />
-                                            )}
-                                        />
-                                    </div>
-                                }
-                            />
-
-
-                            {
-                                watch("assignedType") === 2 && (
-                                    <>
+                                <PermissionWrapper
+                                    functionalityName="Todo"
+                                    moduleName="Assign Todo"
+                                    actionIds={[2, 1]}
+                                    checkAll={false}
+                                    component={
                                         <div>
                                             <Controller
-                                                name="teamId"
+                                                name="assignedType"
                                                 control={control}
                                                 rules={{ required: true }}
                                                 render={({ field }) => (
                                                     <Select
-                                                        // disabled={todoId ? watch("createdBy") !== userData?.userId : false}
-                                                        options={teams}
-                                                        label={"Team"}
-                                                        placeholder="Select Team"
-                                                        value={parseInt(watch("teamId")) || null}
+                                                        disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                        options={assignedType}
+                                                        label={"Assigned To"}
+                                                        placeholder="Select Assigned To"
+                                                        value={parseInt(watch("assignedType")) || null}
                                                         onChange={(_, newValue) => {
+                                                            const currentRemoved = watch("customerIds") || [];
+                                                            setValue("removeCustomerIds", currentRemoved);
+                                                            setValue("removeTeam", watch("teamId") || null);
                                                             if (newValue?.id) {
-                                                                field.onChange(newValue.id);
-                                                                const customers = newValue?.teamMembers?.map((item) => {
-                                                                    return {
-                                                                        id: item.memberId,
-                                                                        title: item.memberName || ''
-                                                                    }
-                                                                })
-                                                                setCustomers(customers || [])
-                                                                const customerIds = customers?.map(cust => cust.id);
-                                                                setValue("customerIds", customerIds || []);
-                                                            } else {
+                                                                setValue("customerId", null);
                                                                 setValue("teamId", null);
-                                                                setCustomers([])
-                                                                setValue("customerIds", []);
+                                                                field.onChange(newValue.id);
+                                                                if (newValue?.id === 1 || newValue?.id === 2) {
+                                                                    setCustomers([])
+                                                                }
+                                                            } else {
+                                                                setValue("assignedType", null);
+                                                                setValue("customerId", null);
+                                                                setValue("teamId", null);
                                                             }
                                                         }}
-                                                        error={errors.teamId}
+                                                        error={errors.assignedType}
                                                     />
                                                 )}
                                             />
                                         </div>
-
+                                    }
+                                    fallbackComponent={
                                         <div>
                                             <Controller
-                                                name="customerIds"
+                                                name="assignedType"
                                                 control={control}
-                                                render={({ field }) => {
-                                                    const selectedOptions = customers.filter((cust) =>
-                                                        (field.value || []).includes(cust.id)
-                                                    );
-
-                                                    return (
-                                                        <CheckBoxSelect
-                                                            disabled={todoId ? watch("createdBy") !== userData?.userId : customers?.length === 0}
-                                                            options={customers}
-                                                            label="Members"
-                                                            placeholder="Select members"
-                                                            value={selectedOptions}
-                                                            onChange={(event, newValue) => {
-                                                                const newIds = newValue.map(opt => opt.id);
-                                                                const removedIds = (field.value || []).filter(id => !newIds.includes(id));
-
-                                                                // ✅ Update main selected IDs
-                                                                field.onChange(newIds);
-
-                                                                // ✅ Also update removeCustomerIds in the form
-                                                                if (todoId) {
-                                                                    const currentRemoved = watch("removeCustomerIds") || [];
-                                                                    setValue("removeCustomerIds", [...new Set([...currentRemoved, ...removedIds])]);
-                                                                    setValue("removeTeam", watch("teamId") || null);
-                                                                }
-                                                            }}
-                                                            checkAll={true}
-                                                            maxVisibleChips={1}
-                                                        />
-                                                    );
-                                                }}
+                                                render={({ field }) => (
+                                                    <Select
+                                                        disabled={true}
+                                                        options={assignedType}
+                                                        label={"Assigned To"}
+                                                        placeholder="Select Assigned To"
+                                                        value={parseInt(watch("assignedType")) || null}
+                                                    />
+                                                )}
                                             />
                                         </div>
-                                    </>
-                                )
-                            }
+                                    }
+                                />
 
-                            {
-                                watch("assignedType") === 3 && (
-                                    <div>
-                                        <Controller
-                                            name="customerId"
-                                            control={control}
-                                            rules={{ required: true }}
-                                            render={({ field, fieldState: { error } }) => (
-                                                <TeamMemberSelect
-                                                    disabled={todoId ? watch("createdBy") !== userData?.userId : false}
-                                                    label={"Member"}
-                                                    placeholder="Select Member"
-                                                    options={teamAndMembers}
-                                                    value={field.value || ""}
-                                                    onChange={(e) => {
-                                                        field.onChange(e?.id)
-                                                    }}
-                                                    error={!!error}
+
+                                {
+                                    watch("assignedType") === 2 && (
+                                        <>
+                                            <div>
+                                                <Controller
+                                                    name="teamId"
+                                                    control={control}
+                                                    rules={{ required: true }}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            // disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                            options={teams}
+                                                            label={"Team"}
+                                                            placeholder="Select Team"
+                                                            value={parseInt(watch("teamId")) || null}
+                                                            onChange={(_, newValue) => {
+                                                                if (newValue?.id) {
+                                                                    field.onChange(newValue.id);
+                                                                    const customers = newValue?.teamMembers?.map((item) => {
+                                                                        return {
+                                                                            id: item.memberId,
+                                                                            title: item.memberName || ''
+                                                                        }
+                                                                    })
+                                                                    setCustomers(customers || [])
+                                                                    const customerIds = customers?.map(cust => cust.id);
+                                                                    setValue("customerIds", customerIds || []);
+                                                                } else {
+                                                                    setValue("teamId", null);
+                                                                    setCustomers([])
+                                                                    setValue("customerIds", []);
+                                                                }
+                                                            }}
+                                                            error={errors.teamId}
+                                                        />
+                                                    )}
                                                 />
-                                            )}
-                                        />
-                                    </div>
-                                )
-                            }
-                            <div>
-                                <Controller
-                                    name="complectedWork"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            disabled={parseInt(watch("status")) === 1}
-                                            label="Completed Work"
-                                            type="text"
-                                            onChange={(e) => {
-                                                let numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                if (numericValue === '') {
-                                                    field.onChange('');
-                                                    return;
-                                                }
-                                                let value = parseInt(numericValue, 10);
+                                            </div>
 
-                                                if (Math.abs(value) <= 100) {
-                                                    field.onChange(value);
-                                                }
-                                            }}
-                                            value={field.value ?? ""}
-                                            endIcon="%"
-                                        />
-                                    )}
-                                />
-                            </div>
+                                            <div>
+                                                <Controller
+                                                    name="customerIds"
+                                                    control={control}
+                                                    render={({ field }) => {
+                                                        const selectedOptions = customers.filter((cust) =>
+                                                            (field.value || []).includes(cust.id)
+                                                        );
 
-                            <div className='col-span-3'>
-                                <Controller
-                                    name="comments"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            disabled={todoId ? watch("createdBy") !== userData?.userId : false}
-                                            {...field}
-                                            label="Comments"
-                                            type={`text`}
-                                            multiline={true}
-                                            minRows={3}
-                                        />
-                                    )}
-                                />
-                            </div>
+                                                        return (
+                                                            <CheckBoxSelect
+                                                                disabled={todoId ? watch("createdBy") !== userData?.userId : customers?.length === 0}
+                                                                options={customers}
+                                                                label="Members"
+                                                                placeholder="Select members"
+                                                                value={selectedOptions}
+                                                                onChange={(event, newValue) => {
+                                                                    const newIds = newValue.map(opt => opt.id);
+                                                                    const removedIds = (field.value || []).filter(id => !newIds.includes(id));
 
-                            <div className="col-span-3">
-                                <MultipleFileUpload
-                                    files={files}
-                                    setFiles={setFiles}
-                                    setAlert={setAlert}
-                                    setValue={setValue}
-                                    existingImages={existingImages}
-                                    setExistingImages={setExistingImages}
-                                    type="todo"
-                                    multiple={true}
-                                    placeHolder="Attach files here"
-                                    uploadedFiles={uploadedFiles}
-                                />
+                                                                    // ✅ Update main selected IDs
+                                                                    field.onChange(newIds);
+
+                                                                    // ✅ Also update removeCustomerIds in the form
+                                                                    if (todoId) {
+                                                                        const currentRemoved = watch("removeCustomerIds") || [];
+                                                                        setValue("removeCustomerIds", [...new Set([...currentRemoved, ...removedIds])]);
+                                                                        setValue("removeTeam", watch("teamId") || null);
+                                                                    }
+                                                                }}
+                                                                checkAll={true}
+                                                                maxVisibleChips={1}
+                                                            />
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
+                                        </>
+                                    )
+                                }
+
+                                {
+                                    watch("assignedType") === 3 && (
+                                        <div>
+                                            <Controller
+                                                name="customerId"
+                                                control={control}
+                                                rules={{ required: true }}
+                                                render={({ field, fieldState: { error } }) => (
+                                                    <TeamMemberSelect
+                                                        disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                        label={"Member"}
+                                                        placeholder="Select Member"
+                                                        options={teamAndMembers}
+                                                        value={field.value || ""}
+                                                        onChange={(e) => {
+                                                            field.onChange(e?.id)
+                                                        }}
+                                                        error={!!error}
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+                                    )
+                                }
+                                <div>
+                                    <Controller
+                                        name="complectedWork"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                disabled={parseInt(watch("status")) === 1}
+                                                label="Completed Work"
+                                                type="text"
+                                                onChange={(e) => {
+                                                    let numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                    if (numericValue === '') {
+                                                        field.onChange('');
+                                                        return;
+                                                    }
+                                                    let value = parseInt(numericValue, 10);
+
+                                                    if (Math.abs(value) <= 100) {
+                                                        field.onChange(value);
+                                                    }
+                                                }}
+                                                value={field.value ?? ""}
+                                                endIcon="%"
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                <div className='col-span-3'>
+                                    <Controller
+                                        name="comments"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                {...field}
+                                                label="Comments"
+                                                type={`text`}
+                                                multiline={true}
+                                                minRows={3}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="col-span-3">
+                                    <MultipleFileUpload
+                                        files={files}
+                                        setFiles={setFiles}
+                                        setAlert={setAlert}
+                                        setValue={setValue}
+                                        existingImages={existingImages}
+                                        setExistingImages={setExistingImages}
+                                        type="todo"
+                                        multiple={true}
+                                        placeHolder="Attach files here"
+                                        uploadedFiles={uploadedFiles}
+                                    />
+                                </div>
                             </div>
                         </div>
-
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type="submit" text={todoId ? "Update" : "Submit"} isLoading={loading} />
-                            <Button type="button" text={"Cancel"} disabled={loading} useFor='disabled' onClick={() => onClose()} />
+                            <Button type="submit" text={todoId ? "Update" : "Submit"} isLoading={loading} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} disabled={loading} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

@@ -44,7 +44,7 @@ const BaseDatePicker = React.forwardRef(({
                         },
                         '& .MuiOutlinedInput-root': {
                             height: '2.2rem',
-                            borderRadius: '0.5rem',
+                            borderRadius: '4px',
                             height: '3rem',
                             transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
                             '& fieldset': {

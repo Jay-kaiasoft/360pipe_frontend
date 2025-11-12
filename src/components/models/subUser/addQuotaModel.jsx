@@ -8,21 +8,28 @@ import CustomIcons from '../../common/icons/CustomIcons';
 import Select from '../../common/select/select';
 import { createQuota, getQuota, updateQuota } from '../../../service/customerQuota/customerQuotaService';
 import Input from '../../common/input/input';
+import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { connect } from 'react-redux';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
     '& .MuiDialogActions-root': { padding: theme.spacing(1) },
 }));
 
+
 const terms = [
-    { id: 1, title: 'Monthly', value: 1, kind: 'monthly' },
-    { id: 2, title: 'Quarter 1', value: 3, kind: 'q1' },
-    { id: 3, title: 'Quarter 2', value: 3, kind: 'q2' },
-    { id: 4, title: 'Quarter 3', value: 3, kind: 'q3' },
-    { id: 5, title: 'Quarter 4', value: 3, kind: 'q4' },
-    { id: 6, title: 'Semi-Annual', value: 6, kind: 'semi' },
-    { id: 7, title: 'Yearly', value: 12, kind: 'yearly' },
+    { id: 1, title: 'Monthly', kind: 'monthly' },
+    { id: 2, title: 'Quarterly', kind: 'quarterly' },
+    { id: 3, title: 'Semi-Annual', kind: 'semi' },
+    { id: 4, title: 'Annual', kind: 'annual' },
 ];
+
+const TERM_COUNTS = {
+    monthly: 12,
+    quarterly: 4,
+    semi: 2,
+    annual: 1,
+};
 
 const MONTHS = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -32,8 +39,7 @@ const MONTHS = [
 function parseStartMonthIndex(startEvalPeriod) {
     try {
         if (!startEvalPeriod) return 0;
-        // Expect "MM/DD/YYYY, ..." — take the first part before comma
-        const datePart = String(startEvalPeriod).split(',')[0]?.trim(); // "MM/DD/YYYY"
+        const datePart = String(startEvalPeriod).split(',')[0]?.trim();
         const mm = parseInt((datePart || '').split('/')[0], 10);
         if (Number.isFinite(mm) && mm >= 1 && mm <= 12) return mm - 1; // 0-based
         return 0;
@@ -42,40 +48,41 @@ function parseStartMonthIndex(startEvalPeriod) {
     }
 }
 
-function getIndicesForKind(kind) {
+function monthName(idx) { return MONTHS[(idx + 12) % 12]; }
+
+function monthSpanLabel(startIdx, len) {
+    const s = monthName(startIdx);
+    const e = monthName(startIdx + len - 1);
+    return `${s}–${e}`;
+}
+
+function buildLabelsForKind(kind, startMonthIndex) {
     switch (kind) {
-        case 'q1': return [1, 2, 3];
-        case 'q2': return [4, 5, 6];
-        case 'q3': return [7, 8, 9];
-        case 'q4': return [10, 11, 12];
-        case 'semi': return [1, 2, 3, 4, 5, 6];
-        case 'yearly': return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         case 'monthly':
-        default: return [1];
+            // 12 single-month labels rotating from start
+            return Array.from({ length: 12 }, (_, i) => monthName(startMonthIndex + i));
+        case 'quarterly': {
+            // 4 quarters of 3 months each
+            const starts = [0, 3, 6, 9].map(o => (startMonthIndex + o) % 12);
+            return starts.map((s, i) => `Q${i + 1} (${monthSpanLabel(s, 3)})`);
+        }
+        case 'semi': {
+            // 2 halves: 6 months each
+            const h1 = monthSpanLabel(startMonthIndex, 6);
+            const h2 = monthSpanLabel(startMonthIndex + 6, 6);
+            return [`(${h1})`, `H2 (${h2})`];
+        }
+        case 'annual': {
+            // 1 full-year label
+            const full = monthSpanLabel(startMonthIndex, 12);
+            return [`Annual (${full})`];
+        }
+        default:
+            return [];
     }
 }
 
-function buildMonthLabels({ kind, count, startMonthIndex }) {
-
-    // Offsets per term kind
-    const ranges = {
-        monthly: [0],
-        q1: [0, 1, 2],
-        q2: [3, 4, 5],
-        q3: [6, 7, 8],
-        q4: [9, 10, 11],
-        semi: [0, 1, 2, 3, 4, 5],
-        yearly: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-    };
-
-    const offsets = ranges[kind] || Array.from({ length: count }, (_, i) => i);
-    return offsets.slice(0, count).map(off => {
-        const idx = (startMonthIndex + off) % 12;
-        return MONTHS[idx];
-    });
-}
-
-function AddQuotaModel({ open, handleClose, customerId, id, handleGetAllQuota, startEvalPeriod, endEvalPeriod }) {
+function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetAllQuota, startEvalPeriod, endEvalPeriod }) {
     const theme = useTheme();
 
     const {
@@ -131,7 +138,7 @@ function AddQuotaModel({ open, handleClose, customerId, id, handleGetAllQuota, s
             const response = await getQuota(id);
             if (response?.result) {
                 const r = response.result;
-                setValue('id', r?.id || '');
+                setValue('quotaId', r?.id || '');
                 setValue('quota', r?.quota || '');
                 // Map incoming term title back to our id
                 const termData = terms.find(item => item.title === r?.term);
@@ -148,51 +155,61 @@ function AddQuotaModel({ open, handleClose, customerId, id, handleGetAllQuota, s
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
-    const submit = async (data) => {
+    const submit = async () => {
         const selectedTerm = terms.find(t => t.id === parseInt(watch('term')));
-        if (!selectedTerm || !data?.quota) return;
+        if (!selectedTerm || !watch("quota")) return;
 
         const quotaData = {
-            ...data,
-            customerId,
+            id: id,
+            quota: Number(parseFloat(watch("quota")).toFixed(2)),
             term: selectedTerm.title, // fix: use our terms array
+            amount1: Number(parseFloat(watch("amount1")).toFixed(2)),
+            amount2: Number(parseFloat(watch("amount2")).toFixed(2)),
+            amount3: Number(parseFloat(watch("amount3")).toFixed(2)),
+            amount4: Number(parseFloat(watch("amount4")).toFixed(2)),
+            amount5: Number(parseFloat(watch("amount5")).toFixed(2)),
+            amount6: Number(parseFloat(watch("amount6")).toFixed(2)),
+            amount7: Number(parseFloat(watch("amount7")).toFixed(2)),
+            amount8: Number(parseFloat(watch("amount8")).toFixed(2)),
+            amount9: Number(parseFloat(watch("amount9")).toFixed(2)),
+            amount10: Number(parseFloat(watch("amount10")).toFixed(2)),
+            amount11: Number(parseFloat(watch("amount11")).toFixed(2)),
+            amount12: Number(parseFloat(watch("amount12")).toFixed(2)),
+            customerId: customerId,
         };
+
         if (id) {
-          const response = await updateQuota(id, quotaData);
-          if (response?.status === 200) {
-            handleGetAllQuota();
-            onClose();
-          } else {
-            // You can integrate your setAlert here if available in scope
-            console.error(response?.message || 'Error updating quota');
-          }
+            const response = await updateQuota(id, quotaData);
+            if (response?.status === 200) {
+                handleGetAllQuota();
+                onClose();
+            } else {
+                setAlert({
+                    open: true,
+                    type: "error",
+                    message: response?.data?.message || "An error occurred. Please try again.",
+                });
+            }
         } else {
-          const response = await createQuota(quotaData);
-          if (response?.status === 201) {
-            handleGetAllQuota();
-            onClose();
-          } else {
-            console.error(response?.message || 'Error creating quota');
-          }
+            const response = await createQuota(quotaData);
+            if (response?.status === 201) {
+                handleGetAllQuota();
+                onClose();
+            } else {
+                setAlert({
+                    open: true,
+                    type: "error",
+                    message: response?.data?.message || "An error occurred. Please try again.",
+                });
+            }
         }
     };
 
-    // ---- Dynamic month labels based on selected term & startEvalPeriod ----
-    const selectedTerm = terms.find(t => t.id === parseInt(watch('term')));
-    const count = selectedTerm?.value || 0;
-
-    const startMonthIndex = parseStartMonthIndex(startEvalPeriod);
-    const monthLabels = selectedTerm
-        ? buildMonthLabels({
-            kind: selectedTerm.kind,
-            count,
-            startMonthIndex,
-        })
-        : [];
+    const selectedTerm = terms?.find(t => t.id === parseInt(watch('term')));
 
     return (
         <React.Fragment>
-            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
+            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {id ? 'Update' : 'Add'} Quota
                 </Components.DialogTitle>
@@ -212,104 +229,108 @@ function AddQuotaModel({ open, handleClose, customerId, id, handleGetAllQuota, s
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Controller
-                                    name="quota"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Quota"
-                                            type="text"
-                                            onChange={(e) => {
-                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                field.onChange(numericValue);
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-
-                            <div>
-                                <Controller
-                                    name="term"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={terms}
-                                            label="Period"
-                                            placeholder="Select period"
-                                            value={parseInt(watch('term')) || null}
-                                            onChange={(_, newValue) => {
-                                                // Clear all amount fields when term changes
-                                                for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
-                                                // Set new term
-                                                field.onChange(newValue?.id || null);
-                                            }}
-                                        />
-
-                                    )}
-                                />
-                            </div>
-
-                            {/* Dynamic amount inputs with month-based labels */}
-                            {/* Dynamic amount inputs using fixed storage slots based on term */}
-                            {(() => {
-                                if (!selectedTerm) return null;
-
-                                // Which amount slots to use for this term (e.g., q2 -> [4,5,6])
-                                const slotIndices = getIndicesForKind(selectedTerm.kind);
-
-                                // Build labels that *align* with the offsets of the chosen term
-                                // (q1 uses offsets [0,1,2], q2 [3,4,5], etc., already handled by buildMonthLabels)
-                                const startMonthIndex = parseStartMonthIndex(startEvalPeriod);
-                                const monthLabels = buildMonthLabels({
-                                    kind: selectedTerm.kind,
-                                    count: slotIndices.length,
-                                    startMonthIndex,
-                                });
-
-                                return (
-                                    <>
-                                        {slotIndices.map((slotNumber, i) => {
-                                            const fieldName = `amount${slotNumber}`;
-                                            const labelMonth = monthLabels[i] || `Month ${i + 1}`;
-                                            return (
-                                                <div key={fieldName}>
-                                                    <Controller
-                                                        name={fieldName}
-                                                        control={control}
-                                                        rules={{
-                                                            required: watch('term') ? `${labelMonth} amount is required` : false,
-                                                        }}
-                                                        render={({ field }) => (
-                                                            <Input
-                                                                {...field}
-                                                                label={`${labelMonth} Amount`}
-                                                                type="text"
-                                                                onChange={(e) => {
-                                                                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                                    field.onChange(numericValue);
-                                                                }}
-                                                                error={errors?.[fieldName]}
-                                                            />
-                                                        )}
+                        <div className='py-3 px-[30px]'>
+                            <div className="grid grid-cols-2 gap-[30px]">
+                                <div>
+                                    <Controller
+                                        name="quota"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Quota"
+                                                type="text"
+                                                onChange={(e) => {
+                                                    let value = e.target.value;
+                                                    if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                        field.onChange(value);
+                                                    }
+                                                }}
+                                                error={errors?.quota}
+                                                startIcon={
+                                                    <CustomIcons
+                                                        iconName={"fa-solid fa-dollar-sign"}
+                                                        css={"text-lg text-black mr-2"}
                                                     />
-                                                </div>
-                                            );
-                                        })}
-                                    </>
-                                );
-                            })()}
+                                                }
+                                            />
+                                        )}
+                                    />
+                                </div>
 
+                                <div>
+                                    <Controller
+                                        name="term"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={terms}
+                                                label="Period"
+                                                placeholder="Select period"
+                                                value={parseInt(watch('term')) || null}
+                                                onChange={(_, newValue) => {
+                                                    for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
+                                                    field.onChange(newValue?.id || null);
+                                                }}
+                                                error={errors.term}
+                                            />
+
+                                        )}
+                                    />
+                                </div>
+
+                                <div className='col-span-2 grid grid-cols-3 gap-4'>
+                                    {(() => {
+                                        if (!selectedTerm) return null;
+                                        const startMonthIndex = parseStartMonthIndex(startEvalPeriod);
+                                        const kind = terms.find(t => t.id === parseInt(watch('term')))?.kind;
+                                        const count = TERM_COUNTS[kind] || 0;
+                                        const labels = buildLabelsForKind(kind, startMonthIndex).slice(0, count);
+                                        return (
+                                            <>
+                                                {Array.from({ length: count }, (_, i) => {
+                                                    const n = i + 1;                   // amount1..amountN
+                                                    const fieldName = `amount${n}`;
+                                                    const labelText = `${labels[i]} Amount` || `Amount ${n}`;
+                                                    return (
+                                                        <div key={fieldName}>
+                                                            <Controller
+                                                                name={fieldName}
+                                                                control={control}
+                                                                rules={{ required: watch('term') ? `${labelText} is required` : false }}
+                                                                render={({ field }) => (
+                                                                    <Input
+                                                                        {...field}
+                                                                        label={`${labelText}`}
+                                                                        type="text"
+                                                                        onChange={(e) => {
+                                                                            let value = e.target.value;
+                                                                            if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                field.onChange(value);
+                                                                            }
+                                                                        }}
+                                                                        error={errors?.[fieldName]}
+                                                                    />
+                                                                )}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+
+                            </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className="flex justify-end items-center gap-4">
-                            <Button type="submit" text={id ? 'Update' : 'Submit'} />
-                            <Button type="button" text={'Cancel'} useFor="disabled" onClick={onClose} />
+                            <Button type="submit" text={id ? 'Update' : 'Submit'} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={'Cancel'} useFor="disabled" onClick={onClose} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>
@@ -318,4 +339,8 @@ function AddQuotaModel({ open, handleClose, customerId, id, handleGetAllQuota, s
     );
 }
 
-export default AddQuotaModel;
+const mapDispatchToProps = {
+    setAlert,
+};
+
+export default connect(null, mapDispatchToProps)(AddQuotaModel)

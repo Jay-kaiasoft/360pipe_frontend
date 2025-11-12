@@ -8,6 +8,7 @@ import { getAllActions } from '../../service/actions/actionService';
 import Button from '../../components/common/buttons/button';
 import Checkbox from '../../components/common/checkBox/checkbox';
 import Input from '../../components/common/input/input';
+import CustomIcons from '../../components/common/icons/CustomIcons';
 
 const AddMemberRoles = () => {
     const { id } = useParams();
@@ -295,10 +296,10 @@ const AddMemberRoles = () => {
 
                 <div className='flex justify-end mt-5 gap-3'>
                     <div>
-                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/members")} />
+                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/members")} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                     </div>
                     <div>
-                        <Button type="submit" text={id ? "Update" : "Submit"} />
+                        <Button type="submit" text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />}/>
                     </div>
                 </div>
             </form>

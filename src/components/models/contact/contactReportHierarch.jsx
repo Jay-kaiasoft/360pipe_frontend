@@ -153,7 +153,7 @@ function ContactReportHierarch({ open, handleClose, contactId }) {
         open={open}
         aria-labelledby="contact-hierarch-title"
         fullWidth
-        maxWidth="lg"
+        maxWidth="md"
         fullScreen={typeof window !== 'undefined' && window.innerWidth < 768}
       >
         <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="contact-hierarch-title">
@@ -194,7 +194,7 @@ function ContactReportHierarch({ open, handleClose, contactId }) {
 
         <Components.DialogActions>
           <div className="flex justify-end items-center gap-4">
-            <Button type="button" text="Close" useFor="disabled" onClick={onClose} />
+            <Button type="button" text="Close" useFor="disabled" onClick={onClose} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
           </div>
         </Components.DialogActions>
       </BootstrapDialog>

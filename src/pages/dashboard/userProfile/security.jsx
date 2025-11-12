@@ -14,6 +14,7 @@ import { getCustomer, updateCustomer } from '../../../service/customers/customer
 import { securityQuestions } from '../../../service/common/commonService';
 import { connect } from 'react-redux';
 import Button from '../../../components/common/buttons/button';
+import CustomIcons from '../../../components/common/icons/CustomIcons';
 
 const tabData = [
     {
@@ -264,7 +265,7 @@ const Security = ({ setAlert }) => {
                         selectedTab === 0 && (
                             <div className="mt-6 flex justify-end items-center gap-3 cap">
                                 <div>
-                                    <Button type="submit" text={"Update"} />
+                                    <Button type="submit" text={"Update"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                                 </div>
                             </div>
                         )

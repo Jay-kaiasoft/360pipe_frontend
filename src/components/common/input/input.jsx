@@ -23,7 +23,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
             helperText={helperText}
             sx={{
                 '& .MuiOutlinedInput-root': {
-                    borderRadius: '0.5rem',
+                    borderRadius: '4px',
                     transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
                     '& fieldset': {
                         borderColor: error ? theme.palette.error.main : theme.palette.secondary?.main,

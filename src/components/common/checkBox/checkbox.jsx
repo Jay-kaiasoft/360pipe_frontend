@@ -2,7 +2,7 @@ import React from "react";
 import Components from "../../muiComponents/components";
 import { useTheme } from "@mui/material";
 
-const Checkbox = ({ text, onChange, checked = false, disabled }) => {
+const Checkbox = ({ text, onChange, checked = false, disabled, color = null }) => {
     const theme = useTheme();
 
     return (
@@ -14,12 +14,12 @@ const Checkbox = ({ text, onChange, checked = false, disabled }) => {
                         size="small"
                         sx={{
                             "&.Mui-checked": {
-                                color: theme.palette.secondary.main,
+                                color: color || theme.palette.secondary.main,
                             },
                             "&.MuiSvgIcon-root": {
-                                color: theme.palette.secondary.main,
+                                color: color || theme.palette.secondary.main,
                             },
-                            color: theme.palette.secondary.main,
+                            color: color || theme.palette.secondary.main,
                             paddingY: 0,
                         }}
                         checked={checked}

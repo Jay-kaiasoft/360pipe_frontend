@@ -144,105 +144,109 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
 
                 <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
                     <Components.DialogContent dividers>
-                        <div className='grid md:grid-cols-2 gap-4'>
-                            <div>
-                                <Controller
-                                    name={`productId`}
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={products || []} // Prevent selecting the same account in both fields
-                                            label={"Product"}
-                                            placeholder="Select product"
-                                            value={parseInt(watch(`productId`)) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    setValue("name", newValue.name)
-                                                    setValue("price", newValue.price)
-                                                } else {
-                                                    setValue(`productId`, null);
-                                                    setValue("name", null)
-                                                    setValue("price", null)
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-                            <div>
-                                <Controller
-                                    name="name"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            disabled
-                                            label="Product Name"
-                                            type={`text`}
-                                        />
-                                    )}
-                                />
-                            </div>
-                            <div>
-                                <Controller
-                                    name="qty"
-                                    control={control}
-                                    rules={{
-                                        required: "Qty name is required",
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            disabled={!watch("name")}
-                                            label="Quantity"
-                                            type={`text`}
-                                            error={errors.qty}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, '');
-                                                field.onChange(value);
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-                            <div>
-                                <Controller
-                                    name="price"
-                                    control={control}
-                                    rules={{
-                                        required: "price is required",
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            disabled={!watch("name")}
-                                            label="Price"
-                                            type={`text`}
-                                            error={errors.price}
-                                            onChange={(e) => {
-                                                let value = e.target.value;
-                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
+                        <div className='py-3 px-[30px]'>
+                            <div className='grid md:grid-cols-2 gap-[30px]'>
+                                <div>
+                                    <Controller
+                                        name={`productId`}
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={products || []} // Prevent selecting the same account in both fields
+                                                label={"Product"}
+                                                placeholder="Select product"
+                                                value={parseInt(watch(`productId`)) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                        setValue("name", newValue.name)
+                                                        setValue("price", newValue.price)
+                                                    } else {
+                                                        setValue(`productId`, null);
+                                                        setValue("name", null)
+                                                        setValue("price", null)
+                                                    }
+                                                }}
+                                                error={errors?.productId}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                <div>
+                                    <Controller
+                                        name="name"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                disabled
+                                                label="Product Name"
+                                                type={`text`}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                <div>
+                                    <Controller
+                                        name="qty"
+                                        control={control}
+                                        rules={{
+                                            required: "Qty name is required",
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                disabled={!watch("name")}
+                                                label="Quantity"
+                                                type={`text`}
+                                                error={errors.qty}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, '');
                                                     field.onChange(value);
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                <div>
+                                    <Controller
+                                        name="price"
+                                        control={control}
+                                        rules={{
+                                            required: "price is required",
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                disabled={!watch("name")}
+                                                label="Price"
+                                                type={`text`}
+                                                error={errors.price}
+                                                onChange={(e) => {
+                                                    let value = e.target.value;
+                                                    if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                        field.onChange(value);
+                                                    }
+                                                }}
+                                                startIcon={
+                                                    <CustomIcons
+                                                        iconName={"fa-solid fa-dollar-sign"}
+                                                        css={"text-lg text-black mr-2"}
+                                                    />
                                                 }
-                                            }}
-                                            startIcon={
-                                                <CustomIcons
-                                                    iconName={"fa-solid fa-dollar-sign"}
-                                                    css={"text-lg text-black mr-2"}
-                                                />
-                                            }
-                                        />
-                                    )}
-                                />
+                                            />
+                                        )}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={id ? "Update" : "Submit"} />
-                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                            <Button type={`submit`} text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

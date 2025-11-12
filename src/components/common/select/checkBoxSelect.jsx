@@ -107,7 +107,7 @@ const CheckBoxSelect = forwardRef(
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
-              borderRadius: '0.5rem',
+              borderRadius: '4px',
               color: `${theme.palette.text.primary} !important`,
               minHeight: '40px',
               alignItems: 'flex-start',

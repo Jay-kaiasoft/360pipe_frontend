@@ -93,7 +93,7 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
                   // helperText: fieldState.error ? "This field is required" : null,
                   sx: {
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: '0.5rem',
+                      borderRadius: '4px',
                       transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
                       '& fieldset': {
                         borderColor: fieldState.error

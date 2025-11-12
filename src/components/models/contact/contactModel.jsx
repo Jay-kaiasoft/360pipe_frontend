@@ -193,7 +193,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
-                maxWidth='sm'
+                maxWidth='md'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {contactId ? "Update" : "Add New"} Contact
@@ -214,115 +214,116 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 gap-4'>
-                            <div>
-                                <Controller
-                                    name="opportunityId"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={opportunities}
-                                            label={"Opportunity"}
-                                            placeholder="Select Opportunity"
-                                            value={parseInt(watch("opportunityId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue("opportunityId", null);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
+                        <div className='py-3 px-[30px]'>
+                            <div className='grid grid-cols-2 md:grid-cols-3 gap-[30px]'>
+                                <div>
+                                    <Controller
+                                        name="opportunityId"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={opportunities}
+                                                label={"Opportunity"}
+                                                placeholder="Select Opportunity"
+                                                value={parseInt(watch("opportunityId")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue("opportunityId", null);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <Controller
-                                name="firstName"
-                                control={control}
-                                rules={{
-                                    required: "First name is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="First Name"
-                                        type={`text`}
-                                        error={errors.firstName}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="lastName"
-                                control={control}
-                                rules={{
-                                    required: "Last name is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Last Name"
-                                        type={`text`}
-                                        error={errors.lastName}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="title"
-                                control={control}
-                                rules={{
-                                    required: "Title is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Title"
-                                        type={`text`}
-                                        error={errors.title}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="emailAddress"
-                                control={control}
-                                rules={{
-                                    required: "Email address is required",
-                                    pattern: {
-                                        value: /^\S+@\S+$/i,
-                                        message: "Email address is invalid",
-                                    },
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Email Address"
-                                        type={`text`}
-                                        error={errors.emailAddress}
-                                    />
-                                )}
-                            />
-                            <div>
                                 <Controller
-                                    name="reportContactId"
+                                    name="firstName"
                                     control={control}
+                                    rules={{
+                                        required: "First name is required",
+                                    }}
                                     render={({ field }) => (
-                                        <Select
-                                            options={contacts}
-                                            label={"Reports To"}
-                                            placeholder="Select contact"
-                                            value={parseInt(watch("reportContactId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue("reportContactId", null);
-                                                }
-                                            }}
+                                        <Input
+                                            {...field}
+                                            label="First Name"
+                                            type={`text`}
+                                            error={errors.firstName}
                                         />
                                     )}
                                 />
-                            </div>
-                            {/* <div>
+                                <Controller
+                                    name="lastName"
+                                    control={control}
+                                    rules={{
+                                        required: "Last name is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Last Name"
+                                            type={`text`}
+                                            error={errors.lastName}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="title"
+                                    control={control}
+                                    rules={{
+                                        required: "Title is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Title"
+                                            type={`text`}
+                                            error={errors.title}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="emailAddress"
+                                    control={control}
+                                    rules={{
+                                        required: "Email address is required",
+                                        pattern: {
+                                            value: /^\S+@\S+$/i,
+                                            message: "Email address is invalid",
+                                        },
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Email Address"
+                                            type={`text`}
+                                            error={errors.emailAddress}
+                                        />
+                                    )}
+                                />
+                                <div>
+                                    <Controller
+                                        name="reportContactId"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={contacts}
+                                                label={"Reports To"}
+                                                placeholder="Select contact"
+                                                value={parseInt(watch("reportContactId")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue("reportContactId", null);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                {/* <div>
                                 <Controller
                                     name="role"
                                     control={control}
@@ -343,13 +344,14 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                     )}
                                 />
                             </div> */}
+                            </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={contactId ? "Update" : "Submit"} isLoading={loading} />
-                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                            <Button type={`submit`} text={contactId ? "Update" : "Submit"} isLoading={loading} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

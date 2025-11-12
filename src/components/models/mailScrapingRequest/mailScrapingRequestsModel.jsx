@@ -112,33 +112,35 @@ function MailScrapingRequestsModel({ setAlert, open, handleClose, id, handleGetA
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-1 gap-4'>
-                            <Controller
-                                name="maxMessages"
-                                control={control}
-                                rules={{
-                                    required: "Masages is required",
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Max Messages Count"
-                                        type={`text`}
-                                        error={errors.maxMessages}
-                                        onChange={(e) => {
-                                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                            field.onChange(numericValue);
-                                        }}
-                                    />
-                                )}
-                            />
+                        <div className='py-3 px-[30px]'>
+                            <div className='grid grid-cols-1'>
+                                <Controller
+                                    name="maxMessages"
+                                    control={control}
+                                    rules={{
+                                        required: "Masages is required",
+                                    }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Max Messages Count"
+                                            type={`text`}
+                                            error={errors.maxMessages}
+                                            onChange={(e) => {
+                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                field.onChange(numericValue);
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={"Update"} isLoading={loading} />
-                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                            <Button type={`submit`} text={"Update"} isLoading={loading} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

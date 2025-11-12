@@ -35,7 +35,7 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "1
     };
 
     return (
-        <div className="w-40 h-40">
+        <div className="w-24 h-24">
             {value ? (
                 <div className="relative w-full h-full border border-dashed border-gray-400 rounded-full overflow-hidden">
                     <img
@@ -43,7 +43,7 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "1
                         alt="Uploaded preview"
                         className="w-full h-full object-contain"
                     />
-                    <div className='absolute z-50 top-4 right-6 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500'>
+                    <div className='absolute z-50 top-2 right-2.5 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500'>
                         <button type='button' onClick={onRemove}>
                             <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white' />
                         </button>
@@ -55,10 +55,10 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "1
                     onClick={handleClick}
                 >
                     <div className="flex flex-col items-center justify-center text-gray-500">
-                        <CustomIcons iconName="fa-solid fa-image" css="w-8 h-8 mb-3" />
-                        <p className="text-center text-sm">
+                        <CustomIcons iconName="fa-solid fa-image" css="w-5 h-5" />
+                        {/* <p className="text-center text-sm">
                             {text ? text : 'Click in this area to upload a file'}
-                        </p>
+                        </p> */}
                     </div>
                     <input
                         type="file"

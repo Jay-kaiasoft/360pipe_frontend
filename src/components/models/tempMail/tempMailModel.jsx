@@ -98,7 +98,7 @@ function TempMailModel({ setAlert, open, handleClose, id, handleGetAllMails }) {
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
-                maxWidth='sm'
+                maxWidth='md'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     Update E-Mail Details
@@ -119,83 +119,85 @@ function TempMailModel({ setAlert, open, handleClose, id, handleGetAllMails }) {
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 gap-4'>
-                            <Controller
-                                name="email"
-                                control={control}                               
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Sender Email"
-                                        type={`text`}
-                                        disabled                                 
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="companyName"
-                                control={control}                               
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Company Name"
-                                        type={`text`}
-                                        onChange={(e) => {
-                                            field.onChange(e);
-                                        }}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="jobTitle"
-                                control={control}                               
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Job Title"
-                                        type={`text`}
-                                        error={errors.jobTitle}
-                                        onChange={(e) => {
-                                            field.onChange(e);
-                                        }}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="phone"
-                                control={control}                             
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Phone Number"
-                                        type={`text`}
-                                        onChange={(e) => {                                            
-                                            field.onChange(e.target.value);
-                                        }}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="website"
-                                control={control}                               
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Website"
-                                        type={`text`}
-                                        onChange={(e) => {
-                                            field.onChange(e);
-                                        }}
-                                    />
-                                )}
-                            />
+                        <div className='py-3 px-[30px]'>
+                            <div className='grid grid-cols-3 gap-[30px]'>
+                                <Controller
+                                    name="email"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Sender Email"
+                                            type={`text`}
+                                            disabled
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="companyName"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Company Name"
+                                            type={`text`}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="jobTitle"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Job Title"
+                                            type={`text`}
+                                            error={errors.jobTitle}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="phone"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Phone Number"
+                                            type={`text`}
+                                            onChange={(e) => {
+                                                field.onChange(e.target.value);
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="website"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Website"
+                                            type={`text`}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                            }}
+                                        />
+                                    )}
+                                />
+                            </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={"Update"} isLoading={loading} />
-                            <Button type="button" text={"Cancel"} disabled={loading} useFor='disabled' onClick={() => onClose()} />
+                            <Button type={`submit`} text={"Update"} isLoading={loading} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} disabled={loading} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

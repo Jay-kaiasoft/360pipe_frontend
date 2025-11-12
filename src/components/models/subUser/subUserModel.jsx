@@ -349,16 +349,24 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         if (t === 1) {
             const now = new Date();
             const y = now.getFullYear();
-            const start = new Date(y, 0, 1, 0, 0, 0, 0);
-            const end = new Date(y, 11, 31, 23, 59, 59, 999);
+            const start = new Date(y, 0, 1);      // Jan 1
+            const end = new Date(y, 11, 31);      // Dec 31
 
-            setValue("startEvalPeriod", start);
-            setValue("endEvalPeriod", end);
+            const formatDate = (date) => {
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const yyyy = date.getFullYear();
+                return `${mm}/${dd}/${yyyy}`;
+            };
+
+            setValue("startEvalPeriod", formatDate(start));
+            setValue("endEvalPeriod", formatDate(end));
         } else {
             setValue("startEvalPeriod", null);
             setValue("endEvalPeriod", null);
         }
     }, [watch("calendarYearType")]);
+
 
 
     const handleSetQuota = async (id) => {
@@ -392,6 +400,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
             startEvalPeriod: watch("startEvalPeriod"),
             endEvalPeriod: watch("endEvalPeriod"),
         }
+
         if ((id && watch("emailAddress") === emailAddress) || validEmail || validUsername) {
             if (id) {
                 const res = await updateSubUser(id, newData);
@@ -510,351 +519,351 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-                            <div>
-                                <Controller
-                                    name="name"
-                                    control={control}
-                                    rules={{
-                                        required: "Name is required",
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Name"
-                                            type={`text`}
-                                            error={errors.name}
-                                            onChange={(e) => {
-                                                field.onChange(e);
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
+                        <div className='py-3 px-[30px]'>
+                            <div className='grid grid-cols-2 md:grid-cols-3 gap-[30px]'>
+                                <div>
+                                    <Controller
+                                        name="name"
+                                        control={control}
+                                        rules={{
+                                            required: "Name is required",
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Name"
+                                                type={`text`}
+                                                error={errors.name}
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <div>
-                                <Controller
-                                    name="subUserTypeId"
-                                    control={control}
-                                    rules={{ required: "Sub User Type is required" }}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={subUsersTypes}
-                                            label="Member Role"
-                                            placeholder="Select role"
-                                            value={parseInt(watch("subUserTypeId")) || null}
-                                            onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                            error={errors?.subUserTypeId}
-                                        />
-                                    )}
-                                />
-                            </div>
+                                <div>
+                                    <Controller
+                                        name="subUserTypeId"
+                                        control={control}
+                                        rules={{ required: "Sub User Type is required" }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={subUsersTypes}
+                                                label="Member Role"
+                                                placeholder="Select role"
+                                                value={parseInt(watch("subUserTypeId")) || null}
+                                                onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                error={errors?.subUserTypeId}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <div>
-                                <Controller
-                                    name="emailAddress"
-                                    control={control}
-                                    rules={{
-                                        required: "Email is required",
-                                        pattern: {
-                                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                            message: "Invalid email address",
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Email"
-                                            type={`text`}
-                                            error={errors?.emailAddress}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\s/g, "");
-                                                field.onChange(value);
-                                            }}
-                                            onBlur={() => {
-                                                if (emailAddress !== watch("emailAddress")) {
-                                                    handleVerifyEmail();
-                                                    setIsEmailExits(false);
-                                                } else {
-                                                    setIsEmailExits(true);
-                                                    setValidEmail(true);
+                                <div>
+                                    <Controller
+                                        name="emailAddress"
+                                        control={control}
+                                        rules={{
+                                            required: "Email is required",
+                                            pattern: {
+                                                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                                message: "Invalid email address",
+                                            },
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Email"
+                                                type={`text`}
+                                                error={errors?.emailAddress}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\s/g, "");
+                                                    field.onChange(value);
+                                                }}
+                                                onBlur={() => {
+                                                    if (emailAddress !== watch("emailAddress")) {
+                                                        handleVerifyEmail();
+                                                        setIsEmailExits(false);
+                                                    } else {
+                                                        setIsEmailExits(true);
+                                                        setValidEmail(true);
+                                                    }
+                                                }}
+                                                endIcon={
+                                                    validEmail === true ? (
+                                                        <CustomIcons iconName={'fa-solid fa-check'} css={`text-green-500`} />
+                                                    ) : validEmail === false ? (
+                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css={`text-red-500`} />
+                                                    ) : null
                                                 }
-                                            }}
-                                            endIcon={
-                                                validEmail === true ? (
-                                                    <CustomIcons iconName={'fa-solid fa-check'} css={`text-green-500`} />
-                                                ) : validEmail === false ? (
-                                                    <CustomIcons iconName={'fa-solid fa-xmark'} css={`text-red-500`} />
-                                                ) : null
-                                            }
-                                        />
-                                    )}
-                                />
-                            </div>
-
-                            <div>
-                                <Controller
-                                    name="cellPhone"
-                                    control={control}
-                                    rules={{
-                                        required: "Phone is required",
-                                        maxLength: {
-                                            value: 10,
-                                            message: 'Enter valid phone number',
-                                        },
-                                        minLength: {
-                                            value: 10,
-                                            message: 'Enter valid phone number',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="Phone"
-                                            type={`text`}
-                                            error={errors?.cellPhone}
-                                            onChange={(e) => {
-                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                field.onChange(numericValue);
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
-
-                            {
-                                id && (
-                                    <>
-                                        <div className='col-span-3 grid grid-cols-3 gap-4'>
-                                            <Controller
-                                                name="calendarYearType"
-                                                control={control}
-                                                rules={{ required: "Calendar Year Type is required" }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        options={calendarType}
-                                                        label="Calendar Type"
-                                                        placeholder="Select calendar type"
-                                                        value={parseInt(watch("calendarYearType")) || null}
-                                                        onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                                        error={errors?.calendarYearType}
-                                                    />
-                                                )}
                                             />
-                                            {
-                                                watch("calendarYearType") && (
-                                                    <div>
-                                                        <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
-                                                    </div>
-                                                )
-                                            }
+                                        )}
+                                    />
+                                </div>
 
-                                            {
-                                                watch("calendarYearType") && (
-                                                    <div>
-                                                        <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
-                                                    </div>
-                                                )
-                                            }
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="quota"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        {...field}
-                                                        label="Quota"
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            let value = e.target.value;
-                                                            if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                field.onChange(value);
-                                                            }
-                                                        }}
-                                                        startIcon={
-                                                            <CustomIcons
-                                                                iconName={"fa-solid fa-dollar-sign"}
-                                                                css={"text-lg text-black mr-2"}
-                                                            />
-                                                        }
-                                                    />
-                                                )}
+                                <div>
+                                    <Controller
+                                        name="cellPhone"
+                                        control={control}
+                                        rules={{
+                                            required: "Phone is required",
+                                            maxLength: {
+                                                value: 10,
+                                                message: 'Enter valid phone number',
+                                            },
+                                            minLength: {
+                                                value: 10,
+                                                message: 'Enter valid phone number',
+                                            },
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Phone"
+                                                type={`text`}
+                                                error={errors?.cellPhone}
+                                                onChange={(e) => {
+                                                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                    field.onChange(numericValue);
+                                                }}
                                             />
-                                        </div>
+                                        )}
+                                    />
+                                </div>
 
-                                        <div>
-                                            <Controller
-                                                name="term"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        options={terms}
-                                                        label="Period"
-                                                        placeholder="Select period"
-                                                        value={parseInt(watch('term')) || null}
-                                                        onChange={(_, newValue) => {
-                                                            for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
-                                                            field.onChange(newValue?.id || null);
-                                                        }}
-                                                    />
-
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div className='col-span-3 grid grid-cols-3 gap-4'>
-                                            {(() => {
-                                                if (!selectedTerm) return null;
-                                                const startMonthIndex = parseStartMonthIndex(watch("startEvalPeriod"));
-                                                const kind = terms.find(t => t.id === parseInt(watch('term')))?.kind;
-                                                const count = TERM_COUNTS[kind] || 0;
-                                                const labels = buildLabelsForKind(kind, startMonthIndex).slice(0, count);
-                                                return (
-                                                    <>
-                                                        {Array.from({ length: count }, (_, i) => {
-                                                            const n = i + 1;                   // amount1..amountN
-                                                            const fieldName = `amount${n}`;
-                                                            const labelText = `${labels[i]} Amount` || `Amount ${n}`;
-                                                            return (
-                                                                <div key={fieldName}>
-                                                                    <Controller
-                                                                        name={fieldName}
-                                                                        control={control}
-                                                                        rules={{ required: watch('term') ? `${labelText} is required` : false }}
-                                                                        render={({ field }) => (
-                                                                            <Input
-                                                                                {...field}
-                                                                                label={`${labelText}`}
-                                                                                type="text"
-                                                                                onChange={(e) => {
-                                                                                    let value = e.target.value;
-                                                                                    if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                        field.onChange(value);
-                                                                                    }
-                                                                                }}
-                                                                                error={errors?.[fieldName]}
-                                                                            />
-                                                                        )}
-                                                                    />
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-
-                                        <div className='flex items-center gap-3'>
-                                            <Tooltip title="Save" arrow>
-                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => submitQuota()}>
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            {
-                                                showCloseButton && (
-                                                    <Tooltip title="Cancel" arrow>
-                                                        <div className='bg-gray-800 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleResetQuota()}>
-                                                                <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-4 w-4' />
-                                                            </Components.IconButton>
+                                {
+                                    id && (
+                                        <>
+                                            <div className='col-span-3 grid grid-cols-3 gap-4'>
+                                                <Controller
+                                                    name="calendarYearType"
+                                                    control={control}
+                                                    rules={{ required: "Calendar Year Type is required" }}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            options={calendarType}
+                                                            label="Calendar Type"
+                                                            placeholder="Select calendar type"
+                                                            value={parseInt(watch("calendarYearType")) || null}
+                                                            onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                            error={errors?.calendarYearType}
+                                                        />
+                                                    )}
+                                                />
+                                                {
+                                                    watch("calendarYearType") && (
+                                                        <div>
+                                                            <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
                                                         </div>
-                                                    </Tooltip>
-                                                )
-                                            }
-                                        </div>
+                                                    )
+                                                }
 
-                                        <div className='col-span-3'>
-                                            <div className="max-h-56 overflow-y-auto">
-                                                <table className="min-w-full border-collapse border">
-                                                    <thead className="bg-gray-200 sticky top-0 z-10 ">
-                                                        <tr>
-                                                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                #
-                                                            </th>
-                                                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                Term
-                                                            </th>
-                                                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                Quota
-                                                            </th>
-                                                            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                Actions
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    {
-                                                        customerQuotaDtos?.length > 0 ? (
-                                                            <tbody className="divide-y divide-gray-200 bg-white">
-                                                                {customerQuotaDtos?.map((row, i) => (
-                                                                    <tr key={i} className="hover:bg-gray-50">
-                                                                        <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
-                                                                        <td className="px-4 py-1 text-sm text-gray-800">{row.term || "—"}</td>
-                                                                        <td className="px-4 py-1 text-sm text-gray-800">${row.quota?.toLocaleString() || "—"}</td>
+                                                {
+                                                    watch("calendarYearType") && (
+                                                        <div>
+                                                            <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                        </div>
+                                                    )
+                                                }
+                                            </div>
 
-                                                                        <td className="px-4 py-1 text-sm text-gray-800">
-                                                                            <div className='flex items-center gap-2 justify-end h-full'>
-                                                                                <Tooltip title="Edit" arrow>
-                                                                                    <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                        <Components.IconButton onClick={() => handleSetQuota(row.id)}>
-                                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                        </Components.IconButton>
-                                                                                    </div>
-                                                                                </Tooltip>
-                                                                                <Tooltip title="Delete" arrow>
-                                                                                    <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                        </Components.IconButton>
-                                                                                    </div>
-                                                                                </Tooltip>
-                                                                            </div>
+                                            <div>
+                                                <Controller
+                                                    name="quota"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            label="Quota"
+                                                            type="text"
+                                                            onChange={(e) => {
+                                                                let value = e.target.value;
+                                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                                    field.onChange(value);
+                                                                }
+                                                            }}
+                                                            startIcon={
+                                                                <CustomIcons
+                                                                    iconName={"fa-solid fa-dollar-sign"}
+                                                                    css={"text-lg text-black mr-2"}
+                                                                />
+                                                            }
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Controller
+                                                    name="term"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            options={terms}
+                                                            label="Period"
+                                                            placeholder="Select period"
+                                                            value={parseInt(watch('term')) || null}
+                                                            onChange={(_, newValue) => {
+                                                                for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
+                                                                field.onChange(newValue?.id || null);
+                                                            }}
+                                                        />
+
+                                                    )}
+                                                />
+                                            </div>
+
+                                            <div className='col-span-3 grid grid-cols-3 gap-4'>
+                                                {(() => {
+                                                    if (!selectedTerm) return null;
+                                                    const startMonthIndex = parseStartMonthIndex(watch("startEvalPeriod"));
+                                                    const kind = terms.find(t => t.id === parseInt(watch('term')))?.kind;
+                                                    const count = TERM_COUNTS[kind] || 0;
+                                                    const labels = buildLabelsForKind(kind, startMonthIndex).slice(0, count);
+                                                    return (
+                                                        <>
+                                                            {Array.from({ length: count }, (_, i) => {
+                                                                const n = i + 1;                   // amount1..amountN
+                                                                const fieldName = `amount${n}`;
+                                                                const labelText = `${labels[i]} Amount` || `Amount ${n}`;
+                                                                return (
+                                                                    <div key={fieldName}>
+                                                                        <Controller
+                                                                            name={fieldName}
+                                                                            control={control}
+                                                                            rules={{ required: watch('term') ? `${labelText} is required` : false }}
+                                                                            render={({ field }) => (
+                                                                                <Input
+                                                                                    {...field}
+                                                                                    label={`${labelText}`}
+                                                                                    type="text"
+                                                                                    onChange={(e) => {
+                                                                                        let value = e.target.value;
+                                                                                        if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                            field.onChange(value);
+                                                                                        }
+                                                                                    }}
+                                                                                    error={errors?.[fieldName]}
+                                                                                />
+                                                                            )}
+                                                                        />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+
+                                            <div className='flex items-center gap-3'>
+                                                <Tooltip title="Save" arrow>
+                                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => submitQuota()}>
+                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                                {
+                                                    showCloseButton && (
+                                                        <Tooltip title="Cancel" arrow>
+                                                            <div className='bg-gray-800 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton onClick={() => handleResetQuota()}>
+                                                                    <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-4 w-4' />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    )
+                                                }
+                                            </div>
+
+                                            <div className='col-span-3'>
+                                                <div className="max-h-56 overflow-y-auto">
+                                                    <table className="min-w-full border-collapse border">
+                                                        <thead className="bg-gray-200 sticky top-0 z-10 ">
+                                                            <tr>
+                                                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
+                                                                    #
+                                                                </th>
+                                                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
+                                                                    Term
+                                                                </th>
+                                                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
+                                                                    Quota
+                                                                </th>
+                                                                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
+                                                                    Actions
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        {
+                                                            customerQuotaDtos?.length > 0 ? (
+                                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                                    {customerQuotaDtos?.map((row, i) => (
+                                                                        <tr key={i} className="hover:bg-gray-50">
+                                                                            <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
+                                                                            <td className="px-4 py-1 text-sm text-gray-800">{row.term || "—"}</td>
+                                                                            <td className="px-4 py-1 text-sm text-gray-800">${row.quota?.toLocaleString() || "—"}</td>
+
+                                                                            <td className="px-4 py-1 text-sm text-gray-800">
+                                                                                <div className='flex items-center gap-2 justify-end h-full'>
+                                                                                    <Tooltip title="Edit" arrow>
+                                                                                        <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                            <Components.IconButton onClick={() => handleSetQuota(row.id)}>
+                                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                            </Components.IconButton>
+                                                                                        </div>
+                                                                                    </Tooltip>
+                                                                                    <Tooltip title="Delete" arrow>
+                                                                                        <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                            </Components.IconButton>
+                                                                                        </div>
+                                                                                    </Tooltip>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            ) : (
+                                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                                    <tr className="hover:bg-gray-50">
+                                                                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                                            No records
                                                                         </td>
                                                                     </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        ) : (
-                                                            <tbody className="divide-y divide-gray-200 bg-white">
-                                                                <tr className="hover:bg-gray-50">
-                                                                    <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-                                                                        No records
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        )
-                                                    }
-                                                </table>
+                                                                </tbody>
+                                                            )
+                                                        }
+                                                    </table>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </>
-                                )
-                            }
+                                        </>
+                                    )
+                                }
 
-                        </div>
-                        <div className='w-60 mt-5'>
-                            {
-                                id && (
-                                    <Button disabled={!isEmailExits} type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
-                                )
-                            }
+                            </div>
+                            <div className='w-60 mt-5'>
+                                {
+                                    id && (
+                                        <Button disabled={!isEmailExits} type={`button`} text={"Send Invitation"} useFor='success' onClick={() => handleSendInvitation()} />
+                                    )
+                                }
+                            </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className={`flex justify-end items-center gap-4`}>
-
                             <div>
-                                <Button type={`submit`} text={id ? "Update" : "Submit"} />
+                                <Button type={`submit`} text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                             </div>
-                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>
             </BootstrapDialog>
-            {/* <AddQuotaModel open={openModel} handleClose={handleCloseModel} customerId={id} id={selectedQuotaId} startEvalPeriod={watch("startEvalPeriod")} endEvalPeriod={watch("endEvalPeriod")} handleGetUser={handleGetUser} handleGetAllQuota={handleGetUserQuota} /> */}
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

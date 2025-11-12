@@ -10,6 +10,7 @@ import { deleteBrandLogo, updateBusinessInfo, uploadBrandLogo } from '../../../s
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import { connect } from 'react-redux';
 import Button from '../../../components/common/buttons/button';
+import CustomIcons from '../../../components/common/icons/CustomIcons';
 
 const Brand = ({ setAlert }) => {
     const data = getUserDetails();
@@ -32,7 +33,7 @@ const Brand = ({ setAlert }) => {
             websiteUrl: "",
         },
     });
-    
+
     const handleImageChange = (event) => {
         if (event) {
             setFormDataFile(event)
@@ -86,7 +87,7 @@ const Brand = ({ setAlert }) => {
     const handleGetUserDetails = async () => {
         const res = await getCustomer(data?.userId);
         if (res?.data?.status === 200) {
-            if (res?.data?.result?.businessInfo) {                
+            if (res?.data?.result?.businessInfo) {
                 reset(res?.data?.result?.businessInfo);
             }
         }
@@ -105,11 +106,20 @@ const Brand = ({ setAlert }) => {
             setAlert({ open: true, message: res?.data?.message, type: "error" })
         }
     }
-    
+
     return (
         <>
             <div className="flex justify-center items-center">
                 <form onSubmit={handleSubmit(submit)} className="max-w-96 w-full px-6 flex flex-col gap-4">
+                    <div className='flex justify-center'>
+                        <FileInputBox
+                            onFileSelect={handleImageChange}
+                            onRemove={handleDeleteImage}
+                            value={watch("brandLogo")}
+                            text="Click in this area to upload brand logo"
+                        />
+                    </div>
+
                     <div>
                         <Controller
                             name="businessName"
@@ -167,18 +177,9 @@ const Brand = ({ setAlert }) => {
                         />
                     </div>
 
-                    <div>
-                        <FileInputBox
-                            onFileSelect={handleImageChange}
-                            onRemove={handleDeleteImage}
-                            value={watch("brandLogo")}
-                            text="Click in this area to upload brand logo"
-                        />
-                    </div>
-                    
                     <div className="mt-6 flex justify-end items-center gap-3 cap">
                         <div>
-                            <Button type="submit" text={"Update"} />
+                            <Button type="submit" text={"Update"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                         </div>
                     </div>
                 </form>

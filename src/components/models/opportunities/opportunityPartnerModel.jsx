@@ -154,62 +154,69 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
 
                 <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
                     <Components.DialogContent dividers>
-                        <div className='grid md:grid-cols-2 gap-4'>
-                            <div className='mb-3'>
-                                <Controller
-                                    name={`accountId`}
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={accounts || []} // Prevent selecting the same account in both fields
-                                            label={"Account"}
-                                            placeholder="Select Account"
-                                            value={parseInt(watch(`accountId`)) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    setValue(`accountToId`, newValue.salesforceAccountId || null);
-                                                } else {
-                                                    setValue(`accountToId`, null);
-                                                    setValue(`accountId`, null);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div>
+                        <div className='p-[15px]'>
+                            <div className='grid md:grid-cols-2 gap-[30px]'>
+                                <div className='mb-3'>
+                                    <Controller
+                                        name={`accountId`}
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={accounts || []} // Prevent selecting the same account in both fields
+                                                label={"Account"}
+                                                placeholder="Select Account"
+                                                value={parseInt(watch(`accountId`)) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                        setValue(`accountToId`, newValue.salesforceAccountId || null);
+                                                    } else {
+                                                        setValue(`accountToId`, null);
+                                                        setValue(`accountId`, null);
+                                                    }
+                                                }}
+                                                error={errors?.accountId}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
-                            <div>
-                                <Controller
-                                    name={`role`}
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={partnerRoles}
-                                            label={"Role"}
-                                            placeholder="Select Role"
-                                            value={parseInt(watch(`roleid`)) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    setValue(`roleid`, newValue.id);
-                                                    setValue(`role`, newValue.title);
-                                                } else {
-                                                    setValue(`role`, null);
-                                                    setValue(`roleid`, null);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
+                                <div>
+                                    <Controller
+                                        name={`role`}
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={partnerRoles}
+                                                label={"Role"}
+                                                placeholder="Select Role"
+                                                value={parseInt(watch(`roleid`)) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                        setValue(`roleid`, newValue.id);
+                                                        setValue(`role`, newValue.title);
+                                                    } else {
+                                                        setValue(`role`, null);
+                                                        setValue(`roleid`, null);
+                                                    }
+                                                }}
+                                                error={errors?.role}
+
+                                            />
+                                        )}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={id ? "Update" : "Submit"} />
-                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                            <Button type={`submit`} text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

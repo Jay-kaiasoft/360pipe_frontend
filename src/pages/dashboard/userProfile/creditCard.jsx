@@ -16,6 +16,7 @@ import { getCustomer } from '../../../service/customers/customersService';
 import { createPaymentProfile, deletePaymentProfile, getPaymentProfile } from '../../../service/payment/paymentService';
 import Button from '../../../components/common/buttons/button';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
+import CustomIcons from '../../../components/common/icons/CustomIcons';
 
 
 const formatCardNumber = (value) => {
@@ -553,7 +554,7 @@ const CreditCard = ({ setAlert }) => {
                             !watch("cardType") ? (
                                 <div className="mt-6 flex justify-end items-center gap-3 cap">
                                     <div>
-                                        <Button type="submit" text={"Update"} />
+                                        <Button type="submit" text={"Update"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                                     </div>
                                 </div>) : null
                         }

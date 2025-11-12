@@ -461,7 +461,7 @@ const Profile = ({ setAlert }) => {
 
                 <div className="mt-6 flex justify-end items-center gap-3 cap">
                     <div>
-                        <Button type="submit" text={"Update"} />
+                        <Button type="submit" text={"Update"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                     </div>
                 </div>
             </form>
