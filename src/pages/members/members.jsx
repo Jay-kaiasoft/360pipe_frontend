@@ -138,16 +138,14 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       headerName: 'Member Name',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 800,
-      sortable: false,
+      maxWidth: 800,      
     },
     {
       field: 'emailAddress',
       headerName: 'Email Address',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 700,
-      sortable: false,
+      maxWidth: 700,      
       renderCell: (params) => {
         return (
           <div>
@@ -164,16 +162,14 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       headerName: 'Role',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 400,
-      sortable: false,
+      maxWidth: 400,      
     },
     {
       field: 'status',
       headerName: 'Status',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 200,
-      sortable: false,
+      maxWidth: 200,      
     },
     {
       field: 'action',

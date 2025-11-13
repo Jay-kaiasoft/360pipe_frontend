@@ -9,18 +9,23 @@ import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 import { deleteOpportunity, getAllOpportunities, getOpportunityOptions } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import SelectMultiple from '../../../components/common/select/selectMultiple';
 import { opportunityStatus } from '../../../service/common/commonService';
 import { Tooltip } from '@mui/material';
+import ViewOpportunitiesModel from '../../../components/models/opportunities/viewOpportunitiesModel';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
-    const location = useLocation();
+    const location = useLocation(); 
+    const navigate = useNavigate();
 
     const [opportunities, setOpportunities] = useState([]);
     const [open, setOpen] = useState(false);
+    const [openView, setOpenView] = useState(false)
+
     const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
+
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
     const [selectedOppName, setSelectedOppName] = useState([])
@@ -96,6 +101,16 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     }
 
+     const handleOpenView = (opportunityId = null) => {
+        setSelectedOpportunityId(opportunityId);
+        setOpenView(true);
+    }
+
+    const handleCloseView = () => {
+        setSelectedOpportunityId(null);
+        setOpenView(false);
+    }
+
     const handleOpen = (opportunityId = null) => {
         setSelectedOpportunityId(opportunityId);
         setOpen(true);
@@ -120,11 +135,11 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         const res = await deleteOpportunity(selectedOpportunityId);
         if (res.status === 200) {
             setSyncingPushStatus(true);
-            setAlert({
-                open: true,
-                message: "Opportunity deleted successfully",
-                type: "success"
-            });
+            // setAlert({
+            //     open: true,
+            //     message: "Opportunity deleted successfully",
+            //     type: "success"
+            // });
             handleGetOpportunities();
             handleCloseDeleteDialog();
         } else {
@@ -166,7 +181,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 400,
-            sortable: false,
         },
         {
             field: 'salesStage',
@@ -211,9 +225,18 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
+            flex: 1,
+            maxWidth: 170,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
+                        <Tooltip title="View" arrow>
+                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => navigate(`/dashboard/opportunity-view/${params.row.id}`)}>
+                                    <CustomIcons iconName={'fa-solid fa-eye'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                         <PermissionWrapper
                             functionalityName="Opportunities"
                             moduleName="Opportunities"
@@ -310,6 +333,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} />
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
+            <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView}/>
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

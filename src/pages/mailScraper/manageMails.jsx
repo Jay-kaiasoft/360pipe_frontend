@@ -197,8 +197,7 @@ const ManageMails = ({ setAlert }) => {
             headerName: 'Sender Email',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 230,
-            sortable: false,
+            minWidth: 230,            
         },
         {
             field: 'companyName',
@@ -212,7 +211,8 @@ const ManageMails = ({ setAlert }) => {
             headerName: 'Phone',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 150
+            maxWidth: 150,
+            sortable: false,
         },
         {
             field: 'jobTitle',
@@ -227,9 +227,9 @@ const ManageMails = ({ setAlert }) => {
             headerName: 'Website',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 130
+            minWidth: 130,
+            sortable: false,
         },
-
         {
             field: 'action',
             headerName: 'action',

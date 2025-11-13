@@ -11,7 +11,7 @@ import Input from '../../../components/common/input/input';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
-import { createOpportunity, deleteOpportunityLogo, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { createOpportunity, deleteOpportunityLogo, getOpportunityDetails, updateOpportunitiesDealAmount, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
 import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
@@ -241,6 +241,10 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     }
 
     const onClose = () => {
+        setProductTotalAmount(0)
+        setOpportunitiesContacts([])
+        setOpportunitiesPartner([])
+        setOpportunitiesProducts([])
         setLoading(false);
         reset({
             id: null,
@@ -266,7 +270,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 // reset(res?.result);
                 setValue("accountId", res?.result?.accountId || null);
                 setValue("opportunity", res?.result?.opportunity || null);
-                setValue("dealAmount", res?.result?.dealAmount || null);
                 setValue("closeDate", res?.result?.closeDate ? res?.result?.closeDate : null);
                 setValue("nextSteps", res?.result?.nextSteps || null);
                 setValue("salesforceOpportunityId", res?.result?.salesforceOpportunityId || null);
@@ -274,6 +277,11 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
+                if (productTotalAmount > Number(res?.result?.dealAmount?.toFixed(2))) {
+                    setValue("dealAmount", productTotalAmount)
+                } else {
+                    setValue("dealAmount", res?.result?.dealAmount || null);
+                }
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
                         ...item,
@@ -454,6 +462,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const submit = async (data) => {
         const newData = {
             ...data,
+            dealAmount: productTotalAmount > Number(parseFloat(watch("dealAmount")).toFixed(2)) ? productTotalAmount : watch("dealAmount"),
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
             newLogo: watch("newLogo")
@@ -494,8 +503,16 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     }
                 }
             } else if (activeStep === 3) {
-                onClose()
+                const res = await getAllOpportunitiesProducts(watch("id") || opportunityId)
+                setOpportunitiesProducts(res.result)
+                const total = res.result?.reduce((sum, item) => {
+                    const price = parseFloat(parseFloat(item?.qty) * parseFloat(item?.price)) || 0;
+                    return sum + price;
+                }, 0);
+                await updateOpportunitiesDealAmount(opportunityId, { dealAmount: Number(total.toFixed(2)) > Number(parseFloat(watch("dealAmount")).toFixed(2)) ? Number(total.toFixed(2)) : watch("dealAmount") })
+                handleGetAllOpportunities()
                 setLoading(false);
+                onClose()
             }
             else {
                 setLoading(false);
@@ -703,7 +720,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                 <div className="p-[30px]">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-[22px] font-semibold"></h3>
-
                                         <div>
                                             <Button type={`button`} text={'Add Partner'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
                                         </div>
@@ -766,7 +782,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                         </div>
                                     </div>
                                 </div>
-
                             )
                         }
                         {
@@ -941,7 +956,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
                             {
-                                activeStep != 0 && (
+                                activeStep !== 0 && (
                                     <Button onClick={handleBack} type={`button`} text={"back"} isLoading={loading} startIcon={<CustomIcons iconName={'fa-solid fa-arrow-left'} css='cursor-pointer' />} />
                                 )
                             }
@@ -996,409 +1011,3 @@ const mapDispatchToProps = {
 };
 
 export default connect(null, mapDispatchToProps)(OpportunitiesModel)
-
-
-
-//    <div className='grid grid-cols-5 gap-4'>
-//                             <div className='flex justify-center items-center'>
-//                                 <FileInputBox
-//                                     onFileSelect={handleImageChange}
-//                                     onRemove={handleOpenDeleteLogoDialog}
-//                                     value={watch("logo") || watch("newLogo")}
-//                                     text="Upload opportunity Logo"
-//                                     size="100x100"
-//                                 />
-//                             </div>
-//                             <div className={`grid ${opportunityId != null ? "md:grid-cols-4" : "md:grid-cols-3"}  gap-4 mb-4 col-span-4`}>
-//                                 <div className='col-span-2'>
-//                                     <Controller
-//                                         name="accountId"
-//                                         control={control}
-//                                         render={({ field }) => (
-//                                             <Select
-//                                                 options={accounts}
-//                                                 label={"Account"}
-//                                                 placeholder="Select Account"
-//                                                 value={parseInt(watch("accountId")) || null}
-//                                                 onChange={(_, newValue) => {
-//                                                     if (newValue?.id) {
-//                                                         field.onChange(newValue.id);
-//                                                     } else {
-//                                                         setValue("accountId", null);
-//                                                     }
-//                                                 }}
-//                                             />
-//                                         )}
-//                                     />
-//                                 </div>
-//                                 <Controller
-//                                     name="opportunity"
-//                                     control={control}
-//                                     rules={{
-//                                         required: "Opportunity name is required",
-//                                     }}
-//                                     render={({ field }) => (
-//                                         <Input
-//                                             {...field}
-//                                             label="Opportunity Name"
-//                                             type={`text`}
-//                                             error={errors.opportunity}
-//                                             onChange={(e) => {
-//                                                 field.onChange(e);
-//                                             }}
-//                                         />
-//                                     )}
-//                                 />
-//                                 <Controller
-//                                     name="dealAmount"
-//                                     control={control}
-//                                     rules={{
-//                                         required: "Deal amount is required",
-//                                     }}
-//                                     render={({ field }) => (
-//                                         <Input
-//                                             {...field}
-//                                             label="Deal Amount"
-//                                             type="text"
-//                                             error={errors.dealAmount}
-//                                             onChange={(e) => {
-//                                                 let value = e.target.value;
-//                                                 if (/^\d*\.?\d{0,2}$/.test(value)) {
-//                                                     field.onChange(value);
-//                                                 }
-//                                             }}
-//                                             startIcon={
-//                                                 <CustomIcons
-//                                                     iconName={"fa-solid fa-dollar-sign"}
-//                                                     css={"text-lg text-black mr-2"}
-//                                                 />
-//                                             }
-//                                         />
-//                                     )}
-//                                 />
-//                                 <Controller
-//                                     name="salesStage"
-//                                     control={control}
-//                                     rules={{
-//                                         required: "Sales stage is required",
-//                                     }}
-//                                     render={({ field }) => (
-//                                         <Select
-//                                             options={opportunityStages}
-//                                             label={"Stage"}
-//                                             placeholder="Select Stage"
-//                                             value={parseInt(watch("salesStage")) || null}
-//                                             error={errors.salesStage}
-//                                             onChange={(_, newValue) => {
-//                                                 if (newValue?.id) {
-//                                                     field.onChange(newValue.id);
-//                                                 } else {
-//                                                     setValue("salesStage", null);
-//                                                 }
-//                                             }}
-//                                         />
-//                                     )}
-//                                 />
-//                                 <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
-//                                 <Controller
-//                                     name="nextSteps"
-//                                     control={control}
-//                                     rules={{
-//                                         required: "Next steps is required",
-//                                     }}
-//                                     render={({ field }) => (
-//                                         <Input
-//                                             {...field}
-//                                             label="Next Steps"
-//                                             type={`text`}
-//                                             error={errors.nextSteps}
-//                                             onChange={(e) => {
-//                                                 field.onChange(e.target.value);
-//                                             }}
-//                                         />
-//                                     )}
-//                                 />
-//                                 <Controller
-//                                     name="status"
-//                                     control={control}
-//                                     render={({ field }) => (
-//                                         <Select
-//                                             options={opportunityStatus}
-//                                             label={"Status"}
-//                                             placeholder="Select status"
-//                                             value={parseInt(watch("status")) || null}
-//                                             onChange={(_, newValue) => {
-//                                                 if (newValue?.id) {
-//                                                     field.onChange(newValue.id);
-//                                                 } else {
-//                                                     setValue("status", null);
-//                                                 }
-//                                             }}
-//                                         />
-//                                     )}
-//                                 />
-//                             </div>
-//                         </div>
-
-//                         {opportunityId != null && (
-//                             <div className="border-b-2 border-gray-600 my-6"></div>
-//                         )}
-//                         {
-//                             opportunityId != null && (
-//                                 <div className='grid md:grid-cols-2 gap-6'>
-//                                     <div className='border-r-2 border-gray-600 pr-6'>
-//                                         <div className="max-h-56 overflow-y-auto">
-//                                             <table className="min-w-full border-collapse border">
-//                                                 <thead className="bg-gray-50 sticky top-0 z-10">
-//                                                     <tr>
-//                                                         <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
-//                                                             <div className='flex items-center'>
-//                                                                 <p className='w-full text-left'>
-//                                                                     Partners
-//                                                                 </p>
-//                                                                 <Tooltip title="Add" arrow>
-//                                                                     <div className='bg-green-600 h-7 w-7 flex justify-end items-center rounded-full text-white'>
-//                                                                         <Components.IconButton onClick={() => handleOpenPartnerModel()}>
-//                                                                             <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                         </Components.IconButton>
-//                                                                     </div>
-//                                                                 </Tooltip>
-//                                                             </div>
-//                                                         </th>
-//                                                     </tr>
-//                                                     <tr>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-//                                                             #
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-//                                                             Name
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-//                                                             Role
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">
-//                                                             Actions
-//                                                         </th>
-//                                                     </tr>
-//                                                 </thead>
-
-//                                                 <tbody className="divide-y divide-gray-200 bg-white">
-//                                                     {opportunitiesPartner?.length > 0 ? (
-//                                                         opportunitiesPartner.map((row, i) => (
-//                                                             <tr key={i} className="hover:bg-gray-50">
-//                                                                 <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
-//                                                                 <td className="px-4 py-1 text-sm text-gray-800">{row.accountName || "—"}</td>
-//                                                                 <td className="px-4 py-1 text-sm text-gray-800">{row.role || "—"}</td>
-//                                                                 <td className="px-4 py-1 text-sm text-gray-800">
-//                                                                     <div className='flex items-center gap-2 justify-end h-full'>
-//                                                                         <Tooltip title="Edit" arrow>
-//                                                                             <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-//                                                                                 <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
-//                                                                                     <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                                 </Components.IconButton>
-//                                                                             </div>
-//                                                                         </Tooltip>
-//                                                                         <Tooltip title="Delete" arrow>
-//                                                                             <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-//                                                                                 <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-//                                                                                     <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                                 </Components.IconButton>
-//                                                                             </div>
-//                                                                         </Tooltip>
-//                                                                     </div>
-//                                                                 </td>
-//                                                             </tr>
-//                                                         ))
-//                                                     ) : (
-//                                                         <tr className="hover:bg-gray-50">
-//                                                             <td colSpan={4} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-//                                                                 No records
-//                                                             </td>
-//                                                         </tr>
-//                                                     )}
-//                                                 </tbody>
-//                                             </table>
-//                                         </div>
-//                                     </div>
-
-//                                     <div>
-//                                         <div className="max-h-56 overflow-y-auto">
-//                                             <table className="min-w-full border-collapse border">
-//                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
-//                                                     <tr>
-//                                                         <th colSpan={4} className="text-center px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
-//                                                             <div className='flex items-center'>
-//                                                                 <p className='w-full text-left'>
-//                                                                     Contacts
-//                                                                 </p>
-//                                                                 <div className='flex justify-end items-center gap-3'>
-//                                                                     {editedContacts.length > 0 && (
-//                                                                         <Tooltip title="Save" arrow>
-//                                                                             <div className='bg-[#1072E0] h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-//                                                                                 <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
-//                                                                                     <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                                 </Components.IconButton>
-//                                                                             </div>
-//                                                                         </Tooltip>
-//                                                                     )}
-//                                                                     <Tooltip title="Add" arrow>
-//                                                                         <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-//                                                                             <Components.IconButton onClick={() => handleOpenContactModel()}>
-//                                                                                 <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                             </Components.IconButton>
-//                                                                         </div>
-//                                                                     </Tooltip>
-//                                                                 </div>
-//                                                             </div>
-//                                                         </th>
-//                                                     </tr>
-//                                                     <tr>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             #
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Name
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Key Contact
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Actions
-//                                                         </th>
-//                                                     </tr>
-//                                                 </thead>
-//                                                 {
-//                                                     opportunitiesContacts?.length > 0 ? (
-//                                                         <tbody className="divide-y divide-gray-200 bg-white">
-//                                                             {opportunitiesContacts?.map((row, i) => (
-//                                                                 <tr key={i} className="hover:bg-gray-50">
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">{row.contactName || "—"}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">
-//                                                                         <div className='w-10'>
-//                                                                             <Checkbox
-//                                                                                 checked={!!row.isKey}
-//                                                                                 disabled={
-//                                                                                     opportunitiesContacts.filter(c => c.isKey).length >= 4 && !row.isKey
-//                                                                                 }
-//                                                                                 onChange={() => handleToggleKeyContact(row.id)}
-//                                                                             />
-//                                                                         </div>
-//                                                                     </td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">
-//                                                                         <div className='flex items-center gap-2 justify-end h-full'>
-//                                                                             <Tooltip title="Delete" arrow>
-//                                                                                 <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-//                                                                                     <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
-//                                                                                         <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                                     </Components.IconButton>
-//                                                                                 </div>
-//                                                                             </Tooltip>
-//                                                                         </div>
-//                                                                     </td>
-//                                                                 </tr>
-//                                                             ))}
-//                                                         </tbody>
-//                                                     ) : (
-//                                                         <tbody className="divide-y divide-gray-200 bg-white">
-//                                                             <tr className="hover:bg-gray-50">
-//                                                                 <td colSpan={4} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-//                                                                     No records
-//                                                                 </td>
-//                                                             </tr>
-//                                                         </tbody>
-//                                                     )
-//                                                 }
-//                                             </table>
-//                                         </div>
-//                                     </div>
-
-//                                     <div className='col-span-2'>
-//                                         <div className="border-b-2 border-gray-600 my-4"></div>
-//                                         <div className="max-h-56 overflow-y-auto">
-//                                             <table className="min-w-full border-collapse border">
-//                                                 <thead className="bg-gray-50 sticky top-0 z-10 ">
-//                                                     <tr>
-//                                                         <th colSpan={6} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
-//                                                             <div className='flex items-center'>
-//                                                                 <p className='w-full text-left'>
-//                                                                     Product & Service
-//                                                                 </p>
-//                                                                 <Tooltip title="Add" arrow>
-//                                                                     <div className='bg-green-600 h-7 w-7 flex justify-end items-center rounded-full text-white'>
-//                                                                         <Components.IconButton onClick={() => handleOpenProductModel()}>
-//                                                                             <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                         </Components.IconButton>
-//                                                                     </div>
-//                                                                 </Tooltip>
-//                                                             </div>
-//                                                         </th>
-//                                                     </tr>
-//                                                     <tr>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             #
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Name
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Qty
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Price
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Total Price
-//                                                         </th>
-//                                                         <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-//                                                             Actions
-//                                                         </th>
-//                                                     </tr>
-//                                                 </thead>
-//                                                 {
-//                                                     opportunitiesProducts?.length > 0 ? (
-//                                                         <tbody className="divide-y divide-gray-200 bg-white">
-//                                                             {opportunitiesProducts?.map((row, i) => (
-//                                                                 <tr key={i} className="hover:bg-gray-50">
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">{row.name || "—"}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">{row.qty || "—"}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">${row.price?.toLocaleString() || "—"}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">${parseFloat(parseFloat(row.qty) * parseFloat(row.price))?.toLocaleString() || "—"}</td>
-//                                                                     <td className="px-4 py-1 text-sm text-gray-800">
-//                                                                         <div className='flex items-center gap-2 justify-end h-full'>
-//                                                                             <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-//                                                                                 <Tooltip title="Edit" arrow>
-//                                                                                     <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
-//                                                                                         <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                                     </Components.IconButton>
-//                                                                                 </Tooltip>
-//                                                                             </div>
-//                                                                             <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-//                                                                                 <Tooltip title="Delete" arrow>
-//                                                                                     <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
-//                                                                                         <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-//                                                                                     </Components.IconButton>
-//                                                                                 </Tooltip>
-//                                                                             </div>
-//                                                                         </div>
-//                                                                     </td>
-//                                                                 </tr>
-//                                                             ))}
-//                                                         </tbody>
-//                                                     ) : (
-//                                                         <tbody className="divide-y divide-gray-200 bg-white">
-//                                                             <tr className="hover:bg-gray-50">
-//                                                                 <td colSpan={6} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-//                                                                     No records
-//                                                                 </td>
-//                                                             </tr>
-//                                                         </tbody>
-//                                                     )
-//                                                 }
-//                                             </table>
-//                                         </div>
-//                                     </div>
-//                                 </div>
-//                             )
-//                         }

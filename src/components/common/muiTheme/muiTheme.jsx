@@ -39,7 +39,7 @@ const MuiTheme = () =>
       text: {
         primary: colors.heading,
         secondary: colors.secondary,
-        disabled: colors.defaultTwo,
+        disabled: colors.black,
       },
       error: {
         main: "#FF4D66",

@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { useTheme } from '@mui/material';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false ,disabled = false}) => {
+const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false }) => {
   const theme = useTheme();
 
   const customTheme = createTheme({
@@ -84,7 +84,7 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
                 setValue(name, date ? dayjs(date).format("MM/DD/YYYY") : null);
               }}
               minDate={minDate ? dayjs(minDate) : null}
-              maxDate={maxDate ? dayjs(maxDate) : null}             
+              maxDate={maxDate ? dayjs(maxDate) : null}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -124,9 +124,15 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
                     '& .MuiInputBase-input': {
                       color: theme.palette.text.primary,
                       height: 7,
-                    },
-                    '& .Mui-disabled': {
+                    },                  
+                    '& .MuiInputLabel-root.Mui-disabled': {
                       color: theme.palette.text.primary,
+                    },
+
+                    // ✅ disabled input text color (important one)
+                    '& .MuiInputBase-input.Mui-disabled': {
+                      color: theme.palette.text.primary,
+                      WebkitTextFillColor: theme.palette.text.primary,
                     },
                     '& .MuiFormHelperText-root': {
                       color: theme.palette.error.main,

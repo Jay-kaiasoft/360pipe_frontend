@@ -666,14 +666,71 @@ body {
 
 /* subtle glow pulse for "waiting" */
 @keyframes pulseGlow {
-  0%, 100% { transform: scale(1);   filter: drop-shadow(0 0 0 rgba(234,179,8,.0)); }
-  50%      { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(234,179,8,.45)); }
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(234, 179, 8, .0));
+  }
+
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 8px rgba(234, 179, 8, .45));
+  }
 }
-.pulse-glow { animation: pulseGlow 1.4s ease-in-out infinite; }
+
+.pulse-glow {
+  animation: pulseGlow 1.4s ease-in-out infinite;
+}
 
 /* quick pop when job finishes */
 @keyframes popIn {
-  0% { transform: scale(.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
-.pop-in { animation: popIn .35s ease-out both; }
+
+.pop-in {
+  animation: popIn .35s ease-out both;
+}
+
+.MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitleContainer {
+  visibility: visible !important;
+}
+
+.MuiDataGrid-columnHeader .MuiDataGrid-sortIcon,
+.MuiDataGrid-columnHeader .MuiDataGrid-sortButton {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+
+/* Remove hover, focus, and active background */
+.MuiDataGrid-columnHeader .MuiIconButton-root,
+.MuiDataGrid-columnHeader .MuiIconButton-root:hover,
+.MuiDataGrid-columnHeader .MuiIconButton-root:focus,
+.MuiDataGrid-columnHeader .MuiIconButton-root:active {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Remove inner icon focus/active background */
+.MuiDataGrid-columnHeader .MuiDataGrid-sortIcon,
+.MuiDataGrid-columnHeader .MuiDataGrid-sortIcon:hover,
+.MuiDataGrid-columnHeader .MuiDataGrid-sortIcon:focus,
+.MuiDataGrid-columnHeader .MuiDataGrid-sortIcon:active {
+  background-color: transparent !important;
+}
+
+/* Remove ripple effect from sort icon */
+.MuiDataGrid-columnHeader .MuiTouchRipple-root {
+  display: none !important;
+}
+
+/* https://chatgpt.com/share/6915ca7a-fafc-8001-952d-336374762224 */

@@ -63,8 +63,7 @@ const SyncHistory = () => {
             headerName: 'Date',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 180,
-            sortable: false,
+            maxWidth: 180,            
         },
 
         {
@@ -102,6 +101,7 @@ const SyncHistory = () => {
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 200,
+            sortable: false,
         },
     ];
 

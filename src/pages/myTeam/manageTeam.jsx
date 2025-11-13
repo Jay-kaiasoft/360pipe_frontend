@@ -101,8 +101,7 @@ const ManageTeam = ({ setAlert }) => {
             headerName: 'Name',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 300,
-            sortable: false,
+            maxWidth: 300,            
         },
         {
             field: 'createdByName',
@@ -117,7 +116,6 @@ const ManageTeam = ({ setAlert }) => {
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 350,
-            sortable: false,
         },
         {
             field: 'teamMembers',
@@ -125,6 +123,7 @@ const ManageTeam = ({ setAlert }) => {
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 50,
+            sortable: false,
         },
         {
             field: 'action',

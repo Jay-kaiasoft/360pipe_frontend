@@ -122,8 +122,7 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'First Name',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 300,
-            sortable: false,
+            maxWidth: 300,            
         },
         {
             field: 'lastName',

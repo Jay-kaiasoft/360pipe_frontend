@@ -10,6 +10,27 @@ import { changeTodoPriority } from '../../../service/todoPriority/todoPrioritySe
 
 const paginationModel = { page: 0, pageSize: 10 };
 
+const AscIcon = () => (
+    <CustomIcons
+        iconName="fa-solid fa-sort-up"
+        css="text-black text-sm ml-2"
+    />
+);
+
+const DescIcon = () => (
+    <CustomIcons
+        iconName="fa-solid fa-sort-down"
+        css="text-black text-sm ml-2"
+    />
+);
+
+const UnsortedIcon = () => (
+    <CustomIcons
+        iconName="fa-solid fa-sort"
+        css="text-black text-sm ml-2"
+    />
+);
+
 export default function DataTable({
     getRowClassName,
     checkboxSelection = false,
@@ -155,7 +176,7 @@ export default function DataTable({
                             )}
                         </div> */}
                         <div>
-                            {   
+                            {
                                 showFilters && filtersComponent && (filtersComponent())
                             }
                         </div>
@@ -208,7 +229,12 @@ export default function DataTable({
                             setRowSelectionModel(newRowSelectionModel);
                         }}
                         rowSelectionModel={rowSelectionModel}
-                        // slots={{ toolbar: CustomToolbar }}
+                        slots={{
+                            columnSortedAscendingIcon: AscIcon,
+                            columnSortedDescendingIcon: DescIcon,
+                            columnUnsortedIcon: UnsortedIcon,
+                        }}
+                        disableColumnMenu
                         slotProps={{
                             toolbar: {
                                 showQuickFilter: true,          // ✅ adds a search box
@@ -218,6 +244,8 @@ export default function DataTable({
                         sx={{
                             color: theme.palette.text.primary,
                             overflow: 'auto',
+                    
+
                             '& .MuiDataGrid-columnHeaders': {
                                 position: 'sticky',
                                 top: 0,

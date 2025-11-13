@@ -84,7 +84,7 @@ function buildLabelsForKind(kind, startMonthIndex) {
             // 2 halves: 6 months each
             const h1 = monthSpanLabel(startMonthIndex, 6);
             const h2 = monthSpanLabel(startMonthIndex + 6, 6);
-            return [`(${h1})`, `H2 (${h2})`];
+            return [`(${h1})`, `(${h2})`];
         }
         case 'annual': {
             // 1 full-year label
@@ -670,6 +670,26 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
                                             <div>
                                                 <Controller
+                                                    name="term"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            options={terms}
+                                                            label="Period"
+                                                            placeholder="Select period"
+                                                            value={parseInt(watch('term')) || null}
+                                                            onChange={(_, newValue) => {
+                                                                for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
+                                                                field.onChange(newValue?.id || null);
+                                                            }}
+                                                        />
+
+                                                    )}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Controller
                                                     name="quota"
                                                     control={control}
                                                     render={({ field }) => (
@@ -693,27 +713,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                     )}
                                                 />
                                             </div>
-
-                                            <div>
-                                                <Controller
-                                                    name="term"
-                                                    control={control}
-                                                    render={({ field }) => (
-                                                        <Select
-                                                            options={terms}
-                                                            label="Period"
-                                                            placeholder="Select period"
-                                                            value={parseInt(watch('term')) || null}
-                                                            onChange={(_, newValue) => {
-                                                                for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
-                                                                field.onChange(newValue?.id || null);
-                                                            }}
-                                                        />
-
-                                                    )}
-                                                />
-                                            </div>
-
+                                            
                                             <div className='col-span-3 grid grid-cols-3 gap-4'>
                                                 {(() => {
                                                     if (!selectedTerm) return null;

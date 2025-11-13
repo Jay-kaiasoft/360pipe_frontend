@@ -40,11 +40,7 @@ const Sidebar = ({
                 name: "Dashboard",
                 path: "/dashboard",
                 subItems: [
-                    // ...((userDetails?.rolename === "SALES REPRESENTIVE")
-                    //     ? [
-                    //         { name: "Accounts", path: "/dashboard/accounts", pro: false },
-                    //     ]
-                    //     : []),
+                    { name: "Accounts", path: "/dashboard/accounts", pro: false },
                     { name: "Opportunities", path: "/dashboard/opportunities", pro: false },
                     { name: "Contacts", path: "/dashboard/contacts", pro: false }
                 ]

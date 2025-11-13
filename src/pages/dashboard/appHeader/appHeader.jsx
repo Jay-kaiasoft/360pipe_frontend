@@ -26,7 +26,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   const locaiton = useLocation();
 
   const [tabsData, setTabsData] = useState([]);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(null);
 
   const handleChangeTab = (value) => {
     const selectedPath = tabsData[value]?.path;
@@ -62,24 +62,15 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
           }
         ]
         : []),
-      {
-        label: "Sync History",
-        path: "/dashboard/syncHistory",
-      },
-      {
-        label: "E-Mail Scraper",
-        path: "/dashboard/managemails",
-      },
-      {
-        label: "Products & Service",
-        path: "/dashboard/products",
-      },
+
     ]
     setTabsData(tabItems)
     const currentPath = locaiton.pathname;
     const currentTabIndex = tabItems?.findIndex(tab => tab.path === currentPath);
     if (currentTabIndex !== -1) {
       setSelectedTab(currentTabIndex);
+    } else {
+      setSelectedTab(null)
     }
   }
 
@@ -111,7 +102,6 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   }
 
   useEffect(() => {
-    handleSetNavItems()
     handleGetAllSyncRecords()
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -124,6 +114,10 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       document.removeEventListener("keydown", handleKeyDown)
     }
   }, [])
+
+  useEffect(() => {
+    handleSetNavItems()
+  }, [locaiton.pathname])
 
   const handleSync = async () => {
     setLoading(true);
@@ -202,7 +196,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   return (
     <header className="w-full bg-white border-b-2 shadow-sm" style={{ borderColor: theme.palette.secondary.main }}>
       <div className="flex justify-start items-center gap-4 lg:px-6">
-        <div className="flex justify-start items-center gap-8 grow">
+        <div className="flex justify items-center gap-8 grow">
           <div className="hidden xl:block">
             <div className="w-40 flex items-center h-12">
               <NavLink to={'/dashboard'}>

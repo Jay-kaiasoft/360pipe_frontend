@@ -332,7 +332,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 500,
-            sortable: false,
         },
         {
             field: 'status',
@@ -359,7 +358,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 200,
-
+            sortable: false,
             renderCell: (params) => {
                 return (
                     <div className='flex justify-center items-center h-full'>

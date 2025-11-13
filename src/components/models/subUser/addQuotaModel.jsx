@@ -16,7 +16,6 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogActions-root': { padding: theme.spacing(1) },
 }));
 
-
 const terms = [
     { id: 1, title: 'Monthly', kind: 'monthly' },
     { id: 2, title: 'Quarterly', kind: 'quarterly' },
@@ -70,7 +69,7 @@ function buildLabelsForKind(kind, startMonthIndex) {
             // 2 halves: 6 months each
             const h1 = monthSpanLabel(startMonthIndex, 6);
             const h2 = monthSpanLabel(startMonthIndex + 6, 6);
-            return [`(${h1})`, `H2 (${h2})`];
+            return [`(${h1})`, `(${h2})`];
         }
         case 'annual': {
             // 1 full-year label
@@ -233,6 +232,27 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                             <div className="grid grid-cols-2 gap-[30px]">
                                 <div>
                                     <Controller
+                                        name="term"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={terms}
+                                                label="Period"
+                                                placeholder="Select period"
+                                                value={parseInt(watch('term')) || null}
+                                                onChange={(_, newValue) => {
+                                                    for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
+                                                    field.onChange(newValue?.id || null);
+                                                }}
+                                                error={errors.term}
+                                            />
+
+                                        )}
+                                    />
+                                </div>
+                                <div>
+                                    <Controller
                                         name="quota"
                                         control={control}
                                         rules={{ required: true }}
@@ -255,28 +275,6 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                                                     />
                                                 }
                                             />
-                                        )}
-                                    />
-                                </div>
-
-                                <div>
-                                    <Controller
-                                        name="term"
-                                        control={control}
-                                        rules={{ required: true }}
-                                        render={({ field }) => (
-                                            <Select
-                                                options={terms}
-                                                label="Period"
-                                                placeholder="Select period"
-                                                value={parseInt(watch('term')) || null}
-                                                onChange={(_, newValue) => {
-                                                    for (let i = 1; i <= 12; i++) setValue(`amount${i}`, null, { shouldDirty: true });
-                                                    field.onChange(newValue?.id || null);
-                                                }}
-                                                error={errors.term}
-                                            />
-
                                         )}
                                     />
                                 </div>

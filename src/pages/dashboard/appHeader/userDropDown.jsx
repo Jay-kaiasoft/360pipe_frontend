@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { getUserDetails } from "../../../utils/getUserDetails";
 import Cookies from 'js-cookie';
 
@@ -7,9 +7,57 @@ import CustomIcons from "../../../components/common/icons/CustomIcons"
 import AlertDialog from "../../../components/common/alertDialog/alertDialog";
 import PermissionWrapper from "../../../components/common/permissionWrapper/PermissionWrapper";
 
+
+const items = [
+    {
+        label: "Edit Profile",
+        path: "/dashboard/profile",
+        iconName: "fa-solid fa-circle-user",
+    },
+    {
+        label: "My Team",
+        path: "/dashboard/myteam",
+        iconName: "fa-solid fa-users",
+        permission: {
+            functionalityName: "My Team",
+            moduleName: "My Team",
+            actionId: 4,
+        },
+    },
+    {
+        label: "Members",
+        path: "/dashboard/members",
+        iconName: "fa-solid fa-user-plus",
+        permission: {
+            functionalityName: "Members",
+            moduleName: "Members",
+            actionId: 4,
+        },
+    },
+    {
+        label: "Sync History",
+        path: "/dashboard/syncHistory",
+        iconName: "fa-solid fa-clock-rotate-left",
+    },
+    {
+        label: "E-Mail Scraper",
+        path: "/dashboard/managemails",
+        iconName: "fa-solid fa-envelope",
+    },
+    {
+        label: "Products & Service",
+        path: "/dashboard/products",
+        iconName: "fa-solid fa-screwdriver-wrench",
+    },
+];
+
+
 export default function UserDropdown() {
+
     const userdata = getUserDetails();
     const navigate = useNavigate();
+    const locaiton = useLocation();
+    const currentPath = locaiton.pathname;
 
     const [logOutDialog, setLogOutDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
@@ -59,30 +107,6 @@ export default function UserDropdown() {
                 <span className="mr-3 overflow-hidden rounded-full">
                     <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-gray-500 group-hover:text-gray-700 h-6 w-6"} />
                 </span>
-
-                {/* <span className="block mr-1 text-sm font-bold text-start min-w-28">
-                    {userdata?.username ? userdata?.username : userdata?.name}<br />
-                    <span className="capitalize">
-                        {userdata?.roleName ? userdata?.roleName?.toLowerCase() : ""}
-                    </span>
-                </span> */}
-                {/* <svg
-                    className={`stroke-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
-                        }`}
-                    width="18"
-                    height="20"
-                    viewBox="0 0 18 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg> */}
             </button>
 
             {/* Dropdown Menu */}
@@ -101,70 +125,46 @@ export default function UserDropdown() {
                         </span>
                     </div>
 
-                    {/* Menu Items */}
                     <ul className="flex flex-col gap-1 py-3 border-b border-gray-200">
-                        <li>
-                            <NavLink
-                                to="/dashboard/profile"
-                                onClick={closeDropdown}
-                                className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                            >
-                                <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
-                                Edit profile
-                            </NavLink>
-                        </li>
-                        <PermissionWrapper
-                            functionalityName="My Team"
-                            moduleName="My Team"
-                            actionId={4}
-                            component={
-                                <li>
-                                    <NavLink
-                                        to="/dashboard/myteam"
-                                        onClick={closeDropdown}
-                                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                                    >
-                                        <CustomIcons iconName="fa-solid fa-users" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
-                                        My Team
-                                    </NavLink>
-                                </li>
-                            }
-                        />
-                        <PermissionWrapper
-                            functionalityName="Members"
-                            moduleName="Members"
-                            actionId={4}
-                            component={
-                                <li>
-                                    <NavLink
-                                        to="/dashboard/members"
-                                        onClick={closeDropdown}
-                                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                                    >
-                                        <CustomIcons iconName="fa-solid fa-user-plus" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
-                                        Members
-                                    </NavLink>
-                                </li>
-                            }
-                        />
+                        {items
+                            // optional filter, if you later add item.show conditions
+                            .filter(item => item.show !== false)
+                            .map((item) => {
+                                const content = (
+                                    <li key={item.path}>
+                                        <NavLink
+                                            to={item.path}
+                                            onClick={closeDropdown}
+                                            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium  rounded-lg transition-colors duration-200 ${currentPath === item.path ? "bg-[#1072E0] text-white hover:bg-[#1072E0] hover:text-white" : "text-gray-700 hover:bg-gray-100 hover:text-gray-700 "}`}
+                                        >
+                                            <CustomIcons
+                                                iconName={item.iconName}
+                                                css={`text-lg ${currentPath === item.path ? "group-hover:text-white" : "group-hover:text-gray-700 text-gray-500"} `}
+                                            />
+                                            {item.label}
+                                        </NavLink>
+                                    </li>
+                                );
 
-                        {/* {
-                            !userdata?.subUser && (
-                                <li>
-                                    <NavLink
-                                        to="/dashboard/manageusers"
-                                        onClick={closeDropdown}
-                                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                                    >
-                                        <CustomIcons iconName="fa-solid fa-user" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
-                                        Manage Users
-                                    </NavLink>
-                                </li>
-                            )
-                        } */}
+                                // If the item has permission info, wrap it in PermissionWrapper
+                                if (item.permission) {
+                                    const { functionalityName, moduleName, actionId } = item.permission;
+                                    return (
+                                        <PermissionWrapper
+                                            key={item.path}
+                                            functionalityName={functionalityName}
+                                            moduleName={moduleName}
+                                            actionId={actionId}
+                                            component={content}
+                                        />
+                                    );
+                                }
+
+                                // Otherwise, just render the <li> normally
+                                return content;
+                            })}
                     </ul>
 
-                    {/* Sign Out Button */}
                     <div
                         onClick={handleOpenLogOutDialog}
                         className="cursor-pointer flex items-center gap-3 px-3 py-2 mt-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"

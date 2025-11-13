@@ -35,6 +35,7 @@ import ManageMails from "./pages/mailScraper/manageMails";
 import MyCalendar from "./pages/calendar/myCalendar";
 import GoogleCalendarOauthRedirect from "./pages/calendar/googleCalendarOauthRedirect";
 import Products from "./pages/dashboard/products/products";
+import ViewOpportunity from "./pages/dashboard/opportunities/viewOpportunity";
 
 library.add(fas, far, fab)
 
@@ -83,6 +84,10 @@ const App = ({ setLoading }) => {
         {
           path: "opportunities",
           element: <Opportunities />,
+        },
+        {
+          path: "opportunity-view/:opportunityId",
+          element: <ViewOpportunity />,
         },
         {
           path: "contacts",

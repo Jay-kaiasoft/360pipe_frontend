@@ -3,7 +3,7 @@ import CustomIcons from '../common/icons/CustomIcons';
 import { connect } from 'react-redux';
 import { setAlert } from '../../redux/commonReducers/commonReducers';
 
-function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "160x160" }) {
+function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "160x160", disabled = false }) {
 
     const fileInputRef = useRef(null);
 
@@ -66,6 +66,7 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "1
                         className="hidden"
                         accept="image/JPG, image/PNG, image/JPEG"
                         onChange={handleFileChange}
+                        disabled={disabled}
                     />
                 </div>
             )}
