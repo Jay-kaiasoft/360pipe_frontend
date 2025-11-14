@@ -260,8 +260,8 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
                     <Components.DialogActions>
                         <div className={`flex justify-end items-center gap-4`}>
                             <div>
-                                <Button type={`submit`} text={id ? "Update" : "Submit"} />
-                                <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                                <Button type={`submit`} text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                                <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />}/>
                             </div>
                         </div>
                     </Components.DialogActions>

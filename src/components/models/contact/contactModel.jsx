@@ -215,7 +215,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='py-3 px-[30px]'>
-                            <div className='grid grid-cols-2 md:grid-cols-3 gap-[30px]'>
+                            <div className='grid md:grid-cols-2 gap-[30px]'>
                                 <div>
                                     <Controller
                                         name="opportunityId"

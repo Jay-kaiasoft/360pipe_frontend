@@ -361,10 +361,10 @@ const AddTeamMembers = ({ setAlert }) => {
                 </div>
                 <div className='flex justify-end mt-5 gap-3'>
                     <div>
-                        <Button type="submit" text={id ? "Update" : "Submit"} />
+                        <Button type="submit" text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                     </div>
                     <div>
-                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/myteam")} />
+                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/myteam")} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                     </div>
                 </div>
             </form>
@@ -379,7 +379,6 @@ const AddTeamMembers = ({ setAlert }) => {
             <AddTeamMemberModel open={open} handleClose={handleClose} selectedMember={selectedMember} members={fields} append={append} update={update} />
             <OpenDisplayOpportunities open={openDisplayOpportunities} handleClose={handleCloseModelDisplayOpportunities} selectedMember={selectedMember} />
             <OpenAssignOpportunities open={openAssignOpportunities} handleClose={handleCloseAssignOpportunities} selectedMember={selectedMember} members={fields} append={append} update={update} />
-
         </div>
     )
 }

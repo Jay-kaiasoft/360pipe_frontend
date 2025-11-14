@@ -372,8 +372,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='py-3 px-[30px]'>
-                            <div className='grid md:grid-cols-3 gap-[30px]'>
-                                <div className='col-span-2'>
+                            <div className='grid md:grid-cols-2 gap-[30px]'>
+                                <div>
                                     <Controller
                                         name="task"
                                         control={control}
@@ -515,7 +515,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     }
                                 />
 
-
                                 {
                                     watch("assignedType") === 2 && (
                                         <>
@@ -649,7 +648,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                <div className='col-span-3'>
+                                <div className='md:col-span-2'>
                                     <Controller
                                         name="comments"
                                         control={control}
@@ -666,7 +665,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                <div className="col-span-3">
+                                <div className="md:col-span-2">
                                     <MultipleFileUpload
                                         files={files}
                                         setFiles={setFiles}

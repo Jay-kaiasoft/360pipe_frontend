@@ -2,13 +2,11 @@ import React, { useRef } from 'react';
 import CustomIcons from '../common/icons/CustomIcons';
 import { connect } from 'react-redux';
 import { setAlert } from '../../redux/commonReducers/commonReducers';
+import { NavLink } from 'react-router-dom';
 
-function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "160x160", disabled = false }) {
+function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = null, disabled = false }) {
 
     const fileInputRef = useRef(null);
-
-    const [width, height] = size.split("x").map(Number);
-
     const handleClick = () => {
         fileInputRef.current.click();
     };
@@ -17,9 +15,17 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "1
         const file = e.target.files[0];
         if (!file) return;
 
+        // If size is null or empty → allow all images
+        if (!size) {
+            onFileSelect && onFileSelect(file);
+            return;
+        }
+
+        const [width, height] = size.split("x").map(Number);
+
         const img = new Image();
         img.onload = () => {
-            // Check image dimensions
+            // Check image dimensions only when size is given
             if (img.width === width && img.height === height) {
                 onFileSelect && onFileSelect(file);
             } else {
@@ -27,22 +33,25 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = "1
                     open: true,
                     type: "warning",
                     message: `Only images with dimensions ${width}x${height}px are allowed.`
-                })
-                fileInputRef.current.value = null; // Reset file input
+                });
+                fileInputRef.current.value = null;
             }
         };
         img.src = URL.createObjectURL(file);
     };
 
+
     return (
         <div className="w-24 h-24">
             {value ? (
                 <div className="relative w-full h-full border border-dashed border-gray-400 rounded-full overflow-hidden">
-                    <img
-                        src={value}
-                        alt="Uploaded preview"
-                        className="w-full h-full object-contain"
-                    />
+                    <a href={value} target='_blank'>
+                        <img
+                            src={value}
+                            alt="Uploaded preview"
+                            className="w-full h-full object-contain"
+                        />
+                    </a>
                     <div className='absolute z-50 top-2 right-2.5 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500'>
                         <button type='button' onClick={onRemove}>
                             <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white' />

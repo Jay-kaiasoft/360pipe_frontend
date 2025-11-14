@@ -75,6 +75,28 @@ export const opportunityStatus = [
     { id: 5, title: "Won" },
 ];
 
+export const statusColors = {
+    "Pipline": "#9C27B0",
+    "Upside": "#42A5F5",    // Blue
+    "Commit": "#F4C542",    // Yellow
+    "Lost": "#D32F2F",      // Red
+    "Won": "#2E7D32",       // Green
+};
+
+export const stageColors = {
+    "Prospecting": "#9e9e9e",
+    "Qualification": "#f4c542",
+    "Needs Analysis": "#4CAF50",
+    "Value Proposition": "#42A5F5",
+    "Id. Decision Makers": "#F57C00",
+    "Perception Analysis": "#9C27B0",
+    "Proposal/Price Quote": "#1E88E5",
+    "Negotiation/Review": "#9e9e9e",
+    "Closed Won": "#2e7d32",
+    "Closed Lost": "#d32f2f",
+};
+
+
 export const uploadFiles = async (data) => {
     try {
         const response = axiosInterceptor().post(`${fileUploadURL}`, data)

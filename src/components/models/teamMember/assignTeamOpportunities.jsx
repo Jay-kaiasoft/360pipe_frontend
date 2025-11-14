@@ -94,7 +94,7 @@ function AssignTeamOpportunities({ setAlert, open, handleClose, teamId }) {
         open={open}
         aria-labelledby="customized-dialog-title"
         fullWidth
-        maxWidth='sm'
+        maxWidth='md'
       >
         <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
           Assign Opportunities To Team
@@ -115,38 +115,41 @@ function AssignTeamOpportunities({ setAlert, open, handleClose, teamId }) {
 
         <form noValidate onSubmit={handleSubmit(submit)}>
           <Components.DialogContent dividers>
-            <div className='grid grid-cols-1 gap-4'>
-              <div>
-                <Controller
-                  name="opportunities"
-                  control={control}
-                  render={({ field }) => {
-                    const selectedOptions = opportunities.filter((opp) =>
-                      (field.value || []).includes(opp.id)
-                    );
+            <div className='px-[30px]'>
+              <div className='grid grid-cols-1 gap-[30px]'>
+                <div>
+                  <Controller
+                    name="opportunities"
+                    control={control}
+                    render={({ field }) => {
+                      const selectedOptions = opportunities.filter((opp) =>
+                        (field.value || []).includes(opp.id)
+                      );
 
-                    return (
-                      <CheckBoxSelect
-                        options={opportunities}
-                        label="Select Opportunities"
-                        value={selectedOptions}
-                        onChange={(event, newValue) => {
-                          const newIds = newValue.map((opt) => opt.id);
-                          field.onChange(newIds);
-                        }}
-                        checkAll={true}
-                      />
-                    );
-                  }}
-                />
+                      return (
+                        <CheckBoxSelect
+                          options={opportunities}
+                          label="Opportunities"
+                          placeholder="Select opportunities"
+                          value={selectedOptions}
+                          onChange={(event, newValue) => {
+                            const newIds = newValue.map((opt) => opt.id);
+                            field.onChange(newIds);
+                          }}
+                          checkAll={true}
+                        />
+                      );
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </Components.DialogContent>
 
           <Components.DialogActions>
             <div className='flex justify-end items-center gap-4'>
-              <Button type={`submit`} text={"Assign"} />
-              <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+              <Button type={`submit`} text={"Assign"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+              <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
             </div>
           </Components.DialogActions>
         </form>
@@ -154,6 +157,7 @@ function AssignTeamOpportunities({ setAlert, open, handleClose, teamId }) {
     </React.Fragment>
   );
 }
+
 const mapDispatchToProps = {
   setAlert,
 };

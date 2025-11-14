@@ -82,78 +82,73 @@ const Quota = ({ setAlert }) => {
         handleGetAllQuotas()
     }, [])
     return (
-        <>
-            <div>
-                <div className="max-h-56 overflow-y-auto">
-                    <table className="border-collapse border w-96 md:w-[500px]">
-                        <thead className="bg-gray-50 sticky top-0 z-10 ">
-                            <tr>
-                                <th colSpan={5} className="px-4 py-2 text-lg font-semibold tracking-wide bg-gray-100 sticky top-0 border-b">
-                                    <div className='flex items-center'>
-                                        <p className='text-center grow'>
-                                            Quota Details
-                                        </p>
-                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                            <Components.IconButton onClick={() => handleOpenModel()}>
-                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                            </Components.IconButton>
-                                        </div>
-                                    </div>
-                                </th>
-                            </tr>
-                            <tr>
-                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                    #
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                    Term
-                                </th>
-                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                    Quota
-                                </th>
-                                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 sticky top-0">
-                                    Actions
-                                </th>
+        <div className='flex justify-center items-center'>
+            <div className="max-h-56 overflow-y-auto w-96 md:w-[600px]">
+                {/* Title bar */}
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[22px] font-semibold"></h3>
+
+                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton onClick={() => handleOpenModel()}>
+                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                        </Components.IconButton>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="border rounded-md overflow-hidden">
+                    <table className="border-collapse w-full">
+                        {/* Header */}
+                        <thead className="sticky top-0 z-10">
+                            <tr className="bg-[#0478DC] text-white">
+                                <th className="px-4 py-3 text-left text-sm font-semibold w-12">#</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold">Term</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold">Quota</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold w-32">Action</th>
                             </tr>
                         </thead>
-                        {
-                            quota?.length > 0 ? (
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    {quota?.map((row, i) => (
-                                        <tr key={i} className="hover:bg-gray-50">
-                                            <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
-                                            <td className="px-4 py-1 text-sm text-gray-800">{row.term || "—"}</td>
-                                            <td className="px-4 py-1 text-sm text-gray-800">{row.quota || "—"}</td>
-                                            <td className="px-4 py-1 text-sm text-gray-800">
-                                                <div className='flex items-center gap-2 justify-end h-full'>
-                                                    <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleOpenModel(row.id)}>
-                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                        </Components.IconButton>
-                                                    </div>
+
+                        {/* Body */}
+                        {quota?.length > 0 ? (
+                            <tbody>
+                                {quota.map((row, i) => (
+                                    <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
+                                        <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
+                                        <td className="px-4 py-3 text-sm">{row.term || '—'}</td>
+                                        <td className="px-4 py-3 text-sm">{row.quota || '—'}</td>
+                                        <td className="px-4 py-3">
+                                            <div className='flex items-center gap-2 justify-end h-full'>
+                                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleOpenModel(row.id)}>
+                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                    </Components.IconButton>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            ) : (
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    <tr className="hover:bg-gray-50">
-                                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
-                                            No records
+                                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
-                                </tbody>
-                            )
-                        }
+                                ))}
+                            </tbody>
+                        ) : (
+                            <tbody>
+                                <tr>
+                                    <td
+                                        colSpan={4}
+                                        className="px-4 py-4 text-center text-sm font-semibold"
+                                    >
+                                        No records
+                                    </td>
+                                </tr>
+                            </tbody>
+                        )}
                     </table>
                 </div>
             </div>
+
             <AddQuotaModel open={openModel} handleClose={handleCloseModel} customerId={userdata?.userId} id={selectedQuotaId} startEvalPeriod={startEvalPeriod} endEvalPeriod={endEvalPeriod} handleGetUser={handleGetUser} handleGetAllQuota={handleGetAllQuotas} />
             <AlertDialog
                 open={dialog.open}
@@ -163,7 +158,7 @@ const Quota = ({ setAlert }) => {
                 handleAction={() => handleDeleteQuota()}
                 handleClose={() => handleCloseDeleteDialog()}
             />
-        </>
+        </div>
     )
 }
 

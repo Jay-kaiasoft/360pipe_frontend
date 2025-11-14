@@ -520,7 +520,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='py-3 px-[30px]'>
-                            <div className='grid grid-cols-2 md:grid-cols-3 gap-[30px]'>
+                            <div className='grid grid-cols-2 md:grid-cols-2 gap-[30px]'>
                                 <div>
                                     <Controller
                                         name="name"
@@ -635,22 +635,24 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                 {
                                     id && (
                                         <>
-                                            <div className='col-span-3 grid grid-cols-3 gap-4'>
-                                                <Controller
-                                                    name="calendarYearType"
-                                                    control={control}
-                                                    rules={{ required: "Calendar Year Type is required" }}
-                                                    render={({ field }) => (
-                                                        <Select
-                                                            options={calendarType}
-                                                            label="Calendar Type"
-                                                            placeholder="Select calendar type"
-                                                            value={parseInt(watch("calendarYearType")) || null}
-                                                            onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                                            error={errors?.calendarYearType}
-                                                        />
-                                                    )}
-                                                />
+                                            <div className='col-span-2 grid grid-cols-2 gap-[30px]'>
+                                                <div className='col-span-2'>
+                                                    <Controller
+                                                        name="calendarYearType"
+                                                        control={control}
+                                                        rules={{ required: "Calendar Year Type is required" }}
+                                                        render={({ field }) => (
+                                                            <Select
+                                                                options={calendarType}
+                                                                label="Calendar Type"
+                                                                placeholder="Select calendar type"
+                                                                value={parseInt(watch("calendarYearType")) || null}
+                                                                onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                                error={errors?.calendarYearType}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
                                                 {
                                                     watch("calendarYearType") && (
                                                         <div>
@@ -713,8 +715,8 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                     )}
                                                 />
                                             </div>
-                                            
-                                            <div className='col-span-3 grid grid-cols-3 gap-4'>
+
+                                            <div className='col-span-2 grid grid-cols-2 gap-[30px]'>
                                                 {(() => {
                                                     if (!selectedTerm) return null;
                                                     const startMonthIndex = parseStartMonthIndex(watch("startEvalPeriod"));
@@ -777,67 +779,67 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 }
                                             </div>
 
-                                            <div className='col-span-3'>
-                                                <div className="max-h-56 overflow-y-auto">
-                                                    <table className="min-w-full border-collapse border">
-                                                        <thead className="bg-gray-200 sticky top-0 z-10 ">
-                                                            <tr>
-                                                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                    #
-                                                                </th>
-                                                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                    Term
-                                                                </th>
-                                                                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                    Quota
-                                                                </th>
-                                                                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-100 sticky top-0">
-                                                                    Actions
-                                                                </th>
-                                                            </tr>
-                                                        </thead>
-                                                        {
-                                                            customerQuotaDtos?.length > 0 ? (
-                                                                <tbody className="divide-y divide-gray-200 bg-white">
-                                                                    {customerQuotaDtos?.map((row, i) => (
-                                                                        <tr key={i} className="hover:bg-gray-50">
-                                                                            <td className="px-4 py-1 text-sm text-gray-800 font-bold">{i + 1}</td>
-                                                                            <td className="px-4 py-1 text-sm text-gray-800">{row.term || "—"}</td>
-                                                                            <td className="px-4 py-1 text-sm text-gray-800">${row.quota?.toLocaleString() || "—"}</td>
+                                            <div className='col-span-2'>
+                                                <div className="border rounded-md overflow-hidden">
+                                                    <div className="max-h-56 overflow-y-auto">
+                                                        <table className="min-w-full border-collapse">
+                                                            {/* Header */}
+                                                            <thead className="sticky top-0 z-10">
+                                                                <tr className="bg-[#0478DC] text-white">
+                                                                    <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
+                                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Term</th>
+                                                                    <th className="px-4 py-3 text-right text-sm font-semibold w-40">Quota</th>
+                                                                    <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
+                                                                </tr>
+                                                            </thead>
 
-                                                                            <td className="px-4 py-1 text-sm text-gray-800">
-                                                                                <div className='flex items-center gap-2 justify-end h-full'>
-                                                                                    <Tooltip title="Edit" arrow>
-                                                                                        <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                            <Components.IconButton onClick={() => handleSetQuota(row.id)}>
-                                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                            </Components.IconButton>
-                                                                                        </div>
-                                                                                    </Tooltip>
-                                                                                    <Tooltip title="Delete" arrow>
-                                                                                        <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                            </Components.IconButton>
-                                                                                        </div>
-                                                                                    </Tooltip>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            ) : (
-                                                                <tbody className="divide-y divide-gray-200 bg-white">
-                                                                    <tr className="hover:bg-gray-50">
-                                                                        <td colSpan={5} className="px-4 py-3 text-sm text-gray-800 font-bold text-center">
+                                                            {/* Body */}
+                                                            <tbody>
+                                                                {(customerQuotaDtos?.length ? customerQuotaDtos : []).map((row, i) => (
+                                                                    <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
+                                                                        <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
+                                                                        <td className="px-4 py-3 text-sm">{row.term || "—"}</td>
+                                                                        <td className="px-4 py-3 text-sm text-right">
+                                                                            {typeof row.quota === "number"
+                                                                                ? `$${row.quota.toLocaleString()}`
+                                                                                : row.quota
+                                                                                    ? `$${Number(row.quota).toLocaleString()}`
+                                                                                    : "—"}
+                                                                        </td>
+                                                                        <td className="px-4 py-3">
+                                                                            <div className='flex items-center gap-2 justify-end h-full'>
+                                                                                <Tooltip title="Edit" arrow>
+                                                                                    <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                        <Components.IconButton onClick={() => handleSetQuota(row.id)}>
+                                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                        </Components.IconButton>
+                                                                                    </div>
+                                                                                </Tooltip>
+                                                                                <Tooltip title="Delete" arrow>
+                                                                                    <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                        </Components.IconButton>
+                                                                                    </div>
+                                                                                </Tooltip>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+
+                                                                {/* Empty state */}
+                                                                {(!customerQuotaDtos || customerQuotaDtos.length === 0) && (
+                                                                    <tr>
+                                                                        <td colSpan={4} className="px-4 py-4 text-center text-sm font-semibold">
                                                                             No records
                                                                         </td>
                                                                     </tr>
-                                                                </tbody>
-                                                            )
-                                                        }
-                                                    </table>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
+
                                             </div>
                                         </>
                                     )

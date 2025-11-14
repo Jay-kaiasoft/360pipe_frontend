@@ -48,7 +48,7 @@ function OpenDisplayOpportunities({ open, handleClose, selectedMember, type }) {
         open={open}
         aria-labelledby="customized-dialog-title"
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
       >
         <Components.DialogTitle
           sx={{ m: 0, p: 2, color: theme.palette.text.primary }}

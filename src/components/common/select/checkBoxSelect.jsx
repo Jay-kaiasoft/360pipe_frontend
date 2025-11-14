@@ -54,7 +54,7 @@ const CheckBoxSelect = forwardRef(
       return (
         <Components.TextField
           {...params}
-          label={label || "Options"}
+          // label={label || "Options"}
           placeholder={placeholder || "Select options"}
           error={!!error}
           InputProps={{
@@ -86,7 +86,7 @@ const CheckBoxSelect = forwardRef(
                             color: `#ffffff !important`,
                           },
                         },
-                      },                     
+                      },
                     }}
                   />
                 ))}
@@ -153,73 +153,78 @@ const CheckBoxSelect = forwardRef(
     };
 
     return (
-      <Components.Autocomplete
-        multiple
-        disableCloseOnSelect
-        options={finalOptions}
-        size={size}
-        disabled={disabled}
-        getOptionLabel={(option) => option?.title || ""}
-        value={value}
-        isOptionEqualToValue={(option, val) => option?.id === val?.id}
-        onChange={handleChange}
-        noOptionsText={"No data found"}
-        renderOption={(props, option, { selected }) => {
-          // Render "Select All" state
-          if (option.id === "__all__") {
-            const isAllChecked = value.length === selectOptions.length;
+      <div>
+        <p className='mb-2 text-black text-left'>
+          {label}
+        </p>
+        <Components.Autocomplete
+          multiple
+          disableCloseOnSelect
+          options={finalOptions}
+          size={size}
+          disabled={disabled}
+          getOptionLabel={(option) => option?.title || ""}
+          value={value}
+          isOptionEqualToValue={(option, val) => option?.id === val?.id}
+          onChange={handleChange}
+          noOptionsText={"No data found"}
+          renderOption={(props, option, { selected }) => {
+            // Render "Select All" state
+            if (option.id === "__all__") {
+              const isAllChecked = value.length === selectOptions.length;
+              return (
+                <li {...props}>
+                  <Checkbox checked={isAllChecked} />
+                  <Components.ListItemText
+                    secondary={option.title}
+                    sx={{
+                      '& .MuiTypography-root': {
+                        color: isAllChecked ? '#ffffff !important' : 'inherit',
+                      }
+                    }}
+                  />
+                </li>
+              );
+            }
+
+            // Normal option
             return (
               <li {...props}>
-                <Checkbox checked={isAllChecked} />
+                <Checkbox checked={selected} />
                 <Components.ListItemText
                   secondary={option.title}
                   sx={{
                     '& .MuiTypography-root': {
-                      color: isAllChecked ? '#ffffff !important' : 'inherit',
+                      color: selected ? '#ffffff !important' : 'inherit',
                     }
                   }}
                 />
               </li>
             );
-          }
-
-          // Normal option
-          return (
-            <li {...props}>
-              <Checkbox checked={selected} />
-              <Components.ListItemText
-                secondary={option.title}
-                sx={{
-                  '& .MuiTypography-root': {
-                    color: selected ? '#ffffff !important' : 'inherit',
-                  }
-                }}
-              />
-            </li>
-          );
-        }}
-        componentsProps={{
-          paper: {
-            sx: {
-              '& .MuiAutocomplete-option': {
-                padding: '0.5rem 1rem',
-                color: `${theme.palette.text.primary} !important`,
-                '&:hover': {
-                  backgroundColor: `${theme.palette.custom.default2} !important`,
-                },
-                '&[aria-selected="true"]': {
-                  backgroundColor: `${theme.palette.secondary.main} !important`,
-                  color: `#ffffff !important`,
-                  '& .MuiCheckbox-root': {
+          }}
+          componentsProps={{
+            paper: {
+              sx: {
+                '& .MuiAutocomplete-option': {
+                  padding: '0.5rem 1rem',
+                  color: `${theme.palette.text.primary} !important`,
+                  '&:hover': {
+                    backgroundColor: `${theme.palette.custom.default2} !important`,
+                  },
+                  '&[aria-selected="true"]': {
+                    backgroundColor: `${theme.palette.secondary.main} !important`,
                     color: `#ffffff !important`,
+                    '& .MuiCheckbox-root': {
+                      color: `#ffffff !important`,
+                    },
                   },
                 },
               },
             },
-          },
-        }}
-        renderInput={renderCustomInput}
-      />
+          }}
+          renderInput={renderCustomInput}
+        />
+      </div>
     );
   }
 );

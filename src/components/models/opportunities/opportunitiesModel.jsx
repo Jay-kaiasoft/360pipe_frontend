@@ -621,7 +621,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     </div>
 
                                     <div className='py-[30px] md:p-[30px]'>
-                                        <div className={`grid grid-cols-2 md:grid-cols-3  gap-[30px] md:col-span-4`}>
+                                        <div className={`grid md:grid-cols-1 gap-[30px] md:col-span-4`}>
                                             <Controller
                                                 name="dealAmount"
                                                 control={control}

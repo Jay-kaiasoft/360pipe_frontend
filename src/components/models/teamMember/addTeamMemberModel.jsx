@@ -131,7 +131,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
-                maxWidth='sm'
+                maxWidth='md'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {selectedMember ? "Update" : "Add"} Member
@@ -152,67 +152,69 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 gap-4'>
-                            <div>
-                                <Controller
-                                    name="memberId"
-                                    control={control}
-                                    rules={{
-                                        required: "Member is required"
-                                    }}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={customers}
-                                            label={"Member"}
-                                            placeholder="Select member"
-                                            value={parseInt(watch("memberId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                    setValue("memberName", newValue.title);
-                                                    setValue("role", newValue.role);
-                                                } else {
-                                                    setValue("memberId", null);
-                                                    setValue("memberName", '');
-                                                    setValue("role", '');
-                                                }
-                                            }}
-                                            error={errors?.memberId}
-                                        />
-                                    )}
-                                />
-                            </div>
-                            <div>
-                                <Controller
-                                    name="opportunities"
-                                    control={control}
-                                    render={({ field }) => {
-                                        const selectedOptions = opportunities.filter((opp) =>
-                                            (field.value || []).includes(opp.id)
-                                        );
-
-                                        return (
-                                            <CheckBoxSelect
-                                                options={opportunities}
-                                                label="Select Opportunities"
-                                                value={selectedOptions}
-                                                onChange={(event, newValue) => {
-                                                    const newIds = newValue.map((opt) => opt.id);
-                                                    field.onChange(newIds);
+                        <div className='px-[30px]'>
+                            <div className='grid grid-cols-2 gap-[30px]'>
+                                <div>
+                                    <Controller
+                                        name="memberId"
+                                        control={control}
+                                        rules={{
+                                            required: "Member is required"
+                                        }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={customers}
+                                                label={"Member"}
+                                                placeholder="Select member"
+                                                value={parseInt(watch("memberId")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                        setValue("memberName", newValue.title);
+                                                        setValue("role", newValue.role);
+                                                    } else {
+                                                        setValue("memberId", null);
+                                                        setValue("memberName", '');
+                                                        setValue("role", '');
+                                                    }
                                                 }}
-                                                checkAll={true}
+                                                error={errors?.memberId}
                                             />
-                                        );
-                                    }}
-                                />
+                                        )}
+                                    />
+                                </div>
+                                <div>
+                                    <Controller
+                                        name="opportunities"
+                                        control={control}
+                                        render={({ field }) => {
+                                            const selectedOptions = opportunities.filter((opp) =>
+                                                (field.value || []).includes(opp.id)
+                                            );
+                                            return (
+                                                <CheckBoxSelect
+                                                    options={opportunities}
+                                                    label="Opportunities"
+                                                    value={selectedOptions}
+                                                    placeholder="Select opportunities"
+                                                    onChange={(event, newValue) => {
+                                                        const newIds = newValue.map((opt) => opt.id);
+                                                        field.onChange(newIds);
+                                                    }}
+                                                    checkAll={true}
+                                                />
+                                            );
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={selectedMember ? "Update" : "Submit"} />
-                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} />
+                            <Button type={`submit`} text={selectedMember ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
                 </form>

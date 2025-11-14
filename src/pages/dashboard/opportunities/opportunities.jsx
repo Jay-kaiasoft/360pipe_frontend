@@ -12,12 +12,12 @@ import OpportunitiesModel from '../../../components/models/opportunities/opportu
 import { useLocation, useNavigate } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import SelectMultiple from '../../../components/common/select/selectMultiple';
-import { opportunityStatus } from '../../../service/common/commonService';
-import { Tooltip } from '@mui/material';
+import { opportunityStatus, stageColors, statusColors } from '../../../service/common/commonService';
+import { Chip, Tooltip } from '@mui/material';
 import ViewOpportunitiesModel from '../../../components/models/opportunities/viewOpportunitiesModel';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
-    const location = useLocation(); 
+    const location = useLocation();
     const navigate = useNavigate();
 
     const [opportunities, setOpportunities] = useState([]);
@@ -101,7 +101,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     }
 
-     const handleOpenView = (opportunityId = null) => {
+    const handleOpenView = (opportunityId = null) => {
         setSelectedOpportunityId(opportunityId);
         setOpenView(true);
     }
@@ -183,18 +183,52 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             minWidth: 400,
         },
         {
-            field: 'salesStage',
-            headerName: 'sales Stage',
-            headerClassName: 'uppercase',
+            field: "salesStage",
+            headerName: "Sales Stage",
             flex: 1,
-            minWidth: 200
+            minWidth: 200,
+            renderCell: (params) => {
+                const stage = params.value;
+                const bg = stageColors[stage] || "#e0e0e0";
+
+                return (
+                    <Chip
+                        label={stage}
+                        size="small"
+                        sx={{
+                            backgroundColor: bg,
+                            color: "#fff",
+                            fontWeight: 600,
+                            borderRadius: "20px",
+                            px: 1.5,
+                        }}
+                    />
+                );
+            },
         },
         {
-            field: 'status',
-            headerName: 'Status',
-            headerClassName: 'uppercase',
+            field: "status",
+            headerName: "Status",
             flex: 1,
-            minWidth: 200
+            minWidth: 180,
+            renderCell: (params) => {
+                const status = params.value;
+                const bg = statusColors[status] || "#e0e0e0";
+
+                return (
+                    <Chip
+                        label={status}
+                        size="small"
+                        sx={{
+                            backgroundColor: bg,
+                            color: "#fff",
+                            fontWeight: 600,
+                            borderRadius: "20px",
+                            px: 1.5,
+                        }}
+                    />
+                );
+            },
         },
         {
             field: 'dealAmount',
@@ -333,7 +367,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} />
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
-            <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView}/>
+            <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView} />
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

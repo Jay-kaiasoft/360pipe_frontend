@@ -229,7 +229,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='py-3 px-[30px]'>
-                            <div className="grid grid-cols-2 gap-[30px]">
+                            <div className="grid md:grid-cols-2 gap-[30px]">
                                 <div>
                                     <Controller
                                         name="term"
@@ -251,6 +251,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                                         )}
                                     />
                                 </div>
+                                
                                 <div>
                                     <Controller
                                         name="quota"
@@ -279,7 +280,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                                     />
                                 </div>
 
-                                <div className='col-span-2 grid grid-cols-3 gap-4'>
+                                <div className='md:col-span-2 grid md:grid-cols-2 gap-4'>
                                     {(() => {
                                         if (!selectedTerm) return null;
                                         const startMonthIndex = parseStartMonthIndex(startEvalPeriod);
