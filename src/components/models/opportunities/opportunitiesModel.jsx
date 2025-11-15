@@ -557,295 +557,208 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='flex justify-center mt-5'>
+                        <div className='flex justify-center'>
                             <div className='w-[800px]'>
                                 <Stapper steps={steps} activeStep={activeStep} orientation={`horizontal`} labelFontSize="14px" />
                             </div>
                         </div>
-                        {
-                            activeStep === 0 && (
-                                <>
-                                    <div className='grid md:grid-cols-3 gap-[30px] mt-8'>
-                                        <div className='flex justify-center items-center my-5'>
-                                            <FileInputBox
-                                                onFileSelect={handleImageChange}
-                                                onRemove={handleOpenDeleteLogoDialog}
-                                                value={watch("logo") || watch("newLogo")}
-                                                text="Upload opportunity Logo"
-                                                size="100x100"
-                                            />
-                                        </div>
+                        <div className='px-[30px]'>
+                            {
+                                activeStep === 0 && (
+                                    <>
+                                        <div className='mt-8'>
+                                            <div className='flex justify-center items-center'>
+                                                <FileInputBox
+                                                    onFileSelect={handleImageChange}
+                                                    onRemove={handleOpenDeleteLogoDialog}
+                                                    value={watch("logo") || watch("newLogo")}
+                                                    text="Upload opportunity Logo"
+                                                    size="100x100"
+                                                />
+                                            </div>
 
-                                        <div className='flex flex-col gap-[30px] md:col-span-2'>
-                                            <div>
+                                            <div className='flex flex-col gap-[30px] md:col-span-2'>
+                                                <div>
+                                                    <Controller
+                                                        name="accountId"
+                                                        control={control}
+                                                        render={({ field }) => (
+                                                            <Select
+                                                                options={accounts}
+                                                                label={"Account"}
+                                                                placeholder="Select Account"
+                                                                value={parseInt(watch("accountId")) || null}
+                                                                onChange={(_, newValue) => {
+                                                                    if (newValue?.id) {
+                                                                        field.onChange(newValue.id);
+                                                                    } else {
+                                                                        setValue("accountId", null);
+                                                                    }
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
+
                                                 <Controller
-                                                    name="accountId"
+                                                    name="opportunity"
                                                     control={control}
+                                                    rules={{
+                                                        required: "Opportunity name is required",
+                                                    }}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            label="Opportunity Name"
+                                                            type={`text`}
+                                                            error={errors.opportunity}
+                                                            onChange={(e) => {
+                                                                field.onChange(e);
+                                                            }}
+                                                        />
+                                                    )}
+                                                />
+                                                <Controller
+                                                    name="dealAmount"
+                                                    control={control}
+                                                    rules={{
+                                                        required: "Deal amount is required",
+                                                    }}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            label="Deal Amount"
+                                                            type="text"
+                                                            error={errors.dealAmount}
+                                                            onChange={(e) => {
+                                                                let value = e.target.value;
+                                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                                                    field.onChange(value);
+                                                                }
+                                                            }}
+                                                            startIcon={
+                                                                <CustomIcons
+                                                                    iconName={"fa-solid fa-dollar-sign"}
+                                                                    css={"text-lg text-black mr-2"}
+                                                                />
+                                                            }
+                                                        />
+                                                    )}
+                                                />
+                                                <Controller
+                                                    name="salesStage"
+                                                    control={control}
+                                                    rules={{
+                                                        required: "Sales stage is required",
+                                                    }}
                                                     render={({ field }) => (
                                                         <Select
-                                                            options={accounts}
-                                                            label={"Account"}
-                                                            placeholder="Select Account"
-                                                            value={parseInt(watch("accountId")) || null}
+                                                            options={opportunityStages}
+                                                            label={"Stage"}
+                                                            placeholder="Select Stage"
+                                                            value={parseInt(watch("salesStage")) || null}
+                                                            error={errors.salesStage}
                                                             onChange={(_, newValue) => {
                                                                 if (newValue?.id) {
                                                                     field.onChange(newValue.id);
                                                                 } else {
-                                                                    setValue("accountId", null);
+                                                                    setValue("salesStage", null);
                                                                 }
                                                             }}
                                                         />
                                                     )}
                                                 />
-                                            </div>
-
-                                            <Controller
-                                                name="opportunity"
-                                                control={control}
-                                                rules={{
-                                                    required: "Opportunity name is required",
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        {...field}
-                                                        label="Opportunity Name"
-                                                        type={`text`}
-                                                        error={errors.opportunity}
-                                                        onChange={(e) => {
-                                                            field.onChange(e);
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className='py-[30px] md:p-[30px]'>
-                                        <div className={`grid md:grid-cols-1 gap-[30px] md:col-span-4`}>
-                                            <Controller
-                                                name="dealAmount"
-                                                control={control}
-                                                rules={{
-                                                    required: "Deal amount is required",
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        {...field}
-                                                        label="Deal Amount"
-                                                        type="text"
-                                                        error={errors.dealAmount}
-                                                        onChange={(e) => {
-                                                            let value = e.target.value;
-                                                            if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                field.onChange(value);
-                                                            }
-                                                        }}
-                                                        startIcon={
-                                                            <CustomIcons
-                                                                iconName={"fa-solid fa-dollar-sign"}
-                                                                css={"text-lg text-black mr-2"}
-                                                            />
-                                                        }
-                                                    />
-                                                )}
-                                            />
-                                            <Controller
-                                                name="salesStage"
-                                                control={control}
-                                                rules={{
-                                                    required: "Sales stage is required",
-                                                }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        options={opportunityStages}
-                                                        label={"Stage"}
-                                                        placeholder="Select Stage"
-                                                        value={parseInt(watch("salesStage")) || null}
-                                                        error={errors.salesStage}
-                                                        onChange={(_, newValue) => {
-                                                            if (newValue?.id) {
-                                                                field.onChange(newValue.id);
-                                                            } else {
-                                                                setValue("salesStage", null);
-                                                            }
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                            <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
-                                            <Controller
-                                                name="nextSteps"
-                                                control={control}
-                                                rules={{
-                                                    required: "Next steps is required",
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        {...field}
-                                                        label="Next Steps"
-                                                        type={`text`}
-                                                        error={errors.nextSteps}
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                            <Controller
-                                                name="status"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        options={opportunityStatus}
-                                                        label={"Status"}
-                                                        placeholder="Select status"
-                                                        value={parseInt(watch("status")) || null}
-                                                        onChange={(_, newValue) => {
-                                                            if (newValue?.id) {
-                                                                field.onChange(newValue.id);
-                                                            } else {
-                                                                setValue("status", null);
-                                                            }
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-                                    </div>
-                                </>
-                            )
-                        }
-                        {
-                            activeStep === 1 && (
-                                <div className="p-[30px]">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-[22px] font-semibold"></h3>
-                                        <div>
-                                            <Button type={`button`} text={'Add Partner'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
-                                        </div>
-                                    </div>
-
-                                    <div className="border rounded-md overflow-hidden">
-                                        <div className="h-56 overflow-y-auto">
-                                            <table className="min-w-full border-collapse">
-                                                {/* Header */}
-                                                <thead className="sticky top-0 z-10">
-                                                    <tr className="bg-[#0478DC] text-white">
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
-                                                    </tr>
-                                                </thead>
-
-                                                {/* Body */}
-                                                <tbody>
-                                                    {(opportunitiesPartner?.length ? opportunitiesPartner : []).map((row, i) => (
-                                                        <tr
-                                                            key={row.id ?? i}
-                                                            className="odd:bg-white even:bg-[#0000003B]"
-                                                        >
-                                                            <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
-                                                            <td className="px-4 py-3 text-sm">{row.accountName || "—"}</td>
-                                                            <td className="px-4 py-3 text-sm">{row.role || "—"}</td>
-                                                            <td className="px-4 py-3">
-                                                                <div className='flex items-center gap-2 justify-end h-full'>
-                                                                    <Tooltip title="Edit" arrow>
-                                                                        <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
-                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                            </Components.IconButton>
-                                                                        </div>
-                                                                    </Tooltip>
-                                                                    <Tooltip title="Delete" arrow>
-                                                                        <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                            </Components.IconButton>
-                                                                        </div>
-                                                                    </Tooltip>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-
-                                                    {/* Empty state */}
-                                                    {(!opportunitiesPartner || opportunitiesPartner.length === 0) && (
-                                                        <tr className="odd:bg-white">
-                                                            <td colSpan={4} className="px-4 py-4 text-center text-sm font-semibold">
-                                                                No records
-                                                            </td>
-                                                        </tr>
+                                                <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
+                                                <Controller
+                                                    name="status"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            options={opportunityStatus}
+                                                            label={"Status"}
+                                                            placeholder="Select status"
+                                                            value={parseInt(watch("status")) || null}
+                                                            onChange={(_, newValue) => {
+                                                                if (newValue?.id) {
+                                                                    field.onChange(newValue.id);
+                                                                } else {
+                                                                    setValue("status", null);
+                                                                }
+                                                            }}
+                                                        />
                                                     )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        }
-                        {
-                            activeStep === 2 && (
-                                <div className="p-[30px]">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-[22px] font-semibold"></h3>
+                                                />
+                                                <Controller
+                                                    name="nextSteps"
+                                                    control={control}
+                                                    rules={{
+                                                        required: "Next steps is required",
+                                                    }}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            multiline={true}
+                                                            rows={3}
+                                                            label="Next Step"
+                                                            type={`text`}
+                                                            error={errors.nextSteps}
+                                                            onChange={(e) => {
+                                                                field.onChange(e.target.value);
+                                                            }}
+                                                        />
+                                                    )}
+                                                />
 
-                                        <div className="flex items-center gap-3">
-                                            {editedContacts.length > 0 && (
-                                                <Tooltip title="Save" arrow>
-                                                    <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
-                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            )}
-
-                                            <div>
-                                                <Button type={`button`} text={'Add Contact'} onClick={() => handleOpenContactModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
                                             </div>
                                         </div>
-                                    </div>
+                                    </>
+                                )
+                            }
+                            {
+                                activeStep === 1 && (
+                                    <div className="p-[30px]">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-[22px] font-semibold"></h3>
+                                            <div>
+                                                <Button type={`button`} text={'Add Partner'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                                            </div>
+                                        </div>
 
-                                    <div className="border rounded-md overflow-hidden">
-                                        <div className="max-h-56 overflow-y-auto">
-                                            <table className="min-w-full border-collapse">
-                                                <thead className="sticky top-0 z-10">
-                                                    <tr className="bg-[#0478DC] text-white">
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Key Contact</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
-                                                    </tr>
-                                                </thead>
+                                        <div className="border rounded-md overflow-hidden">
+                                            <div className="h-56 overflow-y-auto">
+                                                <table className="min-w-full border-collapse">
+                                                    {/* Header */}
+                                                    <thead className="sticky top-0 z-10">
+                                                        <tr className="bg-[#0478DC] text-white">
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
+                                                            <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
+                                                        </tr>
+                                                    </thead>
 
-                                                <tbody>
-                                                    {opportunitiesContacts?.length > 0 ? (
-                                                        opportunitiesContacts.map((row, i) => (
+                                                    {/* Body */}
+                                                    <tbody>
+                                                        {(opportunitiesPartner?.length ? opportunitiesPartner : []).map((row, i) => (
                                                             <tr
                                                                 key={row.id ?? i}
-                                                                className="odd:bg-white even:bg-gray-200"
+                                                                className="odd:bg-white even:bg-[#0000003B]"
                                                             >
                                                                 <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
-                                                                <td className="px-4 py-3 text-sm">{row.contactName || "—"}</td>
-
-                                                                <td className="px-4 py-3 text-sm">
-                                                                    <div className="flex justify-start">
-                                                                        <Checkbox
-                                                                            checked={!!row.isKey}
-                                                                            disabled={
-                                                                                opportunitiesContacts.filter(c => c.isKey).length >= 4 && !row.isKey
-                                                                            }
-                                                                            onChange={() => handleToggleKeyContact(row.id)}
-                                                                        />
-                                                                    </div>
-                                                                </td>
-
+                                                                <td className="px-4 py-3 text-sm">{row.accountName || "—"}</td>
+                                                                <td className="px-4 py-3 text-sm">{row.role || "—"}</td>
                                                                 <td className="px-4 py-3">
-                                                                    <div className='flex items-center justify-end h-full'>
+                                                                    <div className='flex items-center gap-2 justify-end h-full'>
+                                                                        <Tooltip title="Edit" arrow>
+                                                                            <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
                                                                         <Tooltip title="Delete" arrow>
                                                                             <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
                                                                                     <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
                                                                                 </Components.IconButton>
                                                                             </div>
@@ -853,104 +766,190 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     </div>
                                                                 </td>
                                                             </tr>
-                                                        ))
-                                                    ) : (
-                                                        <tr>
-                                                            <td
-                                                                colSpan={4}
-                                                                className="px-4 py-4 text-center text-sm font-semibold"
-                                                            >
-                                                                No records
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        }
-                        {
-                            activeStep === 3 && (
-                                <div className="p-[30px]">
-                                    {/* Title bar */}
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-[22px] font-semibold"></h3>
+                                                        ))}
 
-                                        <div>
-                                            <Button type={`button`} text={'Add Product & Service'} onClick={() => handleOpenProductModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
-                                        </div>
-                                    </div>
-
-                                    <div className="border rounded-md overflow-hidden">
-                                        <div className="max-h-56 overflow-y-auto">
-                                            <table className="min-w-full border-collapse">
-                                                <thead className="sticky top-0 z-10">
-                                                    <tr className="bg-[#0478DC] text-white">
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold w-28">Qty</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold w-32">Price</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold w-40">Total Price</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
-                                                    </tr>
-                                                </thead>
-
-                                                <tbody>
-                                                    {(opportunitiesProducts?.length ? opportunitiesProducts : []).map((row, i) => {
-                                                        const qty = parseFloat(row?.qty) || 0;
-                                                        const price = parseFloat(row?.price) || 0;
-                                                        const total = qty * price;
-
-                                                        return (
-                                                            <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
-                                                                <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
-                                                                <td className="px-4 py-3 text-sm">{row.name || "—"}</td>
-                                                                <td className="px-4 py-3 text-sm text-right">{qty || "—"}</td>
-                                                                <td className="px-4 py-3 text-sm text-right">
-                                                                    {price ? `$${price.toLocaleString()}` : "—"}
-                                                                </td>
-                                                                <td className="px-4 py-3 text-sm text-right">
-                                                                    {total ? `$${total.toLocaleString()}` : "—"}
-                                                                </td>
-                                                                <td className="px-4 py-3">
-                                                                    <div className='flex items-center gap-2 justify-end h-full'>
-                                                                        <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                            <Tooltip title="Edit" arrow>
-                                                                                <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                </Components.IconButton>
-                                                                            </Tooltip>
-                                                                        </div>
-                                                                        <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                            <Tooltip title="Delete" arrow>
-                                                                                <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                </Components.IconButton>
-                                                                            </Tooltip>
-                                                                        </div>
-                                                                    </div>
+                                                        {/* Empty state */}
+                                                        {(!opportunitiesPartner || opportunitiesPartner.length === 0) && (
+                                                            <tr className="odd:bg-white">
+                                                                <td colSpan={4} className="px-4 py-4 text-center text-sm font-semibold">
+                                                                    No records
                                                                 </td>
                                                             </tr>
-                                                        );
-                                                    })}
-
-                                                    {(!opportunitiesProducts || opportunitiesProducts.length === 0) && (
-                                                        <tr>
-                                                            <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
-                                                                No records
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                )
+                            }
+                            {
+                                activeStep === 2 && (
+                                    <div className="p-[30px]">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-[22px] font-semibold"></h3>
 
-                            )
-                        }
+                                            <div className="flex items-center gap-3">
+                                                {editedContacts.length > 0 && (
+                                                    <Tooltip title="Save" arrow>
+                                                        <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={handleBulkUpdateKeyContacts} title="Update key contacts">
+                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                )}
+
+                                                <div>
+                                                    <Button type={`button`} text={'Add Contact'} onClick={() => handleOpenContactModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border rounded-md overflow-hidden">
+                                            <div className="max-h-56 overflow-y-auto">
+                                                <table className="min-w-full border-collapse">
+                                                    <thead className="sticky top-0 z-10">
+                                                        <tr className="bg-[#0478DC] text-white">
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Key Contact</th>
+                                                            <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+                                                        {opportunitiesContacts?.length > 0 ? (
+                                                            opportunitiesContacts.map((row, i) => (
+                                                                <tr
+                                                                    key={row.id ?? i}
+                                                                    className="odd:bg-white even:bg-gray-200"
+                                                                >
+                                                                    <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
+                                                                    <td className="px-4 py-3 text-sm">{row.contactName || "—"}</td>
+
+                                                                    <td className="px-4 py-3 text-sm">
+                                                                        <div className="flex justify-start">
+                                                                            <Checkbox
+                                                                                checked={!!row.isKey}
+                                                                                disabled={
+                                                                                    opportunitiesContacts.filter(c => c.isKey).length >= 4 && !row.isKey
+                                                                                }
+                                                                                onChange={() => handleToggleKeyContact(row.id)}
+                                                                            />
+                                                                        </div>
+                                                                    </td>
+
+                                                                    <td className="px-4 py-3">
+                                                                        <div className='flex items-center justify-end h-full'>
+                                                                            <Tooltip title="Delete" arrow>
+                                                                                <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                    <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                    </Components.IconButton>
+                                                                                </div>
+                                                                            </Tooltip>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                        ) : (
+                                                            <tr>
+                                                                <td
+                                                                    colSpan={4}
+                                                                    className="px-4 py-4 text-center text-sm font-semibold"
+                                                                >
+                                                                    No records
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            }
+                            {
+                                activeStep === 3 && (
+                                    <div className="p-[30px]">
+                                        {/* Title bar */}
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-[22px] font-semibold"></h3>
+
+                                            <div>
+                                                <Button type={`button`} text={'Add Product & Service'} onClick={() => handleOpenProductModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                                            </div>
+                                        </div>
+
+                                        <div className="border rounded-md overflow-hidden">
+                                            <div className="max-h-56 overflow-y-auto">
+                                                <table className="min-w-full border-collapse">
+                                                    <thead className="sticky top-0 z-10">
+                                                        <tr className="bg-[#0478DC] text-white">
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
+                                                            <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                            <th className="px-4 py-3 text-right text-sm font-semibold w-28">Qty</th>
+                                                            <th className="px-4 py-3 text-right text-sm font-semibold w-32">Price</th>
+                                                            <th className="px-4 py-3 text-right text-sm font-semibold w-40">Total Price</th>
+                                                            <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+                                                        {(opportunitiesProducts?.length ? opportunitiesProducts : []).map((row, i) => {
+                                                            const qty = parseFloat(row?.qty) || 0;
+                                                            const price = parseFloat(row?.price) || 0;
+                                                            const total = qty * price;
+
+                                                            return (
+                                                                <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
+                                                                    <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
+                                                                    <td className="px-4 py-3 text-sm">{row.name || "—"}</td>
+                                                                    <td className="px-4 py-3 text-sm text-right">{qty || "—"}</td>
+                                                                    <td className="px-4 py-3 text-sm text-right">
+                                                                        {price ? `$${price.toLocaleString()}` : "—"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 text-sm text-right">
+                                                                        {total ? `$${total.toLocaleString()}` : "—"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <div className='flex items-center gap-2 justify-end h-full'>
+                                                                            <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Tooltip title="Edit" arrow>
+                                                                                    <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                    </Components.IconButton>
+                                                                                </Tooltip>
+                                                                            </div>
+                                                                            <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                <Tooltip title="Delete" arrow>
+                                                                                    <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                    </Components.IconButton>
+                                                                                </Tooltip>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+
+                                                        {(!opportunitiesProducts || opportunitiesProducts.length === 0) && (
+                                                            <tr>
+                                                                <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
+                                                                    No records
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>

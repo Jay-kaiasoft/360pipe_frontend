@@ -20,7 +20,7 @@ const Layout = ({ sessionEndModel }) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 pt-20"> {/* pt-16 to account for fixed header height */}
+      <div className="flex flex-1 pt-20">
         {/* Sidebar for mobile */}
         <div className="lg:hidden">
           <SideBar />
@@ -30,7 +30,7 @@ const Layout = ({ sessionEndModel }) => {
         {/* Scrollable Content */}
         <main className="flex-1">
           <div className="h-full overflow-y-auto">
-            <div className="p-4 mx-auto">
+            <div className="px-4 mx-auto">
               <Outlet />
               {location.pathname === '/dashboard' && <Dashboard />}
             </div>
@@ -41,7 +41,7 @@ const Layout = ({ sessionEndModel }) => {
       <AlertDialog
         open={sessionEndModel}
         title="Session Expired"
-        message="Your session has expired. Please log in again to continue."
+        message="Your session has expired. Please log in to continue."
         actionButtonText="Login"
         handleAction={() => navigate('/login')}
         closeIcon={false}

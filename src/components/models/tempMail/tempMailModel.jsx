@@ -119,8 +119,8 @@ function TempMailModel({ setAlert, open, handleClose, id, handleGetAllMails }) {
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='py-3 px-[30px]'>
-                            <div className='grid md:grid-cols-2 gap-[30px]'>
+                        <div className='px-[30px]'>
+                            <div className='grid gap-[30px]'>
                                 <Controller
                                     name="email"
                                     control={control}

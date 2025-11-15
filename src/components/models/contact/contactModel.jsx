@@ -214,8 +214,8 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='py-3 px-[30px]'>
-                            <div className='grid md:grid-cols-2 gap-[30px]'>
+                        <div className='px-[30px]'>
+                            <div className='grid gap-[30px]'>
                                 <div>
                                     <Controller
                                         name="opportunityId"
@@ -224,7 +224,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                             <Select
                                                 options={opportunities}
                                                 label={"Opportunity"}
-                                                placeholder="Select Opportunity"
+                                                placeholder="Select opportunity"
                                                 value={parseInt(watch("opportunityId")) || null}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {
@@ -323,27 +323,6 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                         )}
                                     />
                                 </div>
-                                {/* <div>
-                                <Controller
-                                    name="role"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={opportunityContactRoles}
-                                            label={"Role"}
-                                            placeholder="Select Role"
-                                            value={parseInt(watch("role")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue("role", null);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-                            </div> */}
                             </div>
                         </div>
                     </Components.DialogContent>

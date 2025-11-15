@@ -519,8 +519,8 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='py-3 px-[30px]'>
-                            <div className='grid grid-cols-2 md:grid-cols-2 gap-[30px]'>
+                        <div className='px-[30px]'>
+                            <div className='grid gap-[30px]'>
                                 <div>
                                     <Controller
                                         name="name"
@@ -635,8 +635,8 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                 {
                                     id && (
                                         <>
-                                            <div className='col-span-2 grid grid-cols-2 gap-[30px]'>
-                                                <div className='col-span-2'>
+                                            <div className='grid gap-[30px]'>
+                                                <div>
                                                     <Controller
                                                         name="calendarYearType"
                                                         control={control}
@@ -716,7 +716,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 />
                                             </div>
 
-                                            <div className='col-span-2 grid grid-cols-2 gap-[30px]'>
+                                            <div className='grid gap-[30px]'>
                                                 {(() => {
                                                     if (!selectedTerm) return null;
                                                     const startMonthIndex = parseStartMonthIndex(watch("startEvalPeriod"));
@@ -779,7 +779,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 }
                                             </div>
 
-                                            <div className='col-span-2'>
+                                            <div>
                                                 <div className="border rounded-md overflow-hidden">
                                                     <div className="max-h-56 overflow-y-auto">
                                                         <table className="min-w-full border-collapse">

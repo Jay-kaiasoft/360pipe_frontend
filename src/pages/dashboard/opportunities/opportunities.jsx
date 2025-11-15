@@ -176,11 +176,37 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             sortable: false,
         },
         {
+            field: 'accountName',
+            headerName: 'Account',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 200,
+            renderCell: (params) => {
+                return (
+                    <span>{params.value ? params.value : '-'}</span>
+                )
+            }
+        },
+        {
             field: 'opportunity',
             headerName: 'opportunity Name',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 400,
+            minWidth: 300,
+        },
+        {
+            field: 'dealAmount',
+            headerName: 'deal Amount',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 120,
+            align: 'right',
+            headerAlign: 'right',
+            renderCell: (params) => {
+                return (
+                    <span>{params.value ? `$${parseFloat(Number(params.value).toFixed(2)).toLocaleString()}` : ''}</span>
+                )
+            }
         },
         {
             field: "salesStage",
@@ -206,42 +232,31 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 );
             },
         },
-        {
-            field: "status",
-            headerName: "Status",
-            flex: 1,
-            minWidth: 180,
-            renderCell: (params) => {
-                const status = params.value;
-                const bg = statusColors[status] || "#e0e0e0";
+        // {
+        //     field: "status",
+        //     headerName: "Status",
+        //     flex: 1,
+        //     minWidth: 150,
+        //     renderCell: (params) => {
+        //         const status = params.value;
+        //         const bg = statusColors[status] || "#e0e0e0";
 
-                return (
-                    <Chip
-                        label={status}
-                        size="small"
-                        sx={{
-                            backgroundColor: bg,
-                            color: "#fff",
-                            fontWeight: 600,
-                            borderRadius: "20px",
-                            px: 1.5,
-                        }}
-                    />
-                );
-            },
-        },
-        {
-            field: 'dealAmount',
-            headerName: 'deal Amount',
-            headerClassName: 'uppercase',
-            flex: 1,
-            minWidth: 200,
-            renderCell: (params) => {
-                return (
-                    <span>{params.value ? `$${params.value.toLocaleString()}` : ''}</span>
-                )
-            }
-        },
+        //         return (
+        //             <Chip
+        //                 label={status}
+        //                 size="small"
+        //                 sx={{
+        //                     backgroundColor: bg,
+        //                     color: "#fff",
+        //                     fontWeight: 600,
+        //                     borderRadius: "20px",
+        //                     px: 1.5,
+        //                 }}
+        //             />
+        //         );
+        //     },
+        // },
+
         {
             field: 'closeDate',
             headerName: 'close Date',
@@ -251,6 +266,18 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             renderCell: (params) => {
                 return (
                     <span>{params.value ? new Date(params.value).toLocaleDateString() : ''}</span>
+                )
+            }
+        },
+        {
+            field: 'nextSteps',
+            headerName: 'Next Step',
+            headerClassName: 'uppercase',
+            flex: 1,
+            minWidth: 300,
+            renderCell: (params) => {
+                return (
+                    <span>{(params.value !== "" && params.value !== null) ? params.value : '-'}</span>
                 )
             }
         },

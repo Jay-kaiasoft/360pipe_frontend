@@ -154,9 +154,9 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
 
                 <form noValidate onSubmit={handleSubmit(submit)} className='h-full'>
                     <Components.DialogContent dividers>
-                        <div className='p-[15px]'>
-                            <div className='grid md:grid-cols-2 gap-[30px]'>
-                                <div className='mb-3'>
+                        <div className='px-[30px]'>
+                            <div className='grid gap-[30px]'>
+                                <div>
                                     <Controller
                                         name={`accountId`}
                                         control={control}
@@ -165,7 +165,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                                             <Select
                                                 options={accounts || []} // Prevent selecting the same account in both fields
                                                 label={"Account"}
-                                                placeholder="Select Account"
+                                                placeholder="Select account"
                                                 value={parseInt(watch(`accountId`)) || null}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {
@@ -191,7 +191,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                                             <Select
                                                 options={partnerRoles}
                                                 label={"Role"}
-                                                placeholder="Select Role"
+                                                placeholder="Select role"
                                                 value={parseInt(watch(`roleid`)) || null}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {

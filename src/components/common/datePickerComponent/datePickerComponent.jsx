@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { useTheme } from '@mui/material';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false }) => {
+const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, error = false, value, onChange }) => {
   const theme = useTheme();
 
   const customTheme = createTheme({

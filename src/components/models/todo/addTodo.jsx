@@ -371,8 +371,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='py-3 px-[30px]'>
-                            <div className='grid md:grid-cols-2 gap-[30px]'>
+                        <div className='px-[30px]'>
+                            <div className='grid gap-[30px]'>
                                 <div>
                                     <Controller
                                         name="task"
@@ -440,7 +440,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 disabled={todoId ? watch("createdBy") !== userData?.userId : false}
                                                 options={todoType}
                                                 label={"Task Type"}
-                                                placeholder="Select Task Type"
+                                                placeholder="Select task type"
                                                 value={parseInt(watch("source")) || null}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {
@@ -648,7 +648,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                <div className='md:col-span-2'>
+                                <div>
                                     <Controller
                                         name="comments"
                                         control={control}
@@ -665,7 +665,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                <div className="md:col-span-2">
+                                <div>
                                     <MultipleFileUpload
                                         files={files}
                                         setFiles={setFiles}

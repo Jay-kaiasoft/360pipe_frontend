@@ -153,7 +153,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
                         <div className='px-[30px]'>
-                            <div className='grid grid-cols-2 gap-[30px]'>
+                            <div className='grid gap-[30px]'>
                                 <div>
                                     <Controller
                                         name="memberId"
