@@ -21,6 +21,16 @@ export const getAllOpportunities = async (params) => {
     }
 };
 
+export const getAllOpportunitiesGroupedByStage = async (params) => {
+    try {
+        const response = await axiosInterceptor().get(`${opportunityURL}/get/allByGroup${params ? `?${params}` : ''}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching opportunities:", error);
+        throw error;
+    }
+};
+
 export const getOpportunityDetails = async (opportunityId) => {
     try {
         const response = await axiosInterceptor().get(`${opportunityURL}/get/${opportunityId}`);

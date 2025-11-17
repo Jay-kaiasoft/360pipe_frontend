@@ -4,27 +4,28 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Checkbox from '../../../components/common/checkBox/checkbox';
 import Select from '../../../components/common/select/select';
 import Input from '../../../components/common/input/input';
-import { Controller, useForm } from 'react-hook-form';
-import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
+import { useForm } from 'react-hook-form';
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import CustomIcons from '../../../components/common/icons/CustomIcons';
-import FileInputBox from '../../../components/fileInputBox/fileInputBox';
 
 import { getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
-import { getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
-import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import { getAllOpportunitiesPartner, deleteOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
+import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
+import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import { opportunityStages, opportunityStatus, partnerRoles } from '../../../service/common/commonService';
-import Button from '../../../components/common/buttons/button';
-import { Chip, Tooltip } from '@mui/material';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import Components from '../../../components/muiComponents/components';
+import OpportunityContactModel from '../../../components/models/opportunities/opportunityContactModel';
+import OpportunitiesPartnersModel from '../../../components/models/opportunities/opportunityPartnerModel';
+import OpportunitiesProductsModel from '../../../components/models/opportunities/opportunitiesProductsModel';
+import AlertDialog from '../../../components/common/alertDialog/alertDialog';
+import { Tooltip } from '@mui/material';
 
-const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
+const ViewOpportunity = ({ setAlert }) => {
     const { opportunityId } = useParams()
     const navigate = useNavigate();
 
@@ -35,13 +36,31 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
     const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
 
+    // Contact CRUD states
+    const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [selectedContactId, setSelectedContactId] = useState(null);
+
+    const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // Partner CRUD states
+    const [partnerModalOpen, setPartnerModalOpen] = useState(false);
+    const [selectedPartnerId, setSelectedPartnerId] = useState(null);
+
+    const [dialogPartner, setDialogPartner] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // Product CRUD states
+    const [productModalOpen, setProductModalOpen] = useState(false);
+    const [selectedProductId, setSelectedProductId] = useState(null);
+
+    const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    const [initialIsKey, setInitialIsKey] = useState({});         // id -> original isKey
+    const [editedContacts, setEditedContacts] = useState([]);     // [{ id, isKey }, ...]
+
     const {
-        control,
-        reset,
         watch,
         setValue,
         getValues,
-        formState: { errors },
     } = useForm({
         defaultValues: {
             id: null,
@@ -73,7 +92,6 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.title || null);
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
-                // Assuming 'dealOwner' comes from the API or needs to be set
 
                 if (productTotalAmount > Number(res?.result?.dealAmount?.toFixed(2))) {
                     setValue("dealAmount", productTotalAmount)
@@ -81,7 +99,6 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                     setValue("dealAmount", res?.result?.dealAmount || null);
                 }
 
-                // Original logic for opportunityPartnerDetails (keeping it for context, though not strictly needed for the view)
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
                         ...item,
@@ -146,7 +163,6 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
 
             // ✅ Sort: isKey === true first
             const sortedList = [...list].sort((a, b) => {
-                // true values should come first
                 if (a.isKey === b.isKey) return 0;
                 return a.isKey ? -1 : 1;
             });
@@ -157,7 +173,8 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
             sortedList.forEach(c => {
                 if (c?.id != null) map[c.id] = !!c.isKey;
             });
-
+            setInitialIsKey(map);
+            setEditedContacts([]); // Reset edits on fresh load
         }
     };
 
@@ -171,16 +188,13 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
 
     // --- Helper Functions and Components for View UI ---
 
-    // 1. Helper to get the display name from an ID in an options array
     const getDisplayName = (id, options) => {
         const option = options.find(opt => opt.id === id);
         return option ? option.title : '—';
     };
 
-    // 2. Helper to format date
     const formatDate = (dateString) => {
         if (!dateString) return '—';
-        // Use 'en-US' locale for consistent display or replace with your desired locale
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -188,17 +202,15 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
         });
     };
 
-    // 3. API save handlers
     const handleSaveField = async (fieldName, newValue) => {
         try {
             const opportunityId = watch("id");
             if (opportunityId) {
-                const currentValues = getValues(); // Get all current form values
+                const currentValues = getValues();
                 const updateData = { ...currentValues, [fieldName]: newValue };
                 const res = await updateOpportunity(opportunityId, updateData);
                 if (res?.status === 200) {
                     setValue(fieldName, newValue);
-                    // Optionally refresh data or show success message
                 } else {
                     setAlert({
                         open: true,
@@ -231,7 +243,13 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
 
         const handleSave = async () => {
             if (editValue !== value && onSave) {
-                await onSave(type === 'select' ? label === "Account" ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id : options?.find((row) => (row.title === editValue || row.id === editValue))?.title : editValue);
+                await onSave(
+                    type === 'select'
+                        ? label === "Account"
+                            ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id
+                            : options?.find((row) => (row.title === editValue || row.id === editValue))?.title
+                        : editValue
+                );
             }
             setIsEditing(false);
         };
@@ -358,15 +376,12 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                         let pillClasses = "";
 
                         if (isActive) {
-                            // current stage
                             pillClasses =
                                 "bg-[#1072E0] text-white border-[#1072E0]";
                         } else if (isCompleted) {
-                            // completed stage
                             pillClasses =
                                 "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF]";
                         } else {
-                            // upcoming stage
                             pillClasses = "bg-white text-gray-700 border-gray-300";
                         }
 
@@ -393,6 +408,198 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
         );
     };
 
+    // Contact CRUD handlers
+    const handleAddContact = () => {
+        setSelectedContactId(null);
+        setContactModalOpen(true);
+    };
+
+    const handleCloseContactModel = () => {
+        setSelectedContactId(null);
+        setContactModalOpen(false);
+    };
+
+    const handleOpenDeleteContactDialog = (id) => {
+        setSelectedContactId(id);
+        setDialogContact({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteContactDialog = () => {
+        setSelectedContactId(null);
+        setDialogContact({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteContact = async () => {
+        try {
+            const res = await deleteOpportunitiesContact(selectedContactId);
+            if (res?.status === 200) {
+                handleCloseDeleteContactDialog()
+                handleGetOppContacts();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete contact",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: error.message || "Failed to delete contact",
+                type: "error"
+            });
+        }
+    };
+
+    // ✅ Contact toggle handlers (FIXED)
+    const handleToggleKeyContact = (id, isKey) => {
+        setEditedContacts(prev => {
+            const next = [...prev];
+            const idx = next.findIndex(e => e.id === id);
+
+            if (idx >= 0) {
+                next[idx] = { id, isKey };
+            } else {
+                next.push({ id, isKey });
+            }
+
+            const original = initialIsKey[id] ?? false;
+
+            // If value is same as original, remove from edited list
+            const idxAfter = next.findIndex(e => e.id === id);
+            if (idxAfter >= 0 && next[idxAfter].isKey === original) {
+                next.splice(idxAfter, 1);
+            }
+
+            return next;
+        });
+    };
+
+    const handleSaveKeyContacts = async () => {
+        try {
+            const requestData = editedContacts.map(item => ({
+                id: item.id,
+                isKey: item.isKey
+            }));
+
+            const res = await updateOpportunitiesContact(requestData);
+
+            if (res?.status === 200) {
+                setEditedContacts([]);
+                handleGetOppContacts();
+            } else {
+                setAlert({
+                    open: true,
+                    message: "Failed to update key contacts",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: "Something went wrong while saving",
+                type: "error"
+            });
+        }
+    };
+
+    // Partner CRUD handlers
+    const handleAddPartner = () => {
+        setSelectedPartnerId(null);
+        setPartnerModalOpen(true);
+    };
+
+    const handleClosePartnerModel = () => {
+        setSelectedPartnerId(null);
+        setPartnerModalOpen(false);
+    };
+
+    const handleEditPartner = (partnerId) => {
+        setSelectedPartnerId(partnerId);
+        setPartnerModalOpen(true);
+    };
+
+    const handleOpenDeletePartnerDialog = (id) => {
+        setSelectedPartnerId(id);
+        setDialogPartner({ open: true, title: 'Delete Partner', message: 'Are you sure! Do you want to delete this partner?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeletePartnerDialog = () => {
+        setSelectedPartnerId(null);
+        setDialogPartner({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeletePartner = async () => {
+        try {
+            const res = await deleteOpportunitiesPartner(selectedPartnerId);
+            if (res?.status === 200) {
+                handleCloseDeletePartnerDialog()
+                handleGetAllOpportunitiesPartner();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete partner",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: error.message || "Failed to delete partner",
+                type: "error"
+            });
+        }
+    };
+
+    // Product CRUD handlers
+    const handleAddProduct = () => {
+        setSelectedProductId(null);
+        setProductModalOpen(true);
+    };
+
+    const handleCloseProductModel = () => {
+        setSelectedProductId(null);
+        setProductModalOpen(false);
+    };
+
+    const handleEditProduct = (productId) => {
+        setSelectedProductId(productId);
+        setProductModalOpen(true);
+    };
+
+    const handleOpenDeleteProductDialog = (id) => {
+        setSelectedProductId(id);
+        setDialogProduct({ open: true, title: 'Delete Product', message: 'Are you sure! Do you want to delete this product?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteProductDialog = () => {
+        setSelectedProductId(null);
+        setDialogProduct({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteProduct = async () => {
+        try {
+            const res = await deleteOpportunitiesProducts(selectedProductId);
+            if (res?.status === 200) {
+                handleCloseDeleteProductDialog()
+                handleGetOppProduct();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete product",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: error.message || "Failed to delete product",
+                type: "error"
+            });
+        }
+    };
+
+
     const PartnersSection = ({ list = [] }) => {
         return (
             <>
@@ -404,14 +611,36 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                                 <span className="mx-4 font-semibold text-gray-700">Partners</span>
                                 <div className="flex-grow border-t border-gray-300"></div>
                             </div>
-
+                            <div className='flex justify-end mb-4 gap-2'>
+                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                    <Components.IconButton onClick={() => handleAddPartner()}>
+                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                    </Components.IconButton>
+                                </div>
+                            </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 4k:grid-cols-6 gap-4">
                                 {list.map((row, i) => (
                                     <div
                                         key={row.id ?? i}
-                                        className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+                                        className="relative bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
                                     >
+                                        <div className="absolute right-2 flex items-center justify-end gap-2">
+                                            <Tooltip title="Edit" arrow>
+                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleEditPartner(row.id)}>
+                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                            <Tooltip title="Delete" arrow>
+                                                <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
+                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        </div>
                                         <p className="font-semibold text-gray-800 text-lg">
                                             {row.accountName || "—"}
                                         </p>
@@ -429,68 +658,100 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
     };
 
     const ContactsSection = ({ list = [] }) => {
+        // Apply edits to the list
+        const contactsWithEdits = list.map(c => {
+            const edit = editedContacts.find(e => e.id === c.id);
+            return { ...c, isKey: edit ? edit.isKey : c.isKey };
+        });
+
+        // Sort: isKey true first
+        const sortedContacts = [...contactsWithEdits].sort((a, b) => {
+            if (a.isKey === b.isKey) return 0;
+            return a.isKey ? -1 : 1;
+        });
+
+        const currentKeyContactsCount = sortedContacts.filter(c => c.isKey).length;
+
         return (
             <>
-                {
-                    list.length > 0 && (
-                        <section className="mt-8">
-                            <div className="flex items-center my-4">
-                                <div className="flex-grow border-t border-gray-300"></div>
-                                <span className="mx-4 font-semibold text-gray-700">Contacts</span>
-                                <div className="flex-grow border-t border-gray-300"></div>
-                            </div>
+                <section className="mt-8">
+                    <div className="mt-4">
+                        <div className="flex items-center">
+                            <div className="flex-grow border-t border-gray-300"></div>
+                            <span className="mx-4 font-semibold text-gray-700">Contacts</span>
+                            <div className="flex-grow border-t border-gray-300"></div>
+                        </div>
+                    </div>
+                    <div className='flex justify-end mb-4 gap-2'>
+                        {editedContacts.length > 0 && (
+                            <Tooltip title="Save" arrow>
+                                <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                    <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
+                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                    </Components.IconButton>
+                                </div>
+                            </Tooltip>
+                        )}
+                        <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                            <Components.IconButton onClick={() => handleAddContact()}>
+                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
+                    </div>
 
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
+                        {sortedContacts.map((row, i) => (
+                            <div
+                                key={row.id ?? i}
+                                className={`
+            relative bg-white border rounded-xl p-4 shadow-sm 
+            hover:shadow-md transition-shadow cursor-pointer
+            ${row.isKey ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
+        `}
+                            >
 
-                            <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
-                                {list.map((row, i) => (
-                                    <div
-                                        key={row.id ?? i}
-                                        className={`
-                                    bg-white border rounded-xl p-4 shadow-sm flex gap-3 cursor-pointer
-                                    ${row.isKey ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
-                                    hover:shadow-md transition-shadow
-                                `}
+                                {/* ====== Checkbox on Top-Right ====== */}
+                                <div className="absolute top-2 right-2 flex items-center gap-1">
+                                    <Checkbox
+                                        checked={!!row.isKey}
+                                        disabled={currentKeyContactsCount >= 4 && !row.isKey}
+                                        onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
+                                    />
+                                    <Tooltip title="Delete" arrow>
+                                        <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                            <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                            </Components.IconButton>
+                                        </div>
+                                    </Tooltip>
+                                </div>
+
+                                {/* Avatar & Details */}
+                                <div className="flex gap-3 pr-8">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold
+                ${row.isKey ? 'bg-blue-600' : 'bg-gray-400'}`}
                                     >
-                                        <div className={`w-10 h-10 rounded-full ${row.isKey ? 'bg-blue-600' : 'bg-gray-300'} flex items-center justify-center text-white font-semibold flex-shrink-0`}>
-                                            {(row.contactName || "—").charAt(0)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-col">
-                                                <p className="font-semibold text-gray-800 truncate">
-                                                    {row.contactName || "—"}
-                                                </p>
-                                                {row.isKey && (
-                                                    <Chip
-                                                        label="Key Contact"
-                                                        size="small"
-                                                        sx={{
-                                                            bgcolor: "#1072E0",
-                                                            color: "#fff",
-                                                            fontSize: 10,
-                                                            height: 20,
-                                                            mt: 0.5,
-                                                            width: 'fit-content'
-                                                        }}
-                                                    />
-                                                )}
-                                            </div>
-                                            {row.email && (
-                                                <p className="text-xs text-gray-500 mt-1 truncate">
-                                                    {row.email}
-                                                </p>
-                                            )}
-                                            {row.phone && (
-                                                <p className="text-xs text-gray-500 truncate">
-                                                    {row.phone}
-                                                </p>
-                                            )}
-                                        </div>
+                                        {(row.contactName || "—").charAt(0)}
                                     </div>
-                                ))}
+
+                                    <div className="flex-1 overflow-hidden">
+                                        <p className="font-semibold text-gray-800 truncate">
+                                            {row.contactName || "—"}
+                                        </p>
+
+                                        {row.email && (
+                                            <p className="text-xs text-gray-500 truncate mt-1">{row.email}</p>
+                                        )}
+                                        {row.phone && (
+                                            <p className="text-xs text-gray-500 truncate">{row.phone}</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </section>
-                    )
-                }
+                        ))}
+
+                    </div>
+                </section>
             </>
         );
     };
@@ -515,64 +776,80 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                                 </span>
                                 <div className="flex-grow border-t border-gray-300"></div>
                             </div>
-
-                            <div className="bg-white border border-gray-200 rounded-xl shadow-md">
-                                {/* Header for Alignment Reference (Optional, but helpful) */}
-                                <div className="hidden sm:flex px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
-                                    <div className="flex-1 min-w-0">Product Name</div>
-                                    <div className="flex justify-end w-[250px] sm:w-[350px]">
-                                        <span className="w-1/4 text-right">Qty</span>
-                                        <span className="w-1/4 text-right">Price</span>
-                                        <span className="w-1/2 text-right">Total</span>
-                                    </div>
+                            <div className='flex justify-end mb-4 gap-2'>
+                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                    <Components.IconButton onClick={() => handleAddProduct()}>
+                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                    </Components.IconButton>
                                 </div>
+                            </div>
 
-                                <div className="divide-y divide-gray-100">
-                                    {items.map((row, i) => {
-                                        const qty = parseFloat(row?.qty) || 0;
-                                        const price = parseFloat(row?.price) || 0;
-                                        const total = qty * price;
+                            <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="hidden sm:table-header-group">
+                                        <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                                            <th className="px-4 py-3 text-left">Product Name</th>
+                                            <th className="px-4 py-3 text-right">Qty</th>
+                                            <th className="px-4 py-3 text-right">Price</th>
+                                            <th className="px-4 py-3 text-right">Total</th>
+                                            <th className="px-4 py-3 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {items.map((row, i) => {
+                                            const qty = parseFloat(row?.qty) || 0;
+                                            const price = parseFloat(row?.price) || 0;
+                                            const total = qty * price;
 
-                                        return (
-                                            <div
-                                                key={row.id ?? i}
-                                                className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3 hover:bg-gray-50 transition-colors"
-                                            >
-                                                {/* Product Name (Left Aligned) */}
-                                                <div className="flex-1 min-w-0 pr-4 pb-2 sm:pb-0">
-                                                    <p className="font-semibold text-gray-800 text-base break-words">
-                                                        {row.name || "—"}
-                                                    </p>
-                                                </div>
-
-                                                {/* Qty, Price, Total (Right Aligned, Columnar Structure) */}
-                                                <div className="flex justify-between sm:justify-end w-full sm:w-[250px] lg:w-[350px] text-sm text-gray-700">
-                                                    {/* Qty Column */}
-                                                    <div className="flex sm:block w-1/3 sm:w-1/4 text-right">
-                                                        <span className="sm:hidden text-xs text-gray-500 mr-2">Qty:</span>
+                                            return (
+                                                <tr
+                                                    key={row.id ?? i}
+                                                    className="hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <td className="px-4 py-3">
+                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Product Name:</div>
+                                                        <p className="font-semibold text-gray-800 text-base break-words">
+                                                            {row.name || "—"}
+                                                        </p>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Qty:</div>
                                                         <span className="font-semibold">{qty || "—"}</span>
-                                                    </div>
-
-                                                    {/* Price Column */}
-                                                    <div className="flex sm:block w-1/3 sm:w-1/4 text-right">
-                                                        <span className="sm:hidden text-xs text-gray-500 mr-2">Price:</span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Price:</div>
                                                         <span className="font-semibold">{price ? `$${price.toLocaleString()}` : "—"}</span>
-                                                    </div>
-
-                                                    {/* Total Column (Blue, prominent) */}
-                                                    <div className="flex sm:block w-1/3 sm:w-1/2 text-right">
-                                                        <span className="sm:hidden text-xs text-blue-600 mr-2">Total:</span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="sm:hidden text-xs text-blue-600 mb-1">Total:</div>
                                                         <span className="font-bold text-blue-600 text-base">
                                                             {total ? `$${total.toLocaleString()}` : "—"}
                                                         </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Tooltip title="Edit" arrow>
+                                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleEditProduct(row.id)}>
+                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                            <Tooltip title="Delete" arrow>
+                                                                <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
 
-                                {/* Grand Total Footer */}
                                 <div className="flex justify-between items-center px-4 py-3 border-t border-gray-200 bg-[#F9FAFB] rounded-b-xl">
                                     <p className="text-base font-bold text-gray-700">
                                         Total Expected Revenue
@@ -591,7 +868,6 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
         );
     };
 
-
     return (
         <div className='mx-auto relative p-4 sm:p-6 bg-white rounded-xl shadow-lg'>
 
@@ -602,7 +878,7 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                 </div>
             </div>
 
-            {/* Stage Timeline (Top Bar) */}
+            {/* Stage Timeline */}
             <StageTimeline
                 stages={opportunityStages}
                 currentStageId={opportunityStages.find(stage => stage.title === watch("salesStage"))?.id}
@@ -610,10 +886,10 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
 
             <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4 border-t border-gray-200'>
 
-                {/* Logo Section */}
+                {/* Logo */}
                 <div className='flex justify-center md:justify-start items-start md:col-span-1'>
                     <div className="w-32 h-32 border border-dashed border-gray-400 rounded-full overflow-hidden flex items-center justify-center">
-                        <a href={watch("logo")} target='_blank' className='block w-full h-full'>
+                        <a href={watch("logo")} target='_blank' className='block w-full h-full' rel="noreferrer">
                             {watch("logo") ? (
                                 <img
                                     src={watch("logo")}
@@ -629,7 +905,7 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
                     </div>
                 </div>
 
-                {/* Main Opportunity Fields (Responsive Grid) */}
+                {/* Main Fields */}
                 <div className='grid md:grid-cols-2 gap-y-5 w-full md:col-span-4'>
                     <>
                         <OpportunityField
@@ -696,6 +972,55 @@ const ViewOpportunity = ({ setAlert, setSyncingPushStatus }) => {
             <PartnersSection list={opportunitiesPartner} />
             <ProductsSection list={opportunitiesProducts} />
 
+            {/* Contact Modal */}
+            <OpportunityContactModel
+                open={contactModalOpen}
+                handleClose={handleCloseContactModel}
+                opportunityId={opportunityId}
+                handleGetAllOppContact={handleGetOppContacts}
+            />
+            <AlertDialog
+                open={dialogContact.open}
+                title={dialogContact.title}
+                message={dialogContact.message}
+                actionButtonText={dialogContact.actionButtonText}
+                handleAction={() => handleDeleteContact()}
+                handleClose={() => handleCloseDeleteContactDialog()}
+            />
+
+            {/* Partner Modal */}
+            <OpportunitiesPartnersModel
+                open={partnerModalOpen}
+                handleClose={handleClosePartnerModel}
+                opportunityId={opportunityId}
+                id={selectedPartnerId}
+                handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner}
+            />
+            <AlertDialog
+                open={dialogPartner.open}
+                title={dialogPartner.title}
+                message={dialogPartner.message}
+                actionButtonText={dialogPartner.actionButtonText}
+                handleAction={() => handleDeletePartner()}
+                handleClose={() => handleCloseDeletePartnerDialog()}
+            />
+
+            {/* Product Modal */}
+            <OpportunitiesProductsModel
+                open={productModalOpen}
+                handleClose={handleCloseProductModel}
+                opportunityId={opportunityId}
+                id={selectedProductId}
+                handleGetAllOpportunitiesProducts={handleGetOppProduct}
+            />
+            <AlertDialog
+                open={dialogProduct.open}
+                title={dialogProduct.title}
+                message={dialogProduct.message}
+                actionButtonText={dialogProduct.actionButtonText}
+                handleAction={() => handleDeleteProduct()}
+                handleClose={() => handleCloseDeleteProductDialog()}
+            />
         </div>
     )
 }

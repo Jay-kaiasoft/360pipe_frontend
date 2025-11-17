@@ -9,7 +9,6 @@ import Button from '../../components/common/buttons/button';
 
 const MyCalendar = ({ setAlert }) => {
 
-    console.log("userTimeZone", userTimeZone)
     const handleClickGoogleCalendar = async () => {
         let x = window.innerWidth / 2 - 600 / 2;
         let y = window.innerHeight / 2 - 700 / 2;

@@ -45,7 +45,8 @@ export default function DataTable({
     buttons,
     allowSorting = false,
     setRowSelectionModel,
-    rowSelectionModel
+    rowSelectionModel,
+    processRowUpdate
 }) {
     const userInfo = getUserDetails();
     const theme = useTheme();
@@ -229,6 +230,7 @@ export default function DataTable({
                             setRowSelectionModel(newRowSelectionModel);
                         }}
                         rowSelectionModel={rowSelectionModel}
+                        processRowUpdate={processRowUpdate}
                         slots={{
                             columnSortedAscendingIcon: AscIcon,
                             columnSortedDescendingIcon: DescIcon,
@@ -244,8 +246,11 @@ export default function DataTable({
                         sx={{
                             color: theme.palette.text.primary,
                             overflow: 'auto',
-                    
-
+                            '& .MuiDataGrid-editInputCell': {
+                                // border: 1,
+                                // borderColor:"blue",
+                                boxShadow: 5
+                            },
                             '& .MuiDataGrid-columnHeaders': {
                                 position: 'sticky',
                                 top: 0,

@@ -25,7 +25,6 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
 
 function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, contactId, handleGetAllContacts }) {
     const theme = useTheme()
-
     const [loading, setLoading] = useState(false);
     const [opportunities, setOpportunities] = useState([]);
     const [contacts, setContacts] = useState([]);

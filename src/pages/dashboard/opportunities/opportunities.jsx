@@ -7,12 +7,12 @@ import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { deleteOpportunity, getAllOpportunities, getOpportunityOptions } from '../../../service/opportunities/opportunitiesService';
+import { deleteOpportunity, getAllOpportunities, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import SelectMultiple from '../../../components/common/select/selectMultiple';
-import { opportunityStatus, stageColors, statusColors } from '../../../service/common/commonService';
+import { opportunityStatus, stageColors } from '../../../service/common/commonService';
 import { Chip, Tooltip } from '@mui/material';
 import ViewOpportunitiesModel from '../../../components/models/opportunities/viewOpportunitiesModel';
 
@@ -135,11 +135,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         const res = await deleteOpportunity(selectedOpportunityId);
         if (res.status === 200) {
             setSyncingPushStatus(true);
-            // setAlert({
-            //     open: true,
-            //     message: "Opportunity deleted successfully",
-            //     type: "success"
-            // });
             handleGetOpportunities();
             handleCloseDeleteDialog();
         } else {
@@ -153,7 +148,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     useEffect(() => {
         handleGetOpportunityOptions()
-        // handleGetOpportunities();
     }, []);
 
     useEffect(() => {
@@ -202,6 +196,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             minWidth: 120,
             align: 'right',
             headerAlign: 'right',
+            editable: true,
             renderCell: (params) => {
                 return (
                     <span>{params.value ? `$${parseFloat(Number(params.value).toFixed(2)).toLocaleString()}` : ''}</span>
@@ -232,31 +227,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 );
             },
         },
-        // {
-        //     field: "status",
-        //     headerName: "Status",
-        //     flex: 1,
-        //     minWidth: 150,
-        //     renderCell: (params) => {
-        //         const status = params.value;
-        //         const bg = statusColors[status] || "#e0e0e0";
-
-        //         return (
-        //             <Chip
-        //                 label={status}
-        //                 size="small"
-        //                 sx={{
-        //                     backgroundColor: bg,
-        //                     color: "#fff",
-        //                     fontWeight: 600,
-        //                     borderRadius: "20px",
-        //                     px: 1.5,
-        //                 }}
-        //             />
-        //         );
-        //     },
-        // },
-
         {
             field: 'closeDate',
             headerName: 'close Date',
@@ -275,6 +245,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 300,
+            editable: true,
             renderCell: (params) => {
                 return (
                     <span>{(params.value !== "" && params.value !== null) ? params.value : '-'}</span>
@@ -336,6 +307,33 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         return row.rowId;
     }
 
+    const processRowUpdate = async (newRow) => {
+        try {
+            const updatedData = { ...newRow, nextSteps: newRow.nextSteps, dealAmount: newRow.dealAmount };
+            const res = await updateOpportunity(newRow.id, updatedData);
+            if (res.status === 200) {
+                setSyncingPushStatus(true);
+                handleGetOpportunities();
+                return newRow;
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to update opportunity",
+                    type: "error"
+                });
+                return oldRow;
+            }
+        } catch (error) {
+            console.error("Error updating opportunity:", error);
+            setAlert({
+                open: true,
+                message: "Failed to update opportunity",
+                type: "error"
+            });
+            return oldRow;
+        }
+    }
+
     const actionButtons = () => {
         return (
             <PermissionWrapper
@@ -391,7 +389,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} />
+                <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} processRowUpdate={processRowUpdate} />
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView} />
