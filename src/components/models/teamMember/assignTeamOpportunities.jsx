@@ -30,9 +30,7 @@ function AssignTeamOpportunities({ setAlert, open, handleClose, teamId }) {
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
-    formState: { errors },
   } = useForm({
     defaultValues: {
       opportunities: null,

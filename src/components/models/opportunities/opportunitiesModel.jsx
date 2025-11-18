@@ -64,8 +64,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedProductId, setSelectedProductId] = useState(null);
 
-    const [initialIsKey, setInitialIsKey] = useState({});         // id -> original isKey
-    const [editedContacts, setEditedContacts] = useState([]);     // [{ id, isKey }, ...]
+    const [initialIsKey, setInitialIsKey] = useState({});
+    const [editedContacts, setEditedContacts] = useState([]);
     const [openContactModel, setOpenContactModel] = useState(false);
     const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedContactId, setSelectedContactId] = useState(null);
@@ -459,10 +459,29 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         });
     };
 
+    const formatMoney = (val) => {
+        if (!val) return "";
+        const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, "").split(".");
+
+        const intWithCommas = intPartRaw
+            .replace(/\D/g, "")
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        if (decimalRaw !== undefined) {
+            return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
+        }
+        return intWithCommas;
+    };
+
+    const parseMoneyFloat = (val) => {
+        if (!val) return 0;
+        return parseFloat(val.replace(/,/g, "")).toFixed(2);
+    };
+
     const submit = async (data) => {
         const newData = {
             ...data,
-            dealAmount: productTotalAmount > Number(parseFloat(watch("dealAmount")).toFixed(2)) ? productTotalAmount : watch("dealAmount"),
+            dealAmount: productTotalAmount > parseFloat(parseMoneyFloat(data.dealAmount)) ? productTotalAmount : parseFloat(parseMoneyFloat(data.dealAmount)),
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
             newLogo: watch("newLogo")
@@ -632,9 +651,27 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             error={errors.dealAmount}
                                                             onChange={(e) => {
                                                                 let value = e.target.value;
-                                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    field.onChange(value);
+
+                                                                // Remove everything except digits and dot
+                                                                value = value.replace(/[^0-9.]/g, "");
+
+                                                                // Allow only 1 dot
+                                                                const parts = value.split(".");
+                                                                if (parts.length > 2) {
+                                                                    value = parts[0] + "." + parts.slice(1).join("");
                                                                 }
+
+                                                                // Max 2 decimals
+                                                                if (parts[1]) {
+                                                                    parts[1] = parts[1].slice(0, 2);
+                                                                }
+
+                                                                value = parts.join(".");
+
+                                                                // Apply comma formatting
+                                                                const formatted = formatMoney(value);
+
+                                                                field.onChange(formatted);
                                                             }}
                                                             startIcon={
                                                                 <CustomIcons

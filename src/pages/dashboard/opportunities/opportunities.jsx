@@ -7,7 +7,7 @@ import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { deleteOpportunity, getAllOpportunities, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { deleteOpportunity, getAllOpportunities, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
@@ -15,6 +15,7 @@ import SelectMultiple from '../../../components/common/select/selectMultiple';
 import { opportunityStatus, stageColors } from '../../../service/common/commonService';
 import { Chip, Tooltip } from '@mui/material';
 import ViewOpportunitiesModel from '../../../components/models/opportunities/viewOpportunitiesModel';
+import GroupedDataTable from '../../../components/common/table/groupedTable';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -90,12 +91,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
             const queryString = searchParams.toString();
 
-            const opportunities = await getAllOpportunities(queryString);
-            const formattedOpportunities = opportunities?.result?.map((opportunity, index) => ({
-                ...opportunity,
-                rowId: index + 1
-            }));
-            setOpportunities(formattedOpportunities);
+            const opportunities = await getAllOpportunitiesGroupedByStage(queryString);
+             setOpportunities(opportunities?.result || []);
+            // const formattedOpportunities = opportunities?.result?.map((opportunity, index) => ({
+            //     ...opportunity,
+            //     rowId: index + 1
+            // }));
+            // setOpportunities(formattedOpportunities);
         } catch (error) {
             console.error("Error fetching opportunities:", error);
         }
@@ -193,9 +195,9 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'deal Amount',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 120,
+            minWidth: 150,
             align: 'right',
-            headerAlign: 'right',
+            headerAlign: 'left',
             editable: true,
             renderCell: (params) => {
                 return (
@@ -232,7 +234,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'close Date',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 150,
+            maxWidth: 180,
             renderCell: (params) => {
                 return (
                     <span>{params.value ? new Date(params.value).toLocaleDateString() : ''}</span>
@@ -244,7 +246,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'Next Step',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 300,
+            minWidth: 280,
             editable: true,
             renderCell: (params) => {
                 return (
@@ -269,7 +271,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                 </Components.IconButton>
                             </div>
                         </Tooltip>
-                        <PermissionWrapper
+                        {/* <PermissionWrapper
                             functionalityName="Opportunities"
                             moduleName="Opportunities"
                             actionId={2}
@@ -282,7 +284,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                     </div>
                                 </Tooltip>
                             }
-                        />
+                        /> */}
                         <PermissionWrapper
                             functionalityName="Opportunities"
                             moduleName="Opportunities"
@@ -302,10 +304,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             },
         },
     ];
-
-    const getRowId = (row) => {
-        return row.rowId;
-    }
 
     const processRowUpdate = async (newRow) => {
         try {
@@ -389,7 +387,17 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} processRowUpdate={processRowUpdate} />
+                {/* <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} processRowUpdate={processRowUpdate} /> */}
+                <GroupedDataTable
+                    groups={opportunities}
+                    columns={columns}
+                    height={350}
+                    showButtons={true}
+                    buttons={actionButtons}
+                    showFilters={true}
+                    filtersComponent={filterComponent}
+                    processRowUpdate={processRowUpdate}
+                />
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView} />

@@ -5,8 +5,6 @@ import { Controller, useForm } from 'react-hook-form';
 import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
-import Select from '../../common/select/select';
-import { getAllSubUsers } from '../../../service/customers/customersService';
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import CheckBoxSelect from '../../common/select/checkBoxSelect';
 
@@ -28,9 +26,7 @@ function OpenAssignOpportunities({ open, handleClose, selectedMember, members, a
     handleSubmit,
     control,
     reset,
-    watch,
     setValue,
-    formState: { errors },
   } = useForm({
     defaultValues: {
       teamMemberId: null,

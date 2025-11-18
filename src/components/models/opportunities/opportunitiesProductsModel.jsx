@@ -9,7 +9,7 @@ import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
-import { getAllActiveProducts, getProducts } from '../../../service/products/productService';
+import { getAllActiveProducts } from '../../../service/products/productService';
 import Input from '../../common/input/input';
 import { createOpportunitiesProducts, getOpportunitiesProducts, updateOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 
@@ -74,6 +74,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
             const res = await getOpportunitiesProducts(id)
             if (res.status === 200) {
                 reset(res.result)
+                setValue("price", formatMoney(res.result?.price))
             }
         }
     }
@@ -83,11 +84,31 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
         handleGetAllProducts()
     }, [open])
 
+    const formatMoney = (val) => {
+        if (!val) return "";
+        const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, "").split(".");
+
+        const intWithCommas = intPartRaw
+            .replace(/\D/g, "")
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        if (decimalRaw !== undefined) {
+            return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
+        }
+        return intWithCommas;
+    };
+
+    const parseMoneyFloat = (val) => {
+        if (!val) return 0;
+        return parseFloat(val.replace(/,/g, "")).toFixed(2);
+    };
+
     const submit = async (data) => {
         const newData = {
             ...data,
             qty: parseInt(data.qty),
             oppId: opportunityId,
+            price: parseFloat(parseMoneyFloat(data.price)),
         }
         if (id) {
             const res = await updateOpportunitiesProducts(id, newData)
@@ -116,6 +137,8 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
         setSyncingPushStatus(true);
 
     }
+
+
 
     return (
         <React.Fragment>
@@ -161,7 +184,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                                     if (newValue?.id) {
                                                         field.onChange(newValue.id);
                                                         setValue("name", newValue.name)
-                                                        setValue("price", newValue.price)
+                                                        setValue("price", formatMoney(newValue?.price))
                                                     } else {
                                                         setValue(`productId`, null);
                                                         setValue("name", null)
@@ -219,15 +242,32 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                         render={({ field }) => (
                                             <Input
                                                 {...field}
+                                                type="text"
                                                 disabled={!watch("name")}
-                                                label="Price"
-                                                type={`text`}
                                                 error={errors.price}
                                                 onChange={(e) => {
                                                     let value = e.target.value;
-                                                    if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                        field.onChange(value);
+
+                                                    // Remove everything except digits and dot
+                                                    value = value.replace(/[^0-9.]/g, "");
+
+                                                    // Allow only 1 dot
+                                                    const parts = value.split(".");
+                                                    if (parts.length > 2) {
+                                                        value = parts[0] + "." + parts.slice(1).join("");
                                                     }
+
+                                                    // Max 2 decimals
+                                                    if (parts[1]) {
+                                                        parts[1] = parts[1].slice(0, 2);
+                                                    }
+
+                                                    value = parts.join(".");
+
+                                                    // Apply comma formatting
+                                                    const formatted = formatMoney(value);
+
+                                                    field.onChange(formatted);
                                                 }}
                                                 startIcon={
                                                     <CustomIcons

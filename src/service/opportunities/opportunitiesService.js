@@ -71,6 +71,16 @@ export const updateOpportunitiesDealAmount = async (opportunityId, opportunityDa
     }
 };
 
+export const updateOpportunityLogo = async (opportunityData) => {
+    try {
+        const response = await axiosInterceptor().post(`${opportunityURL}/uploadOpportunityLogo`, opportunityData);
+        return response.data;
+    } catch (error) {
+        console.error("Error updating opportunity:", error);
+        throw error;
+    }
+};
+
 export const deleteOpportunity = async (opportunityId) => {
     try {
         const response = await axiosInterceptor().delete(`${opportunityURL}/delete/${opportunityId}`);

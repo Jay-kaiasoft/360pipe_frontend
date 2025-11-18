@@ -1,33 +1,39 @@
 import React, { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form';
+import dayjs from "dayjs";
 import { useNavigate, useParams } from 'react-router-dom'
+import { connect } from 'react-redux';
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { Tooltip } from '@mui/material';
 
 import Checkbox from '../../../components/common/checkBox/checkbox';
 import Select from '../../../components/common/select/select';
 import Input from '../../../components/common/input/input';
-import { useForm } from 'react-hook-form';
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 
-import { getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
-import { getAllAccounts } from '../../../service/account/accountService';
-import { getAllOpportunitiesPartner, deleteOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
-import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
-import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
-import { opportunityStages, opportunityStatus, partnerRoles } from '../../../service/common/commonService';
-import { connect } from 'react-redux';
-import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import Components from '../../../components/muiComponents/components';
 import OpportunityContactModel from '../../../components/models/opportunities/opportunityContactModel';
 import OpportunitiesPartnersModel from '../../../components/models/opportunities/opportunityPartnerModel';
 import OpportunitiesProductsModel from '../../../components/models/opportunities/opportunitiesProductsModel';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
-import { Tooltip } from '@mui/material';
+
+import { getUserDetails } from '../../../utils/getUserDetails';
+import { deleteOpportunityLogo, getOpportunityDetails, updateOpportunity, updateOpportunityLogo } from '../../../service/opportunities/opportunitiesService';
+import { getAllAccounts } from '../../../service/account/accountService';
+import { getAllOpportunitiesPartner, deleteOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
+import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
+import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
+import FileInputBox from '../../../components/fileInputBox/fileInputBox';
+
 
 const ViewOpportunity = ({ setAlert }) => {
     const { opportunityId } = useParams()
     const navigate = useNavigate();
+    const userdata = getUserDetails();
 
     const [accounts, setAccounts] = useState([]);
     const [productTotalAmount, setProductTotalAmount] = useState(0)
@@ -57,6 +63,8 @@ const ViewOpportunity = ({ setAlert }) => {
     const [initialIsKey, setInitialIsKey] = useState({});         // id -> original isKey
     const [editedContacts, setEditedContacts] = useState([]);     // [{ id, isKey }, ...]
 
+    const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
     const {
         watch,
         setValue,
@@ -76,6 +84,64 @@ const ViewOpportunity = ({ setAlert }) => {
             newLogo: null,
         },
     });
+
+    const handleOpenDeleteLogoDialog = () => {
+        setDialogLogo({ open: true, title: 'Delete Logo', message: 'Are you sure! Do you want to delete this logo?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteLogoDialog = () => {
+        setDialogLogo({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteOppLogo = async () => {
+        if (opportunityId && watch("logo")) {
+            const res = await deleteOpportunityLogo(opportunityId);
+            if (res?.status === 200) {
+                setValue("newLogo", null)
+                setValue("logo", null)
+                handleCloseDeleteLogoDialog()
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete opportunity logo",
+                    type: "error"
+                });
+            }
+        }
+        if (watch("newLogo")) {
+            setValue("newLogo", null)
+            handleCloseDeleteLogoDialog()
+        }
+    }
+
+    const handleImageChange = async (file) => {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);                    // <-- send the File object
+        formData.append("folderName", "oppLogo");
+        formData.append("userId", String(userdata?.userId || ""));
+
+        // IMPORTANT: don't set Content-Type; the browser sets multipart boundary
+        uploadFiles(formData).then(async (res) => {
+            if (res.data.status === 200) {
+                const { imageURL } = res?.data?.result?.[0] || {};
+
+                let obj = {
+                    oppId: opportunityId,
+                    image: imageURL
+                }
+                const response = await updateOpportunityLogo(obj);
+                if (response.status === 200) {
+                    setValue("logo", response.result || imageURL)
+                } else {
+                    setAlert({ open: true, message: res?.data?.message || "Fail to upload opportunity logo", type: "error" });
+                }
+            } else {
+                setAlert({ open: true, message: res?.data?.message, type: "error" });
+            }
+        });
+    };
 
     const handleGetOpportunityDetails = async () => {
         if (opportunityId) {
@@ -232,25 +298,72 @@ const ViewOpportunity = ({ setAlert }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editValue, setEditValue] = useState(value);
 
+        const formatNumberWithCommas = (val) => {
+            if (!val && val !== 0) return "";
+            const [intPartRaw, decimalRaw] = val.toString().split(".");
+            const intPart = intPartRaw.replace(/\D/g, ""); // only digits
+            const intWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            if (decimalRaw !== undefined) {
+                return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
+            }
+            return intWithCommas;
+        };
+
+        const parseDealAmountToFloat = (val) => {
+            if (!val) return null;
+            const cleaned = val.toString().replace(/,/g, "");
+            if (cleaned === "") return null;
+            const num = parseFloat(cleaned);
+            if (Number.isNaN(num)) return null;
+            return parseFloat(num.toFixed(2));
+        };
+
         const handleDoubleClick = () => {
             setIsEditing(true);
+
             if (label === "Deal Amount") {
-                setEditValue(value.replace(/[$,]/g, ''));
+                // value might be like "$20,000" or "20000" or 20000
+                const raw = value !== undefined && value !== null ? value.toString().replace(/[$,]/g, '') : '';
+                if (raw === '') {
+                    setEditValue('');
+                } else {
+                    setEditValue(formatNumberWithCommas(raw));
+                }
             } else {
                 setEditValue(value);
             }
         };
 
         const handleSave = async () => {
-            if (editValue !== value && onSave) {
-                await onSave(
-                    type === 'select'
-                        ? label === "Account"
-                            ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id
-                            : options?.find((row) => (row.title === editValue || row.id === editValue))?.title
-                        : editValue
-                );
+            if (!onSave) {
+                setIsEditing(false);
+                return;
             }
+
+            let finalValue;
+
+            if (type === 'select') {
+                finalValue =
+                    label === "Account"
+                        ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id
+                        : options?.find((row) => (row.title === editValue || row.id === editValue))?.title;
+            } else if (label === "Deal Amount") {
+                // convert "2,003.43" -> 2003.43
+                finalValue = parseDealAmountToFloat(editValue);
+            } else {
+                finalValue = editValue;
+            }
+
+            // Avoid unnecessary save if value didn't actually change
+            const original =
+                label === "Deal Amount"
+                    ? parseDealAmountToFloat(value?.toString().replace(/[$,]/g, ''))
+                    : value;
+
+            if (finalValue !== original) {
+                await onSave(finalValue);
+            }
+
             setIsEditing(false);
         };
 
@@ -260,7 +373,37 @@ const ViewOpportunity = ({ setAlert }) => {
         };
 
         const handleChange = (e) => {
-            setEditValue(e.target.value);
+            const val = e.target.value;
+
+            if (label === "Deal Amount") {
+                // Allow only digits and dot
+                let cleaned = val.replace(/,/g, "").replace(/[^\d.]/g, "");
+
+                // Keep only first dot
+                const parts = cleaned.split(".");
+                if (parts.length > 2) {
+                    cleaned = parts[0] + "." + parts.slice(1).join("");
+                }
+
+                const [intPart, decimalPartRaw] = cleaned.split(".");
+                const safeInt = intPart || "0";
+
+                let formatted = safeInt.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                if (decimalPartRaw !== undefined) {
+                    const decimals = decimalPartRaw.slice(0, 2); // max 2 digits
+                    formatted = `${formatted}.${decimals}`;
+                }
+
+                // If user removed everything, allow empty string
+                if (val.trim() === "") {
+                    setEditValue("");
+                } else {
+                    setEditValue(formatted);
+                }
+            } else {
+                setEditValue(val);
+            }
         };
 
         const handleSelectChange = (selectedOption) => {
@@ -330,22 +473,22 @@ const ViewOpportunity = ({ setAlert }) => {
                                     onChange={handleChange}
                                     className="flex-1 text-right"
                                     autoFocus
-                                    error={required}
+                                    error={(!editValue || editValue === "") && required}
                                 />
                             )}
                             <div className='flex items-center gap-3'>
                                 <Tooltip title="Save" arrow>
-                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={() => handleSave()}>
-                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-4 w-4' />
+                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={handleSave}>
+                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
                                         </Components.IconButton>
                                     </div>
                                 </Tooltip>
 
                                 <Tooltip title="Cancel" arrow>
-                                    <div className='bg-gray-800 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={() => handleCancel()}>
-                                            <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-4 w-4' />
+                                    <div className='bg-gray-800 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={handleCancel}>
+                                            <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-3 w-3' />
                                         </Components.IconButton>
                                     </div>
                                 </Tooltip>
@@ -363,6 +506,7 @@ const ViewOpportunity = ({ setAlert }) => {
             </div>
         );
     };
+
 
     const StageTimeline = ({ stages, currentStageId }) => {
         return (
@@ -612,11 +756,13 @@ const ViewOpportunity = ({ setAlert }) => {
                                 <div className="flex-grow border-t border-gray-300"></div>
                             </div>
                             <div className='flex justify-end mb-4 gap-2'>
-                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                    <Components.IconButton onClick={() => handleAddPartner()}>
-                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddPartner()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 4k:grid-cols-6 gap-4">
@@ -686,17 +832,21 @@ const ViewOpportunity = ({ setAlert }) => {
                         {editedContacts.length > 0 && (
                             <Tooltip title="Save" arrow>
                                 <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                    <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
-                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                    </Components.IconButton>
+                                    <Tooltip title="Save" arrow>
+                                        <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
+                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                        </Components.IconButton>
+                                    </Tooltip>
                                 </div>
                             </Tooltip>
                         )}
-                        <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                            <Components.IconButton onClick={() => handleAddContact()}>
-                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
+                        <Tooltip title="Add" arrow>
+                            <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                <Components.IconButton onClick={() => handleAddContact()}>
+                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
@@ -777,11 +927,13 @@ const ViewOpportunity = ({ setAlert }) => {
                                 <div className="flex-grow border-t border-gray-300"></div>
                             </div>
                             <div className='flex justify-end mb-4 gap-2'>
-                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                    <Components.IconButton onClick={() => handleAddProduct()}>
-                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddProduct()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             </div>
 
                             <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
@@ -888,20 +1040,14 @@ const ViewOpportunity = ({ setAlert }) => {
 
                 {/* Logo */}
                 <div className='flex justify-center md:justify-start items-start md:col-span-1'>
-                    <div className="w-32 h-32 border border-dashed border-gray-400 rounded-full overflow-hidden flex items-center justify-center">
-                        <a href={watch("logo")} target='_blank' className='block w-full h-full' rel="noreferrer">
-                            {watch("logo") ? (
-                                <img
-                                    src={watch("logo")}
-                                    alt="Opportunity Logo"
-                                    className="w-full h-full object-contain"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-6xl">
-                                    <CustomIcons iconName="fa-solid fa-image" css="w-5 h-5" />
-                                </div>
-                            )}
-                        </a>
+                    <div className="w-32 h-32">
+                        <FileInputBox
+                            onFileSelect={handleImageChange}
+                            onRemove={handleOpenDeleteLogoDialog}
+                            value={watch("logo") || watch("newLogo")}
+                            text="Upload opportunity Logo"
+                            size="100x100"
+                        />
                     </div>
                 </div>
 
@@ -1020,6 +1166,15 @@ const ViewOpportunity = ({ setAlert }) => {
                 actionButtonText={dialogProduct.actionButtonText}
                 handleAction={() => handleDeleteProduct()}
                 handleClose={() => handleCloseDeleteProductDialog()}
+            />
+
+            <AlertDialog
+                open={dialogLogo.open}
+                title={dialogLogo.title}
+                message={dialogLogo.message}
+                actionButtonText={dialogLogo.actionButtonText}
+                handleAction={() => handleDeleteOppLogo()}
+                handleClose={() => handleCloseDeleteLogoDialog()}
             />
         </div>
     )

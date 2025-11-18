@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import CustomIcons from '../common/icons/CustomIcons';
 import { connect } from 'react-redux';
 import { setAlert } from '../../redux/commonReducers/commonReducers';
-import { NavLink } from 'react-router-dom';
 
 function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = null, disabled = false }) {
 

@@ -6,11 +6,9 @@ import Brand from "./brand";
 import Security from "./security";
 import ChangePassword from "./changePassword";
 import CreditCard from "./creditCard";
-import { getUserDetails } from "../../../utils/getUserDetails";
 import Quota from "./quota";
 
 const UserProfile = () => {
-    const userdata = getUserDetails();
     const [tabsData, setTabsData] = useState([]);
 
     const [selectedTab, setSelectedTab] = useState(0);

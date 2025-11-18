@@ -1,10 +1,8 @@
 import { StepConnector, styled } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import CustomIcons from '../icons/CustomIcons';
 import Components from '../../muiComponents/components';
 
 export default function Stapper({ steps, activeStep, orientation = "vertical", labelFontSize, width = null }) {
-  const theme = useTheme();
 
   const CustomStepIconRoot = styled('div')(({ theme, ownerState }) => ({
     backgroundColor: ownerState.completed ? theme.palette.secondary.main : '',

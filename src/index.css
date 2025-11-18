@@ -734,3 +734,46 @@ body {
 }
 
 /* https://chatgpt.com/share/6915ca7a-fafc-8001-952d-336374762224 */
+
+
+
+/* 
+.MuiDataGrid-columnHeader .MuiDataGrid-sortIcon,
+.MuiDataGrid-columnHeader .MuiDataGrid-sortButton {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.MuiDataGrid-columnHeader--sortable .MuiDataGrid-iconButtonContainer {
+  width: 18px !important;
+  min-width: 18px !important;
+  display: flex;
+  justify-content: center;
+}
+
+.MuiDataGrid-columnHeader .MuiIconButton-root,
+.MuiDataGrid-columnHeader .MuiIconButton-root:hover,
+.MuiDataGrid-columnHeader .MuiIconButton-root:focus,
+.MuiDataGrid-columnHeader .MuiIconButton-root:active {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.MuiDataGrid-columnHeader .MuiTouchRipple-root {
+  display: none !important;
+}
+
+.MuiDataGrid-columnHeader--alignRight .MuiDataGrid-columnHeaderTitleContainer {
+  flex-direction: row-reverse !important;
+  justify-content: flex-end !important;
+}
+
+.MuiDataGrid-columnHeader--alignRight .MuiDataGrid-iconButtonContainer {
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+.MuiDataGrid-columnHeader:not(.MuiDataGrid-columnHeader--alignRight) .MuiDataGrid-iconButtonContainer {
+  margin-right: 4px;
+  margin-left: 0;
+} */
