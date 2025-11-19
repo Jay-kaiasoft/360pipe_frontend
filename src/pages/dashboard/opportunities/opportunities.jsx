@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
-import DataTable from '../../../components/common/table/table';
 import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { deleteOpportunity, getAllOpportunities, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { deleteOpportunity, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
@@ -16,6 +15,7 @@ import { opportunityStatus, stageColors } from '../../../service/common/commonSe
 import { Chip, Tooltip } from '@mui/material';
 import ViewOpportunitiesModel from '../../../components/models/opportunities/viewOpportunitiesModel';
 import GroupedDataTable from '../../../components/common/table/groupedTable';
+import Input from '../../../components/common/input/input';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -92,7 +92,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             const queryString = searchParams.toString();
 
             const opportunities = await getAllOpportunitiesGroupedByStage(queryString);
-             setOpportunities(opportunities?.result || []);
+            setOpportunities(opportunities?.result || []);
             // const formattedOpportunities = opportunities?.result?.map((opportunity, index) => ({
             //     ...opportunity,
             //     rowId: index + 1
@@ -192,19 +192,23 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         },
         {
             field: 'dealAmount',
-            headerName: 'deal Amount',
-            headerClassName: 'uppercase',
+            headerName: 'Deal Amount',
             flex: 1,
-            minWidth: 150,
+            minWidth: 120,
             align: 'right',
             headerAlign: 'left',
             editable: true,
             renderCell: (params) => {
-                return (
-                    <span>{params.value ? `$${parseFloat(Number(params.value).toFixed(2)).toLocaleString()}` : ''}</span>
-                )
-            }
+                const val = params.value;
+                if (val === null || val === undefined || val === '') return '';
+                const num = parseFloat(val);
+                if (Number.isNaN(num)) return '';
+                return `$${num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+            },
+            renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
+
+
         {
             field: "salesStage",
             headerName: "Sales Stage",
@@ -250,9 +254,14 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             editable: true,
             renderCell: (params) => {
                 return (
-                    <span>{(params.value !== "" && params.value !== null) ? params.value : '-'}</span>
-                )
-            }
+                    <span>
+                        {(params.value !== "" && params.value !== null && params.value !== undefined)
+                            ? params.value
+                            : '-'}
+                    </span>
+                );
+            },
+            renderEditCell: (params) => <NextStepsEditCell {...params} />,
         },
         {
             field: 'action',
@@ -305,9 +314,199 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         },
     ];
 
-    const processRowUpdate = async (newRow) => {
+    const DealAmountEditCell = (params) => {
+        const { id, field, api, value } = params;
+
+        const inputRef = React.useRef(null);
+
+        const formatWithCommas = (raw) => {
+            if (!raw) return "";
+            const [intRaw, decRaw] = raw.toString().split(".");
+            const intOnly = intRaw.replace(/\D/g, "");
+            const intWithCommas = intOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            if (decRaw !== undefined) return `${intWithCommas}.${decRaw}`;
+            return intWithCommas;
+        };
+
+        const sanitizeValue = (val) => {
+            if (!val) return "";
+
+            // keep only digits and dots
+            val = val.replace(/[^0-9.]/g, "");
+
+            // allow only one dot
+            const firstDotIndex = val.indexOf(".");
+            if (firstDotIndex !== -1) {
+                const before = val.slice(0, firstDotIndex + 1);
+                const after = val.slice(firstDotIndex + 1).replace(/\./g, "");
+                val = before + after;
+            }
+
+            let [intPart, decPart] = val.split(".");
+            intPart = intPart || "";
+
+            if (decPart !== undefined) {
+                decPart = decPart.slice(0, 2); // max 2 decimals
+            }
+
+            return decPart !== undefined ? `${intPart}.${decPart}` : intPart;
+        };
+
+        const [inputValue, setInputValue] = React.useState(() => {
+            if (!value && value !== 0) return "";
+            return formatWithCommas(value);
+        });
+
+        const originalValue = React.useRef(value);
+
+        const handleChange = (event) => {
+            const rawInput = event.target.value;
+            const caretPos = event.target.selectionStart ?? rawInput.length;
+
+            // sanitize full string
+            const cleanedFull = sanitizeValue(rawInput);
+            const formattedFull = formatWithCommas(cleanedFull);
+
+            // now compute where caret should land after formatting
+            const rawBeforeCaret = rawInput.slice(0, caretPos);
+            const cleanedBeforeCaret = sanitizeValue(rawBeforeCaret);
+            const formattedBeforeCaret = formatWithCommas(cleanedBeforeCaret);
+            const newCaretPos = formattedBeforeCaret.length;
+
+            setInputValue(formattedFull);
+            api.setEditCellValue({ id, field, value: cleanedFull }, event);
+
+            // restore caret position after React re-renders
+            requestAnimationFrame(() => {
+                if (inputRef.current) {
+                    inputRef.current.setSelectionRange(newCaretPos, newCaretPos);
+                }
+            });
+        };
+
+        const handleSave = () => {
+            api.stopCellEditMode({ id, field });
+        };
+
+        const handleCancel = () => {
+            api.setEditCellValue({ id, field, value: originalValue.current });
+            api.stopCellEditMode({ id, field, ignoreModifications: true });
+        };
+
+        return (
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+                <Input
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={handleChange}
+                    autoFocus
+                />
+
+                <Tooltip title="Save" arrow>
+                    <div className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}>
+                        <Components.IconButton onClick={handleSave} disabled={inputValue === null || inputValue === ""}>
+                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+
+                <Tooltip title="Cancel" arrow>
+                    <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton onClick={handleCancel}>
+                            <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-3 w-3' />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+            </div>
+        );
+    };
+
+    const NextStepsEditCell = (params) => {
+        const { id, field, api, value } = params;
+
+        const [inputValue, setInputValue] = React.useState(value ?? "");
+        const originalValue = React.useRef(value ?? "");
+
+        const handleChange = (event) => {
+            const newVal = event.target.value;
+            setInputValue(newVal);
+            api.setEditCellValue({ id, field, value: newVal }, event);
+        };
+
+        const handleSave = () => {
+            // commit current value and exit edit mode
+            api.stopCellEditMode({ id, field });
+        };
+
+        const handleCancel = () => {
+            // revert to original and exit without saving
+            api.setEditCellValue({ id, field, value: originalValue.current });
+            api.stopCellEditMode({ id, field, ignoreModifications: true });
+        };
+
+        return (
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+                <Input
+                    value={inputValue}
+                    onChange={handleChange}
+                    autoFocus
+                    className="flex-1"
+                    multiline={true}
+                    rows={4}
+                />
+
+                <Tooltip title="Save" arrow>
+                    <div className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}>
+                        <Components.IconButton onClick={handleSave} disabled={inputValue === null || inputValue === ""}>
+                            <CustomIcons
+                                iconName={"fa-solid fa-floppy-disk"}
+                                css="cursor-pointer text-white h-3 w-3"
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+
+                <Tooltip title="Cancel" arrow>
+                    <div className="bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white">
+                        <Components.IconButton onClick={handleCancel}>
+                            <CustomIcons
+                                iconName={"fa-solid fa-close"}
+                                css="cursor-pointer text-white h-3 w-3"
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+            </div>
+        );
+    };
+
+    const processRowUpdate = async (newRow, oldRow) => {
         try {
-            const updatedData = { ...newRow, nextSteps: newRow.nextSteps, dealAmount: newRow.dealAmount };
+            const cleanedAmount =
+                newRow.dealAmount === '' || newRow.dealAmount == null
+                    ? null
+                    : parseFloat(newRow.dealAmount).toFixed(2);
+            const updatedData = {
+                ...newRow,
+                nextSteps: newRow.nextSteps,
+                dealAmount: cleanedAmount, // float with max 2 decimals
+            };
+            if (cleanedAmount === null || cleanedAmount === "") {
+                setAlert({
+                    open: true,
+                    message: "Deal amount can not be empty",
+                    type: "error"
+                })
+                return
+            }
+            if (newRow.nextSteps === null || newRow.nextSteps === "") {
+                setAlert({
+                    open: true,
+                    message: "Next step can not be empty",
+                    type: "error"
+                })
+                return
+            }
             const res = await updateOpportunity(newRow.id, updatedData);
             if (res.status === 200) {
                 setSyncingPushStatus(true);
@@ -317,7 +516,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 setAlert({
                     open: true,
                     message: res?.message || "Failed to update opportunity",
-                    type: "error"
+                    type: "error",
                 });
                 return oldRow;
             }
@@ -326,11 +525,11 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             setAlert({
                 open: true,
                 message: "Failed to update opportunity",
-                type: "error"
+                type: "error",
             });
             return oldRow;
         }
-    }
+    };
 
     const actionButtons = () => {
         return (
@@ -397,6 +596,14 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     showFilters={true}
                     filtersComponent={filterComponent}
                     processRowUpdate={processRowUpdate}
+                    onCellEditStop={(params, event) => {
+                        if (params.reason === "enterKeyDown") {
+                            event.defaultMuiPrevented = true;   // ❌ prevent save on Enter
+                        }
+                        if (params.reason === "cellFocusOut") {
+                            event.defaultMuiPrevented = true;   // ❌ prevent save on outside click
+                        }
+                    }}
                 />
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />

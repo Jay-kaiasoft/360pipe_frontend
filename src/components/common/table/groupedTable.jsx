@@ -60,6 +60,7 @@ export default function GroupedDataTable({
     setRowSelectionModel,
     rowSelectionModel,
     processRowUpdate,
+    onCellEditStop
 }) {
     const theme = useTheme();
 
@@ -168,6 +169,7 @@ export default function GroupedDataTable({
                                             columnUnsortedIcon: UnsortedIcon,
                                         }}
                                         disableColumnMenu
+                                        onCellEditStop={onCellEditStop}
                                         slotProps={{
                                             toolbar: {
                                                 showQuickFilter: true,

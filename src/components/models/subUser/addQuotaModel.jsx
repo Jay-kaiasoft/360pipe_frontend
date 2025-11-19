@@ -132,22 +132,88 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
         handleClose();
     };
 
+    const formatMoney = (val) => {
+        if (val === null || val === undefined || val === '') return '';
+
+        const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, '').split('.');
+
+        const intWithCommas = intPartRaw
+            .replace(/\D/g, '')
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+        // If user has typed a dot, we always keep it,
+        // even if nothing is after it yet.
+        if (decimalRaw !== undefined) {
+            const trimmed = decimalRaw.slice(0, 2); // max 2 decimals
+            // "1." → keep as "1."
+            if (trimmed === '') {
+                return `${intWithCommas}.`;
+            }
+            // "1.5" or "1.56" → "1.5" / "1.56"
+            return `${intWithCommas}.${trimmed}`;
+        }
+
+        // No dot typed yet
+        return intWithCommas;
+    };
+
+
+    const sanitizeMoney = (val) => {
+        if (!val) return '';
+
+        // keep only digits and dot
+        val = val.replace(/[^0-9.]/g, '');
+
+        // allow only one dot
+        const firstDotIndex = val.indexOf('.');
+        if (firstDotIndex !== -1) {
+            const before = val.slice(0, firstDotIndex + 1);
+            const after = val.slice(firstDotIndex + 1).replace(/\./g, '');
+            val = before + after;
+        }
+
+        let [intPart, decPart] = val.split('.');
+        intPart = intPart || '';
+
+        if (decPart !== undefined) {
+            decPart = decPart.slice(0, 2); // max 2 decimals
+        }
+
+        return decPart !== undefined ? `${intPart}.${decPart}` : intPart;
+    };
+
+    const parseMoneyFloat = (val) => {
+        if (!val) return 0;
+        const num = parseFloat(val.toString().replace(/,/g, ''));
+        if (Number.isNaN(num)) return 0;
+        return Number(num.toFixed(2));
+    };
+
     const handleGetQuotaLocal = async () => {
         if (open && id) {
             const response = await getQuota(id);
             if (response?.result) {
                 const r = response.result;
+
                 setValue('quotaId', r?.id || '');
-                setValue('quota', r?.quota || '');
-                // Map incoming term title back to our id
+
+                // term mapping
                 const termData = terms.find(item => item.title === r?.term);
                 setValue('term', termData?.id || '');
+
+                // 🟢 show formatted quota like 3,435.54
+                setValue('quota', r?.quota != null ? formatMoney(r.quota) : '');
+
+                // 🟢 show formatted amounts for amount1..amount12
                 for (let i = 1; i <= 12; i++) {
-                    setValue(`amount${i}`, r?.[`amount${i}`] ?? '');
+                    const key = `amount${i}`;
+                    const rawAmount = r?.[key];
+                    setValue(key, rawAmount != null ? formatMoney(rawAmount) : '');
                 }
             }
         }
     };
+
 
     useEffect(() => {
         handleGetQuotaLocal();
@@ -158,22 +224,24 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
         const selectedTerm = terms.find(t => t.id === parseInt(watch('term')));
         if (!selectedTerm || !watch("quota")) return;
 
+        const getMoney = (name) => parseMoneyFloat(watch(name));
+
         const quotaData = {
             id: id,
-            quota: Number(parseFloat(watch("quota")).toFixed(2)),
-            term: selectedTerm.title, // fix: use our terms array
-            amount1: Number(parseFloat(watch("amount1")).toFixed(2)),
-            amount2: Number(parseFloat(watch("amount2")).toFixed(2)),
-            amount3: Number(parseFloat(watch("amount3")).toFixed(2)),
-            amount4: Number(parseFloat(watch("amount4")).toFixed(2)),
-            amount5: Number(parseFloat(watch("amount5")).toFixed(2)),
-            amount6: Number(parseFloat(watch("amount6")).toFixed(2)),
-            amount7: Number(parseFloat(watch("amount7")).toFixed(2)),
-            amount8: Number(parseFloat(watch("amount8")).toFixed(2)),
-            amount9: Number(parseFloat(watch("amount9")).toFixed(2)),
-            amount10: Number(parseFloat(watch("amount10")).toFixed(2)),
-            amount11: Number(parseFloat(watch("amount11")).toFixed(2)),
-            amount12: Number(parseFloat(watch("amount12")).toFixed(2)),
+            quota: getMoney("quota"),
+            term: selectedTerm.title,
+            amount1: getMoney("amount1"),
+            amount2: getMoney("amount2"),
+            amount3: getMoney("amount3"),
+            amount4: getMoney("amount4"),
+            amount5: getMoney("amount5"),
+            amount6: getMoney("amount6"),
+            amount7: getMoney("amount7"),
+            amount8: getMoney("amount8"),
+            amount9: getMoney("amount9"),
+            amount10: getMoney("amount10"),
+            amount11: getMoney("amount11"),
+            amount12: getMoney("amount12"),
             customerId: customerId,
         };
 
@@ -186,19 +254,19 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                 setAlert({
                     open: true,
                     type: "error",
-                    message: response?.data?.message || "An error occurred. Please try again.",
+                    message: response?.data?.message || "An error occurred",
                 });
             }
         } else {
             const response = await createQuota(quotaData);
-            if (response?.status === 201) {
+            if (response?.status === 200) {
                 handleGetAllQuota();
                 onClose();
             } else {
                 setAlert({
                     open: true,
                     type: "error",
-                    message: response?.data?.message || "An error occurred. Please try again.",
+                    message: response?.data?.message || "An error occurred",
                 });
             }
         }
@@ -263,10 +331,29 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                                                 label="Quota"
                                                 type="text"
                                                 onChange={(e) => {
-                                                    let value = e.target.value;
-                                                    if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                        field.onChange(value);
-                                                    }
+                                                    const target = e.target;
+                                                    const rawInput = target.value;
+                                                    const caretPos = target.selectionStart ?? rawInput.length;
+
+                                                    // 1) Clean + format full input
+                                                    const cleanedFull = sanitizeMoney(rawInput);
+                                                    const formattedFull = formatMoney(cleanedFull);
+
+                                                    // 2) Clean + format part BEFORE caret to compute new caret pos
+                                                    const rawBeforeCaret = rawInput.slice(0, caretPos);
+                                                    const cleanedBeforeCaret = sanitizeMoney(rawBeforeCaret);
+                                                    const formattedBeforeCaret = formatMoney(cleanedBeforeCaret);
+                                                    const newCaretPos = formattedBeforeCaret.length;
+
+                                                    // 3) Update form value
+                                                    field.onChange(formattedFull);
+
+                                                    // 4) Restore caret after rerender
+                                                    requestAnimationFrame(() => {
+                                                        try {
+                                                            target.setSelectionRange(newCaretPos, newCaretPos);
+                                                        } catch (err) { }
+                                                    });
                                                 }}
                                                 error={errors?.quota}
                                                 startIcon={
@@ -305,12 +392,34 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                                                                         label={`${labelText}`}
                                                                         type="text"
                                                                         onChange={(e) => {
-                                                                            let value = e.target.value;
-                                                                            if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                field.onChange(value);
-                                                                            }
+                                                                            const target = e.target;
+                                                                            const rawInput = target.value;
+                                                                            const caretPos = target.selectionStart ?? rawInput.length;
+
+                                                                            const cleanedFull = sanitizeMoney(rawInput);
+                                                                            const formattedFull = formatMoney(cleanedFull);
+
+                                                                            const rawBeforeCaret = rawInput.slice(0, caretPos);
+                                                                            const cleanedBeforeCaret = sanitizeMoney(rawBeforeCaret);
+                                                                            const formattedBeforeCaret = formatMoney(cleanedBeforeCaret);
+                                                                            const newCaretPos = formattedBeforeCaret.length;
+
+                                                                            field.onChange(formattedFull);
+
+                                                                            requestAnimationFrame(() => {
+                                                                                try {
+                                                                                    target.setSelectionRange(newCaretPos, newCaretPos);
+                                                                                } catch (err) { }
+                                                                            });
                                                                         }}
+
                                                                         error={errors?.[fieldName]}
+                                                                        startIcon={
+                                                                            <CustomIcons
+                                                                                iconName={"fa-solid fa-dollar-sign"}
+                                                                                css={"text-lg text-black mr-2"}
+                                                                            />
+                                                                        }
                                                                     />
                                                                 )}
                                                             />

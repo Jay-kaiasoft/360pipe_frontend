@@ -103,7 +103,7 @@ const Quota = ({ setAlert }) => {
                             <tr className="bg-[#0478DC] text-white">
                                 <th className="px-4 py-3 text-left text-sm font-semibold w-12">#</th>
                                 <th className="px-4 py-3 text-left text-sm font-semibold">Term</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold">Quota</th>
+                                <th className="px-4 py-3 text-right text-sm font-semibold">Quota</th>
                                 <th className="px-4 py-3 text-right text-sm font-semibold w-32">Action</th>
                             </tr>
                         </thead>
@@ -115,7 +115,7 @@ const Quota = ({ setAlert }) => {
                                     <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
                                         <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
                                         <td className="px-4 py-3 text-sm">{row.term || '—'}</td>
-                                        <td className="px-4 py-3 text-sm">{row.quota || '—'}</td>
+                                        <td className="px-4 py-3 text-right text-sm">${row.quota?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '—'}</td>
                                         <td className="px-4 py-3">
                                             <div className='flex items-center gap-2 justify-end h-full'>
                                                 <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>

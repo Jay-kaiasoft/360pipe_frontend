@@ -5,20 +5,25 @@ import Components from '../../muiComponents/components';
 const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur }, ref) => {
     const theme = useTheme();
     return (
-        <div>
-            <p className='mb-2 text-black text-left'>
-                {label}
-            </p>
+        <>
+            {
+                label && (
+                    <p className='mb-2 text-black text-left'>
+                        {label}
+                    </p>
+                )
+            }
             <Components.TextField
                 variant="outlined"
                 multiline={multiline}
                 rows={rows}
+                autoHeight={multiline && rows ? true : false}
                 fullWidth
                 disabled={disabled}
                 size='small'
                 name={name}
                 // label={label}
-                placeholder={placeholder || `Enter ${label?.toLowerCase()}`}
+                placeholder={placeholder || label ? `Enter ${label?.toLowerCase()}` : `Enter value`}
                 value={type === 'date' ? value || new Date().toISOString().split('T')[0] : value || ''}
                 type={type}
                 onChange={onChange}
@@ -68,7 +73,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
                 onBlur={onBlur}
                 onFocus={onFocus}
             />
-        </div>
+        </>
     );
 });
 

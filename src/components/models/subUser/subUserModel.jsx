@@ -96,6 +96,25 @@ function buildLabelsForKind(kind, startMonthIndex) {
     }
 }
 
+const formatMoney = (val) => {
+    if (!val) return "";
+    const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, "").split(".");
+
+    const intWithCommas = intPartRaw
+        .replace(/\D/g, "")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    if (decimalRaw !== undefined) {
+        return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
+    }
+    return intWithCommas;
+};
+
+const parseMoneyFloat = (val) => {
+    if (!val) return 0;
+    return parseFloat(val.replace(/,/g, "")).toFixed(2);
+};
+
 function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, handleGetAllUsers }) {
     const theme = useTheme()
     const [validEmail, setValidEmail] = useState(null);
@@ -367,25 +386,75 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         }
     }, [watch("calendarYearType")]);
 
+    const formatMoney = (val) => {
+        if (!val && val !== 0) return "";
+        const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, "").split(".");
 
+        const intWithCommas = intPartRaw
+            .replace(/\D/g, "")
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        if (decimalRaw !== undefined) {
+            return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
+        }
+        return intWithCommas;
+    };
+
+    const sanitizeMoney = (val) => {
+        if (!val) return "";
+
+        // keep only digits and dot
+        val = val.replace(/[^0-9.]/g, "");
+
+        // allow only a single dot
+        const firstDotIndex = val.indexOf(".");
+        if (firstDotIndex !== -1) {
+            const before = val.slice(0, firstDotIndex + 1);
+            const after = val.slice(firstDotIndex + 1).replace(/\./g, "");
+            val = before + after;
+        }
+
+        let [intPart, decPart] = val.split(".");
+        intPart = intPart || "";
+
+        if (decPart !== undefined) {
+            decPart = decPart.slice(0, 2); // max 2 decimals
+        }
+
+        return decPart !== undefined ? `${intPart}.${decPart}` : intPart;
+    };
+
+    const parseMoneyFloat = (val) => {
+        if (!val) return 0;
+        return parseFloat(val.replace(/,/g, "")).toFixed(2);
+    };
 
     const handleSetQuota = async (id) => {
         if (id) {
             const response = await getQuota(id);
             if (response?.result) {
-                setShowCloseButton(true)
+                setShowCloseButton(true);
                 const r = response.result;
+
                 setValue('quotaId', r?.id || '');
-                setValue('quota', r?.quota || '');
+
+                // 🟢 show 3,435.54 style in quota input
+                setValue('quota', r?.quota != null ? formatMoney(r.quota) : '');
+
                 // Map incoming term title back to our id
                 const termData = terms.find(item => item.title === r?.term);
                 setValue('term', termData?.id || '');
+
+                // 🟢 show formatted amounts for amount1..amount12
                 for (let i = 1; i <= 12; i++) {
-                    setValue(`amount${i}`, r?.[`amount${i}`] ?? '');
+                    const key = `amount${i}`;
+                    const rawAmount = r?.[key];
+                    setValue(key, rawAmount != null ? formatMoney(rawAmount) : '');
                 }
             }
         }
     };
+
 
     const submit = async (data) => {
         const newData = {
@@ -446,20 +515,20 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
         const quotaData = {
             id: watch("quotaId"),
-            quota: Number(parseFloat(watch("quota")).toFixed(2)),
+            quota: parseFloat(parseMoneyFloat(watch("quota"))),
             term: selectedTerm.title, // fix: use our terms array
-            amount1: Number(parseFloat(watch("amount1")).toFixed(2)),
-            amount2: Number(parseFloat(watch("amount2")).toFixed(2)),
-            amount3: Number(parseFloat(watch("amount3")).toFixed(2)),
-            amount4: Number(parseFloat(watch("amount4")).toFixed(2)),
-            amount5: Number(parseFloat(watch("amount5")).toFixed(2)),
-            amount6: Number(parseFloat(watch("amount6")).toFixed(2)),
-            amount7: Number(parseFloat(watch("amount7")).toFixed(2)),
-            amount8: Number(parseFloat(watch("amount8")).toFixed(2)),
-            amount9: Number(parseFloat(watch("amount9")).toFixed(2)),
-            amount10: Number(parseFloat(watch("amount10")).toFixed(2)),
-            amount11: Number(parseFloat(watch("amount11")).toFixed(2)),
-            amount12: Number(parseFloat(watch("amount12")).toFixed(2)),
+            amount1: parseFloat(parseMoneyFloat(watch("amount1"))),
+            amount2: parseFloat(parseMoneyFloat(watch("amount2"))),
+            amount3: parseFloat(parseMoneyFloat(watch("amount3"))),
+            amount4: parseFloat(parseMoneyFloat(watch("amount4"))),
+            amount5: parseFloat(parseMoneyFloat(watch("amount5"))),
+            amount6: parseFloat(parseMoneyFloat(watch("amount6"))),
+            amount7: parseFloat(parseMoneyFloat(watch("amount7"))),
+            amount8: parseFloat(parseMoneyFloat(watch("amount8"))),
+            amount9: parseFloat(parseMoneyFloat(watch("amount9"))),
+            amount10: parseFloat(parseMoneyFloat(watch("amount10"))),
+            amount11: parseFloat(parseMoneyFloat(watch("amount11"))),
+            amount12: parseFloat(parseMoneyFloat(watch("amount12"))),
             customerId: id,
         };
 
@@ -700,10 +769,31 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                             label="Quota"
                                                             type="text"
                                                             onChange={(e) => {
-                                                                let value = e.target.value;
-                                                                if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    field.onChange(value);
-                                                                }
+                                                                const target = e.target;
+                                                                const rawInput = target.value;
+                                                                const caretPos = target.selectionStart ?? rawInput.length;
+
+                                                                // 1) Clean & format full string
+                                                                const cleanedFull = sanitizeMoney(rawInput);
+                                                                const formattedFull = formatMoney(cleanedFull);
+
+                                                                // 2) Figure out where the caret SHOULD be after formatting
+                                                                const rawBeforeCaret = rawInput.slice(0, caretPos);
+                                                                const cleanedBeforeCaret = sanitizeMoney(rawBeforeCaret);
+                                                                const formattedBeforeCaret = formatMoney(cleanedBeforeCaret);
+                                                                const newCaretPos = formattedBeforeCaret.length;
+
+                                                                // 3) Update form value with formatted text
+                                                                field.onChange(formattedFull);
+
+                                                                // 4) Restore caret position after React updates the input
+                                                                requestAnimationFrame(() => {
+                                                                    try {
+                                                                        target.setSelectionRange(newCaretPos, newCaretPos);
+                                                                    } catch (err) {
+                                                                        // ignore if input is gone
+                                                                    }
+                                                                });
                                                             }}
                                                             startIcon={
                                                                 <CustomIcons
@@ -714,6 +804,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                         />
                                                     )}
                                                 />
+
                                             </div>
 
                                             <div className='grid gap-[30px]'>
@@ -738,18 +829,40 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                                             render={({ field }) => (
                                                                                 <Input
                                                                                     {...field}
-                                                                                    label={`${labelText}`}
+                                                                                    label={labelText}
                                                                                     type="text"
                                                                                     onChange={(e) => {
-                                                                                        let value = e.target.value;
-                                                                                        if (/^\d*\.?\d{0,2}$/.test(value)) {
-                                                                                            field.onChange(value);
-                                                                                        }
+                                                                                        const target = e.target;
+                                                                                        const rawInput = target.value;
+                                                                                        const caretPos = target.selectionStart ?? rawInput.length;
+
+                                                                                        const cleanedFull = sanitizeMoney(rawInput);
+                                                                                        const formattedFull = formatMoney(cleanedFull);
+
+                                                                                        const rawBeforeCaret = rawInput.slice(0, caretPos);
+                                                                                        const cleanedBeforeCaret = sanitizeMoney(rawBeforeCaret);
+                                                                                        const formattedBeforeCaret = formatMoney(cleanedBeforeCaret);
+                                                                                        const newCaretPos = formattedBeforeCaret.length;
+
+                                                                                        field.onChange(formattedFull);
+
+                                                                                        requestAnimationFrame(() => {
+                                                                                            try {
+                                                                                                target.setSelectionRange(newCaretPos, newCaretPos);
+                                                                                            } catch (err) { }
+                                                                                        });
                                                                                     }}
                                                                                     error={errors?.[fieldName]}
+                                                                                    startIcon={
+                                                                                        <CustomIcons
+                                                                                            iconName={"fa-solid fa-dollar-sign"}
+                                                                                            css={"text-lg text-black mr-2"}
+                                                                                        />
+                                                                                    }
                                                                                 />
                                                                             )}
                                                                         />
+
                                                                     </div>
                                                                 );
                                                             })}
