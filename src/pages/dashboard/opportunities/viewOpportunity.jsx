@@ -36,7 +36,6 @@ const ViewOpportunity = ({ setAlert }) => {
     const userdata = getUserDetails();
 
     const [accounts, setAccounts] = useState([]);
-    const [productTotalAmount, setProductTotalAmount] = useState(0)
 
     const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
@@ -158,12 +157,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.title || null);
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
-
-                if (productTotalAmount > Number(res?.result?.dealAmount?.toFixed(2))) {
-                    setValue("dealAmount", productTotalAmount)
-                } else {
-                    setValue("dealAmount", res?.result?.dealAmount || null);
-                }
+                setValue("dealAmount", res?.result?.dealAmount || null);
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
@@ -214,11 +208,6 @@ const ViewOpportunity = ({ setAlert }) => {
         if (watch("id") || opportunityId) {
             const res = await getAllOpportunitiesProducts(watch("id") || opportunityId)
             setOpportunitiesProducts(res.result)
-            const total = res.result?.reduce((sum, item) => {
-                const price = parseFloat(parseFloat(item?.qty) * parseFloat(item?.price)) || 0;
-                return sum + price;
-            }, 0);
-            setProductTotalAmount(Number(total.toFixed(2)));
         }
     }
 
@@ -743,7 +732,6 @@ const ViewOpportunity = ({ setAlert }) => {
         }
     };
 
-
     const PartnersSection = ({ list = [] }) => {
         return (
             <>
@@ -811,97 +799,97 @@ const ViewOpportunity = ({ setAlert }) => {
         });
 
         // Sort: isKey true first
-        const sortedContacts = [...contactsWithEdits].sort((a, b) => {
-            if (a.isKey === b.isKey) return 0;
-            return a.isKey ? -1 : 1;
-        });
-
+        const sortedContacts = contactsWithEdits || [];
         const currentKeyContactsCount = sortedContacts.filter(c => c.isKey).length;
 
         return (
             <>
-                <section className="mt-8">
-                    <div className="mt-4">
-                        <div className="flex items-center">
-                            <div className="flex-grow border-t border-gray-300"></div>
-                            <span className="mx-4 font-semibold text-gray-700">Contacts</span>
-                            <div className="flex-grow border-t border-gray-300"></div>
-                        </div>
-                    </div>
-                    <div className='flex justify-end mb-4 gap-2'>
-                        {editedContacts.length > 0 && (
-                            <Tooltip title="Save" arrow>
-                                <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                    <Tooltip title="Save" arrow>
-                                        <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
-                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                        </Components.IconButton>
-                                    </Tooltip>
+                {
+                    list?.length > 0 && (
+                        <section className="mt-8">
+                            <div className="mt-4">
+                                <div className="flex items-center">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="mx-4 font-semibold text-gray-700">Contacts</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
                                 </div>
-                            </Tooltip>
-                        )}
-                        <Tooltip title="Add" arrow>
-                            <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                <Components.IconButton onClick={() => handleAddContact()}>
-                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                </Components.IconButton>
                             </div>
-                        </Tooltip>
-                    </div>
+                            <div className='flex justify-end mb-4 gap-2'>
+                                {editedContacts.length > 0 && (
+                                    <Tooltip title="Save" arrow>
+                                        <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                            <Tooltip title="Save" arrow>
+                                                <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
+                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                </Components.IconButton>
+                                            </Tooltip>
+                                        </div>
+                                    </Tooltip>
+                                )}
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddContact()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
-                        {sortedContacts.map((row, i) => (
-                            <div
-                                key={row.id ?? i}
-                                className={`
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
+                                {sortedContacts.map((row, i) => (
+                                    <div
+                                        key={row.id ?? i}
+                                        className={`
             relative bg-white border rounded-xl p-4 shadow-sm 
             hover:shadow-md transition-shadow cursor-pointer
             ${row.isKey ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
         `}
-                            >
-
-                                {/* ====== Checkbox on Top-Right ====== */}
-                                <div className="absolute top-2 right-2 flex items-center gap-1">
-                                    <Checkbox
-                                        checked={!!row.isKey}
-                                        disabled={currentKeyContactsCount >= 4 && !row.isKey}
-                                        onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
-                                    />
-                                    <Tooltip title="Delete" arrow>
-                                        <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                            <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
-                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                            </Components.IconButton>
-                                        </div>
-                                    </Tooltip>
-                                </div>
-
-                                {/* Avatar & Details */}
-                                <div className="flex gap-3 pr-8">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold
-                ${row.isKey ? 'bg-blue-600' : 'bg-gray-400'}`}
                                     >
-                                        {(row.contactName || "—").charAt(0)}
-                                    </div>
 
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className="font-semibold text-gray-800 truncate">
-                                            {row.contactName || "—"}
-                                        </p>
+                                        {/* ====== Checkbox on Top-Right ====== */}
+                                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                                            <Checkbox
+                                                checked={!!row.isKey}
+                                                disabled={currentKeyContactsCount >= 4 && !row.isKey}
+                                                onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
+                                            />
+                                            <Tooltip title="Delete" arrow>
+                                                <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        </div>
 
-                                        {row.email && (
-                                            <p className="text-xs text-gray-500 truncate mt-1">{row.email}</p>
-                                        )}
-                                        {row.phone && (
-                                            <p className="text-xs text-gray-500 truncate">{row.phone}</p>
-                                        )}
+                                        {/* Avatar & Details */}
+                                        <div className="flex gap-3 pr-8">
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold
+                ${row.isKey ? 'bg-blue-600' : 'bg-gray-400'}`}
+                                            >
+                                                {(row.contactName || "—").charAt(0)}
+                                            </div>
+
+                                            <div className="flex-1 overflow-hidden">
+                                                <p className="font-semibold text-gray-800 truncate">
+                                                    {row.contactName || "—"}
+                                                </p>
+
+                                                {row.email && (
+                                                    <p className="text-xs text-gray-500 truncate mt-1">{row.email}</p>
+                                                )}
+                                                {row.phone && (
+                                                    <p className="text-xs text-gray-500 truncate">{row.phone}</p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
+
                             </div>
-                        ))}
-
-                    </div>
-                </section>
+                        </section>
+                    )
+                }
             </>
         );
     };

@@ -50,7 +50,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [productTotalAmount, setProductTotalAmount] = useState(0)
 
     const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
@@ -241,7 +240,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     }
 
     const onClose = () => {
-        setProductTotalAmount(0)
         setOpportunitiesContacts([])
         setOpportunitiesPartner([])
         setOpportunitiesProducts([])
@@ -277,11 +275,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
-                if (productTotalAmount > Number(res?.result?.dealAmount?.toFixed(2))) {
-                    setValue("dealAmount", productTotalAmount)
-                } else {
-                    setValue("dealAmount", res?.result?.dealAmount || null);
-                }
+                setValue("dealAmount", res?.result?.dealAmount || null);
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
                         ...item,
@@ -333,11 +327,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         if (open && (watch("id") || opportunityId)) {
             const res = await getAllOpportunitiesProducts(watch("id") || opportunityId)
             setOpportunitiesProducts(res.result)
-            const total = res.result?.reduce((sum, item) => {
-                const price = parseFloat(parseFloat(item?.qty) * parseFloat(item?.price)) || 0;
-                return sum + price;
-            }, 0);
-            setProductTotalAmount(Number(total.toFixed(2)));
         }
     }
 
@@ -431,13 +420,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         handleGetAllAccounts()
         handleGetOppContacts()
         handleGetOpportunityDetails()
-    }, [open])
-
-    useEffect(() => {
-        if (productTotalAmount > Number(parseFloat(watch("dealAmount")).toFixed(2))) {
-            setValue("dealAmount", productTotalAmount)
-        }
-    }, [productTotalAmount])
+    }, [open])    
 
     const handleImageChange = async (file) => {
         if (!file) return;
@@ -481,7 +464,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const submit = async (data) => {
         const newData = {
             ...data,
-            dealAmount: productTotalAmount > parseFloat(parseMoneyFloat(data.dealAmount)) ? productTotalAmount : parseFloat(parseMoneyFloat(data.dealAmount)),
+            dealAmount: parseFloat(parseMoneyFloat(data.dealAmount)),
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
             newLogo: watch("newLogo")

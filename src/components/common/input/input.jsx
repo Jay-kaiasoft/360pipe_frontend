@@ -5,9 +5,9 @@ import Components from '../../muiComponents/components';
 const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur }, ref) => {
     const theme = useTheme();
     return (
-        <>
+        <div>
             {
-                label && (
+                (label !== null && label !== "") && (
                     <p className='mb-2 text-black text-left'>
                         {label}
                     </p>
@@ -23,7 +23,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
                 size='small'
                 name={name}
                 // label={label}
-                placeholder={placeholder || label ? `Enter ${label?.toLowerCase()}` : `Enter value`}
+                placeholder={placeholder ? placeholder : label ? `Enter ${label?.toLowerCase()}` : `Enter value`}
                 value={type === 'date' ? value || new Date().toISOString().split('T')[0] : value || ''}
                 type={type}
                 onChange={onChange}
@@ -73,7 +73,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
                 onBlur={onBlur}
                 onFocus={onFocus}
             />
-        </>
+        </div>
     );
 });
 
