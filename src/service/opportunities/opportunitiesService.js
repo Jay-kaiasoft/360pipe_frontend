@@ -1,4 +1,4 @@
-import { opportunityURL } from "../../config/config";
+import { opportunityURL, opportunitiesDocumentsURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
 export const getOpportunityOptions = async () => {
@@ -97,6 +97,16 @@ export const deleteOpportunityLogo = async (opportunityId) => {
         return response.data;
     } catch (error) {
         console.error("Error deleting opportunity logo:", error);
+        throw error;
+    }
+};
+
+export const deleteOpportunitiesDocs = async (id) => {
+    try {
+        const response = await axiosInterceptor().delete(`${opportunitiesDocumentsURL}/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting opportunity docs:", error);
         throw error;
     }
 };

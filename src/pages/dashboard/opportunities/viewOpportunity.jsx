@@ -28,7 +28,7 @@ import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../
 import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
 import FileInputBox from '../../../components/fileInputBox/fileInputBox';
-
+import MultipleFileUpload from '../../../components/fileInputBox/multipleFileUpload';
 
 const ViewOpportunity = ({ setAlert }) => {
     const { opportunityId } = useParams()
@@ -59,10 +59,14 @@ const ViewOpportunity = ({ setAlert }) => {
 
     const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
-    const [initialIsKey, setInitialIsKey] = useState({});         // id -> original isKey
-    const [editedContacts, setEditedContacts] = useState([]);     // [{ id, isKey }, ...]
+    const [initialIsKey, setInitialIsKey] = useState({});
+    const [editedContacts, setEditedContacts] = useState([]);
 
     const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    const [files, setFiles] = useState([]);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
 
     const {
         watch,
@@ -81,8 +85,46 @@ const ViewOpportunity = ({ setAlert }) => {
             status: null,
             logo: null,
             newLogo: null,
+            opportunityDocs: []
         },
     });
+
+    const uploadSelectedFiles = async () => {
+        const newFiles = [];
+        try {
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append("files", file);
+                formData.append("folderName", "opportunitiesDocuments");
+
+                const response = await uploadFiles(formData);
+                if (response?.data?.status === 200) {
+                    const uploadedFile = response.data.result[0];
+                    setUploadedFiles((prev) => [...prev, uploadedFile]);
+                    newFiles.push(uploadedFile);
+                } else {
+                    setAlert({ open: true, message: response?.data?.message, type: "error" });
+                    return { ok: false, files: [] };
+                }
+            }
+            // clear local selected files on success
+            setFiles([]);
+            const currentValues = getValues();
+            const updateData = { ...currentValues, opportunityDocs: newFiles };
+            const res = await updateOpportunity(opportunityId, updateData);
+            if (res?.status !== 200) {
+                setAlert({
+                    open: true,
+                    message: "Failed to save documents",
+                    type: "error"
+                })
+            }
+            return { ok: true, files: newFiles };
+        } catch (error) {
+            setAlert({ open: true, message: 'Error uploading files', type: "error" });
+            return { ok: false, files: [] };
+        }
+    };
 
     const handleOpenDeleteLogoDialog = () => {
         setDialogLogo({ open: true, title: 'Delete Logo', message: 'Are you sure! Do you want to delete this logo?', actionButtonText: 'yes' });
@@ -158,6 +200,11 @@ const ViewOpportunity = ({ setAlert }) => {
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
                 setValue("dealAmount", res?.result?.dealAmount || null);
+
+                if (Array.isArray(res?.result?.opportunityDocs) && res.result.opportunityDocs.length) {
+                    setExistingImages(res.result.opportunityDocs);
+                    setValue('opportunityDocs', res.result.opportunityDocs);
+                }
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
@@ -241,7 +288,6 @@ const ViewOpportunity = ({ setAlert }) => {
         handleGetOpportunityDetails()
     }, [])
 
-    // --- Helper Functions and Components for View UI ---
 
     const getDisplayName = (id, options) => {
         const option = options.find(opt => opt.id === id);
@@ -260,30 +306,43 @@ const ViewOpportunity = ({ setAlert }) => {
     const handleSaveField = async (fieldName, newValue) => {
         try {
             const opportunityId = watch("id");
-            if (opportunityId) {
-                const currentValues = getValues();
-                const updateData = { ...currentValues, [fieldName]: newValue };
-                const res = await updateOpportunity(opportunityId, updateData);
-                if (res?.status === 200) {
-                    setValue(fieldName, newValue);
-                } else {
-                    setAlert({
-                        open: true,
-                        message: "Failed to update opportunity",
-                        type: "error"
-                    })
+            if (!opportunityId) return;
+
+            const currentValues = getValues();
+
+            let payloadValue = newValue;
+
+            // Ensure dealAmount is always stored with 2 decimals
+            if (fieldName === "dealAmount" && newValue !== null && newValue !== "") {
+                const num = typeof newValue === "number" ? newValue : parseFloat(newValue);
+                if (!Number.isNaN(num)) {
+                    payloadValue = Number(num.toFixed(2));
                 }
+            }
+
+            const updateData = { ...currentValues, [fieldName]: payloadValue };
+
+            const res = await updateOpportunity(opportunityId, updateData);
+            if (res?.status === 200) {
+                setValue(fieldName, payloadValue);
+            } else {
+                setAlert({
+                    open: true,
+                    message: "Failed to update opportunity",
+                    type: "error",
+                });
             }
         } catch (error) {
             setAlert({
                 open: true,
                 message: error || "Failed to update opportunity",
-                type: "error"
-            })
+                type: "error",
+            });
         }
     };
 
-    const OpportunityField = ({ label, value, type = 'text', options = [], onSave, className = '', required = false }) => {
+
+    const OpportunityField = ({ label, value, type = 'text', options = [], onSave, className = '', required = false, multiline = false }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editValue, setEditValue] = useState(value);
 
@@ -306,6 +365,7 @@ const ViewOpportunity = ({ setAlert }) => {
             if (Number.isNaN(num)) return null;
             return parseFloat(num.toFixed(2));
         };
+
 
         const handleDoubleClick = () => {
             setIsEditing(true);
@@ -396,7 +456,7 @@ const ViewOpportunity = ({ setAlert }) => {
         };
 
         const handleSelectChange = (selectedOption) => {
-            setEditValue(selectedOption.id);
+            setEditValue(selectedOption ? selectedOption.id : null);
         };
 
         const handleDateChange = (date) => {
@@ -408,7 +468,7 @@ const ViewOpportunity = ({ setAlert }) => {
         return (
             <div className={`flex justify-start items-center text-sm py-1 ${className}`}>
                 <span className="font-medium text-gray-500 tracking-wider text-sm w-52">{label}</span>
-                <div className="text-gray-900 font-semibold text-base text-right max-w-[60%] break-words">
+                <div className="text-gray-900 font-semibold text-base max-w-[60%] break-words">
                     {isEditing ? (
                         <div className="flex items-center gap-2 w-full">
                             {type === 'select' ? (
@@ -416,10 +476,10 @@ const ViewOpportunity = ({ setAlert }) => {
                                     <Select
                                         value={options?.find((row) => (row.title === editValue || row.id === editValue))?.id || null}
                                         options={options}
-                                        onChange={(_, newValue) => handleSelectChange(newValue)}
+                                        onChange={(_, newValue) => handleSelectChange(newValue ? newValue : null)}
                                         className="flex-1"
                                         autoFocus
-                                        error={required}
+                                        error={(!editValue || editValue === "") && required}
                                     />
                                 </div>
                             ) : type === 'date' ? (
@@ -453,22 +513,23 @@ const ViewOpportunity = ({ setAlert }) => {
                                             },
                                         }}
                                         className="flex-1"
-                                        error={required}
+                                        error={(!editValue || editValue === "") && required}
                                     />
                                 </LocalizationProvider>
                             ) : (
                                 <Input
                                     value={editValue || ''}
                                     onChange={handleChange}
-                                    className="flex-1 text-right"
                                     autoFocus
                                     error={(!editValue || editValue === "") && required}
+                                    multiline={multiline}
+                                    rows={3}
                                 />
                             )}
                             <div className='flex items-center gap-3'>
                                 <Tooltip title="Save" arrow>
-                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={handleSave}>
+                                    <div className={`${(editValue === null || editValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-6 w-6 flex justify-center items-center rounded-full text-white`}>
+                                        <Components.IconButton onClick={handleSave} disabled={editValue === null || editValue === ""}>
                                             <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
                                         </Components.IconButton>
                                     </div>
@@ -734,60 +795,61 @@ const ViewOpportunity = ({ setAlert }) => {
 
     const PartnersSection = ({ list = [] }) => {
         return (
-            <>
-                {
-                    list?.length > 0 && (
-                        <section className="mt-8">
-                            <div className="flex items-center my-4">
-                                <div className="flex-grow border-t border-gray-300"></div>
-                                <span className="mx-4 font-semibold text-gray-700">Partners</span>
-                                <div className="flex-grow border-t border-gray-300"></div>
-                            </div>
-                            <div className='flex justify-end mb-4 gap-2'>
-                                <Tooltip title="Add" arrow>
-                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                        <Components.IconButton onClick={() => handleAddPartner()}>
-                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            </div>
+            <section className="mt-8">
+                <div className="flex items-center my-4">
+                    <div className="flex-grow border-t border-gray-300"></div>
+                    <span className="mx-4 font-semibold text-gray-700">Partners</span>
+                    <div className="flex-grow border-t border-gray-300"></div>
+                </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 4k:grid-cols-6 gap-4">
-                                {list.map((row, i) => (
-                                    <div
-                                        key={row.id ?? i}
-                                        className="relative bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
-                                    >
-                                        <div className="absolute right-2 flex items-center justify-end gap-2">
-                                            <Tooltip title="Edit" arrow>
-                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleEditPartner(row.id)}>
-                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title="Delete" arrow>
-                                                <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
-                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                        <p className="font-semibold text-gray-800 text-lg">
-                                            {row.accountName || "—"}
-                                        </p>
-                                        <p className="mt-1 text-sm text-gray-500">
-                                            {row.role || "—"}
-                                        </p>
+                <div className='flex justify-end mb-4 gap-2'>
+                    <Tooltip title="Add" arrow>
+                        <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                            <Components.IconButton onClick={() => handleAddPartner()}>
+                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                            </Components.IconButton>
+                        </div>
+                    </Tooltip>
+                </div>
+                {
+                    list?.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 4k:grid-cols-6 gap-4">
+                            {list.map((row, i) => (
+                                <div
+                                    key={row.id ?? i}
+                                    className="relative bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+                                >
+                                    <div className="absolute right-2 flex items-center justify-end gap-2">
+                                        <Tooltip title="Edit" arrow>
+                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                <Components.IconButton onClick={() => handleEditPartner(row.id)}>
+                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                </Components.IconButton>
+                                            </div>
+                                        </Tooltip>
+                                        <Tooltip title="Delete" arrow>
+                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
+                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                </Components.IconButton>
+                                            </div>
+                                        </Tooltip>
                                     </div>
-                                ))}
-                            </div>
-                        </section>
-                    )
+                                    <p className="font-semibold text-gray-800 text-lg">
+                                        {row.accountName || "—"}
+                                    </p>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {row.role || "—"}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    ) :
+                        <div className="border rounded-lg text-center py-10 font-bold">
+                            No Partners Found.
+                        </div>
                 }
-            </>
+            </section>
         );
     };
 
@@ -804,37 +866,38 @@ const ViewOpportunity = ({ setAlert }) => {
 
         return (
             <>
-                {
-                    list?.length > 0 && (
-                        <section className="mt-8">
-                            <div className="mt-4">
-                                <div className="flex items-center">
-                                    <div className="flex-grow border-t border-gray-300"></div>
-                                    <span className="mx-4 font-semibold text-gray-700">Contacts</span>
-                                    <div className="flex-grow border-t border-gray-300"></div>
-                                </div>
-                            </div>
-                            <div className='flex justify-end mb-4 gap-2'>
-                                {editedContacts.length > 0 && (
-                                    <Tooltip title="Save" arrow>
-                                        <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                            <Tooltip title="Save" arrow>
-                                                <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
-                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                </Components.IconButton>
-                                            </Tooltip>
-                                        </div>
-                                    </Tooltip>
-                                )}
-                                <Tooltip title="Add" arrow>
-                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                        <Components.IconButton onClick={() => handleAddContact()}>
-                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            </div>
 
+                <section className="mt-8">
+                    <div className="mt-4">
+                        <div className="flex items-center">
+                            <div className="flex-grow border-t border-gray-300"></div>
+                            <span className="mx-4 font-semibold text-gray-700">Contacts</span>
+                            <div className="flex-grow border-t border-gray-300"></div>
+                        </div>
+                    </div>
+
+                    <div className='flex justify-end mb-4 gap-2'>
+                        {editedContacts.length > 0 && (
+                            <Tooltip title="Save" arrow>
+                                <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                    <Tooltip title="Save" arrow>
+                                        <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
+                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                        </Components.IconButton>
+                                    </Tooltip>
+                                </div>
+                            </Tooltip>
+                        )}
+                        <Tooltip title="Add" arrow>
+                            <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                <Components.IconButton onClick={() => handleAddContact()}>
+                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
+                    </div>
+                    {
+                        list?.length > 0 ? (
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
                                 {sortedContacts.map((row, i) => (
                                     <div
@@ -887,9 +950,12 @@ const ViewOpportunity = ({ setAlert }) => {
                                 ))}
 
                             </div>
-                        </section>
-                    )
-                }
+                        ) :
+                            <div className="border rounded-lg text-center py-10 font-bold">
+                                No Contact Found.
+                            </div>
+                    }
+                </section>
             </>
         );
     };
@@ -904,37 +970,37 @@ const ViewOpportunity = ({ setAlert }) => {
 
         return (
             <>
-                {
-                    items.length > 0 && (
-                        <section className="mt-8">
-                            <div className="flex items-center my-4">
-                                <div className="flex-grow border-t border-gray-300"></div>
-                                <span className="mx-4 font-semibold text-gray-700">
-                                    Products &amp; Services
-                                </span>
-                                <div className="flex-grow border-t border-gray-300"></div>
+                <section className="mt-8">
+                    <div className="flex items-center my-4">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="mx-4 font-semibold text-gray-700">
+                            Products &amp; Services
+                        </span>
+                        <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <div className='flex justify-end mb-4 gap-2'>
+                        <Tooltip title="Add" arrow>
+                            <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                <Components.IconButton onClick={() => handleAddProduct()}>
+                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
                             </div>
-                            <div className='flex justify-end mb-4 gap-2'>
-                                <Tooltip title="Add" arrow>
-                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                        <Components.IconButton onClick={() => handleAddProduct()}>
-                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            </div>
+                        </Tooltip>
+                    </div>
 
-                            <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
-                                <table className="w-full">
-                                    <thead className="hidden sm:table-header-group">
-                                        <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
-                                            <th className="px-4 py-3 text-left">Product Name</th>
-                                            <th className="px-4 py-3 text-right">Qty</th>
-                                            <th className="px-4 py-3 text-right">Price</th>
-                                            <th className="px-4 py-3 text-right">Total</th>
-                                            <th className="px-4 py-3 text-right">Action</th>
-                                        </tr>
-                                    </thead>
+                    <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
+                        <table className="w-full">
+                            <thead className="hidden sm:table-header-group">
+                                <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                                    <th className="px-4 py-3 text-left">Product Name</th>
+                                    <th className="px-4 py-3 text-right">Qty</th>
+                                    <th className="px-4 py-3 text-right">Price</th>
+                                    <th className="px-4 py-3 text-right">Total</th>
+                                    <th className="px-4 py-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            {
+                                items.length > 0 ? (
                                     <tbody className="divide-y divide-gray-100">
                                         {items.map((row, i) => {
                                             const qty = parseFloat(row?.qty) || 0;
@@ -958,12 +1024,25 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <div className="sm:hidden text-xs text-gray-500 mb-1">Price:</div>
-                                                        <span className="font-semibold">{price ? `$${price.toLocaleString()}` : "—"}</span>
+                                                        <span className="font-semibold">
+                                                            {price
+                                                                ? `$${price.toLocaleString(undefined, {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2,
+                                                                })}`
+                                                                : "—"}
+                                                        </span>
                                                     </td>
+
                                                     <td className="px-4 py-3 text-right">
                                                         <div className="sm:hidden text-xs text-blue-600 mb-1">Total:</div>
                                                         <span className="font-bold text-blue-600 text-base">
-                                                            {total ? `$${total.toLocaleString()}` : "—"}
+                                                            {total
+                                                                ? `$${total.toLocaleString(undefined, {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2,
+                                                                })}`
+                                                                : "—"}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
@@ -988,8 +1067,18 @@ const ViewOpportunity = ({ setAlert }) => {
                                             );
                                         })}
                                     </tbody>
-                                </table>
-
+                                ) :
+                                    <tbody className="divide-y divide-gray-100">
+                                        <tr className="hover:bg-gray-50 transition-colors">
+                                            <td className="py-10 text-center font-bold" colSpan={5}>
+                                                Product & Service Not Found.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                            }
+                        </table>
+                        {
+                            items.length > 0 ? (
                                 <div className="flex justify-between items-center px-4 py-3 border-t border-gray-200 bg-[#F9FAFB] rounded-b-xl">
                                     <p className="text-base font-bold text-gray-700">
                                         Total Expected Revenue
@@ -1000,10 +1089,10 @@ const ViewOpportunity = ({ setAlert }) => {
                                             : "—"}
                                     </p>
                                 </div>
-                            </div>
-                        </section>
-                    )
-                }
+                            ) : null
+                        }
+                    </div>
+                </section>
             </>
         );
     };
@@ -1012,9 +1101,15 @@ const ViewOpportunity = ({ setAlert }) => {
         <div className='mx-auto relative p-4 sm:p-6 bg-white rounded-xl shadow-lg'>
 
             {/* Back Button */}
-            <div className='absolute top-1 left-5'>
-                <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center' onClick={() => navigate("/dashboard/opportunities")}>
-                    <CustomIcons iconName="fa-solid fa-arrow-left" css="h-5 w-5 text-gray-600" />
+            <div className='mb-2'>
+                <div className='absolute top-1 left-5'>
+                    <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center' onClick={() => navigate("/dashboard/opportunities")}>
+                        <CustomIcons iconName="fa-solid fa-arrow-left" css="h-5 w-5 text-gray-600" />
+                    </div>
+                </div>
+
+                <div className='absolute top-2 right-5'>
+                    <p className='text-red-400'><strong>Note:&nbsp;</strong>Fields can be edited by double-clicking.</p>
                 </div>
             </div>
 
@@ -1060,11 +1155,19 @@ const ViewOpportunity = ({ setAlert }) => {
                         />
                         <OpportunityField
                             label="Deal Amount"
-                            value={watch("dealAmount") ? `$${Number(watch("dealAmount")).toLocaleString()}` : '—'}
+                            value={
+                                watch("dealAmount") !== null && watch("dealAmount") !== undefined && watch("dealAmount") !== ""
+                                    ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}`
+                                    : "—"
+                            }
                             type="text"
-                            onSave={(newValue) => handleSaveField("dealAmount", parseFloat(newValue) || 0)}
+                            onSave={(newValue) => handleSaveField("dealAmount", newValue)}
                             required={true}
                         />
+
 
                         <OpportunityField
                             label="Close Date"
@@ -1084,13 +1187,6 @@ const ViewOpportunity = ({ setAlert }) => {
                         />
 
                         <OpportunityField
-                            label="Next Steps"
-                            value={watch("nextSteps")}
-                            type="text"
-                            onSave={(newValue) => handleSaveField("nextSteps", newValue)}
-                            required={true}
-                        />
-                        <OpportunityField
                             label="Status"
                             value={watch("status")}
                             type="select"
@@ -1099,6 +1195,51 @@ const ViewOpportunity = ({ setAlert }) => {
                             required={true}
                         />
                     </>
+                    <div className='col-span-2'>
+                        <OpportunityField
+                            label="Next Step"
+                            value={watch("nextSteps")}
+                            type="text"
+                            onSave={(newValue) => handleSaveField("nextSteps", newValue)}
+                            required={true}
+                            multiline={true}
+                        />
+                    </div>
+
+                    <div className="flex items-center col-span-2">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="mx-4 font-semibold text-gray-700">Deal Docs</span>
+                        <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    <div className='flex justify-end items-center col-span-2'>
+                        {
+                            files?.length > 0 && (
+                                <Tooltip title="Upload" arrow>
+                                    <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={uploadSelectedFiles} title="Upload docs">
+                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            )
+                        }
+                    </div>
+
+                    <div className='col-span-2'>
+                        <MultipleFileUpload
+                            files={files}
+                            setFiles={setFiles}
+                            setAlert={setAlert}
+                            setValue={setValue}
+                            existingImages={existingImages}
+                            setExistingImages={setExistingImages}
+                            type="oppDocs"
+                            multiple={true}
+                            placeHolder="Attach files here"
+                            uploadedFiles={uploadedFiles}
+                        />
+                    </div>
                 </div>
             </div>
 

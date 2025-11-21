@@ -277,7 +277,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             ...(Array.isArray(existingImages) ? existingImages : []),
             ...uploaded
         ];
-        console.log("first", mergedImages)
         const newData = {
             ...data,
             images: mergedImages, // <-- your API expects the array of uploadedFile objects

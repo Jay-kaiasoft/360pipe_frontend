@@ -26,6 +26,7 @@ import FileInputBox from '../../fileInputBox/fileInputBox';
 import { getUserDetails } from '../../../utils/getUserDetails';
 import { Tooltip } from '@mui/material';
 import Stapper from '../../common/stapper/stapper';
+import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -69,6 +70,10 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedContactId, setSelectedContactId] = useState(null);
     const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    const [files, setFiles] = useState([]);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
 
     const handleBack = () => {
         setActiveStep((prev) => prev - 1)
@@ -163,7 +168,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             salesforceOpportunityId: null,
             status: 1,
             logo: null,
-            newLogo: null
+            newLogo: null,
+            opportunityDocs: []
         },
     });
 
@@ -255,8 +261,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             salesforceOpportunityId: null,
             status: 1,
             logo: null,
-            newLogo: null
+            newLogo: null,
+            opportunityDocs: []
         });
+        setFiles([]);
+        setUploadedFiles([]);
+        setExistingImages([]);
         setActiveStep(0)
         handleClose();
     };
@@ -275,7 +285,15 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
-                setValue("dealAmount", res?.result?.dealAmount || null);
+                setValue(
+                    "dealAmount",
+                    res?.result?.dealAmount !== null && res?.result?.dealAmount !== undefined
+                        ? formatMoney(Number(res.result.dealAmount).toFixed(2))
+                        : null
+                );
+
+                setValue('opportunityDocs', res.result.opportunityDocs);
+
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
                     const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
                         ...item,
@@ -420,7 +438,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         handleGetAllAccounts()
         handleGetOppContacts()
         handleGetOpportunityDetails()
-    }, [open])    
+    }, [open])
 
     const handleImageChange = async (file) => {
         if (!file) return;
@@ -461,9 +479,45 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         return parseFloat(val.replace(/,/g, "")).toFixed(2);
     };
 
+    // NEW: upload files first, then create/update todo with images[]
+    const uploadSelectedFiles = async () => {
+        const newFiles = [];
+        try {
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append("files", file);
+                formData.append("folderName", "opportunitiesDocuments");
+                // formData.append("userId", brandId); 
+
+                const response = await uploadFiles(formData);
+                if (response?.data?.status === 200) {
+                    const uploadedFile = response.data.result[0];
+                    // keep form value and local previews in sync
+                    setValue('opportunityDocs', uploadedFile);
+                    setUploadedFiles((prev) => [...prev, uploadedFile]);
+                    newFiles.push(uploadedFile);
+                } else {
+                    setAlert({ open: true, message: response?.data?.message, type: "error" });
+                    return { ok: false, files: [] };
+                }
+            }
+            // clear local selected files on success
+            setFiles([]);
+            return { ok: true, files: newFiles };
+        } catch (error) {
+            setAlert({ open: true, message: 'Error uploading files', type: "error" });
+            return { ok: false, files: [] };
+        }
+    };
+
     const submit = async (data) => {
+        // 1) Upload any newly picked files first
+        const { ok, files: uploaded } = await uploadSelectedFiles();
+        if (!ok) { setLoading(false); return; }
+
         const newData = {
             ...data,
+            opportunityDocs: uploaded,
             dealAmount: parseFloat(parseMoneyFloat(data.dealAmount)),
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
@@ -511,7 +565,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     const price = parseFloat(parseFloat(item?.qty) * parseFloat(item?.price)) || 0;
                     return sum + price;
                 }, 0);
-                await updateOpportunitiesDealAmount(opportunityId, { dealAmount: Number(total.toFixed(2)) > Number(parseFloat(watch("dealAmount")).toFixed(2)) ? Number(total.toFixed(2)) : watch("dealAmount") })
                 handleGetAllOpportunities()
                 setLoading(false);
                 onClose()
@@ -728,7 +781,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         />
                                                     )}
                                                 />
-
+                                            </div>
+                                            <div>
+                                                <MultipleFileUpload
+                                                    files={files}
+                                                    setFiles={setFiles}
+                                                    setAlert={setAlert}
+                                                    setValue={setValue}
+                                                    existingImages={existingImages}
+                                                    setExistingImages={setExistingImages}
+                                                    type="oppDocs"
+                                                    multiple={true}
+                                                    placeHolder="Attach files here"
+                                                    uploadedFiles={uploadedFiles}
+                                                />
                                             </div>
                                         </div>
                                     </>
@@ -928,11 +994,22 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     <td className="px-4 py-3 text-sm">{row.name || "—"}</td>
                                                                     <td className="px-4 py-3 text-sm text-right">{qty || "—"}</td>
                                                                     <td className="px-4 py-3 text-sm text-right">
-                                                                        {price ? `$${price.toLocaleString()}` : "—"}
+                                                                        {price
+                                                                            ? `$${price.toLocaleString(undefined, {
+                                                                                minimumFractionDigits: 2,
+                                                                                maximumFractionDigits: 2,
+                                                                            })}`
+                                                                            : "—"}
                                                                     </td>
                                                                     <td className="px-4 py-3 text-sm text-right">
-                                                                        {total ? `$${total.toLocaleString()}` : "—"}
+                                                                        {total
+                                                                            ? `$${total.toLocaleString(undefined, {
+                                                                                minimumFractionDigits: 2,
+                                                                                maximumFractionDigits: 2,
+                                                                            })}`
+                                                                            : "—"}
                                                                     </td>
+
                                                                     <td className="px-4 py-3">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
                                                                             <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>

@@ -74,7 +74,14 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
             const res = await getOpportunitiesProducts(id)
             if (res.status === 200) {
                 reset(res.result)
-                setValue("price", formatMoney(res.result?.price))
+                setValue(
+                    "price",
+                    formatMoney(
+                        res.result?.price !== null && res.result?.price !== undefined
+                            ? Number(res.result.price).toFixed(2)
+                            : ""
+                    )
+                );
             }
         }
     }

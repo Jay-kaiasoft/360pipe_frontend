@@ -198,28 +198,27 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             align: 'right',
             headerAlign: 'left',
             editable: true,
+            headerClassName: 'uppercase',
             renderCell: (params) => {
                 const val = params.value;
                 if (val === null || val === undefined || val === '') return '';
                 const num = parseFloat(val);
                 if (Number.isNaN(num)) return '';
-                return `$${num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+                return `$${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             },
             renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
-
-
         {
             field: "salesStage",
             headerName: "Sales Stage",
             flex: 1,
             minWidth: 200,
+            headerClassName: 'uppercase',
             renderCell: (params) => {
                 const stage = params.value;
-                const bg = stageColors[stage] || "#e0e0e0";
-
+                const bg = stageColors[stage] || "#e0e0e0";                
                 return (
-                    <Chip
+                    <Chip                        
                         label={stage}
                         size="small"
                         sx={{
@@ -252,6 +251,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             flex: 1,
             minWidth: 280,
             editable: true,
+            headerClassName: 'uppercase',
             renderCell: (params) => {
                 return (
                     <span>
@@ -605,6 +605,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         }
                     }}
                 />
+                
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView} />
