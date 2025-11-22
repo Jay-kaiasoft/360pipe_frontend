@@ -310,7 +310,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                                         ]);
                                     }
 
-                                    console.log("updated", updated);
                                     return updated;
                                 });
                             }}
@@ -346,6 +345,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 150,
+            align: 'center',
             renderCell: (params) => {
                 return (
                     <span>{params.value ? new Date(params.value).toLocaleDateString() : '-'}</span>

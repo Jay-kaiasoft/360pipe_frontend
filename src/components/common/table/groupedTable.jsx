@@ -11,7 +11,7 @@ import { DataGrid } from '@mui/x-data-grid';
 
 import Input from '../input/input';
 import CustomIcons from '../icons/CustomIcons';
-import { stageColors } from '../../../service/common/commonService';
+import { stageColors, statusColors } from '../../../service/common/commonService';
 
 const paginationModel = { page: 0, pageSize: 10 };
 
@@ -60,7 +60,8 @@ export default function GroupedDataTable({
     setRowSelectionModel,
     rowSelectionModel,
     processRowUpdate,
-    onCellEditStop
+    onCellEditStop,
+    hideFooter = true
 }) {
     const theme = useTheme();
 
@@ -97,16 +98,16 @@ export default function GroupedDataTable({
 
             <div className="border border-t-0 rounded-b-lg bg-white">
                 {groups?.map((group, groupIndex) => {
-                    const stageName = group?.stagename || 'No Stage';
+                    const statusname = group?.statusname || 'No Stage';
                     const rowsWithIndex = (group?.data || []).map((row, idx) => ({
                         ...row,
                         rowId: idx + 1,
                     }));
-                    const color = stageColors[group?.stagename] || "#e0e0e0";
+                    const color = statusColors[group?.statusname] || "#e0e0e0";
 
                     return (
                         <Accordion
-                            key={stageName + groupIndex}
+                            key={statusname + groupIndex}
                             defaultExpanded
                             disableGutters
                         >
@@ -118,31 +119,33 @@ export default function GroupedDataTable({
                                     />
                                 }
                             >
-                                <div className="flex w-full items-center justify-between">
-                                    {/* <p className="font-bold" style={{ color: color }}>
-                                        {stageName}
-                                    </p> */}
-                                    <Chip
-                                        label={stageName}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: color,
-                                            color: "#fff",
-                                            fontWeight: 600,
-                                            borderRadius: "20px",
-                                            px: 1.5,
-                                        }}
-                                    />
-                                    <h1 className="font-bold mr-5">
+                                <div className="flex w-full items-center justify-center">
+                                    <div className='flex items-center justify-start gap-5'>
+                                        <Chip
+                                            label={statusname}
+                                            size="small"
+                                            sx={{
+                                                backgroundColor: color,
+                                                color: "#fff",
+                                                fontWeight: 600,
+                                                borderRadius: "20px",
+                                                px: 1.5,
+                                            }}
+                                        />
+                                        <h1 className="font-bold mr-5">
+                                            ${parseFloat(group?.total)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </h1>
+                                    </div>
+                                    {/* <h1 className="font-bold mr-5">
                                         {rowsWithIndex.length} Items
-                                    </h1>
+                                    </h1> */}
                                 </div>
                             </AccordionSummary>
 
                             <AccordionDetails>
                                 <div
                                     style={{
-                                        height: height || 400,
+                                        // height: height || 400,
                                         width: '100%',
                                     }}
                                 >
@@ -153,6 +156,7 @@ export default function GroupedDataTable({
                                         pageSizeOptions={[10, 25, 50]}
                                         disableRowSelectionOnClick
                                         hideFooterSelectedRowCount
+                                        hideFooter={hideFooter}
                                         getRowClassName={getRowClassName}
                                         getRowId={(row) => row.rowId}
                                         checkboxSelection={checkboxSelection}
@@ -169,6 +173,29 @@ export default function GroupedDataTable({
                                             columnUnsortedIcon: UnsortedIcon,
                                         }}
                                         disableColumnMenu
+                                        onCellClick={(params, event) => {
+                                            // only for editable columns
+                                            if (!params.colDef?.editable) return;
+
+                                            const api = params.api;
+                                            const cellMode = api.getCellMode(params.id, params.field);
+
+                                            // ✅ only switch to edit if currently in view mode
+                                            if (cellMode === 'view') {
+                                                if (api.startCellEditMode) {
+                                                    api.startCellEditMode({ id: params.id, field: params.field });
+                                                } else if (api.setCellMode) {
+                                                    api.setCellMode(params.id, params.field, 'edit');
+                                                }
+                                            }
+                                        }}
+
+                                        // 🔒 Stop default double-click behaviour
+                                        onCellDoubleClick={(params, event) => {
+                                            if (event) {
+                                                event.defaultMuiPrevented = true;
+                                            }
+                                        }}
                                         onCellEditStop={onCellEditStop}
                                         slotProps={{
                                             toolbar: {

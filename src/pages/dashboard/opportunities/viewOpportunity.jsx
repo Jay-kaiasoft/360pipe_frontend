@@ -118,6 +118,8 @@ const ViewOpportunity = ({ setAlert }) => {
                     message: "Failed to save documents",
                     type: "error"
                 })
+            } else {
+                setAlert({ open: true, message: "Opportunity documents uploaded successfully", type: "success" });
             }
             return { ok: true, files: newFiles };
         } catch (error) {
@@ -175,6 +177,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 const response = await updateOpportunityLogo(obj);
                 if (response.status === 200) {
                     setValue("logo", response.result || imageURL)
+                    setAlert({ open: true, message: "Opportunity logo updated successfully", type: "success" });
                 } else {
                     setAlert({ open: true, message: res?.data?.message || "Fail to upload opportunity logo", type: "error" });
                 }
@@ -546,7 +549,7 @@ const ViewOpportunity = ({ setAlert }) => {
                         </div>
                     ) : (
                         <span
-                            onDoubleClick={handleDoubleClick}
+                            onClick={handleDoubleClick}
                             className="cursor-pointer hover:bg-gray-100 px-1 rounded"
                         >
                             {displayValue}
@@ -715,7 +718,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
     const handleOpenDeletePartnerDialog = (id) => {
         setSelectedPartnerId(id);
-        setDialogPartner({ open: true, title: 'Delete Partner', message: 'Are you sure! Do you want to delete this partner?', actionButtonText: 'yes' });
+        setDialogPartner({ open: true, title: 'Delete competitor', message: 'Are you sure! Do you want to delete this competitor?', actionButtonText: 'yes' });
     }
 
     const handleCloseDeletePartnerDialog = () => {
@@ -798,7 +801,7 @@ const ViewOpportunity = ({ setAlert }) => {
             <section className="mt-8">
                 <div className="flex items-center my-4">
                     <div className="flex-grow border-t border-gray-300"></div>
-                    <span className="mx-4 font-semibold text-gray-700">Partners</span>
+                    <span className="mx-4 font-semibold text-gray-700">Competitors</span>
                     <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
@@ -846,7 +849,7 @@ const ViewOpportunity = ({ setAlert }) => {
                         </div>
                     ) :
                         <div className="border rounded-lg text-center py-10 font-bold">
-                            No Partners Found.
+                            No Competitors Found.
                         </div>
                 }
             </section>
@@ -1109,7 +1112,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 </div>
 
                 <div className='absolute top-2 right-5'>
-                    <p className='text-red-400'><strong>Note:&nbsp;</strong>Fields can be edited by double-clicking.</p>
+                    <p className='text-red-600'><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p>
                 </div>
             </div>
 

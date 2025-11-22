@@ -68,11 +68,11 @@ export const opportunityContactRoles = [
 ];
 
 export const opportunityStatus = [
-    { id: 1, title: "Pipline" },
+    { id: 1, title: "Commit" },
     { id: 2, title: "Upside" },
-    { id: 3, title: "Commit" },
-    { id: 4, title: "Lost" },
-    { id: 5, title: "Won" },
+    { id: 3, title: "Pipline" },
+    { id: 4, title: "Won" },
+    { id: 5, title: "Lost" },
 ];
 
 export const statusColors = {

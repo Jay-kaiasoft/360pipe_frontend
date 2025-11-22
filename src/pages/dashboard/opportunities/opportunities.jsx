@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom';
+
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
+import { Chip, Tooltip } from '@mui/material';
+import Input from '../../../components/common/input/input';
 import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
-import { deleteOpportunity, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
-import { useLocation, useNavigate } from 'react-router-dom';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
-import SelectMultiple from '../../../components/common/select/selectMultiple';
+import CheckBoxSelect from '../../../components/common/select/checkBoxSelect';
+
+import { deleteOpportunity, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { opportunityStatus, stageColors } from '../../../service/common/commonService';
-import { Chip, Tooltip } from '@mui/material';
-import ViewOpportunitiesModel from '../../../components/models/opportunities/viewOpportunitiesModel';
 import GroupedDataTable from '../../../components/common/table/groupedTable';
-import Input from '../../../components/common/input/input';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -23,12 +24,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const [opportunities, setOpportunities] = useState([]);
     const [open, setOpen] = useState(false);
-    const [openView, setOpenView] = useState(false)
 
     const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
+
+    // NOTE: these now hold ARRAYS OF OPTION OBJECTS from CheckBoxSelect
     const [selectedOppName, setSelectedOppName] = useState([])
     const [selectedOppStage, setSelectedOppStage] = useState([])
     const [selectedOppStatus, setSelectedOppStatus] = useState([])
@@ -38,16 +40,17 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setOpportunitiesOptions(res?.result[0])
     }
 
-    const handleSetName = (event) => {
-        setSelectedOppName(event)
+    // Updated handlers to match CheckBoxSelect onChange(event, newValue)
+    const handleSetName = (event, newValue) => {
+        setSelectedOppName(newValue || []);
     }
 
-    const handleSetStages = (event) => {
-        setSelectedOppStage(event)
+    const handleSetStages = (event, newValue) => {
+        setSelectedOppStage(newValue || []);
     }
 
-    const handleSetStatus = (event) => {
-        setSelectedOppStatus(event)
+    const handleSetStatus = (event, newValue) => {
+        setSelectedOppStatus(newValue || []);
     }
 
     const handleGetOpportunities = async () => {
@@ -56,21 +59,23 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             let opportunityStages = []
             let oppStatus = []
 
+            // Now selectedOppName/Stage/Status are arrays of {id, title}
             if (selectedOppName?.length > 0) {
-                opportunityName = opportunitiesOptions?.opportunitiesNameOptions
-                    ?.map((row) => selectedOppName?.includes(row.id) ? row.title : undefined)
+                opportunityName = selectedOppName
+                    .map((opt) => opt?.title)
                     .filter(Boolean);
             }
             if (selectedOppStage?.length > 0) {
-                opportunityStages = opportunitiesOptions?.opportunitiesStagesOptions
-                    ?.map((row) => selectedOppStage?.includes(row.id) ? row.title : undefined)
+                opportunityStages = selectedOppStage
+                    .map((opt) => opt?.title)
                     .filter(Boolean);
             }
             if (selectedOppStatus?.length > 0) {
-                oppStatus = opportunityStatus
-                    ?.map((row) => selectedOppStatus?.includes(row.id) ? row.title : undefined)
+                oppStatus = selectedOppStatus
+                    .map((opt) => opt?.title)
                     .filter(Boolean);
             }
+
             let params = {
                 opportunity: opportunityName,
                 salesStage: opportunityStages,
@@ -93,25 +98,10 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
             const opportunities = await getAllOpportunitiesGroupedByStage(queryString);
             setOpportunities(opportunities?.result || []);
-            // const formattedOpportunities = opportunities?.result?.map((opportunity, index) => ({
-            //     ...opportunity,
-            //     rowId: index + 1
-            // }));
-            // setOpportunities(formattedOpportunities);
         } catch (error) {
             console.error("Error fetching opportunities:", error);
         }
-    }
-
-    const handleOpenView = (opportunityId = null) => {
-        setSelectedOpportunityId(opportunityId);
-        setOpenView(true);
-    }
-
-    const handleCloseView = () => {
-        setSelectedOpportunityId(null);
-        setOpenView(false);
-    }
+    } 
 
     const handleOpen = (opportunityId = null) => {
         setSelectedOpportunityId(opportunityId);
@@ -162,6 +152,18 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     }, [syncingPullStatus]);
 
+    const withEditTooltip = (params, children) => {
+        if (!params.colDef?.editable) return children;
+
+        return (
+            <Tooltip title="Click to edit" arrow>
+                <span className="cursor-pointer w-full block">
+                    {children}
+                </span>
+            </Tooltip>
+        );
+    };
+
     const columns = [
         {
             field: 'rowId',
@@ -176,7 +178,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'Account',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 200,
+            minWidth: 150,
             renderCell: (params) => {
                 return (
                     <span>{params.value ? params.value : '-'}</span>
@@ -185,10 +187,17 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         },
         {
             field: 'opportunity',
-            headerName: 'opportunity Name',
+            headerName: 'Opportunity Name',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 300,
+            minWidth: 250,
+            editable: true,
+            renderCell: (params) =>
+                withEditTooltip(
+                    params,
+                    <span>{params.value || '-'}</span>
+                ),
+            renderEditCell: (params) => <OpportunityNameEditCell {...params} />,
         },
         {
             field: 'dealAmount',
@@ -201,24 +210,33 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             renderCell: (params) => {
                 const val = params.value;
-                if (val === null || val === undefined || val === '') return '';
+                if (val === null || val === undefined || val === '') {
+                    return withEditTooltip(params, <span>-</span>);
+                }
                 const num = parseFloat(val);
-                if (Number.isNaN(num)) return '';
-                return `$${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                if (Number.isNaN(num)) {
+                    return withEditTooltip(params, <span>-</span>);
+                }
+                const formatted = `$${num.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}`;
+                return withEditTooltip(params, <span>{formatted}</span>);
             },
             renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
+
         {
             field: "salesStage",
             headerName: "Sales Stage",
             flex: 1,
-            minWidth: 200,
+            minWidth: 100,
             headerClassName: 'uppercase',
             renderCell: (params) => {
                 const stage = params.value;
-                const bg = stageColors[stage] || "#e0e0e0";                
+                const bg = stageColors[stage] || "#e0e0e0";
                 return (
-                    <Chip                        
+                    <Chip
                         label={stage}
                         size="small"
                         sx={{
@@ -237,7 +255,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'close Date',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 180,
+            maxWidth: 150,
+            align: 'center',
             renderCell: (params) => {
                 return (
                     <span>{params.value ? new Date(params.value).toLocaleDateString() : ''}</span>
@@ -249,27 +268,29 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'Next Step',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 280,
+            minWidth: 300,
             editable: true,
-            headerClassName: 'uppercase',
             renderCell: (params) => {
-                return (
-                    <span>
-                        {(params.value !== "" && params.value !== null && params.value !== undefined)
-                            ? params.value
-                            : '-'}
-                    </span>
+                const display =
+                    params.value !== "" && params.value !== null && params.value !== undefined
+                        ? params.value
+                        : "-";
+
+                return withEditTooltip(
+                    params,
+                    <span>{display}</span>
                 );
             },
             renderEditCell: (params) => <NextStepsEditCell {...params} />,
         },
+
         {
             field: 'action',
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
             flex: 1,
-            maxWidth: 170,
+            maxWidth: 120,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
@@ -280,20 +301,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                 </Components.IconButton>
                             </div>
                         </Tooltip>
-                        {/* <PermissionWrapper
-                            functionalityName="Opportunities"
-                            moduleName="Opportunities"
-                            actionId={2}
-                            component={
-                                <Tooltip title="Edit" arrow>
-                                    <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={() => handleOpen(params.row.id)}>
-                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            }
-                        /> */}
                         <PermissionWrapper
                             functionalityName="Opportunities"
                             moduleName="Opportunities"
@@ -313,6 +320,74 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             },
         },
     ];
+
+    const OpportunityNameEditCell = (params) => {
+        const { id, field, api, value } = params;
+
+        const [inputValue, setInputValue] = React.useState(value ?? '');
+        const originalValue = React.useRef(value ?? '');
+
+        const handleChange = (event) => {
+            const newVal = event.target.value;
+            setInputValue(newVal);
+            api.setEditCellValue({ id, field, value: newVal }, event);
+        };
+
+        const handleSave = () => {
+            api.stopCellEditMode({ id, field });
+        };
+
+        const handleCancel = () => {
+            api.setEditCellValue({ id, field, value: originalValue.current });
+            api.stopCellEditMode({ id, field, ignoreModifications: true });
+        };
+
+        return (
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+                <Input
+                    value={inputValue}
+                    onChange={handleChange}
+                    autoFocus
+                    className="flex-1"
+                />
+
+                <Tooltip title="Save" arrow>
+                    <div
+                        className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}
+                    >
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();   // 🔒 don't bubble to DataGrid onCellClick
+                                handleSave();
+                            }}
+                            disabled={inputValue === null || inputValue === ""}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-floppy-disk'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+
+                <Tooltip title="Cancel" arrow>
+                    <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();   // 🔒 same here
+                                handleCancel();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-close'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+            </div>
+        );
+    };
 
     const DealAmountEditCell = (params) => {
         const { id, field, api, value } = params;
@@ -403,20 +478,40 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 />
 
                 <Tooltip title="Save" arrow>
-                    <div className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}>
-                        <Components.IconButton onClick={handleSave} disabled={inputValue === null || inputValue === ""}>
-                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                    <div
+                        className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}
+                    >
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();   // 🔒 don't bubble to DataGrid onCellClick
+                                handleSave();
+                            }}
+                            disabled={inputValue === null || inputValue === ""}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-floppy-disk'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
                         </Components.IconButton>
                     </div>
                 </Tooltip>
 
                 <Tooltip title="Cancel" arrow>
                     <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
-                        <Components.IconButton onClick={handleCancel}>
-                            <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-3 w-3' />
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();   // 🔒 same here
+                                handleCancel();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-close'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
                         </Components.IconButton>
                     </div>
                 </Tooltip>
+
             </div>
         );
     };
@@ -456,26 +551,40 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 />
 
                 <Tooltip title="Save" arrow>
-                    <div className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}>
-                        <Components.IconButton onClick={handleSave} disabled={inputValue === null || inputValue === ""}>
+                    <div
+                        className={`${(inputValue === null || inputValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}
+                    >
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();   // 🔒 don't bubble to DataGrid onCellClick
+                                handleSave();
+                            }}
+                            disabled={inputValue === null || inputValue === ""}
+                        >
                             <CustomIcons
-                                iconName={"fa-solid fa-floppy-disk"}
-                                css="cursor-pointer text-white h-3 w-3"
+                                iconName={'fa-solid fa-floppy-disk'}
+                                css='cursor-pointer text-white h-3 w-3'
                             />
                         </Components.IconButton>
                     </div>
                 </Tooltip>
 
                 <Tooltip title="Cancel" arrow>
-                    <div className="bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white">
-                        <Components.IconButton onClick={handleCancel}>
+                    <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();   // 🔒 same here
+                                handleCancel();
+                            }}
+                        >
                             <CustomIcons
-                                iconName={"fa-solid fa-close"}
-                                css="cursor-pointer text-white h-3 w-3"
+                                iconName={'fa-solid fa-close'}
+                                css='cursor-pointer text-white h-3 w-3'
                             />
                         </Components.IconButton>
                     </div>
                 </Tooltip>
+
             </div>
         );
     };
@@ -521,7 +630,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 return oldRow;
             }
         } catch (error) {
-            console.error("Error updating opportunity:", error);
             setAlert({
                 open: true,
                 message: "Failed to update opportunity",
@@ -550,33 +658,30 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         return (
             <div className='w-[750px] flex justify-start items-center gap-4'>
                 <div className='w-full'>
-                    <SelectMultiple
-                        label="Opportunity name"
+                    <CheckBoxSelect
+                        label="Opportunity Name"
                         placeholder="Select opportunity name"
                         options={opportunitiesOptions?.opportunitiesNameOptions || []}
                         value={selectedOppName}
                         onChange={handleSetName}
-                        limitTags={1}
                     />
                 </div>
                 <div className='w-full'>
-                    <SelectMultiple
-                        label="Opportunity stages"
-                        placeholder="Select opportunity stages"
+                    <CheckBoxSelect
+                        label="Sales Stages"
+                        placeholder="Select sales stages"
                         options={opportunitiesOptions?.opportunitiesStagesOptions || []}
                         value={selectedOppStage}
                         onChange={handleSetStages}
-                        limitTags={1}
                     />
                 </div>
                 <div className='w-full'>
-                    <SelectMultiple
-                        label="Opportunity status"
-                        placeholder="Select opportunity status"
+                    <CheckBoxSelect
+                        label="Deal Status"
+                        placeholder="Select deal status"
                         options={opportunityStatus || []}
                         value={selectedOppStatus}
                         onChange={handleSetStatus}
-                        limitTags={1}
                     />
                 </div>
             </div>
@@ -586,7 +691,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                {/* <DataTable columns={columns} rows={opportunities} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} showFilters={true} filtersComponent={filterComponent} processRowUpdate={processRowUpdate} /> */}
                 <GroupedDataTable
                     groups={opportunities}
                     columns={columns}
@@ -598,17 +702,16 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     processRowUpdate={processRowUpdate}
                     onCellEditStop={(params, event) => {
                         if (params.reason === "enterKeyDown") {
-                            event.defaultMuiPrevented = true;   // ❌ prevent save on Enter
+                            event.defaultMuiPrevented = true;
                         }
                         if (params.reason === "cellFocusOut") {
-                            event.defaultMuiPrevented = true;   // ❌ prevent save on outside click
+                            event.defaultMuiPrevented = true;
                         }
                     }}
                 />
-                
+
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
-            <ViewOpportunitiesModel open={openView} opportunityId={selectedOpportunityId} handleClose={handleCloseView} />
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

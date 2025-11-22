@@ -107,7 +107,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
             } else {
                 setAlert({
                     open: true,
-                    message: res.message || "Fail to update opportunity partner"
+                    message: res.message || "Fail to update opportunity competitors"
                 })
             }
         } else {
@@ -119,7 +119,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
             } else {
                 setAlert({
                     open: true,
-                    message: res.message || "Fail to add opportunity partner"
+                    message: res.message || "Fail to add opportunity competitors"
                 })
             }
         }
@@ -136,7 +136,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {id ? "Update" : "Create"} Opportunity Partner
+                    {id ? "Update" : "Add"} Competitors
                 </Components.DialogTitle>
 
                 <Components.IconButton
