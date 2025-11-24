@@ -623,13 +623,15 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     <>
                                         <div className='mt-8'>
                                             <div className='flex justify-center items-center'>
-                                                <FileInputBox
-                                                    onFileSelect={handleImageChange}
-                                                    onRemove={handleOpenDeleteLogoDialog}
-                                                    value={watch("logo") || watch("newLogo")}
-                                                    text="Upload opportunity Logo"
-                                                    size="100x100"
-                                                />
+                                                <div className='w-40 h-40'>
+                                                    <FileInputBox
+                                                        onFileSelect={handleImageChange}
+                                                        onRemove={handleOpenDeleteLogoDialog}
+                                                        value={watch("logo") || watch("newLogo")}
+                                                        text="Upload opportunity Logo"
+                                                        size="100x100"
+                                                    />
+                                                </div>
                                             </div>
 
                                             <div className='flex flex-col gap-[30px] md:col-span-2'>
@@ -792,7 +794,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     setExistingImages={setExistingImages}
                                                     type="oppDocs"
                                                     multiple={true}
-                                                    placeHolder="Attach files here"
+                                                    placeHolder="Drag & Drop Files Here"
                                                     uploadedFiles={uploadedFiles}
                                                 />
                                             </div>

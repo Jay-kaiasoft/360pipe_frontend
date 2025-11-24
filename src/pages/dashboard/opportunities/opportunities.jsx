@@ -22,6 +22,9 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const location = useLocation();
     const navigate = useNavigate();
 
+    // ⬇️ was isEditing (boolean), now we track which row is editing
+    const [editingRowId, setEditingRowId] = useState(null);
+
     const [opportunities, setOpportunities] = useState([]);
     const [open, setOpen] = useState(false);
 
@@ -101,7 +104,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         } catch (error) {
             console.error("Error fetching opportunities:", error);
         }
-    } 
+    }
 
     const handleOpen = (opportunityId = null) => {
         setSelectedOpportunityId(opportunityId);
@@ -522,6 +525,9 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         const [inputValue, setInputValue] = React.useState(value ?? "");
         const originalValue = React.useRef(value ?? "");
 
+        // ✅ when this edit cell mounts, mark this row as editing for height change
+        setEditingRowId(id ? id : null);
+
         const handleChange = (event) => {
             const newVal = event.target.value;
             setInputValue(newVal);
@@ -530,11 +536,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
         const handleSave = () => {
             // commit current value and exit edit mode
+            setEditingRowId(null);
             api.stopCellEditMode({ id, field });
         };
 
         const handleCancel = () => {
             // revert to original and exit without saving
+            setEditingRowId(null);
             api.setEditCellValue({ id, field, value: originalValue.current });
             api.stopCellEditMode({ id, field, ignoreModifications: true });
         };
@@ -694,7 +702,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 <GroupedDataTable
                     groups={opportunities}
                     columns={columns}
-                    height={350}
+                    // height={350}
                     showButtons={true}
                     buttons={actionButtons}
                     showFilters={true}
@@ -708,6 +716,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                             event.defaultMuiPrevented = true;
                         }
                     }}
+                    // ⬇️ NEW: only the grid that contains this row id will grow in height
+                    editingRowId={editingRowId}
                 />
 
             </div>

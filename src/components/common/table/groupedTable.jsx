@@ -45,6 +45,7 @@ const UnsortedIcon = () => (
  *  - height: number | string (height of each grid)
  *  - showSearch, showButtons, showFilters, filtersComponent, buttons: same as table.jsx
  *  - getRowClassName, checkboxSelection, setRowSelectionModel, rowSelectionModel, processRowUpdate: same as table.jsx
+ *  - editingRowId: id of the row that is currently being edited (used to expand only that table)
  */
 export default function GroupedDataTable({
     groups,
@@ -61,10 +62,11 @@ export default function GroupedDataTable({
     rowSelectionModel,
     processRowUpdate,
     onCellEditStop,
-    hideFooter = true
+    hideFooter = true,
+    editingRowId = null,     // NEW: row id that is currently being edited
 }) {
     const theme = useTheme();
-
+    console.log("editingRowId", editingRowId)
     return (
         <>
             {(showSearch || showButtons || showFilters) && (
@@ -105,6 +107,7 @@ export default function GroupedDataTable({
                     }));
                     const color = statusColors[group?.statusname] || "#e0e0e0";
 
+                    // ✅ Only expand the grid for the group that contains the editingRowId                  
                     return (
                         <Accordion
                             key={statusname + groupIndex}
@@ -133,23 +136,22 @@ export default function GroupedDataTable({
                                             }}
                                         />
                                         <h1 className="font-bold mr-5">
-                                            ${parseFloat(group?.total)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            ${parseFloat(group?.total)?.toLocaleString(
+                                                undefined,
+                                                { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                                            )}
                                         </h1>
                                     </div>
-                                    {/* <h1 className="font-bold mr-5">
-                                        {rowsWithIndex.length} Items
-                                    </h1> */}
                                 </div>
                             </AccordionSummary>
 
                             <AccordionDetails>
                                 <div
                                     style={{
-                                        // height: height || 400,
                                         width: '100%',
                                     }}
                                 >
-                                    <DataGrid
+                                    <DataGrid                                        
                                         rows={rowsWithIndex}
                                         columns={columns}
                                         initialState={{ pagination: { paginationModel } }}
@@ -204,6 +206,8 @@ export default function GroupedDataTable({
                                             },
                                         }}
                                         sx={{
+                                            // 🔑 Only this group's grid height grows when its row is in edit
+                                            height: editingRowId ? 200 : height,
                                             color: theme.palette.text.primary,
                                             overflow: 'auto',
                                             '& .MuiDataGrid-editInputCell': {
@@ -283,4 +287,6 @@ GroupedDataTable.propTypes = {
     setRowSelectionModel: PropTypes.func,
     rowSelectionModel: PropTypes.array,
     processRowUpdate: PropTypes.func,
+    isEditing: PropTypes.bool,
+    editingRowId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };

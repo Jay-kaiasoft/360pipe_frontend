@@ -111,13 +111,15 @@ const Brand = ({ setAlert }) => {
         <>
             <div className="flex justify-center items-center">
                 <form onSubmit={handleSubmit(submit)} className="max-w-96 w-full px-6 flex flex-col gap-4">
-                    <div className='flex justify-center'>
-                        <FileInputBox
-                            onFileSelect={handleImageChange}
-                            onRemove={handleDeleteImage}
-                            value={watch("brandLogo")}
-                            text="Click in this area to upload brand logo"
-                        />
+                    <div className='flex justify-center items-center'>
+                        <div className='w-40 h-40'>
+                            <FileInputBox
+                                onFileSelect={handleImageChange}
+                                onRemove={handleDeleteImage}
+                                value={watch("brandLogo")}
+                                text="Click in this area to upload brand logo"
+                            />
+                        </div>
                     </div>
 
                     <div>

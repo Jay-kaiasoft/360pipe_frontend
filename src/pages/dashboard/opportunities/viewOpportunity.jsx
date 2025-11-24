@@ -562,46 +562,117 @@ const ViewOpportunity = ({ setAlert }) => {
 
 
     const StageTimeline = ({ stages, currentStageId }) => {
+        const [confirmDialog, setConfirmDialog] = useState({
+            open: false,
+            stage: null
+        });
+
+        const handleStageClick = (stage) => {
+            if (stage.id === currentStageId) return; // Don't show dialog if same stage
+
+            setConfirmDialog({
+                open: true,
+                stage: stage
+            });
+        };
+
+        const handleConfirmStageChange = async () => {
+            try {
+                const { stage } = confirmDialog;
+                const opportunityId = watch("id");
+                if (!opportunityId) return;
+
+                // Update the stage
+                setValue("salesStage", stage.title);
+
+                const currentValues = getValues();
+                const updateData = {
+                    ...currentValues,
+                    salesStage: stage.title
+                };
+
+                const res = await updateOpportunity(opportunityId, updateData);
+                if (res?.status === 200) {
+                    setAlert({
+                        open: true,
+                        message: `Stage updated successfully`,
+                        type: "success"
+                    });
+                } else {
+                    // Revert if failed
+                    const currentStage = stages.find(s => s.id === currentStageId);
+                    setValue("salesStage", currentStage?.title);
+                    setAlert({
+                        open: true,
+                        message: "Failed to update stage",
+                        type: "error"
+                    });
+                }
+            } catch (error) {
+                setAlert({
+                    open: true,
+                    message: "Failed to update stage",
+                    type: "error"
+                });
+            } finally {
+                setConfirmDialog({ open: false, stage: null });
+            }
+        };
+
+        const handleCancelStageChange = () => {
+            setConfirmDialog({ open: false, stage: null });
+        };
+
         return (
-            <div className="bg-white px-3 py-4 mb-0">
-                <div className="flex flex-wrap xl:justify-evenly gap-3 md:gap-2 overflow-x-auto pb-1">
-                    {stages?.map((stage) => {
-                        const isActive = stage.id === currentStageId;
-                        const isCompleted =
-                            currentStageId !== null && stage.id < currentStageId;
+            <>
+                <div className="bg-white px-3 py-4 mb-0">
+                    <div className="flex flex-wrap xl:justify-evenly gap-3 md:gap-2 overflow-x-auto pb-1">
+                        {stages?.map((stage) => {
+                            const isActive = stage.id === currentStageId;
+                            const isCompleted = currentStageId !== null && stage.id < currentStageId;
 
-                        let pillClasses = "";
+                            let pillClasses = "";
 
-                        if (isActive) {
-                            pillClasses =
-                                "bg-[#1072E0] text-white border-[#1072E0]";
-                        } else if (isCompleted) {
-                            pillClasses =
-                                "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF]";
-                        } else {
-                            pillClasses = "bg-white text-gray-700 border-gray-300";
-                        }
+                            if (isActive) {
+                                pillClasses = "bg-[#1072E0] text-white border-[#1072E0] cursor-default";
+                            } else if (isCompleted) {
+                                pillClasses = "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF] cursor-pointer";
+                            } else {
+                                pillClasses = "bg-white text-gray-700 border-gray-300 cursor-pointer";
+                            }
 
-                        return (
-                            <div
-                                key={stage.id}
-                                className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap cursor-default transition-colors duration-150 ${pillClasses}`}
-                            >
-                                <span className="truncate">
-                                    {stage.title}
-                                </span>
+                            return (
+                                <div
+                                    key={stage.id}
+                                    onClick={() => handleStageClick(stage)}
+                                    className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
+                                >
+                                    <span className="truncate">
+                                        {stage.title}
+                                    </span>
 
-                                {isCompleted && (
-                                    <CustomIcons
-                                        iconName="fa-solid fa-check"
-                                        css="h-3 w-3 inline-block ml-2"
-                                    />
-                                )}
-                            </div>
-                        );
-                    })}
+                                    {isCompleted && (
+                                        <CustomIcons
+                                            iconName="fa-solid fa-check"
+                                            css="h-3 w-3 inline-block ml-2"
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+
+                {/* Confirmation Dialog */}
+                <AlertDialog
+                    open={confirmDialog.open}
+                    title="Change Stage"
+                    message={`Are you sure you want to change the stage to "${confirmDialog.stage?.title}"?`}
+                    actionButtonText="Yes"
+                    handleAction={handleConfirmStageChange}
+                    handleClose={handleCancelStageChange}
+                />               
+            </>
         );
     };
 
@@ -1126,12 +1197,12 @@ const ViewOpportunity = ({ setAlert }) => {
 
                 {/* Logo */}
                 <div className='flex justify-center md:justify-start items-start md:col-span-1'>
-                    <div className="w-32 h-32">
+                    <div className="w-40 h-40">
                         <FileInputBox
                             onFileSelect={handleImageChange}
                             onRemove={handleOpenDeleteLogoDialog}
                             value={watch("logo") || watch("newLogo")}
-                            text="Upload opportunity Logo"
+                            text="Please upload a 100×100 px logo"
                             size="100x100"
                         />
                     </div>
@@ -1239,7 +1310,7 @@ const ViewOpportunity = ({ setAlert }) => {
                             setExistingImages={setExistingImages}
                             type="oppDocs"
                             multiple={true}
-                            placeHolder="Attach files here"
+                            placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
                             uploadedFiles={uploadedFiles}
                         />
                     </div>
