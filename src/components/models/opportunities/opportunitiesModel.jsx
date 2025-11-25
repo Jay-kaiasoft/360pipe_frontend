@@ -162,6 +162,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             opportunity: null,
             salesStage: null,
             dealAmount: null,
+            discountPercentage: 0.00,
+            listPrice: null,
             closeDate: null,
             nextSteps: null,
             accountId: null,
@@ -256,6 +258,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             opportunity: null,
             salesStage: null,
             dealAmount: null,
+            discountPercentage: 0,
+            listPrice: null,
             closeDate: null,
             nextSteps: null,
             salesforceOpportunityId: null,
@@ -285,13 +289,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
-                setValue(
-                    "dealAmount",
-                    res?.result?.dealAmount !== null && res?.result?.dealAmount !== undefined
-                        ? formatMoney(Number(res.result.dealAmount).toFixed(2))
-                        : null
-                );
-
                 setValue('opportunityDocs', res.result.opportunityDocs);
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
@@ -518,7 +515,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         const newData = {
             ...data,
             opportunityDocs: uploaded,
-            dealAmount: parseFloat(parseMoneyFloat(data.dealAmount)),
+            dealAmount: data.dealAmount ? parseFloat(parseMoneyFloat(data.dealAmount)) : null,
+            discountPercentage: data.discountPercentage ? parseFloat(parseMoneyFloat(data.discountPercentage)) : null,
+            listPrice: data.listPrice ? parseFloat(parseMoneyFloat(data.listPrice)) : null,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
             newLogo: watch("newLogo")
@@ -628,7 +627,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         onFileSelect={handleImageChange}
                                                         onRemove={handleOpenDeleteLogoDialog}
                                                         value={watch("logo") || watch("newLogo")}
-                                                        text="Upload opportunity Logo"
+                                                        text="Please upload a 100×100 px logo"
                                                         size="100x100"
                                                     />
                                                 </div>
@@ -676,15 +675,15 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     )}
                                                 />
                                                 <Controller
-                                                    name="dealAmount"
+                                                    name="listPrice"
                                                     control={control}
                                                     rules={{
-                                                        required: "Deal amount is required",
+                                                        required: "List amount is required",
                                                     }}
                                                     render={({ field }) => (
                                                         <Input
                                                             {...field}
-                                                            label="Deal Amount"
+                                                            label="List Amount"
                                                             type="text"
                                                             error={errors.dealAmount}
                                                             onChange={(e) => {
@@ -710,6 +709,119 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 const formatted = formatMoney(value);
 
                                                                 field.onChange(formatted);
+                                                            }}
+                                                            startIcon={
+                                                                <CustomIcons
+                                                                    iconName={"fa-solid fa-dollar-sign"}
+                                                                    css={"text-lg text-black mr-2"}
+                                                                />
+                                                            }
+                                                        />
+                                                    )}
+                                                />
+                                                <Controller
+                                                    name="discountPercentage"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            disabled={!watch("listPrice")}
+                                                            label="Discount(%)"
+                                                            type="text"
+                                                            onChange={(e) => {
+                                                                let value = e.target.value;
+                                                                value = value.replace(/[^0-9.]/g, "");
+                                                                let parts = value.split(".");
+                                                                if (parts.length > 2) {
+                                                                    value = parts[0] + "." + parts.slice(1).join("");
+                                                                    parts = value.split(".");
+                                                                }
+                                                                if (parts[1]) {
+                                                                    parts[1] = parts[1].slice(0, 2);
+                                                                    value = parts.join(".");
+                                                                }
+
+                                                                const num = value === "" ? 0 : parseFloat(value);
+                                                                if (num > 100) {
+                                                                    return;
+                                                                }
+
+                                                                // set discount%
+                                                                field.onChange(value);
+
+                                                                // 💡 existing forward calc: discount% → listPrice
+                                                                const listAmount = parseFloat(parseMoneyFloat(watch("listPrice")));
+                                                                const dealPrice = parseFloat((listAmount * num) / 100);
+                                                                const total = parseFloat(listAmount - dealPrice)
+                                                                setValue("dealAmount", formatMoney(total));
+                                                            }}
+                                                            startIcon={
+                                                                <CustomIcons
+                                                                    iconName={"fa-solid fa-percent"}
+                                                                    css={"text-lg text-black mr-2"}
+                                                                />
+                                                            }
+                                                        />
+                                                    )}
+                                                />
+                                                <Controller
+                                                    name="dealAmount"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Input
+                                                            {...field}
+                                                            label="Deal Amount"
+                                                            type="text"
+                                                            placeholder=" "
+                                                            disabled={!watch("listPrice")}
+                                                            onChange={(e) => {
+                                                                let value = e.target.value;
+
+                                                                // keep only digits and dot
+                                                                value = value.replace(/[^0-9.]/g, "");
+
+                                                                // allow only ONE dot
+                                                                let parts = value.split(".");
+                                                                if (parts.length > 2) {
+                                                                    value = parts[0] + "." + parts.slice(1).join("");
+                                                                    parts = value.split(".");
+                                                                }
+
+                                                                // max 2 decimals
+                                                                if (parts[1]) {
+                                                                    parts[1] = parts[1].slice(0, 2);
+                                                                    value = parts.join(".");
+                                                                }
+
+                                                                // format with commas
+                                                                const formatted = formatMoney(value);
+                                                                field.onChange(formatted);
+
+                                                                // 🔁 Reverse calc: listPrice + dealAmount → discount%
+                                                                const listAmountStr = watch("listPrice");
+                                                                if (!listAmountStr) {
+                                                                    setValue("discountPercentage", "");
+                                                                    return;
+                                                                }
+
+                                                                const listAmount = parseFloat(parseMoneyFloat(listAmountStr));
+                                                                const dealPrice = parseFloat(parseMoneyFloat(formatted));
+
+                                                                if (!listAmount || Number.isNaN(listAmount) || Number.isNaN(dealPrice)) {
+                                                                    setValue("discountPercentage", "");
+                                                                    return;
+                                                                }
+
+                                                                // ✅ Correct formula:
+                                                                // discount% = ((listPrice - dealAmount) / listPrice) * 100
+                                                                let percent = ((listAmount - dealPrice) / listAmount) * 100;
+
+                                                                // clamp 0–100
+                                                                if (percent < 0) percent = 0;
+                                                                if (percent > 100) percent = 100;
+
+                                                                const percentStr = percent.toFixed(2);
+                                                                setValue("discountPercentage", percentStr);
                                                             }}
                                                             startIcon={
                                                                 <CustomIcons
@@ -794,7 +906,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     setExistingImages={setExistingImages}
                                                     type="oppDocs"
                                                     multiple={true}
-                                                    placeHolder="Drag & Drop Files Here"
+                                                    placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
                                                     uploadedFiles={uploadedFiles}
                                                 />
                                             </div>

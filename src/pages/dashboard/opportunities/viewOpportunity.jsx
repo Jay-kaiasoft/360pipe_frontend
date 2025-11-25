@@ -78,6 +78,8 @@ const ViewOpportunity = ({ setAlert }) => {
             opportunity: null,
             salesStage: null,
             dealAmount: null,
+            discountPercentage: null,
+            listPrice: null,
             closeDate: null,
             nextSteps: null,
             accountId: null,
@@ -119,6 +121,7 @@ const ViewOpportunity = ({ setAlert }) => {
                     type: "error"
                 })
             } else {
+                handleGetOpportunityDetails()
                 setAlert({ open: true, message: "Opportunity documents uploaded successfully", type: "success" });
             }
             return { ok: true, files: newFiles };
@@ -203,10 +206,12 @@ const ViewOpportunity = ({ setAlert }) => {
                 setValue("logo", res?.result?.logo)
                 setValue("id", res?.result?.id)
                 setValue("dealAmount", res?.result?.dealAmount || null);
+                setValue("discountPercentage", res?.result?.discountPercentage || null);
+                setValue("listPrice", res?.result?.listPrice || null);
 
                 if (Array.isArray(res?.result?.opportunityDocs) && res.result.opportunityDocs.length) {
                     setExistingImages(res.result.opportunityDocs);
-                    setValue('opportunityDocs', res.result.opportunityDocs);
+                    // setValue('opportunityDocs', res.result.opportunityDocs);
                 }
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
@@ -306,28 +311,115 @@ const ViewOpportunity = ({ setAlert }) => {
         });
     };
 
+
     const handleSaveField = async (fieldName, newValue) => {
+        const toNumber2 = (val) => {
+            if (val === null || val === undefined || val === "") return null;
+            const num = typeof val === "number" ? val : parseFloat(val);
+            if (Number.isNaN(num)) return null;
+            return Number(num.toFixed(2));
+        };
+
+        const cleanNumber = (val) => {
+            if (val === null || val === undefined || val === "") return "";
+            // IMPORTANT: remove commas so parseFloat("1,000") won't become 1
+            return val.toString().replace(/,/g, "").replace(/[^\d.]/g, "");
+        };
+
         try {
             const opportunityId = watch("id");
             if (!opportunityId) return;
 
             const currentValues = getValues();
+            let payload = { ...currentValues };
 
-            let payloadValue = newValue;
+            // 🔢 Normalize numeric values with comma cleaning
+            let listPrice = toNumber2(
+                fieldName === "listPrice"
+                    ? cleanNumber(newValue)
+                    : cleanNumber(currentValues.listPrice)
+            );
+            let discountPercentage = toNumber2(
+                fieldName === "discountPercentage"
+                    ? cleanNumber(newValue)
+                    : cleanNumber(currentValues.discountPercentage)
+            );
+            let dealAmount = toNumber2(
+                fieldName === "dealAmount"
+                    ? cleanNumber(newValue)
+                    : cleanNumber(currentValues.dealAmount)
+            );
 
-            // Ensure dealAmount is always stored with 2 decimals
-            if (fieldName === "dealAmount" && newValue !== null && newValue !== "") {
-                const num = typeof newValue === "number" ? newValue : parseFloat(newValue);
-                if (!Number.isNaN(num)) {
-                    payloadValue = Number(num.toFixed(2));
+            // 🧮 Keep relationship between ListPrice, Discount%, DealAmount
+            if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
+                // 1) User edited LIST PRICE (base)
+                if (fieldName === "listPrice") {
+                    if (listPrice === null) {
+                        // no base: clear both
+                        discountPercentage = null;
+                        dealAmount = null;
+                    } else {
+                        if (discountPercentage !== null) {
+                            // Forward: listPrice + discount% → dealAmount
+                            const discountValue = (listPrice * discountPercentage) / 100;
+                            dealAmount = toNumber2(listPrice - discountValue);
+                        } else if (dealAmount !== null) {
+                            // Have listPrice and dealAmount, recompute discount%
+                            let pct = ((listPrice - dealAmount) / listPrice) * 100;
+                            if (pct < 0) pct = 0;
+                            if (pct > 100) pct = 100;
+                            discountPercentage = toNumber2(pct);
+                        } else {
+                            // default: no discount
+                            dealAmount = listPrice;
+                        }
+                    }
                 }
+
+                // 2) User edited DISCOUNT %
+                else if (fieldName === "discountPercentage") {
+                    if (listPrice === null) {
+                        // cannot compute without base
+                        discountPercentage = null;
+                        dealAmount = null;
+                    } else if (discountPercentage === null) {
+                        // discount cleared → final price = list price
+                        dealAmount = listPrice;
+                    } else {
+                        const discountValue = (listPrice * discountPercentage) / 100;
+                        dealAmount = toNumber2(listPrice - discountValue);
+                    }
+                }
+
+                // 3) User edited DEAL AMOUNT (final amount after discount)
+                else if (fieldName === "dealAmount") {
+                    if (dealAmount === null || listPrice === null) {
+                        discountPercentage = null;
+                    } else {
+                        let pct = ((listPrice - dealAmount) / listPrice) * 100;
+                        if (pct < 0) pct = 0;
+                        if (pct > 100) pct = 100;
+                        discountPercentage = toNumber2(pct);
+                    }
+                }
+
+                payload.listPrice = listPrice;
+                payload.discountPercentage = discountPercentage;
+                payload.dealAmount = dealAmount;
+            } else {
+                // non-numeric fields: keep old logic
+                payload[fieldName] = newValue;
             }
 
-            const updateData = { ...currentValues, [fieldName]: payloadValue };
-
-            const res = await updateOpportunity(opportunityId, updateData);
+            const res = await updateOpportunity(opportunityId, payload);
             if (res?.status === 200) {
-                setValue(fieldName, payloadValue);
+                // keep form in sync
+                setValue("listPrice", listPrice);
+                setValue("discountPercentage", discountPercentage);
+                setValue("dealAmount", dealAmount);
+
+                // refresh others if needed
+                handleGetOpportunityDetails();
             } else {
                 setAlert({
                     open: true,
@@ -345,7 +437,7 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
 
-    const OpportunityField = ({ label, value, type = 'text', options = [], onSave, className = '', required = false, multiline = false }) => {
+    const OpportunityField = ({ label, value, type = 'text', options = [], onSave, className = '', required = false, multiline = false, disabled = false }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editValue, setEditValue] = useState(value);
 
@@ -371,20 +463,26 @@ const ViewOpportunity = ({ setAlert }) => {
 
 
         const handleDoubleClick = () => {
-            setIsEditing(true);
+            if (!disabled) {
+                setIsEditing(true);
 
-            if (label === "Deal Amount") {
-                // value might be like "$20,000" or "20000" or 20000
-                const raw = value !== undefined && value !== null ? value.toString().replace(/[$,]/g, '') : '';
-                if (raw === '') {
-                    setEditValue('');
+                if (label === "Deal Amount" || label === "List Amount") {
+                    // value might be like "$20,000" or "20000" or 20000
+                    const raw =
+                        value !== undefined && value !== null
+                            ? value.toString().replace(/[$,]/g, "")
+                            : "";
+                    if (raw === "") {
+                        setEditValue("");
+                    } else {
+                        setEditValue(formatNumberWithCommas(raw));
+                    }
                 } else {
-                    setEditValue(formatNumberWithCommas(raw));
+                    setEditValue(value);
                 }
-            } else {
-                setEditValue(value);
             }
         };
+
 
         const handleSave = async () => {
             if (!onSave) {
@@ -399,7 +497,7 @@ const ViewOpportunity = ({ setAlert }) => {
                     label === "Account"
                         ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id
                         : options?.find((row) => (row.title === editValue || row.id === editValue))?.title;
-            } else if (label === "Deal Amount") {
+            } else if (label === "Deal Amount" || label === "List Amount") {
                 // convert "2,003.43" -> 2003.43
                 finalValue = parseDealAmountToFloat(editValue);
             } else {
@@ -408,7 +506,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
             // Avoid unnecessary save if value didn't actually change
             const original =
-                label === "Deal Amount"
+                (label === "Deal Amount" || label === "List Amount")
                     ? parseDealAmountToFloat(value?.toString().replace(/[$,]/g, ''))
                     : value;
 
@@ -427,7 +525,7 @@ const ViewOpportunity = ({ setAlert }) => {
         const handleChange = (e) => {
             const val = e.target.value;
 
-            if (label === "Deal Amount") {
+            if (label === "Deal Amount" || label === "List Amount") {
                 // Allow only digits and dot
                 let cleaned = val.replace(/,/g, "").replace(/[^\d.]/g, "");
 
@@ -447,7 +545,6 @@ const ViewOpportunity = ({ setAlert }) => {
                     formatted = `${formatted}.${decimals}`;
                 }
 
-                // If user removed everything, allow empty string
                 if (val.trim() === "") {
                     setEditValue("");
                 } else {
@@ -456,6 +553,7 @@ const ViewOpportunity = ({ setAlert }) => {
             } else {
                 setEditValue(val);
             }
+
         };
 
         const handleSelectChange = (selectedOption) => {
@@ -483,6 +581,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         className="flex-1"
                                         autoFocus
                                         error={(!editValue || editValue === "") && required}
+                                        disabled={disabled}
                                     />
                                 </div>
                             ) : type === 'date' ? (
@@ -491,6 +590,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         value={editValue ? dayjs(editValue) : null}
                                         onChange={handleDateChange}
                                         format="MM/DD/YYYY"
+                                        disabled={disabled}
                                         slotProps={{
                                             textField: {
                                                 fullWidth: true,
@@ -527,6 +627,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                     error={(!editValue || editValue === "") && required}
                                     multiline={multiline}
                                     rows={3}
+                                    disabled={disabled}
                                 />
                             )}
                             <div className='flex items-center gap-3'>
@@ -671,7 +772,7 @@ const ViewOpportunity = ({ setAlert }) => {
                     actionButtonText="Yes"
                     handleAction={handleConfirmStageChange}
                     handleClose={handleCancelStageChange}
-                />               
+                />
             </>
         );
     };
@@ -1228,9 +1329,41 @@ const ViewOpportunity = ({ setAlert }) => {
                             required={true}
                         />
                         <OpportunityField
+                            label="List Amount"
+                            value={
+                                watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
+                                    ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}`
+                                    : "—"
+                            }
+                            type="text"
+                            onSave={(newValue) => handleSaveField("listPrice", newValue)}
+                            required={true}
+                        />
+
+                        <OpportunityField
+                            label="Discount(%)"
+                            value={
+                                watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
+                                    ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}`
+                                    : "—"
+                            }
+                            type="text"
+                            onSave={(newValue) => handleSaveField("discountPercentage", newValue)}
+                            required={true}
+                        />
+
+                        <OpportunityField
                             label="Deal Amount"
                             value={
-                                watch("dealAmount") !== null && watch("dealAmount") !== undefined && watch("dealAmount") !== ""
+                                watch("dealAmount") !== null &&
+                                    watch("dealAmount") !== undefined &&
+                                    watch("dealAmount") !== ""
                                     ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
@@ -1239,7 +1372,7 @@ const ViewOpportunity = ({ setAlert }) => {
                             }
                             type="text"
                             onSave={(newValue) => handleSaveField("dealAmount", newValue)}
-                            required={true}
+                            required={false}
                         />
 
 

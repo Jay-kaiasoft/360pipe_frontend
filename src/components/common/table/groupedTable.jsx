@@ -66,7 +66,6 @@ export default function GroupedDataTable({
     editingRowId = null,     // NEW: row id that is currently being edited
 }) {
     const theme = useTheme();
-    console.log("editingRowId", editingRowId)
     return (
         <>
             {(showSearch || showButtons || showFilters) && (
@@ -121,6 +120,9 @@ export default function GroupedDataTable({
                                         css="h-4 w-4"
                                     />
                                 }
+                                sx={{
+                                    backgroundColor: "#ECECEC"
+                                }}
                             >
                                 <div className="flex w-full items-center justify-center">
                                     <div className='flex items-center justify-start gap-5'>
@@ -151,7 +153,7 @@ export default function GroupedDataTable({
                                         width: '100%',
                                     }}
                                 >
-                                    <DataGrid                                        
+                                    <DataGrid
                                         rows={rowsWithIndex}
                                         columns={columns}
                                         initialState={{ pagination: { paginationModel } }}

@@ -155,11 +155,11 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     }, [syncingPullStatus]);
 
-    const withEditTooltip = (params, children) => {
+    const withEditTooltip = (text, params, children) => {
         if (!params.colDef?.editable) return children;
 
         return (
-            <Tooltip title="Click to edit" arrow>
+            <Tooltip title={text} arrow>
                 <span className="cursor-pointer w-full block">
                     {children}
                 </span>
@@ -197,6 +197,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             editable: true,
             renderCell: (params) =>
                 withEditTooltip(
+                    "Click To Edit",
                     params,
                     <span>{params.value || '-'}</span>
                 ),
@@ -214,17 +215,35 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             renderCell: (params) => {
                 const val = params.value;
                 if (val === null || val === undefined || val === '') {
-                    return withEditTooltip(params, <span>-</span>);
+                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}`, params, <span>-</span>);
                 }
                 const num = parseFloat(val);
                 if (Number.isNaN(num)) {
-                    return withEditTooltip(params, <span>-</span>);
+                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}`, params, <span>-</span>);
                 }
                 const formatted = `$${num.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                 })}`;
-                return withEditTooltip(params, <span>{formatted}</span>);
+                return withEditTooltip(`$${params.row.listPrice?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}`, params, <span>{formatted}</span>);
             },
             renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
@@ -280,6 +299,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         : "-";
 
                 return withEditTooltip(
+                    "Click To Edit",
                     params,
                     <span>{display}</span>
                 );
