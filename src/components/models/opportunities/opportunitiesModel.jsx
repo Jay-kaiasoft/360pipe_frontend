@@ -479,33 +479,50 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     // NEW: upload files first, then create/update todo with images[]
     const uploadSelectedFiles = async () => {
         const newFiles = [];
+
         try {
             for (const file of files) {
+
                 const formData = new FormData();
                 formData.append("files", file);
                 formData.append("folderName", "opportunitiesDocuments");
-                // formData.append("userId", brandId); 
 
                 const response = await uploadFiles(formData);
+
                 if (response?.data?.status === 200) {
+
                     const uploadedFile = response.data.result[0];
-                    // keep form value and local previews in sync
-                    setValue('opportunityDocs', uploadedFile);
-                    setUploadedFiles((prev) => [...prev, uploadedFile]);
-                    newFiles.push(uploadedFile);
+
+                    // attach isInternal to API returned object
+                    const fileWithInternal = {
+                        ...uploadedFile,
+                        isInternal: file.isInternal
+                    };
+
+                    // update state
+                    setUploadedFiles(prev => [...prev, fileWithInternal]);
+                    setValue("opportunityDocs", fileWithInternal);
+
+                    // push to final return array
+                    newFiles.push(fileWithInternal);
+
                 } else {
                     setAlert({ open: true, message: response?.data?.message, type: "error" });
                     return { ok: false, files: [] };
                 }
             }
-            // clear local selected files on success
+
+            // clear selected files after success
             setFiles([]);
+
             return { ok: true, files: newFiles };
+
         } catch (error) {
-            setAlert({ open: true, message: 'Error uploading files', type: "error" });
+            setAlert({ open: true, message: "Error uploading files", type: "error" });
             return { ok: false, files: [] };
         }
     };
+
 
     const submit = async (data) => {
         // 1) Upload any newly picked files first

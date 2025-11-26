@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDropzone } from "react-dropzone";
 import { NavLink } from "react-router-dom";
 import { connect } from "react-redux";
@@ -26,14 +26,13 @@ function MultipleFileUpload({
     const qless = name.split("?")[0];
     const idx = qless.lastIndexOf(".");
     if (idx !== -1) return qless.slice(idx + 1).toLowerCase();
-    // fallback from mime: e.g. "application/pdf"
     if (fallbackMime && fallbackMime.includes("/")) {
       const sub = fallbackMime.split("/")[1];
-      // some mimes are long; keep common ones mapped
       if (sub.includes("pdf")) return "pdf";
       if (sub.includes("word")) return "docx";
       if (sub === "msword") return "doc";
-      if (sub.includes("excel") || sub.includes("sheet")) return sub.includes("sheet") ? "xlsx" : "xls";
+      if (sub.includes("excel") || sub.includes("sheet"))
+        return sub.includes("sheet") ? "xlsx" : "xls";
       if (sub.includes("jpeg")) return "jpeg";
       if (sub.includes("png")) return "png";
       if (sub.includes("html")) return "html";
@@ -46,55 +45,120 @@ function MultipleFileUpload({
   const iconForExt = (ext) => {
     switch (ext) {
       case "pdf":
-        return { icon: "fa-regular fa-file-pdf", badge: "PDF" };
+        return { icon: "fa-regular fa-file-pdf", badge: "PDF", color: "bg-red-500" };
       case "doc":
       case "docx":
-        return { icon: "fa-regular fa-file-word", badge: "DOC" };
+        return { icon: "fa-regular fa-file-word", badge: "DOC", color: "bg-blue-500" };
       case "xls":
       case "xlsx":
-        return { icon: "fa-regular fa-file-excel", badge: "XLS" };
+        return { icon: "fa-regular fa-file-excel", badge: "XLS", color: "bg-green-500" };
       case "html":
-        return { icon: "fa-regular fa-file-code", badge: "HTML" };
+        return { icon: "fa-regular fa-file-code", badge: "HTML", color: "bg-orange-500" };
       default:
-        return { icon: "fa-regular fa-file", badge: ext ? ext.toUpperCase() : "FILE" };
+        return {
+          icon: "fa-regular fa-file",
+          badge: ext ? ext.toUpperCase() : "FILE",
+          color: "bg-gray-500"
+        };
     }
   };
 
   const TileFrame = ({ children }) => (
-    <div className="relative flex justify-center items-center w-24 h-24 border border-gray-300 rounded-md overflow-hidden m-2 bg-white">
+    <div className="relative flex flex-col justify-start items-center w-28 h-32 border border-gray-300 rounded-lg overflow-hidden m-2 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
       {children}
     </div>
   );
 
   const RemoveButton = ({ onClick }) => (
-    <div className="bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white absolute top-0 right-0">
-      <Components.IconButton onClick={onClick}>
+    <div className="bg-red-500 hover:bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white absolute top-1 right-1 transition-colors duration-200">
+      <Components.IconButton onClick={onClick} className="p-0">
         <CustomIcons iconName={"fa-solid fa-trash"} css="cursor-pointer text-white h-3 w-3" />
       </Components.IconButton>
     </div>
   );
 
-  const FileBadge = ({ text }) => (
-    <span className="absolute bottom-1 left-1 text-[10px] px-1 py-[2px] rounded bg-black/70 text-white">{text}</span>
+  const InternalCheckbox = ({ checked, onChange }) => (
+    <div className="absolute top-1 left-1 flex items-center bg-white/90 rounded-md px-1 py-0.5">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-3 w-3 text-blue-600 rounded focus:ring-blue-500"
+      />
+      <label className="ml-1 text-[10px] text-gray-700 whitespace-nowrap cursor-pointer">
+        Internal
+      </label>
+    </div>
   );
 
-  const renderFileTile = ({ url, name, ext, removable, onRemove }) => {
+  // ✅ Toggle internal flag for either "files" or "existingImages"
+  const handleCheckboxChange = (source, index, isChecked) => {
+    console.log("source", source, "index", index, "isChecked", isChecked);
+
+    if (source === "files") {
+      // keep File instances intact
+      setFiles((prev) => {
+        const updated = [...prev];
+        const file = updated[index];
+        if (file) {
+          file.isInternal = isChecked;
+        }
+        return updated;
+      });
+    }
+
+    if (source === "existing") {
+      // update server-side images metadata
+      setExistingImages?.((prev) =>
+        prev?.map((img, i) =>
+          i === index ? { ...img, isInternal: isChecked } : img
+        )
+      );
+    }
+  };
+
+  const renderFileTile = ({
+    url,
+    name,
+    ext,
+    removable,
+    onRemove,
+    isInternal = false,
+    onCheckboxChange
+  }) => {
     const isImg = isImageExt(ext);
+    const fileInfo = iconForExt(ext);
 
     return (
       <TileFrame key={name}>
-        <NavLink target="_blank" to={url} className="w-full h-full flex justify-center items-center">
-          {isImg ? (
-            <img src={url} alt={name} className="object-cover w-full h-full" />
-          ) : (
-            <div className="w-full h-full flex flex-col justify-center items-center gap-1 px-1 text-center">
-              <CustomIcons iconName={iconForExt(ext).icon} css="text-black text-2xl" />
-              <div className="text-[10px] leading-tight line-clamp-2 break-all">{name}</div>
-            </div>
+        <div className="relative w-full h-20 flex justify-center items-center">
+          <NavLink
+            target="_blank"
+            to={url}
+            className="w-full h-full flex justify-center items-center"
+          >
+            {isImg ? (
+              <img src={url} alt={name} className="object-cover w-full h-full" />
+            ) : (
+              <div className="w-full h-full flex flex-col justify-center items-center gap-1 px-1 text-center">
+                <CustomIcons iconName={fileInfo.icon} css="text-gray-700 text-2xl" />
+              </div>
+            )}
+          </NavLink>
+
+          {/* only show checkbox when handler is provided */}
+          {type === "oppDocs" && typeof onCheckboxChange === "function" && (
+            <InternalCheckbox checked={isInternal} onChange={onCheckboxChange} />
           )}
-        </NavLink>
-        <FileBadge text={iconForExt(ext).badge} />
-        {removable ? <RemoveButton onClick={onRemove} /> : null}
+
+          {removable && <RemoveButton onClick={onRemove} />}
+        </div>
+
+        <div className="w-full px-1 py-1 bg-gray-50 border-t border-gray-200">
+          <div className="text-[10px] leading-tight line-clamp-2 break-all text-center text-gray-700">
+            {name}
+          </div>
+        </div>
       </TileFrame>
     );
   };
@@ -146,12 +210,15 @@ function MultipleFileUpload({
 
       if (approved.length) {
         setFiles((prev) => {
-          const newFiles = approved.filter((newFile) => !prev.some((p) => p.name === newFile.name));
+          const newFiles = approved.filter(
+            (newFile) => !prev.some((p) => p.name === newFile.name)
+          );
           return [
             ...prev,
             ...newFiles.map((file) =>
               Object.assign(file, {
-                preview: URL.createObjectURL(file)
+                preview: URL.createObjectURL(file),
+                isInternal: false
               })
             )
           ];
@@ -160,22 +227,27 @@ function MultipleFileUpload({
     }
   });
 
-  // Revoke object URLs on unmount or when files change
-  useEffect(() => {
-    return () => {
-      files?.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
-    };
-  }, [files]);
-
   // --- Actions ---
   const removeFile = (fileName) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    setFiles((prevFiles) => {
+      const remaining = [];
+      prevFiles.forEach((file) => {
+        if (file.name === fileName) {
+          if (file.preview) {
+            URL.revokeObjectURL(file.preview);
+          }
+        } else {
+          remaining.push(file);
+        }
+      });
+      return remaining;
+    });
   };
 
   const handleRemoveImages = async (id) => {
     if (type === "todo") {
       const response = await deleteImagesById(id);
-      if (response?.status === 200) {        
+      if (response?.status === 200) {
         const data = existingImages?.filter((row) => row.imageId !== id);
         setExistingImages(data);
       } else {
@@ -184,14 +256,13 @@ function MultipleFileUpload({
     }
     if (type === "oppDocs") {
       const response = await deleteOpportunitiesDocs(id);
-      if (response?.status === 200) {        
+      if (response?.status === 200) {
         const data = existingImages?.filter((row) => row.imageId !== id);
         setExistingImages(data);
       } else {
         setAlert({ open: true, message: response.message, type: "error" });
       }
     }
-
   };
 
   return (
@@ -199,24 +270,23 @@ function MultipleFileUpload({
       <div
         {...getRootProps({
           className:
-            "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-600 rounded-md cursor-pointer"
+            "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
         })}
       >
         <input {...getInputProps()} />
-        <p className="text-black text-center">
+        <p className="text-gray-700 text-center text-sm">
           {placeHolder
             ? placeHolder
-            : "Drag & drop files here, or click to select (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
+            : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
         </p>
       </div>
 
-      <aside className="flex flex-wrap mt-4">
+      <aside className="flex flex-wrap mt-4 justify-center">
         {/* Existing (server) files */}
         {existingImages?.map((item, idx) => {
           const ext = getExt(item.imageName || item.imageURL || "");
           const url = item.imageURL;
           const name = item.imageName || `file-${idx}.${ext || "bin"}`;
-
           return (
             <div key={`existing-${idx}`} className="relative">
               {renderFileTile({
@@ -224,34 +294,46 @@ function MultipleFileUpload({
                 name,
                 ext,
                 removable: true,
-                onRemove: () => handleRemoveImages(item.imageId)
+                onRemove: () => handleRemoveImages(item.imageId),
+                isInternal: !!item.isInternal,
+                onCheckboxChange: (checked) =>
+                  handleCheckboxChange("existing", idx, checked)
               })}
             </div>
           );
         })}
 
         {/* Newly added (client) files */}
-        {files?.map((file) => {
+        {files?.map((file, index) => {
           const ext = getExt(file.name, file.type);
           const url = file.preview;
           const name = file.name;
-
           return renderFileTile({
             url,
             name,
             ext,
             removable: true,
-            onRemove: () => removeFile(file.name)
+            onRemove: () => removeFile(file.name),
+            isInternal: !!file.isInternal,
+            onCheckboxChange: (checked) =>
+              handleCheckboxChange("files", index, checked)
           });
         })}
 
-        {/* Previously uploadedFiles (fallback list) */}
+        {/* Previously uploadedFiles (fallback list, read-only) */}
         {!files?.length &&
           uploadedFiles?.map((item, idx) => {
             const ext = getExt(item.imageName || item.imageURL || "");
             const url = item.imageURL;
             const name = item.imageName || `file-${idx}.${ext || "bin"}`;
-            return renderFileTile({ url, name, ext, removable: false });
+            return renderFileTile({
+              url,
+              name,
+              ext,
+              removable: false,
+              isInternal: !!item.isInternal
+              // no onCheckboxChange => checkbox hidden
+            });
           })}
       </aside>
     </div>
@@ -263,313 +345,3 @@ const mapDispatchToProps = {
 };
 
 export default connect(null, mapDispatchToProps)(MultipleFileUpload);
-
-
-
-// import React, { useEffect } from "react";
-// import { useDropzone } from "react-dropzone";
-// import { NavLink } from "react-router-dom";
-// import { connect } from "react-redux";
-// import { setAlert } from "../../redux/commonReducers/commonReducers";
-// import CustomIcons from "../common/icons/CustomIcons";
-// import { deleteImagesById } from "../../service/todo/todoService";
-// import Components from "../muiComponents/components";
-// import { deleteOpportunitiesDocs } from "../../service/opportunities/opportunitiesService";
-
-// function MultipleFileUpload({
-//   files,
-//   setFiles,
-//   setAlert,
-//   setValue,
-//   existingImages,
-//   setExistingImages,
-//   type,
-//   multiple = true,
-//   placeHolder,
-//   uploadedFiles,
-//   setDeleteLogo
-// }) {
-//   // --- Helpers ---
-//   const getExt = (name = "", fallbackMime = "") => {
-//     const qless = name.split("?")[0];
-//     const idx = qless.lastIndexOf(".");
-//     if (idx !== -1) return qless.slice(idx + 1).toLowerCase();
-//     // fallback from mime: e.g. "application/pdf"
-//     if (fallbackMime && fallbackMime.includes("/")) {
-//       const sub = fallbackMime.split("/")[1];
-//       if (sub.includes("pdf")) return "pdf";
-//       if (sub.includes("word")) return "docx";
-//       if (sub === "msword") return "doc";
-//       if (sub.includes("excel") || sub.includes("sheet"))
-//         return sub.includes("sheet") ? "xlsx" : "xls";
-//       if (sub.includes("jpeg")) return "jpeg";
-//       if (sub.includes("png")) return "png";
-//       if (sub.includes("html")) return "html";
-//     }
-//     return "";
-//   };
-
-//   const isImageExt = (ext) => ["png", "jpg", "jpeg"].includes(ext);
-
-//   const iconForExt = (ext) => {
-//     switch (ext) {
-//       case "pdf":
-//         return { icon: "fa-regular fa-file-pdf", badge: "PDF" };
-//       case "doc":
-//       case "docx":
-//         return { icon: "fa-regular fa-file-word", badge: "DOC" };
-//       case "xls":
-//       case "xlsx":
-//         return { icon: "fa-regular fa-file-excel", badge: "XLS" };
-//       case "html":
-//         return { icon: "fa-regular fa-file-code", badge: "HTML" };
-//       default:
-//         return {
-//           icon: "fa-regular fa-file",
-//           badge: ext ? ext.toUpperCase() : "FILE"
-//         };
-//     }
-//   };
-
-//   const TileFrame = ({ children }) => (
-//     <div className="relative flex justify-center items-center w-24 h-24 border border-gray-300 rounded-md overflow-hidden m-2 bg-white">
-//       {children}
-//     </div>
-//   );
-
-//   const RemoveButton = ({ onClick }) => (
-//     <div className="bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white absolute top-0 right-0">
-//       <Components.IconButton
-//         onClick={() => console.log("onClick")}
-//         size="small"
-//       >
-//         <CustomIcons
-//           iconName={"fa-solid fa-trash"}
-//           css="cursor-pointer text-white h-3 w-3"
-//         />
-//       </Components.IconButton>
-//     </div>
-//   );
-
-//   const FileBadge = ({ text }) => (
-//     <span className="absolute bottom-1 left-1 text-[10px] px-1 py-[2px] rounded bg-black/70 text-white">
-//       {text}
-//     </span>
-//   );
-
-//   const renderFileTile = ({ url, name, ext, removable, onRemove }) => {
-//     const isImg = isImageExt(ext);
-
-//     return (
-//       <TileFrame key={name}>
-//         <NavLink
-//           target="_blank"
-//           to={url}
-//           className="w-full h-full flex justify-center items-center"
-//         >
-//           {isImg ? (
-//             <img src={url} alt={name} className="object-cover w-full h-full" />
-//           ) : (
-//             <div className="w-full h-full flex flex-col justify-center items-center gap-1 px-1 text-center">
-//               <CustomIcons
-//                 iconName={iconForExt(ext).icon}
-//                 css="text-black text-2xl"
-//               />
-//               <div className="text-[10px] leading-tight line-clamp-2 break-all">
-//                 {name}
-//               </div>
-//             </div>
-//           )}
-//         </NavLink>
-//         <FileBadge text={iconForExt(ext).badge} />
-//         {removable ? <RemoveButton onClick={() => onRemove()} /> : null}
-//       </TileFrame>
-//     );
-//   };
-
-//   // --- Dropzone ---
-//   const { getRootProps, getInputProps } = useDropzone({
-//     accept: {
-//       "image/*": [],
-//       "application/pdf": [".pdf"],
-//       "application/msword": [".doc"],
-//       "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-//         [".docx"],
-//       "application/vnd.ms-excel": [".xls"],
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
-//         ".xlsx"
-//       ],
-//       "text/html": [".html"]
-//     },
-//     multiple: multiple,
-//     onDrop: (acceptedFiles) => {
-//       const allowedTypes = [
-//         "image/png",
-//         "image/jpeg",
-//         "image/jpg",
-//         "application/pdf",
-//         "application/msword",
-//         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-//         "application/vnd.ms-excel",
-//         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//         "text/html"
-//       ];
-
-//       const approved = [];
-//       const rejected = [];
-
-//       acceptedFiles.forEach((file) => {
-//         if (allowedTypes.includes(file.type)) {
-//           approved.push(file);
-//         } else {
-//           rejected.push(file);
-//         }
-//       });
-
-//       if (rejected.length) {
-//         const bad = rejected.map((f) => f.name).join(", ");
-//         setAlert({
-//           open: true,
-//           message: `Some files are not allowed: ${bad}. Only images (png, jpg, jpeg), PDF, Word, Excel, HTML.`,
-//           type: "error"
-//         });
-//       }
-
-//       if (approved.length) {
-//         setFiles((prev) => {
-//           const newFiles = approved.filter(
-//             (newFile) => !prev.some((p) => p.name === newFile.name)
-//           );
-//           return [
-//             ...prev,
-//             ...newFiles.map((file) =>
-//               Object.assign(file, {
-//                 preview: URL.createObjectURL(file)
-//               })
-//             )
-//           ];
-//         });
-//       }
-//     }
-//   });
-
-//   // Revoke object URLs on unmount or when files change
-//   useEffect(() => {
-//     return () => {
-//       files?.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
-//     };
-//   }, [files]);
-
-//   // --- Actions ---
-//   const removeFile = (fileName) => {
-//     setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
-//   };
-
-//   const handleRemoveImages = async (id) => {
-//     console.log("handleRemoveImages called with id:", id); // Debug log
-//     if (type === "todo") {
-//       const response = await deleteImagesById(id);
-//       if (response?.status === 200) {
-//         setAlert({ open: true, message: response.message, type: "success" });
-//         const data = existingImages?.filter((row) => row.imageId !== id);
-//         setExistingImages(data);
-//       } else {
-//         setAlert({ open: true, message: response.message, type: "error" });
-//       }
-//     }
-//     if (type === "oppDocs") {
-//       const response = await deleteOpportunitiesDocs(id);
-//       if (response?.status === 200) {
-//         setAlert({ open: true, message: response.message, type: "success" });
-//         const data = existingImages?.filter((row) => row.imageId !== id);
-//         setExistingImages(data);
-//       } else {
-//         setAlert({ open: true, message: response.message, type: "error" });
-//       }
-//     }
-//   };
-
-//   // ---- NEW: flag if we have any docs/files to show ----
-//   const hasExisting = existingImages && existingImages.length > 0;
-//   const hasNew = files && files.length > 0;
-//   const hasUploadedFallback =
-//     !hasNew && uploadedFiles && uploadedFiles.length > 0;
-//   const hasAnyDocs = hasExisting || hasNew || hasUploadedFallback;
-
-//   return (
-//     <div className="py-4">
-//       <div
-//         {...getRootProps({
-//           className:
-//             "flex flex-wrap items-start w-full min-h-[120px] px-4 py-3 border-2 border-dashed border-blue-600 rounded-md cursor-pointer"
-//         })}
-//       >
-//         <input {...getInputProps()} />
-
-//         {hasAnyDocs ? (
-//           <>
-//             {/* Existing (server) files */}
-//             {existingImages?.map((item, idx) => {
-//               const ext = getExt(item.imageName || item.imageURL || "");
-//               const url = item.imageURL;
-//               const name =
-//                 item.imageName || `file-${idx}.${ext || "bin"}`;
-
-//               return (
-//                 <div key={`existing-${idx}`} className="relative">
-//                   {renderFileTile({
-//                     url,
-//                     name,
-//                     ext,
-//                     removable: true,
-//                     onRemove: () => handleRemoveImages(item.imageId)
-//                   })}
-//                 </div>
-//               );
-//             })}
-
-//             {/* Newly added (client) files */}
-//             {files?.map((file) => {
-//               const ext = getExt(file.name, file.type);
-//               const url = file.preview;
-//               const name = file.name;
-
-//               return renderFileTile({
-//                 url,
-//                 name,
-//                 ext,
-//                 removable: true,
-//                 onRemove: () => removeFile(file.name)
-//               });
-//             })}
-
-//             {/* Previously uploadedFiles (fallback list) */}
-//             {!files?.length &&
-//               uploadedFiles?.map((item, idx) => {
-//                 const ext = getExt(item.imageName || item.imageURL || "");
-//                 const url = item.imageURL;
-//                 const name =
-//                   item.imageName || `file-${idx}.${ext || "bin"}`;
-//                 return renderFileTile({
-//                   url,
-//                   name,
-//                   ext,
-//                   removable: false
-//                 });
-//               })}
-//           </>
-//         ) : (
-//           <p className="text-black text-center w-full">
-//             {placeHolder ? placeHolder : "Attach files here"}
-//           </p>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-// const mapDispatchToProps = {
-//   setAlert
-// };
-
-// export default connect(null, mapDispatchToProps)(MultipleFileUpload);

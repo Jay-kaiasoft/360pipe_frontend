@@ -102,8 +102,18 @@ const ViewOpportunity = ({ setAlert }) => {
                 const response = await uploadFiles(formData);
                 if (response?.data?.status === 200) {
                     const uploadedFile = response.data.result[0];
-                    setUploadedFiles((prev) => [...prev, uploadedFile]);
-                    newFiles.push(uploadedFile);
+                    // attach isInternal to API returned object
+                    const fileWithInternal = {
+                        ...uploadedFile,
+                        isInternal: file.isInternal
+                    };
+
+                    // update state
+                    setUploadedFiles(prev => [...prev, fileWithInternal]);
+                    setValue("opportunityDocs", fileWithInternal);
+
+                    // push to final return array
+                    newFiles.push(fileWithInternal);
                 } else {
                     setAlert({ open: true, message: response?.data?.message, type: "error" });
                     return { ok: false, files: [] };
@@ -211,7 +221,6 @@ const ViewOpportunity = ({ setAlert }) => {
 
                 if (Array.isArray(res?.result?.opportunityDocs) && res.result.opportunityDocs.length) {
                     setExistingImages(res.result.opportunityDocs);
-                    // setValue('opportunityDocs', res.result.opportunityDocs);
                 }
 
                 if (res?.result?.opportunityPartnerDetails?.length > 0) {
