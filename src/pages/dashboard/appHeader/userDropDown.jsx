@@ -21,7 +21,7 @@ const items = [
         permission: {
             functionalityName: "My Team",
             moduleName: "My Team",
-            actionId: 4,
+            actionId: [4],
         },
     },
     {
@@ -31,23 +31,38 @@ const items = [
         permission: {
             functionalityName: "Members",
             moduleName: "Members",
-            actionId: 4,
+            actionId: [4],
         },
     },
     {
         label: "Sync History",
         path: "/dashboard/syncHistory",
         iconName: "fa-solid fa-clock-rotate-left",
+        permission: {
+            functionalityName: "Sync History",
+            moduleName: "Sync History",
+            actionId: [4],
+        },
     },
     {
         label: "E-Mail Scraper",
         path: "/dashboard/managemails",
         iconName: "fa-solid fa-envelope",
+        permission: {
+            functionalityName: "E-Mail Scraper",
+            moduleName: "E-Mail Scraper",
+            actionId: [1, 2, 3, 4],
+        },
     },
     {
         label: "Products & Service",
         path: "/dashboard/products",
         iconName: "fa-solid fa-screwdriver-wrench",
+        permission: {
+            functionalityName: "Products & Service",
+            moduleName: "Products & Service",
+            actionId: [4],
+        },
     },
 ];
 
@@ -154,13 +169,11 @@ export default function UserDropdown() {
                                             key={item.path}
                                             functionalityName={functionalityName}
                                             moduleName={moduleName}
-                                            actionId={actionId}
+                                            actionIds={actionId}
                                             component={content}
                                         />
                                     );
                                 }
-
-                                // Otherwise, just render the <li> normally
                                 return content;
                             })}
                     </ul>

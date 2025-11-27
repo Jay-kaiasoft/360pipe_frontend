@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from 'react'
+
+import { Editor } from "react-draft-wysiwyg";
+import {
+    EditorState,
+    ContentState,
+    convertToRaw
+} from "draft-js";
+import draftToHtml from "draftjs-to-html";
+import htmlToDraft from "html-to-draftjs";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+
 import { useForm } from 'react-hook-form';
 import dayjs from "dayjs";
 import { useNavigate, useParams } from 'react-router-dom'
@@ -13,6 +24,9 @@ import Checkbox from '../../../components/common/checkBox/checkbox';
 import Select from '../../../components/common/select/select';
 import Input from '../../../components/common/input/input';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
+import FileInputBox from '../../../components/fileInputBox/fileInputBox';
+import MultipleFileUpload from '../../../components/fileInputBox/multipleFileUpload';
+import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 
 import Components from '../../../components/muiComponents/components';
 import OpportunityContactModel from '../../../components/models/opportunities/opportunityContactModel';
@@ -26,14 +40,48 @@ import { getAllAccounts } from '../../../service/account/accountService';
 import { getAllOpportunitiesPartner, deleteOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
-import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
-import FileInputBox from '../../../components/fileInputBox/fileInputBox';
-import MultipleFileUpload from '../../../components/fileInputBox/multipleFileUpload';
+import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService'
+
+const toolbarProperties = {
+    options: ['inline', 'list', 'link', 'emoji', 'history'],
+    inline: {
+        options: ['bold', 'italic', 'underline', 'strikethrough']
+    },
+    blockType: {
+        inDropdown: true,
+        options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
+        className: undefined,
+        component: undefined,
+        dropdownClassName: undefined,
+    },
+    fontSize: {
+        options: [8, 9, 10, 11, 12, 14, 16, 18, 24, 30, 36, 48, 60, 72, 96],
+        className: undefined,
+        component: undefined,
+        dropdownClassName: undefined,
+    },
+    fontFamily: {
+        options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'],
+        className: undefined,
+        component: undefined,
+        dropdownClassName: undefined,
+    },
+    list: {
+        options: ['unordered', 'ordered'],
+    }
+}
 
 const ViewOpportunity = ({ setAlert }) => {
     const { opportunityId } = useParams()
     const navigate = useNavigate();
     const userdata = getUserDetails();
+    const [whyDoAnythingState, setWhyDoAnythingState] = useState(
+        EditorState.createEmpty()
+    );
+    const [businessValueState, setBusinessValueState] = useState(
+        EditorState.createEmpty()
+    );
+
 
     const [accounts, setAccounts] = useState([]);
 
@@ -205,6 +253,22 @@ const ViewOpportunity = ({ setAlert }) => {
             const res = await getOpportunityDetails(opportunityId);
             if (res?.status === 200) {
                 // The original logic to map API response fields to form fields
+                if (res?.result?.whyDoAnything !== null || res?.result?.whyDoAnything !== "") {
+                    const blocksFromHtml = htmlToDraft(res?.result?.whyDoAnything);
+                    const contentState = ContentState.createFromBlockArray(
+                        blocksFromHtml.contentBlocks,
+                        blocksFromHtml.entityMap
+                    );
+                    setWhyDoAnythingState(EditorState.createWithContent(contentState));
+                }
+                if (res?.result?.businessValue !== null || res?.result?.businessValue !== "") {
+                    const blocksFromHtml = htmlToDraft(res?.result?.businessValue);
+                    const contentState = ContentState.createFromBlockArray(
+                        blocksFromHtml.contentBlocks,
+                        blocksFromHtml.entityMap
+                    );
+                    setBusinessValueState(EditorState.createWithContent(contentState));
+                }
                 setValue("accountId", res?.result?.accountId || null);
                 setValue("opportunity", res?.result?.opportunity || null);
                 setValue("closeDate", res?.result?.closeDate ? res?.result?.closeDate : null);
@@ -658,12 +722,26 @@ const ViewOpportunity = ({ setAlert }) => {
                             </div>
                         </div>
                     ) : (
-                        <span
-                            onClick={handleDoubleClick}
-                            className="cursor-pointer hover:bg-gray-100 px-1 rounded"
-                        >
-                            {displayValue}
-                        </span>
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <span
+                                    onClick={handleDoubleClick}
+                                    className="cursor-pointer hover:bg-gray-100 px-1 rounded"
+                                >
+                                    {displayValue}
+                                </span>
+                            }
+                            fallbackComponent={
+                                <span
+                                    className="cursor-pointer hover:bg-gray-100 px-1 rounded"
+                                >
+                                    {displayValue}
+                                </span>
+                            }
+                        />
                     )}
                 </div>
             </div>
@@ -752,21 +830,45 @@ const ViewOpportunity = ({ setAlert }) => {
                             }
 
                             return (
-                                <div
-                                    key={stage.id}
-                                    onClick={() => handleStageClick(stage)}
-                                    className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
-                                >
-                                    <span className="truncate">
-                                        {stage.title}
-                                    </span>
+                                <div key={stage.id}>
+                                    <PermissionWrapper
+                                        functionalityName="Opportunities"
+                                        moduleName="Opportunities"
+                                        actionId={2}
+                                        component={
+                                            <div
+                                                onClick={() => handleStageClick(stage)}
+                                                className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
+                                            >
+                                                <span className="truncate">
+                                                    {stage.title}
+                                                </span>
 
-                                    {isCompleted && (
-                                        <CustomIcons
-                                            iconName="fa-solid fa-check"
-                                            css="h-3 w-3 inline-block ml-2"
-                                        />
-                                    )}
+                                                {isCompleted && (
+                                                    <CustomIcons
+                                                        iconName="fa-solid fa-check"
+                                                        css="h-3 w-3 inline-block ml-2"
+                                                    />
+                                                )}
+                                            </div>
+                                        }
+                                        fallbackComponent={
+                                            <div
+                                                className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
+                                            >
+                                                <span className="truncate">
+                                                    {stage.title}
+                                                </span>
+
+                                                {isCompleted && (
+                                                    <CustomIcons
+                                                        iconName="fa-solid fa-check"
+                                                        css="h-3 w-3 inline-block ml-2"
+                                                    />
+                                                )}
+                                            </div>
+                                        }
+                                    />
                                 </div>
                             );
                         })}
@@ -987,13 +1089,20 @@ const ViewOpportunity = ({ setAlert }) => {
                 </div>
 
                 <div className='flex justify-end mb-4 gap-2'>
-                    <Tooltip title="Add" arrow>
-                        <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                            <Components.IconButton onClick={() => handleAddPartner()}>
-                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                            </Components.IconButton>
-                        </div>
-                    </Tooltip>
+                    <PermissionWrapper
+                        functionalityName="Opportunities"
+                        moduleName="Opportunities"
+                        actionId={2}
+                        component={
+                            <Tooltip title="Add" arrow>
+                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                    <Components.IconButton onClick={() => handleAddPartner()}>
+                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                    </Components.IconButton>
+                                </div>
+                            </Tooltip>
+                        }
+                    />
                 </div>
                 {
                     list?.length > 0 ? (
@@ -1004,20 +1113,34 @@ const ViewOpportunity = ({ setAlert }) => {
                                     className="relative bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
                                 >
                                     <div className="absolute right-2 flex items-center justify-end gap-2">
-                                        <Tooltip title="Edit" arrow>
-                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                <Components.IconButton onClick={() => handleEditPartner(row.id)}>
-                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                </Components.IconButton>
-                                            </div>
-                                        </Tooltip>
-                                        <Tooltip title="Delete" arrow>
-                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
-                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                </Components.IconButton>
-                                            </div>
-                                        </Tooltip>
+                                        <PermissionWrapper
+                                            functionalityName="Opportunities"
+                                            moduleName="Opportunities"
+                                            actionId={2}
+                                            component={
+                                                <Tooltip title="Edit" arrow>
+                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleEditPartner(row.id)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            }
+                                        />
+                                        <PermissionWrapper
+                                            functionalityName="Opportunities"
+                                            moduleName="Opportunities"
+                                            actionId={2}
+                                            component={
+                                                <Tooltip title="Delete" arrow>
+                                                    <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
+                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            }
+                                        />
                                     </div>
                                     <p className="font-semibold text-gray-800 text-lg">
                                         {row.accountName || "—"}
@@ -1062,23 +1185,38 @@ const ViewOpportunity = ({ setAlert }) => {
 
                     <div className='flex justify-end mb-4 gap-2'>
                         {editedContacts.length > 0 && (
-                            <Tooltip title="Save" arrow>
-                                <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                            <PermissionWrapper
+                                functionalityName="Opportunities"
+                                moduleName="Opportunities"
+                                actionId={2}
+                                component={
                                     <Tooltip title="Save" arrow>
-                                        <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
-                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                        </Components.IconButton>
+                                        <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                            <Tooltip title="Save" arrow>
+                                                <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
+                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                </Components.IconButton>
+                                            </Tooltip>
+                                        </div>
                                     </Tooltip>
-                                </div>
-                            </Tooltip>
+                                }
+                            />
+
                         )}
-                        <Tooltip title="Add" arrow>
-                            <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                <Components.IconButton onClick={() => handleAddContact()}>
-                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                </Components.IconButton>
-                            </div>
-                        </Tooltip>
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddContact()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
                     </div>
                     {
                         list?.length > 0 ? (
@@ -1095,18 +1233,28 @@ const ViewOpportunity = ({ setAlert }) => {
 
                                         {/* ====== Checkbox on Top-Right ====== */}
                                         <div className="absolute top-2 right-2 flex items-center gap-1">
-                                            <Checkbox
-                                                checked={!!row.isKey}
-                                                disabled={currentKeyContactsCount >= 4 && !row.isKey}
-                                                onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
+                                            <PermissionWrapper
+                                                functionalityName="Opportunities"
+                                                moduleName="Opportunities"
+                                                actionId={2}
+                                                component={
+                                                    <>
+                                                        <Checkbox
+                                                            checked={!!row.isKey}
+                                                            disabled={currentKeyContactsCount >= 4 && !row.isKey}
+                                                            onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
+                                                        />
+                                                        <Tooltip title="Delete" arrow>
+                                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    </>
+                                                }
                                             />
-                                            <Tooltip title="Delete" arrow>
-                                                <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
-                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
+
                                         </div>
 
                                         {/* Avatar & Details */}
@@ -1163,13 +1311,20 @@ const ViewOpportunity = ({ setAlert }) => {
                         <div className="flex-grow border-t border-gray-300"></div>
                     </div>
                     <div className='flex justify-end mb-4 gap-2'>
-                        <Tooltip title="Add" arrow>
-                            <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                <Components.IconButton onClick={() => handleAddProduct()}>
-                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                </Components.IconButton>
-                            </div>
-                        </Tooltip>
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddProduct()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
@@ -1231,20 +1386,29 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <Tooltip title="Edit" arrow>
-                                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleEditProduct(row.id)}>
-                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                            <Tooltip title="Delete" arrow>
-                                                                <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
-                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
+                                                            <PermissionWrapper
+                                                                functionalityName="Opportunities"
+                                                                moduleName="Opportunities"
+                                                                actionId={2}
+                                                                component={
+                                                                    <>
+                                                                        <Tooltip title="Edit" arrow>
+                                                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleEditProduct(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
+                                                                        <Tooltip title="Delete" arrow>
+                                                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
+                                                                    </>
+                                                                }
+                                                            />
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1424,13 +1588,13 @@ const ViewOpportunity = ({ setAlert }) => {
 
                     <div className="flex items-center col-span-2">
                         <div className="flex-grow border-t border-gray-300"></div>
-                        <span className="mx-4 font-semibold text-gray-700">Deal Docs</span>
+                        <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
                         <div className="flex-grow border-t border-gray-300"></div>
                     </div>
 
-                    <div className='flex justify-end items-center col-span-2'>
-                        {
-                            files?.length > 0 && (
+                    {
+                        files?.length > 0 && (
+                            <div className='flex justify-end items-center col-span-2'>
                                 <Tooltip title="Upload" arrow>
                                     <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
                                         <Components.IconButton onClick={uploadSelectedFiles} title="Upload docs">
@@ -1438,9 +1602,9 @@ const ViewOpportunity = ({ setAlert }) => {
                                         </Components.IconButton>
                                     </div>
                                 </Tooltip>
-                            )
-                        }
-                    </div>
+                            </div>
+                        )
+                    }
 
                     <div className='col-span-2'>
                         <MultipleFileUpload
@@ -1455,6 +1619,46 @@ const ViewOpportunity = ({ setAlert }) => {
                             placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
                             uploadedFiles={uploadedFiles}
                         />
+                    </div>
+
+                    <div className='col-span-2 flex justify-start items-center gap-4'>
+                        <div>
+                            <p className='mb-2'>
+                                Why Do Anything
+                            </p>
+
+                            <div className='h-96 overflow-y-auto'>
+                                <Editor
+                                    editorState={whyDoAnythingState}
+                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                    toolbarClassName="toolbar-class border-b border-gray-300"
+                                    onEditorStateChange={(state) => {
+                                        setWhyDoAnythingState(state)
+                                    }}
+                                    toolbar={toolbarProperties}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className='mb-2'>
+                                Business Value
+                            </p>
+
+                            <div className='h-96 overflow-y-auto'>
+                                <Editor
+                                    editorState={businessValueState}
+                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                    toolbarClassName="toolbar-class border-b border-gray-300"
+                                    onEditorStateChange={(state) => {
+                                        setBusinessValueState(state)
+                                    }}
+                                    toolbar={toolbarProperties}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

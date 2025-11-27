@@ -252,7 +252,7 @@ export const getStaticRoles = () => {
 export const getStaticRolesWithPermissions = () => {
     return getStaticRoles()?.map((item) => {
         const isSalesRep = item.title === 'Sales Representative';
-        // const isSalesManager = item.title === "Sales Manager"
+        const isSalesManager = item.title === "Sales Manager"
         return {
             name: item.title,
             rolesActions: {
@@ -265,7 +265,7 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 2,
                                 "moduleName": "Account",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": isSalesRep ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
                             },
                         ]
                     },
@@ -277,7 +277,7 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 3,
                                 "moduleName": "Opportunities",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": isSalesRep ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
                             },
                         ]
                     },
@@ -301,7 +301,7 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 5,
                                 "moduleName": "My Team",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": [1, 2, 3, 4]
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4]
                             },
                         ]
                     },
@@ -313,7 +313,61 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 6,
                                 "moduleName": "Members",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": isSalesRep ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 7,
+                        "functionalityName": "Todo",
+                        "modules": [
+                            {
+                                "moduleId": 7,
+                                "moduleName": "Todo",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                            {
+                                "moduleId": 8,
+                                "moduleName": "Assign Todo",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 9,
+                        "functionalityName": "Sync History",
+                        "modules": [
+                            {
+                                "moduleId": 9,
+                                "moduleName": "Sync History",
+                                "moduleAssignedActions": [4],
+                                "roleAssignedActions": [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 10,
+                        "functionalityName": "E-Mail Scraper",
+                        "modules": [
+                            {
+                                "moduleId": 10,
+                                "moduleName": "E-Mail Scraper",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 11,
+                        "functionalityName": "Products & Service",
+                        "modules": [
+                            {
+                                "moduleId": 11,
+                                "moduleName": "Products & Service",
+                                "moduleAssignedActions": [1, 2, 3, 4],
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
                             },
                         ]
                     },

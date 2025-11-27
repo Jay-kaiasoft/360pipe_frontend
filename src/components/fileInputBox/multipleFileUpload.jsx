@@ -7,6 +7,7 @@ import CustomIcons from "../common/icons/CustomIcons";
 import { deleteImagesById } from "../../service/todo/todoService";
 import Components from "../muiComponents/components";
 import { deleteOpportunitiesDocs } from "../../service/opportunities/opportunitiesService";
+import PermissionWrapper from "../common/permissionWrapper/PermissionWrapper";
 
 function MultipleFileUpload({
   files,
@@ -147,11 +148,19 @@ function MultipleFileUpload({
           </NavLink>
 
           {/* only show checkbox when handler is provided */}
-          {type === "oppDocs" && typeof onCheckboxChange === "function" && (
-            <InternalCheckbox checked={isInternal} onChange={onCheckboxChange} />
-          )}
-
-          {removable && <RemoveButton onClick={onRemove} />}
+          <PermissionWrapper
+            functionalityName="Opportunities"
+            moduleName="Opportunities"
+            actionId={2}
+            component={
+              <>
+                {type === "oppDocs" && typeof onCheckboxChange === "function" && (
+                  <InternalCheckbox checked={isInternal} onChange={onCheckboxChange} />
+                )}
+                {removable && <RemoveButton onClick={onRemove} />}
+              </>
+            }
+          />
         </div>
 
         <div className="w-full px-1 py-1 bg-gray-50 border-t border-gray-200">
@@ -266,22 +275,30 @@ function MultipleFileUpload({
   };
 
   return (
-    <div className="py-4">
-      <div
-        {...getRootProps({
-          className:
-            "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
-        })}
-      >
-        <input {...getInputProps()} />
-        <p className="text-gray-700 text-center text-sm">
-          {placeHolder
-            ? placeHolder
-            : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
-        </p>
-      </div>
 
-      <aside className="flex flex-wrap mt-4 justify-center">
+    <div className="py-4">
+      <PermissionWrapper
+        functionalityName="Opportunities"
+        moduleName="Opportunities"
+        actionId={2}
+        component={
+          <div
+            {...getRootProps({
+              className:
+                "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
+            })}
+          >
+            <input {...getInputProps()} />
+            <p className="text-gray-700 text-center text-sm">
+              {placeHolder
+                ? placeHolder
+                : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
+            </p>
+          </div>
+        }
+      />
+
+      <aside className="flex flex-wrap mt-4 justify-start">
         {/* Existing (server) files */}
         {existingImages?.map((item, idx) => {
           const ext = getExt(item.imageName || item.imageURL || "");
@@ -332,7 +349,6 @@ function MultipleFileUpload({
               ext,
               removable: false,
               isInternal: !!item.isInternal
-              // no onCheckboxChange => checkbox hidden
             });
           })}
       </aside>

@@ -1,5 +1,35 @@
 import { getUserDetails } from "../../../utils/getUserDetails";
 
+const checkPermission = ({
+    functionalityName,
+    moduleName,
+    actionId,
+    actionIds,
+    checkAll = false,
+}) => {
+    const userData = getUserDetails() || {};
+
+    // Allow Admins / full-access users (same logic as your component)
+    if (userData?.rolename === "SALES REPRESENTIVE" || userData?.subUser === false) {
+        return true;
+    }
+
+    const actionsToCheck = actionIds || (actionId ? [actionId] : []);
+
+    const hasPermission = userData?.permissions?.functionalities?.some((item) =>
+        item?.functionalityName?.toLowerCase() === functionalityName?.toLowerCase() &&
+        item?.modules?.some((row) =>
+            row?.moduleName?.toLowerCase() === moduleName?.toLowerCase() &&
+            (checkAll
+                ? actionsToCheck.every((action) => row?.roleAssignedActions?.includes(action))
+                : actionsToCheck.some((action) => row?.roleAssignedActions?.includes(action))
+            )
+        )
+    );
+
+    return !!hasPermission;
+};
+
 const PermissionWrapper = ({
     component,
     fallbackComponent = null,
@@ -7,31 +37,20 @@ const PermissionWrapper = ({
     moduleName,
     actionId,
     actionIds,
-    checkAll = false // If true, require ALL actions; if false, require ANY action
+    checkAll = false,
 }) => {
-    const userData = getUserDetails() || [];
-
-    // Allow Admins
-    if (userData?.rolename === "SALES REPRESENTIVE" || userData?.subUser === false) {
-        return <>{component}</>;
-    }
-
-    // Determine which actions to check
-    const actionsToCheck = actionIds || (actionId ? [actionId] : []);
-
-    // Check permission
-    const hasPermission = userData?.permissions?.functionalities?.some((item) =>
-        item?.functionalityName?.toLowerCase() === functionalityName?.toLowerCase() &&
-        item?.modules?.some((row) =>
-            row?.moduleName?.toLowerCase() === moduleName?.toLowerCase() &&
-            (checkAll
-                ? actionsToCheck.every(action => row?.roleAssignedActions?.includes(action))
-                : actionsToCheck.some(action => row?.roleAssignedActions?.includes(action))
-            )
-        )
-    );
+    const hasPermission = checkPermission({
+        functionalityName,
+        moduleName,
+        actionId,
+        actionIds,
+        checkAll,
+    });
 
     return hasPermission ? <>{component}</> : fallbackComponent;
 };
+
+// 🔹 Static helper so you can call it from anywhere
+PermissionWrapper.hasPermission = (options) => checkPermission(options);
 
 export default PermissionWrapper;

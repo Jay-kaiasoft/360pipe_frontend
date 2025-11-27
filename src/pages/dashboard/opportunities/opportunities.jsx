@@ -22,6 +22,12 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const location = useLocation();
     const navigate = useNavigate();
 
+    const canEditOpps = PermissionWrapper.hasPermission({
+        functionalityName: "Opportunities",
+        moduleName: "Opportunities",
+        actionId: 2,
+    });
+
     // ⬇️ was isEditing (boolean), now we track which row is editing
     const [editingRowId, setEditingRowId] = useState(null);
 
@@ -194,7 +200,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 250,
-            editable: true,
+            editable: canEditOpps,
             renderCell: (params) =>
                 withEditTooltip(
                     "Click To Edit",
@@ -210,7 +216,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             minWidth: 120,
             align: 'right',
             headerAlign: 'left',
-            editable: true,
+            editable: canEditOpps,
             headerClassName: 'uppercase',
             renderCell: (params) => {
                 const val = params.value;
@@ -291,7 +297,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 300,
-            editable: true,
+            editable: canEditOpps,
             renderCell: (params) => {
                 const display =
                     params.value !== "" && params.value !== null && params.value !== undefined

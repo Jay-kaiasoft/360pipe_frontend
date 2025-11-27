@@ -3,6 +3,10 @@ import { styled, useTheme } from '@mui/material/styles';
 import { Controller, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+import draftToHtml from 'draftjs-to-html';
+import { EditorState, convertToRaw } from 'draft-js';
+import { Editor } from "react-draft-wysiwyg";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import Components from '../../../components/muiComponents/components';
@@ -11,7 +15,7 @@ import Input from '../../../components/common/input/input';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
-import { createOpportunity, deleteOpportunityLogo, getOpportunityDetails, updateOpportunitiesDealAmount, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { createOpportunity, deleteOpportunityLogo, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
 import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
@@ -27,6 +31,35 @@ import { getUserDetails } from '../../../utils/getUserDetails';
 import { Tooltip } from '@mui/material';
 import Stapper from '../../common/stapper/stapper';
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
+
+const toolbarProperties = {
+    options: ['inline', 'list', 'link', 'emoji', 'history'],
+    inline: {
+        options: ['bold', 'italic', 'underline', 'strikethrough']
+    },
+    blockType: {
+        inDropdown: true,
+        options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
+        className: undefined,
+        component: undefined,
+        dropdownClassName: undefined,
+    },
+    fontSize: {
+        options: [8, 9, 10, 11, 12, 14, 16, 18, 24, 30, 36, 48, 60, 72, 96],
+        className: undefined,
+        component: undefined,
+        dropdownClassName: undefined,
+    },
+    fontFamily: {
+        options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'],
+        className: undefined,
+        component: undefined,
+        dropdownClassName: undefined,
+    },
+    list: {
+        options: ['unordered', 'ordered'],
+    }
+}
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -47,6 +80,9 @@ const steps = [
 function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, setSyncingPushStatus }) {
     const userdata = getUserDetails();
     const [activeStep, setActiveStep] = useState(0)
+
+    const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
+    const [businessValue, setBusinessValue] = useState(() => EditorState.createEmpty());
 
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
@@ -171,6 +207,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             status: 1,
             logo: null,
             newLogo: null,
+            whyDoAnything: null,
+            businessValue: null,
             opportunityDocs: []
         },
     });
@@ -528,9 +566,18 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         // 1) Upload any newly picked files first
         const { ok, files: uploaded } = await uploadSelectedFiles();
         if (!ok) { setLoading(false); return; }
+        const whyDoAnythingHtml = whyDoAnything
+            ? draftToHtml(convertToRaw(whyDoAnything.getCurrentContent()))
+            : null;
+
+        const businessValueHtml = businessValue
+            ? draftToHtml(convertToRaw(businessValue.getCurrentContent()))
+            : null;
 
         const newData = {
             ...data,
+            whyDoAnything: whyDoAnythingHtml,
+            businessValue: businessValueHtml,
             opportunityDocs: uploaded,
             dealAmount: data.dealAmount ? parseFloat(parseMoneyFloat(data.dealAmount)) : null,
             discountPercentage: data.discountPercentage ? parseFloat(parseMoneyFloat(data.discountPercentage)) : null,
@@ -576,11 +623,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 }
             } else if (activeStep === 3) {
                 const res = await getAllOpportunitiesProducts(watch("id") || opportunityId)
-                setOpportunitiesProducts(res.result)
-                const total = res.result?.reduce((sum, item) => {
-                    const price = parseFloat(parseFloat(item?.qty) * parseFloat(item?.price)) || 0;
-                    return sum + price;
-                }, 0);
+                setOpportunitiesProducts(res.result)               
                 handleGetAllOpportunities()
                 setLoading(false);
                 onClose()
@@ -913,7 +956,43 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     )}
                                                 />
                                             </div>
+
+                                            <div className='mt-4'>
+                                                <p className='mb-2'>
+                                                    Why Do Anything
+                                                </p>
+                                                <Editor
+                                                    editorState={whyDoAnything}
+                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                    toolbarClassName="toolbar-class border-b border-gray-300"
+                                                    onEditorStateChange={(state) => {
+                                                        setWhyDoAnything(state)
+                                                    }}
+                                                    toolbar={toolbarProperties}
+                                                />
+                                            </div>
+
+                                            <div className='my-4'>
+                                                <p className='mb-2'>
+                                                    Business Value
+                                                </p>
+                                                <Editor
+                                                    editorState={businessValue}
+                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                    toolbarClassName="toolbar-class border-b border-gray-300"
+                                                    onEditorStateChange={(state) => {
+                                                        setBusinessValue(state)
+                                                    }}
+                                                    toolbar={toolbarProperties}
+                                                />
+                                            </div>
+
                                             <div>
+                                                <p className='mb-2'>
+                                                    Opportunity Documents
+                                                </p>
                                                 <MultipleFileUpload
                                                     files={files}
                                                     setFiles={setFiles}
@@ -927,6 +1006,62 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     uploadedFiles={uploadedFiles}
                                                 />
                                             </div>
+
+                                            {/* <div>
+                                                <MultipleFileUpload
+                                                    files={files}
+                                                    setFiles={setFiles}
+                                                    setAlert={setAlert}
+                                                    setValue={setValue}
+                                                    existingImages={existingImages}
+                                                    setExistingImages={setExistingImages}
+                                                    type="oppDocs"
+                                                    multiple={true}
+                                                    placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
+                                                    uploadedFiles={uploadedFiles}
+                                                />
+                                            </div>                                           
+                                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">                                                    
+                                                    <div>
+                                                        <p className="text-xs font-medium text-gray-700 mb-1">
+                                                            Why do anything?
+                                                        </p>
+                                                        <p className="text-[11px] text-gray-500 mb-2">
+                                                            Describe the pain, urgency, and business problem.
+                                                        </p>
+                                                        <Editor
+                                                            editorState={whyDoAnything}
+                                                            wrapperClassName="wrapper-class"
+                                                            editorClassName="editor-class"
+                                                            toolbarClassName="toolbar-class"
+                                                            onEditorStateChange={(state) => {
+                                                                setWhyDoAnything(state);
+                                                            }}
+                                                            toolbar={toolbarProperties}
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs font-medium text-gray-700 mb-1">
+                                                            Business value
+                                                        </p>
+                                                        <p className="text-[11px] text-gray-500 mb-2">
+                                                            Quantify impact (revenue, cost, risk, time saved, etc.).
+                                                        </p>
+                                                        <Editor
+                                                            editorState={businessValue}
+                                                            wrapperClassName="wrapper-class"
+                                                            editorClassName="editor-class"
+                                                            toolbarClassName="toolbar-class"
+                                                            onEditorStateChange={(state) => {
+                                                                setBusinessValue(state);
+                                                            }}
+                                                            toolbar={toolbarProperties}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div> */}
                                         </div>
                                     </>
                                 )
