@@ -209,7 +209,7 @@ export default function GroupedDataTable({
                                         }}
                                         sx={{
                                             // 🔑 Only this group's grid height grows when its row is in edit
-                                            height: editingRowId ? 200 : height,
+                                            // height: editingRowId ? 200 : height,
                                             color: theme.palette.text.primary,
                                             overflow: 'auto',
                                             '& .MuiDataGrid-editInputCell': {
@@ -257,6 +257,14 @@ export default function GroupedDataTable({
                                                 p: 1.5,
                                                 backgroundColor: '#f7f9fb',
                                                 borderBottom: '1px solid #e0e0e0',
+                                            },
+                                            // ⬇️ add this block
+                                            '& .info-selected-row': {
+                                                backgroundColor: 'rgba(4,120,220,0.12) !important',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(4,120,220,0.18) !important',
+                                                },
+                                                borderLeft: '3px solid #0478DC',
                                             },
                                         }}
                                     />

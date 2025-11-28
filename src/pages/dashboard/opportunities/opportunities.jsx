@@ -17,6 +17,8 @@ import CheckBoxSelect from '../../../components/common/select/checkBoxSelect';
 import { deleteOpportunity, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { opportunityStatus, stageColors } from '../../../service/common/commonService';
 import GroupedDataTable from '../../../components/common/table/groupedTable';
+import OpportunityInfoModel from '../../../components/models/opportunities/opportunityInfoModel';
+import OpportunitiesInfo from './opportunitiesInfo';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -33,6 +35,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const [opportunities, setOpportunities] = useState([]);
     const [open, setOpen] = useState(false);
+    const [openInfoModel, setOpenInfoModel] = useState(false);
+    const [infoRowId, setInfoRowId] = useState(null);
 
     const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
 
@@ -112,6 +116,19 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     }
 
+    const handleOpenInfoModel = (opportunityId = null) => {
+        setSelectedOpportunityId(opportunityId);
+        setOpenInfoModel(true);
+        setInfoRowId(opportunityId);      // ⬅️ highlight this row
+    };
+
+    const handleCloseInfoModel = () => {
+        setSelectedOpportunityId(null);
+        setOpenInfoModel(false);
+        setInfoRowId(null);               // ⬅️ remove highlight when closing
+    };
+
+
     const handleOpen = (opportunityId = null) => {
         setSelectedOpportunityId(opportunityId);
         setOpen(true);
@@ -121,6 +138,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setSelectedOpportunityId(null);
         setOpen(false);
     }
+
 
     const handleOpenDeleteDialog = (opportunityId) => {
         setSelectedOpportunityId(opportunityId);
@@ -187,7 +205,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'Account',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 150,
+            maxWidth: 150,
             renderCell: (params) => {
                 return (
                     <span>{params.value ? params.value : '-'}</span>
@@ -199,13 +217,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'Opportunity Name',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 250,
+            maxWidth: 250,
             editable: canEditOpps,
             renderCell: (params) =>
                 withEditTooltip(
                     "Click To Edit",
                     params,
-                    <span>{params.value || '-'}</span>
+                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap">{params.value || '-'}</span>
                 ),
             renderEditCell: (params) => <OpportunityNameEditCell {...params} />,
         },
@@ -213,7 +231,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             field: 'dealAmount',
             headerName: 'Deal Amount',
             flex: 1,
-            minWidth: 120,
+            maxWidth: 150,
             align: 'right',
             headerAlign: 'left',
             editable: canEditOpps,
@@ -253,12 +271,11 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             },
             renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
-
         {
             field: "salesStage",
             headerName: "Sales Stage",
             flex: 1,
-            minWidth: 100,
+            maxWidth: 200,
             headerClassName: 'uppercase',
             renderCell: (params) => {
                 const stage = params.value;
@@ -307,22 +324,30 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 return withEditTooltip(
                     "Click To Edit",
                     params,
-                    <span>{display}</span>
+                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap">
+                        {display}
+                    </span>
                 );
             },
             renderEditCell: (params) => <NextStepsEditCell {...params} />,
         },
-
         {
             field: 'action',
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
             flex: 1,
-            maxWidth: 120,
+            maxWidth: 140,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
+                        <Tooltip title="Info" arrow>
+                            <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenInfoModel(params.row.id)}>
+                                    <CustomIcons iconName={'fa-solid fa-info'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                         <Tooltip title="View" arrow>
                             <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => navigate(`/dashboard/opportunity-view/${params.row.id}`)}>
@@ -498,7 +523,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         };
 
         return (
-            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 px-3">
                 <Input
                     ref={inputRef}
                     value={inputValue}
@@ -721,6 +746,14 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             </div>
         )
     }
+    const getRowClassNameForGrid = (params) => {
+        // params.row.id is your opportunityId (from API)
+        if (params?.row?.id === infoRowId) {
+            return 'info-selected-row';
+        }
+        return '';
+    };
+
 
     return (
         <>
@@ -744,10 +777,19 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     }}
                     // ⬇️ NEW: only the grid that contains this row id will grow in height
                     editingRowId={editingRowId}
+                    getRowClassName={getRowClassNameForGrid}   // ⬅️ new line
                 />
 
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
+            {openInfoModel && (
+                <OpportunitiesInfo
+                    isOpen={openInfoModel}
+                    handleClose={handleCloseInfoModel}
+                    opportunityId={selectedOpportunityId}
+                />
+            )}
+
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

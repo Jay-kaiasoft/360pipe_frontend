@@ -136,7 +136,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {id ? "Update" : "Add"} Competitors
+                    {id ? "Update" : "Add"} Partner Or Competitors
                 </Components.DialogTitle>
 
                 <Components.IconButton

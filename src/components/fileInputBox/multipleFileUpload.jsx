@@ -6,7 +6,7 @@ import { setAlert } from "../../redux/commonReducers/commonReducers";
 import CustomIcons from "../common/icons/CustomIcons";
 import { deleteImagesById } from "../../service/todo/todoService";
 import Components from "../muiComponents/components";
-import { deleteOpportunitiesDocs } from "../../service/opportunities/opportunitiesService";
+import { deleteOpportunitiesDocs, updateOpportunitiesDocs } from "../../service/opportunities/opportunitiesService";
 import PermissionWrapper from "../common/permissionWrapper/PermissionWrapper";
 
 function MultipleFileUpload({
@@ -65,7 +65,7 @@ function MultipleFileUpload({
   };
 
   const TileFrame = ({ children }) => (
-    <div className="relative flex flex-col justify-start items-center w-28 h-32 border border-gray-300 rounded-lg overflow-hidden m-2 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="relative flex flex-col justify-start items-center w-28 h-36 border border-gray-300 rounded-lg overflow-hidden m-2 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
       {children}
     </div>
   );
@@ -79,7 +79,7 @@ function MultipleFileUpload({
   );
 
   const InternalCheckbox = ({ checked, onChange }) => (
-    <div className="absolute top-1 left-1 flex items-center bg-white/90 rounded-md px-1 py-0.5">
+    <div className="flex items-center bg-white/90 rounded-md px-1 py-0.5">
       <input
         type="checkbox"
         checked={checked}
@@ -93,9 +93,7 @@ function MultipleFileUpload({
   );
 
   // ✅ Toggle internal flag for either "files" or "existingImages"
-  const handleCheckboxChange = (source, index, isChecked) => {
-    console.log("source", source, "index", index, "isChecked", isChecked);
-
+  const handleCheckboxChange = async (imageId, source, index, isChecked) => {
     if (source === "files") {
       // keep File instances intact
       setFiles((prev) => {
@@ -109,12 +107,25 @@ function MultipleFileUpload({
     }
 
     if (source === "existing") {
-      // update server-side images metadata
-      setExistingImages?.((prev) =>
-        prev?.map((img, i) =>
-          i === index ? { ...img, isInternal: isChecked } : img
-        )
-      );
+      const res = await updateOpportunitiesDocs(imageId);
+      if (res.status === 200) {
+        setExistingImages?.((prev) =>
+          prev?.map((img, i) =>
+            i === index ? { ...img, isInternal: isChecked } : img
+          )
+        );
+        setAlert({
+          open: true,
+          message: "Document updated successfully.",
+          type: "success"
+        })
+      } else {
+        setAlert({
+          open: true,
+          message: "Fail to update document",
+          type: "error"
+        })
+      }
     }
   };
 
@@ -154,9 +165,6 @@ function MultipleFileUpload({
             actionId={2}
             component={
               <>
-                {type === "oppDocs" && typeof onCheckboxChange === "function" && (
-                  <InternalCheckbox checked={isInternal} onChange={onCheckboxChange} />
-                )}
                 {removable && <RemoveButton onClick={onRemove} />}
               </>
             }
@@ -168,6 +176,9 @@ function MultipleFileUpload({
             {name}
           </div>
         </div>
+        {type === "oppDocs" && typeof onCheckboxChange === "function" && (
+          <InternalCheckbox checked={isInternal} onChange={onCheckboxChange} />
+        )}
       </TileFrame>
     );
   };
@@ -314,7 +325,7 @@ function MultipleFileUpload({
                 onRemove: () => handleRemoveImages(item.imageId),
                 isInternal: !!item.isInternal,
                 onCheckboxChange: (checked) =>
-                  handleCheckboxChange("existing", idx, checked)
+                  handleCheckboxChange(item.imageId, "existing", idx, checked)
               })}
             </div>
           );
@@ -333,7 +344,7 @@ function MultipleFileUpload({
             onRemove: () => removeFile(file.name),
             isInternal: !!file.isInternal,
             onCheckboxChange: (checked) =>
-              handleCheckboxChange("files", index, checked)
+              handleCheckboxChange(null, "files", index, checked)
           });
         })}
 

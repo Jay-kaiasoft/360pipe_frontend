@@ -8,7 +8,8 @@ import {
 } from "draft-js";
 import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
-import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+// import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import '../../../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 import { useForm } from 'react-hook-form';
 import dayjs from "dayjs";
@@ -43,28 +44,9 @@ import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportuni
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService'
 
 const toolbarProperties = {
-    options: ['inline', 'list', 'link', 'emoji', 'history'],
+    options: ['inline', 'blockType', 'list', 'link', 'history'],
     inline: {
         options: ['bold', 'italic', 'underline', 'strikethrough']
-    },
-    blockType: {
-        inDropdown: true,
-        options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
-        className: undefined,
-        component: undefined,
-        dropdownClassName: undefined,
-    },
-    fontSize: {
-        options: [8, 9, 10, 11, 12, 14, 16, 18, 24, 30, 36, 48, 60, 72, 96],
-        className: undefined,
-        component: undefined,
-        dropdownClassName: undefined,
-    },
-    fontFamily: {
-        options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'],
-        className: undefined,
-        component: undefined,
-        dropdownClassName: undefined,
     },
     list: {
         options: ['unordered', 'ordered'],
@@ -75,10 +57,28 @@ const ViewOpportunity = ({ setAlert }) => {
     const { opportunityId } = useParams()
     const navigate = useNavigate();
     const userdata = getUserDetails();
+
+    const [whyDoAnythingStateHTML, setWhyDoAnythingStateHTML] = useState(null);
+    const [businessValueStateHTML, setBusinessValueStateHTML] = useState(null);
+    const [decisionMapHTML, setDecisionMapHTML] = useState(null);
+    const [currentEnvironmentHTML, setCurrentEnvironmentHTML] = useState(null);
+
+    const [isWhyDoAnythingEdit, setIsWhyDoAnythingEdit] = useState(null);
+    const [isBusinessValueEdit, setIsBusinessValueEdit] = useState(null);
+    const [isDecisionMapEdit, setIsDecisionMapEdit] = useState(null);
+    const [isCurrentEnvironmentEdit, setIsCurrentEnvironmentEdit] = useState(null);
+
     const [whyDoAnythingState, setWhyDoAnythingState] = useState(
         EditorState.createEmpty()
     );
     const [businessValueState, setBusinessValueState] = useState(
+        EditorState.createEmpty()
+    );
+
+    const [decisionMapState, setDecisionMapState] = useState(
+        EditorState.createEmpty()
+    );
+    const [currentEnvironmentState, setCurrentEnvironmentState] = useState(
         EditorState.createEmpty()
     );
 
@@ -155,11 +155,6 @@ const ViewOpportunity = ({ setAlert }) => {
                         ...uploadedFile,
                         isInternal: file.isInternal
                     };
-
-                    // update state
-                    setUploadedFiles(prev => [...prev, fileWithInternal]);
-                    setValue("opportunityDocs", fileWithInternal);
-
                     // push to final return array
                     newFiles.push(fileWithInternal);
                 } else {
@@ -168,10 +163,32 @@ const ViewOpportunity = ({ setAlert }) => {
                 }
             }
             // clear local selected files on success
-            setFiles([]);
             const currentValues = getValues();
-            const updateData = { ...currentValues, opportunityDocs: newFiles };
-            const res = await updateOpportunity(opportunityId, updateData);
+            const whyDoAnythingHtmlData = whyDoAnythingState
+                ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
+                : null;
+
+            const businessValueHtmlData = businessValueState
+                ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
+                : null;
+
+            const currentEnvironmentHtmlData = currentEnvironmentState
+                ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
+                : null;
+
+            const decisionMapHtmlData = decisionMapState
+                ? draftToHtml(convertToRaw(decisionMapState.getCurrentContent()))
+                : null;
+
+            let payload = {
+                ...currentValues,
+                opportunityDocs: newFiles,
+                whyDoAnything: whyDoAnythingHtmlData,
+                businessValue: businessValueHtmlData,
+                currentEnvironment: currentEnvironmentHtmlData,
+                decisionMap: decisionMapHtmlData,
+            };
+            const res = await updateOpportunity(opportunityId, payload);
             if (res?.status !== 200) {
                 setAlert({
                     open: true,
@@ -179,8 +196,9 @@ const ViewOpportunity = ({ setAlert }) => {
                     type: "error"
                 })
             } else {
+                setFiles([]);
                 handleGetOpportunityDetails()
-                setAlert({ open: true, message: "Opportunity documents uploaded successfully", type: "success" });
+                setAlert({ open: true, message: "Deal documents uploaded successfully", type: "success" });
             }
             return { ok: true, files: newFiles };
         } catch (error) {
@@ -252,23 +270,65 @@ const ViewOpportunity = ({ setAlert }) => {
         if (opportunityId) {
             const res = await getOpportunityDetails(opportunityId);
             if (res?.status === 200) {
-                // The original logic to map API response fields to form fields
-                if (res?.result?.whyDoAnything !== null || res?.result?.whyDoAnything !== "") {
-                    const blocksFromHtml = htmlToDraft(res?.result?.whyDoAnything);
+                // --- WHY DO ANYTHING ---
+                const whyHtml = (res?.result?.whyDoAnything || "").trim();  // safe default
+                if (whyHtml) {
+                    const blocksFromHtml = htmlToDraft(whyHtml);
                     const contentState = ContentState.createFromBlockArray(
                         blocksFromHtml.contentBlocks,
                         blocksFromHtml.entityMap
                     );
                     setWhyDoAnythingState(EditorState.createWithContent(contentState));
+                    setWhyDoAnythingStateHTML(whyHtml);
+                } else {
+                    // optional: clear state if empty
+                    setWhyDoAnythingState(EditorState.createEmpty());
+                    setWhyDoAnythingStateHTML("");
                 }
-                if (res?.result?.businessValue !== null || res?.result?.businessValue !== "") {
-                    const blocksFromHtml = htmlToDraft(res?.result?.businessValue);
+
+                // --- BUSINESS VALUE ---
+                const valueHtml = (res?.result?.businessValue || "").trim();
+                if (valueHtml) {
+                    const blocksFromHtml = htmlToDraft(valueHtml);
                     const contentState = ContentState.createFromBlockArray(
                         blocksFromHtml.contentBlocks,
                         blocksFromHtml.entityMap
                     );
                     setBusinessValueState(EditorState.createWithContent(contentState));
+                    setBusinessValueStateHTML(valueHtml);
+                } else {
+                    setBusinessValueState(EditorState.createEmpty());
+                    setBusinessValueStateHTML("");
                 }
+
+                const currentEnvironmentHtml = (res?.result?.currentEnvironment || "").trim();
+                if (currentEnvironmentHtml) {
+                    const blocksFromHtml = htmlToDraft(currentEnvironmentHtml);
+                    const contentState = ContentState.createFromBlockArray(
+                        blocksFromHtml.contentBlocks,
+                        blocksFromHtml.entityMap
+                    );
+                    setCurrentEnvironmentState(EditorState.createWithContent(contentState));
+                    setCurrentEnvironmentHTML(currentEnvironmentHtml);
+                } else {
+                    setCurrentEnvironmentState(EditorState.createEmpty());
+                    setCurrentEnvironmentHTML("");
+                }
+
+                const decisionMapHtml = (res?.result?.decisionMap || "").trim();
+                if (decisionMapHtml) {
+                    const blocksFromHtml = htmlToDraft(decisionMapHtml);
+                    const contentState = ContentState.createFromBlockArray(
+                        blocksFromHtml.contentBlocks,
+                        blocksFromHtml.entityMap
+                    );
+                    setDecisionMapState(EditorState.createWithContent(contentState));
+                    setDecisionMapHTML(decisionMapHtml);
+                } else {
+                    setDecisionMapState(EditorState.createEmpty());
+                    setDecisionMapHTML("");
+                }
+
                 setValue("accountId", res?.result?.accountId || null);
                 setValue("opportunity", res?.result?.opportunity || null);
                 setValue("closeDate", res?.result?.closeDate ? res?.result?.closeDate : null);
@@ -282,6 +342,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 setValue("dealAmount", res?.result?.dealAmount || null);
                 setValue("discountPercentage", res?.result?.discountPercentage || null);
                 setValue("listPrice", res?.result?.listPrice || null);
+                setFiles([]);
 
                 if (Array.isArray(res?.result?.opportunityDocs) && res.result.opportunityDocs.length) {
                     setExistingImages(res.result.opportunityDocs);
@@ -369,7 +430,6 @@ const ViewOpportunity = ({ setAlert }) => {
         handleGetOpportunityDetails()
     }, [])
 
-
     const getDisplayName = (id, options) => {
         const option = options.find(opt => opt.id === id);
         return option ? option.title : '—';
@@ -383,7 +443,6 @@ const ViewOpportunity = ({ setAlert }) => {
             day: 'numeric'
         });
     };
-
 
     const handleSaveField = async (fieldName, newValue) => {
         const toNumber2 = (val) => {
@@ -404,7 +463,29 @@ const ViewOpportunity = ({ setAlert }) => {
             if (!opportunityId) return;
 
             const currentValues = getValues();
-            let payload = { ...currentValues };
+            const whyDoAnythingHtmlData = whyDoAnythingState
+                ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
+                : null;
+
+            const businessValueHtmlData = businessValueState
+                ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
+                : null;
+
+            const currentEnvironmentHtmlData = currentEnvironmentState
+                ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
+                : null;
+
+            const decisionMapHtmlData = decisionMapState
+                ? draftToHtml(convertToRaw(decisionMapState.getCurrentContent()))
+                : null;
+
+            let payload = {
+                ...currentValues,
+                whyDoAnything: whyDoAnythingHtmlData,
+                businessValue: businessValueHtmlData,
+                currentEnvironment: currentEnvironmentHtmlData,
+                decisionMap: decisionMapHtmlData,
+            };
 
             // 🔢 Normalize numeric values with comma cleaning
             let listPrice = toNumber2(
@@ -509,7 +590,6 @@ const ViewOpportunity = ({ setAlert }) => {
         }
     };
 
-
     const OpportunityField = ({ label, value, type = 'text', options = [], onSave, className = '', required = false, multiline = false, disabled = false }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editValue, setEditValue] = useState(value);
@@ -555,7 +635,6 @@ const ViewOpportunity = ({ setAlert }) => {
                 }
             }
         };
-
 
         const handleSave = async () => {
             if (!onSave) {
@@ -747,7 +826,6 @@ const ViewOpportunity = ({ setAlert }) => {
             </div>
         );
     };
-
 
     const StageTimeline = ({ stages, currentStageId }) => {
         const [confirmDialog, setConfirmDialog] = useState({
@@ -1084,7 +1162,7 @@ const ViewOpportunity = ({ setAlert }) => {
             <section className="mt-8">
                 <div className="flex items-center my-4">
                     <div className="flex-grow border-t border-gray-300"></div>
-                    <span className="mx-4 font-semibold text-gray-700">Competitors</span>
+                    <span className="mx-4 font-semibold text-gray-700">Partner Or Competitors</span>
                     <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
@@ -1445,6 +1523,55 @@ const ViewOpportunity = ({ setAlert }) => {
         );
     };
 
+    const handleSubmitEditorData = async (type) => {
+        const currentValues = getValues();
+        const whyDoAnythingHtmlData = whyDoAnythingState
+            ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
+            : null;
+
+        const businessValueHtmlData = businessValueState
+            ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
+            : null;
+
+        const currentEnvironmentHtmlData = currentEnvironmentState
+            ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
+            : null;
+
+        const decisionMapHtmlData = decisionMapState
+            ? draftToHtml(convertToRaw(decisionMapState.getCurrentContent()))
+            : null;
+
+        let payload = {
+            ...currentValues,
+            whyDoAnything: whyDoAnythingHtmlData,
+            businessValue: businessValueHtmlData,
+            currentEnvironment: currentEnvironmentHtmlData,
+            decisionMap: decisionMapHtmlData,
+        };
+        const res = await updateOpportunity(opportunityId, payload);
+        if (res?.status === 200) {
+            handleGetOpportunityDetails();
+            if (type === "BusinessValue") {
+                setIsBusinessValueEdit(false)
+            }
+            if (type === "DecisionMap") {
+                setIsDecisionMapEdit(false)
+            }
+            if (type === "WhyDoAnything") {
+                setIsWhyDoAnythingEdit(false)
+            }
+            if (type === "CurrentEnvironment") {
+                setIsCurrentEnvironmentEdit(false)
+            }
+        } else {
+            setAlert({
+                open: true,
+                message: "Failed to update opportunity",
+                type: "error",
+            });
+        }
+    }
+
     return (
         <div className='mx-auto relative p-4 sm:p-6 bg-white rounded-xl shadow-lg'>
 
@@ -1461,7 +1588,6 @@ const ViewOpportunity = ({ setAlert }) => {
                 </div>
             </div>
 
-            {/* Stage Timeline */}
             <StageTimeline
                 stages={opportunityStages}
                 currentStageId={opportunityStages.find(stage => stage.title === watch("salesStage"))?.id}
@@ -1469,20 +1595,18 @@ const ViewOpportunity = ({ setAlert }) => {
 
             <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4 border-t border-gray-200'>
 
-                {/* Logo */}
                 <div className='flex justify-center md:justify-start items-start md:col-span-1'>
                     <div className="w-40 h-40">
                         <FileInputBox
                             onFileSelect={handleImageChange}
                             onRemove={handleOpenDeleteLogoDialog}
                             value={watch("logo") || watch("newLogo")}
-                            text="Please upload a 100×100 px logo"
+                            text="Upload jpg/png of Size 100X100 Px"
                             size="100x100"
                         />
                     </div>
                 </div>
 
-                {/* Main Fields */}
                 <div className='grid md:grid-cols-2 gap-y-5 w-full md:col-span-4'>
                     <>
                         <OpportunityField
@@ -1557,6 +1681,7 @@ const ViewOpportunity = ({ setAlert }) => {
                             required={true}
                         />
                     </>
+
                     <>
                         <OpportunityField
                             label="Account"
@@ -1575,6 +1700,7 @@ const ViewOpportunity = ({ setAlert }) => {
                             required={true}
                         />
                     </>
+
                     <div className='col-span-2'>
                         <OpportunityField
                             label="Next Step"
@@ -1586,12 +1712,264 @@ const ViewOpportunity = ({ setAlert }) => {
                         />
                     </div>
 
+                    <div className='col-span-2 flex justify-start items-center gap-4'>
+                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                            <div className='flex justify-between items-center mb-4'>
+                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                    Why Do Anything
+                                </p>
+                                <div className='flex justify-end items-center'>
+                                    {
+                                        isWhyDoAnythingEdit ? (
+                                            <div className='flex justify-end items-center gap-3'>
+                                                <Tooltip title="Save" arrow>
+                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleSubmitEditorData("WhyDoAnything")}>
+                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                                <Tooltip title="Cancel" arrow>
+                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsWhyDoAnythingEdit(false)}>
+                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        ) : (
+                                            <Tooltip title="Edit" arrow>
+                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => setIsWhyDoAnythingEdit(true)}>
+                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        )
+                                    }
+                                </div>
+                            </div>
+
+                            <div className='h-60 overflow-y-auto'>
+                                {
+                                    isWhyDoAnythingEdit ? (
+                                        <Editor
+                                            editorState={whyDoAnythingState}
+                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                            toolbarClassName="toolbar-class border-b border-gray-300"
+                                            onEditorStateChange={(state) => {
+                                                setWhyDoAnythingState(state)
+                                            }}
+                                            toolbar={toolbarProperties}
+                                        />
+                                    ) :
+                                        <div>
+                                            <div dangerouslySetInnerHTML={{
+                                                __html:
+                                                    whyDoAnythingStateHTML ||
+                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                            }} />
+                                        </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                            <div className='flex justify-between items-center mb-4'>
+                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                    Current Environment
+                                </p>
+
+                                <div className='flex justify-end'>
+                                    {
+                                        isCurrentEnvironmentEdit ? (
+                                            <div className='flex justify-end items-center gap-3'>
+                                                <Tooltip title="Save" arrow>
+                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
+                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                                <Tooltip title="Cancel" arrow>
+                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsCurrentEnvironmentEdit(false)}>
+                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        ) : (
+                                            <Tooltip title="Edit" arrow>
+                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => setIsCurrentEnvironmentEdit(true)}>
+                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        )
+                                    }
+                                </div>
+                            </div>
+
+                            <div className='h-60 overflow-y-auto'>
+                                {
+                                    isCurrentEnvironmentEdit ? (
+                                        <Editor
+                                            editorState={currentEnvironmentState}
+                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                            toolbarClassName="toolbar-class border-b border-gray-300"
+                                            onEditorStateChange={(state) => {
+                                                setCurrentEnvironmentState(state)
+                                            }}
+                                            toolbar={toolbarProperties}
+                                        />
+                                    ) :
+                                        <div>
+                                            <div dangerouslySetInnerHTML={{
+                                                __html:
+                                                    currentEnvironmentHTML ||
+                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                            }} />
+                                        </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='col-span-2 flex justify-start items-center gap-4'>
+                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                            <div className='flex justify-between items-center mb-4'>
+                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                    Business Value
+                                </p>
+                                <div className='flex justify-end'>
+                                    {
+                                        isBusinessValueEdit ? (
+                                            <div className='flex justify-end items-center gap-3'>
+                                                <Tooltip title="Save" arrow>
+                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleSubmitEditorData("BusinessValue")}>
+                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                                <Tooltip title="Cancel" arrow>
+                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsBusinessValueEdit(false)}>
+                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        ) : (
+                                            <Tooltip title="Edit" arrow>
+                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => setIsBusinessValueEdit(true)}>
+                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        )
+                                    }
+                                </div>
+                            </div>
+
+                            <div className='h-60 overflow-y-auto'>
+                                {
+                                    isBusinessValueEdit ? (
+                                        <Editor
+                                            editorState={businessValueState}
+                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                            toolbarClassName="toolbar-class border-b border-gray-300"
+                                            onEditorStateChange={(state) => {
+                                                setBusinessValueState(state)
+                                            }}
+                                            toolbar={toolbarProperties}
+                                        />
+                                    ) :
+                                        <div>
+                                            <div dangerouslySetInnerHTML={{
+                                                __html:
+                                                    businessValueStateHTML ||
+                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                            }} />
+                                        </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                            <div className='flex justify-between items-center mb-4'>
+                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                    Decision Map
+                                </p>
+                                <div className='flex justify-end'>
+                                    {
+                                        isDecisionMapEdit ? (
+                                            <div className='flex justify-end items-center gap-3'>
+                                                <Tooltip title="Save" arrow>
+                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleSubmitEditorData("DecisionMap")}>
+                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                                <Tooltip title="Cancel" arrow>
+                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsDecisionMapEdit(false)}>
+                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        ) : (
+                                            <Tooltip title="Edit" arrow>
+                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => setIsDecisionMapEdit(true)}>
+                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        )
+                                    }
+                                </div>
+                            </div>
+
+                            <div className='h-60 overflow-y-auto'>
+                                {
+                                    isDecisionMapEdit ? (
+                                        <Editor
+                                            editorState={decisionMapState}
+                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                            toolbarClassName="toolbar-class border-b border-gray-300"
+                                            onEditorStateChange={(state) => {
+                                                setDecisionMapState(state)
+                                            }}
+                                            toolbar={toolbarProperties}
+                                        />
+                                    ) :
+                                        <div>
+                                            <div dangerouslySetInnerHTML={{
+                                                __html:
+                                                    decisionMapHTML ||
+                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                            }} />
+                                        </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="flex items-center col-span-2">
                         <div className="flex-grow border-t border-gray-300"></div>
                         <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
                         <div className="flex-grow border-t border-gray-300"></div>
                     </div>
-
                     {
                         files?.length > 0 && (
                             <div className='flex justify-end items-center col-span-2'>
@@ -1605,7 +1983,6 @@ const ViewOpportunity = ({ setAlert }) => {
                             </div>
                         )
                     }
-
                     <div className='col-span-2'>
                         <MultipleFileUpload
                             files={files}
@@ -1620,48 +1997,8 @@ const ViewOpportunity = ({ setAlert }) => {
                             uploadedFiles={uploadedFiles}
                         />
                     </div>
-
-                    <div className='col-span-2 flex justify-start items-center gap-4'>
-                        <div>
-                            <p className='mb-2'>
-                                Why Do Anything
-                            </p>
-
-                            <div className='h-96 overflow-y-auto'>
-                                <Editor
-                                    editorState={whyDoAnythingState}
-                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                    toolbarClassName="toolbar-class border-b border-gray-300"
-                                    onEditorStateChange={(state) => {
-                                        setWhyDoAnythingState(state)
-                                    }}
-                                    toolbar={toolbarProperties}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className='mb-2'>
-                                Business Value
-                            </p>
-
-                            <div className='h-96 overflow-y-auto'>
-                                <Editor
-                                    editorState={businessValueState}
-                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                    toolbarClassName="toolbar-class border-b border-gray-300"
-                                    onEditorStateChange={(state) => {
-                                        setBusinessValueState(state)
-                                    }}
-                                    toolbar={toolbarProperties}
-                                />
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
+            </div >
 
             <ContactsSection list={opportunitiesContacts} />
             <PartnersSection list={opportunitiesPartner} />
@@ -1725,7 +2062,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeleteOppLogo()}
                 handleClose={() => handleCloseDeleteLogoDialog()}
             />
-        </div>
+        </div >
     )
 }
 

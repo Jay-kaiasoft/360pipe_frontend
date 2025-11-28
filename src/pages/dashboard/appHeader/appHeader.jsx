@@ -194,7 +194,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
 
 
   return (
-    <header className="w-full bg-white border-b-2 shadow-sm" style={{ borderColor: theme.palette.secondary.main }}>
+    <header className="w-full bg-white border-b-2 shadow-sm z-50" style={{ borderColor: theme.palette.secondary.main }}>
       <div className="flex justify-start items-center gap-4 lg:px-6">
         <div className="flex justify items-center gap-8 grow">
           <div className="hidden xl:block">

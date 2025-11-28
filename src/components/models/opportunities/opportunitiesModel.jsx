@@ -33,28 +33,9 @@ import Stapper from '../../common/stapper/stapper';
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
 
 const toolbarProperties = {
-    options: ['inline', 'list', 'link', 'emoji', 'history'],
+    options: ['inline', 'list', 'link', 'history'],
     inline: {
         options: ['bold', 'italic', 'underline', 'strikethrough']
-    },
-    blockType: {
-        inDropdown: true,
-        options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
-        className: undefined,
-        component: undefined,
-        dropdownClassName: undefined,
-    },
-    fontSize: {
-        options: [8, 9, 10, 11, 12, 14, 16, 18, 24, 30, 36, 48, 60, 72, 96],
-        className: undefined,
-        component: undefined,
-        dropdownClassName: undefined,
-    },
-    fontFamily: {
-        options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'],
-        className: undefined,
-        component: undefined,
-        dropdownClassName: undefined,
     },
     list: {
         options: ['unordered', 'ordered'],
@@ -72,7 +53,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
 
 const steps = [
     "Opportunity Details",
-    "Competitors Details",
+    "Partner Or Competitors Details",
     "Contact Details",
     "Product & Service Details",
 ]
@@ -83,6 +64,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
     const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
     const [businessValue, setBusinessValue] = useState(() => EditorState.createEmpty());
+    const [decisionMap, setDecisionMap] = useState(() => EditorState.createEmpty());
+    const [currentEnvironment, setCurrentEnvironment] = useState(() => EditorState.createEmpty());
 
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
@@ -209,6 +192,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             newLogo: null,
             whyDoAnything: null,
             businessValue: null,
+            currentEnvironment: null,
+            decisionMap: null,
             opportunityDocs: []
         },
     });
@@ -312,46 +297,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         setActiveStep(0)
         handleClose();
     };
-
-    const handleGetOpportunityDetails = async () => {
-        if (opportunityId && open) {
-            const res = await getOpportunityDetails(opportunityId);
-            if (res?.status === 200) {
-                // reset(res?.result);
-                setValue("accountId", res?.result?.accountId || null);
-                setValue("opportunity", res?.result?.opportunity || null);
-                setValue("closeDate", res?.result?.closeDate ? res?.result?.closeDate : null);
-                setValue("nextSteps", res?.result?.nextSteps || null);
-                setValue("salesforceOpportunityId", res?.result?.salesforceOpportunityId || null);
-                setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.id || null);
-                setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.id || null);
-                setValue("logo", res?.result?.logo)
-                setValue("id", res?.result?.id)
-                setValue('opportunityDocs', res.result.opportunityDocs);
-
-                if (res?.result?.opportunityPartnerDetails?.length > 0) {
-                    const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
-                        ...item,
-                        roleid: partnerRoles?.find(role => role.title === item.role)?.id || null,
-                        partnerId: item.id
-                    }));
-                    setValue('opportunityPartnerDetails', formattedDetails);
-                } else {
-                    setValue('opportunityPartnerDetails', [{
-                        id: null,
-                        salesforceOpportunityPartnerId: null,
-                        opportunityId: null,
-                        accountToId: null,
-                        accountId: null,
-                        role: null,
-                        roleid: null,
-                        isPrimary: false,
-                        isDeleted: false,
-                    }]);
-                }
-            }
-        }
-    }
 
     const handleGetAllAccounts = async () => {
         if (open) {
@@ -467,14 +412,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         }
     };
 
-    useEffect(() => {
-        handleGetOppProduct()
-        handleGetAllOpportunitiesPartner()
-        handleGetAllAccounts()
-        handleGetOppContacts()
-        handleGetOpportunityDetails()
-    }, [open])
-
     const handleImageChange = async (file) => {
         if (!file) return;
 
@@ -561,7 +498,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         }
     };
 
-
     const submit = async (data) => {
         // 1) Upload any newly picked files first
         const { ok, files: uploaded } = await uploadSelectedFiles();
@@ -574,10 +510,20 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             ? draftToHtml(convertToRaw(businessValue.getCurrentContent()))
             : null;
 
+        const currentEnvironmentHtml = currentEnvironment
+            ? draftToHtml(convertToRaw(currentEnvironment.getCurrentContent()))
+            : null;
+
+        const decisionMapHtml = decisionMap
+            ? draftToHtml(convertToRaw(decisionMap.getCurrentContent()))
+            : null;
+
         const newData = {
             ...data,
             whyDoAnything: whyDoAnythingHtml,
             businessValue: businessValueHtml,
+            decisionMap: decisionMapHtml,
+            currentEnvironment: currentEnvironmentHtml,
             opportunityDocs: uploaded,
             dealAmount: data.dealAmount ? parseFloat(parseMoneyFloat(data.dealAmount)) : null,
             discountPercentage: data.discountPercentage ? parseFloat(parseMoneyFloat(data.discountPercentage)) : null,
@@ -623,7 +569,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 }
             } else if (activeStep === 3) {
                 const res = await getAllOpportunitiesProducts(watch("id") || opportunityId)
-                setOpportunitiesProducts(res.result)               
+                setOpportunitiesProducts(res.result)
                 handleGetAllOpportunities()
                 setLoading(false);
                 onClose()
@@ -641,6 +587,10 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             })
         }
     }
+
+    useEffect(() => {
+        handleGetAllAccounts()
+    }, [open])
 
     return (
         <React.Fragment>
@@ -687,7 +637,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         onFileSelect={handleImageChange}
                                                         onRemove={handleOpenDeleteLogoDialog}
                                                         value={watch("logo") || watch("newLogo")}
-                                                        text="Please upload a 100×100 px logo"
+                                                        text="Upload jpg/png of Size 100X100 Px"
                                                         size="100x100"
                                                     />
                                                 </div>
@@ -972,6 +922,21 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     toolbar={toolbarProperties}
                                                 />
                                             </div>
+                                            <div className='my-4'>
+                                                <p className='mb-2'>
+                                                    Current Environment
+                                                </p>
+                                                <Editor
+                                                    editorState={currentEnvironment}
+                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                    toolbarClassName="toolbar-class border-b border-gray-300"
+                                                    onEditorStateChange={(state) => {
+                                                        setCurrentEnvironment(state)
+                                                    }}
+                                                    toolbar={toolbarProperties}
+                                                />
+                                            </div>
 
                                             <div className='my-4'>
                                                 <p className='mb-2'>
@@ -989,9 +954,25 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 />
                                             </div>
 
+                                            <div className='my-4'>
+                                                <p className='mb-2'>
+                                                    Decision Map
+                                                </p>
+                                                <Editor
+                                                    editorState={decisionMap}
+                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                    toolbarClassName="toolbar-class border-b border-gray-300"
+                                                    onEditorStateChange={(state) => {
+                                                        setDecisionMap(state)
+                                                    }}
+                                                    toolbar={toolbarProperties}
+                                                />
+                                            </div>
+
                                             <div>
                                                 <p className='mb-2'>
-                                                    Opportunity Documents
+                                                    Deal Documents
                                                 </p>
                                                 <MultipleFileUpload
                                                     files={files}
@@ -1006,62 +987,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     uploadedFiles={uploadedFiles}
                                                 />
                                             </div>
-
-                                            {/* <div>
-                                                <MultipleFileUpload
-                                                    files={files}
-                                                    setFiles={setFiles}
-                                                    setAlert={setAlert}
-                                                    setValue={setValue}
-                                                    existingImages={existingImages}
-                                                    setExistingImages={setExistingImages}
-                                                    type="oppDocs"
-                                                    multiple={true}
-                                                    placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
-                                                    uploadedFiles={uploadedFiles}
-                                                />
-                                            </div>                                           
-                                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">                                                    
-                                                    <div>
-                                                        <p className="text-xs font-medium text-gray-700 mb-1">
-                                                            Why do anything?
-                                                        </p>
-                                                        <p className="text-[11px] text-gray-500 mb-2">
-                                                            Describe the pain, urgency, and business problem.
-                                                        </p>
-                                                        <Editor
-                                                            editorState={whyDoAnything}
-                                                            wrapperClassName="wrapper-class"
-                                                            editorClassName="editor-class"
-                                                            toolbarClassName="toolbar-class"
-                                                            onEditorStateChange={(state) => {
-                                                                setWhyDoAnything(state);
-                                                            }}
-                                                            toolbar={toolbarProperties}
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <p className="text-xs font-medium text-gray-700 mb-1">
-                                                            Business value
-                                                        </p>
-                                                        <p className="text-[11px] text-gray-500 mb-2">
-                                                            Quantify impact (revenue, cost, risk, time saved, etc.).
-                                                        </p>
-                                                        <Editor
-                                                            editorState={businessValue}
-                                                            wrapperClassName="wrapper-class"
-                                                            editorClassName="editor-class"
-                                                            toolbarClassName="toolbar-class"
-                                                            onEditorStateChange={(state) => {
-                                                                setBusinessValue(state);
-                                                            }}
-                                                            toolbar={toolbarProperties}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div> */}
                                         </div>
                                     </>
                                 )

@@ -110,3 +110,13 @@ export const deleteOpportunitiesDocs = async (id) => {
         throw error;
     }
 };
+
+export const updateOpportunitiesDocs = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${opportunitiesDocumentsURL}/update/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error update opportunity docs:", error);
+        throw error;
+    }
+};
