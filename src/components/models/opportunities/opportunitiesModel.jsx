@@ -997,7 +997,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                         <div className="flex items-center justify-between mb-3">
                                             <h3 className="text-[22px] font-semibold"></h3>
                                             <div>
-                                                <Button type={`button`} text={'Add Competitors'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                                                <Button type={`button`} text={'Add Partner Or Competitors'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
                                             </div>
                                         </div>
 
