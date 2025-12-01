@@ -42,9 +42,10 @@ import { getAllOpportunitiesPartner, deleteOpportunitiesPartner } from '../../..
 import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService'
+import { Tabs } from '../../../components/common/tabs/tabs';
 
 const toolbarProperties = {
-    options: ['inline', 'blockType', 'list', 'link', 'history'],
+    options: ['inline', 'list', 'link', 'history'],
     inline: {
         options: ['bold', 'italic', 'underline', 'strikethrough']
     },
@@ -53,10 +54,16 @@ const toolbarProperties = {
     }
 }
 
+const tableData = [
+    { label: 'Opportunity Details' },
+    { label: 'MEDDIC Details' },
+]
+
 const ViewOpportunity = ({ setAlert }) => {
     const { opportunityId } = useParams()
     const navigate = useNavigate();
     const userdata = getUserDetails();
+    const [selectedTab, setSelectedTab] = useState(0);
 
     const [whyDoAnythingStateHTML, setWhyDoAnythingStateHTML] = useState(null);
     const [businessValueStateHTML, setBusinessValueStateHTML] = useState(null);
@@ -81,7 +88,6 @@ const ViewOpportunity = ({ setAlert }) => {
     const [currentEnvironmentState, setCurrentEnvironmentState] = useState(
         EditorState.createEmpty()
     );
-
 
     const [accounts, setAccounts] = useState([]);
 
@@ -113,7 +119,6 @@ const ViewOpportunity = ({ setAlert }) => {
     const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const [files, setFiles] = useState([]);
-    const [uploadedFiles, setUploadedFiles] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
 
     const {
@@ -139,6 +144,9 @@ const ViewOpportunity = ({ setAlert }) => {
         },
     });
 
+    const handleChangeTab = (value) => {
+        setSelectedTab(value);
+    }
     const uploadSelectedFiles = async () => {
         const newFiles = [];
         try {
@@ -891,7 +899,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
         return (
             <>
-                <div className="bg-white px-3 py-4 mb-0">
+                <div className="px-3 py-4 mb-0">
                     <div className="flex flex-wrap xl:justify-evenly gap-3 md:gap-2 overflow-x-auto pb-1">
                         {stages?.map((stage) => {
                             const isActive = stage.id === currentStageId;
@@ -1350,10 +1358,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
                                                 {row.email && (
                                                     <p className="text-xs text-gray-500 truncate mt-1">{row.email}</p>
-                                                )}
-                                                {row.phone && (
-                                                    <p className="text-xs text-gray-500 truncate">{row.phone}</p>
-                                                )}
+                                                )}                                               
                                             </div>
                                         </div>
                                     </div>
@@ -1405,7 +1410,7 @@ const ViewOpportunity = ({ setAlert }) => {
                         />
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                         <table className="w-full">
                             <thead className="hidden sm:table-header-group">
                                 <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
@@ -1573,10 +1578,8 @@ const ViewOpportunity = ({ setAlert }) => {
     }
 
     return (
-        <div className='mx-auto relative p-4 sm:p-6 bg-white rounded-xl shadow-lg'>
-
-            {/* Back Button */}
-            <div className='mb-2'>
+        <div className='mx-auto relative p-4 sm:p-6 my-3'>
+            <div>
                 <div className='absolute top-1 left-5'>
                     <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center' onClick={() => navigate("/dashboard/opportunities")}>
                         <CustomIcons iconName="fa-solid fa-arrow-left" css="h-5 w-5 text-gray-600" />
@@ -1588,421 +1591,434 @@ const ViewOpportunity = ({ setAlert }) => {
                 </div>
             </div>
 
-            <StageTimeline
-                stages={opportunityStages}
-                currentStageId={opportunityStages.find(stage => stage.title === watch("salesStage"))?.id}
-            />
-
-            <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4 border-t border-gray-200'>
-
-                <div className='flex justify-center md:justify-start items-start md:col-span-1'>
-                    <div className="w-40 h-40">
-                        <FileInputBox
-                            onFileSelect={handleImageChange}
-                            onRemove={handleOpenDeleteLogoDialog}
-                            value={watch("logo") || watch("newLogo")}
-                            text="Upload jpg/png of Size 100X100 Px"
-                            size="100x100"
-                        />
-                    </div>
-                </div>
-
-                <div className='grid md:grid-cols-2 gap-y-5 w-full md:col-span-4'>
+            <div className='my-3'>
+                <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} />
+            </div>
+            {
+                selectedTab === 0 && (
                     <>
-                        <OpportunityField
-                            label="Opportunity Name"
-                            value={watch("opportunity")}
-                            type="text"
-                            onSave={(newValue) => handleSaveField("opportunity", newValue)}
-                            required={true}
+                        <StageTimeline
+                            stages={opportunityStages}
+                            currentStageId={opportunityStages.find(stage => stage.title === watch("salesStage"))?.id}
                         />
 
-                        <OpportunityField
-                            label="Stage"
-                            value={watch("salesStage")}
-                            type="select"
-                            options={opportunityStages}
-                            onSave={(newValue) => handleSaveField("salesStage", newValue)}
-                            required={true}
-                        />
-                        <OpportunityField
-                            label="List Amount"
-                            value={
-                                watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
-                                    ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}`
-                                    : "—"
-                            }
-                            type="text"
-                            onSave={(newValue) => handleSaveField("listPrice", newValue)}
-                            required={true}
-                        />
+                        <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4'>
+                            <div className='flex justify-center md:justify-start items-start md:col-span-1'>
+                                <div className="w-40 h-40">
+                                    <FileInputBox
+                                        onFileSelect={handleImageChange}
+                                        onRemove={handleOpenDeleteLogoDialog}
+                                        value={watch("logo") || watch("newLogo")}
+                                        text="Upload jpg/png of Size 100X100 Px"
+                                        size="100x100"
+                                    />
+                                </div>
+                            </div>
 
-                        <OpportunityField
-                            label="Discount(%)"
-                            value={
-                                watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
-                                    ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}`
-                                    : "—"
-                            }
-                            type="text"
-                            onSave={(newValue) => handleSaveField("discountPercentage", newValue)}
-                            required={true}
-                        />
+                            <div className='grid md:grid-cols-2 gap-y-5 w-full md:col-span-4'>
+                                <>
+                                    <OpportunityField
+                                        label="Opportunity Name"
+                                        value={watch("opportunity")}
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                        required={true}
+                                    />
 
-                        <OpportunityField
-                            label="Deal Amount"
-                            value={
-                                watch("dealAmount") !== null &&
-                                    watch("dealAmount") !== undefined &&
-                                    watch("dealAmount") !== ""
-                                    ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}`
-                                    : "—"
-                            }
-                            type="text"
-                            onSave={(newValue) => handleSaveField("dealAmount", newValue)}
-                            required={false}
-                        />
+                                    <OpportunityField
+                                        label="Stage"
+                                        value={watch("salesStage")}
+                                        type="select"
+                                        options={opportunityStages}
+                                        onSave={(newValue) => handleSaveField("salesStage", newValue)}
+                                        required={true}
+                                    />
+                                    <OpportunityField
+                                        label="List Amount"
+                                        value={
+                                            watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
+                                                ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "—"
+                                        }
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("listPrice", newValue)}
+                                        required={true}
+                                    />
+
+                                    <OpportunityField
+                                        label="Discount(%)"
+                                        value={
+                                            watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
+                                                ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "—"
+                                        }
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("discountPercentage", newValue)}
+                                        required={true}
+                                    />
+
+                                    <OpportunityField
+                                        label="Deal Amount"
+                                        value={
+                                            watch("dealAmount") !== null &&
+                                                watch("dealAmount") !== undefined &&
+                                                watch("dealAmount") !== ""
+                                                ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "—"
+                                        }
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("dealAmount", newValue)}
+                                        required={false}
+                                    />
 
 
-                        <OpportunityField
-                            label="Close Date"
-                            value={formatDate(watch("closeDate"))}
-                            type="date"
-                            onSave={(newValue) => handleSaveField("closeDate", newValue)}
-                            required={true}
-                        />
+                                    <OpportunityField
+                                        label="Close Date"
+                                        value={formatDate(watch("closeDate"))}
+                                        type="date"
+                                        onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                        required={true}
+                                    />
+                                </>
+
+                                <>
+                                    <OpportunityField
+                                        label="Account"
+                                        value={getDisplayName(watch("accountId"), accounts)}
+                                        type="select"
+                                        options={accounts}
+                                        onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                    />
+
+                                    <OpportunityField
+                                        label="Status"
+                                        value={watch("status")}
+                                        type="select"
+                                        options={opportunityStatus}
+                                        onSave={(newValue) => handleSaveField("status", newValue)}
+                                        required={true}
+                                    />
+                                </>
+
+                                <div className='col-span-2'>
+                                    <OpportunityField
+                                        label="Next Step"
+                                        value={watch("nextSteps")}
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("nextSteps", newValue)}
+                                        required={true}
+                                        multiline={true}
+                                    />
+                                </div>
+
+                                <div className="flex items-center col-span-2">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                </div>
+                                {
+                                    files?.length > 0 && (
+                                        <div className='flex justify-end items-center col-span-2'>
+                                            <Tooltip title="Upload" arrow>
+                                                <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={uploadSelectedFiles} title="Upload docs">
+                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        </div>
+                                    )
+                                }
+                                <div className='col-span-2'>
+                                    <MultipleFileUpload
+                                        files={files}
+                                        setFiles={setFiles}
+                                        setAlert={setAlert}
+                                        setValue={setValue}
+                                        existingImages={existingImages}
+                                        setExistingImages={setExistingImages}
+                                        type="oppDocs"
+                                        multiple={true}
+                                        placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
+                                    // uploadedFiles={uploadedFiles}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <ContactsSection list={opportunitiesContacts} />
+                        <PartnersSection list={opportunitiesPartner} />
+                        <ProductsSection list={opportunitiesProducts} />
                     </>
-
+                )
+            }
+            {
+                selectedTab === 1 && (
                     <>
-                        <OpportunityField
-                            label="Account"
-                            value={getDisplayName(watch("accountId"), accounts)}
-                            type="select"
-                            options={accounts}
-                            onSave={(newValue) => handleSaveField("accountId", newValue)}
-                        />
+                        <div className='flex justify-start items-center gap-4 mb-3'>
+                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                <div className='flex justify-between items-center mb-4'>
+                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                        Why Do Anything
+                                    </p>
+                                    <div className='flex justify-end items-center'>
+                                        {
+                                            isWhyDoAnythingEdit ? (
+                                                <div className='flex justify-end items-center gap-3'>
+                                                    <Tooltip title="Save" arrow>
+                                                        <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleSubmitEditorData("WhyDoAnything")}>
+                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title="Cancel" arrow>
+                                                        <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => setIsWhyDoAnythingEdit(false)}>
+                                                                <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
+                                                <Tooltip title="Edit" arrow>
+                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsWhyDoAnythingEdit(true)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            )
+                                        }
+                                    </div>
+                                </div>
 
-                        <OpportunityField
-                            label="Status"
-                            value={watch("status")}
-                            type="select"
-                            options={opportunityStatus}
-                            onSave={(newValue) => handleSaveField("status", newValue)}
-                            required={true}
-                        />
-                    </>
-
-                    <div className='col-span-2'>
-                        <OpportunityField
-                            label="Next Step"
-                            value={watch("nextSteps")}
-                            type="text"
-                            onSave={(newValue) => handleSaveField("nextSteps", newValue)}
-                            required={true}
-                            multiline={true}
-                        />
-                    </div>
-
-                    <div className='col-span-2 flex justify-start items-center gap-4'>
-                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                            <div className='flex justify-between items-center mb-4'>
-                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                    Why Do Anything
-                                </p>
-                                <div className='flex justify-end items-center'>
+                                <div className='h-60 overflow-y-auto'>
                                     {
                                         isWhyDoAnythingEdit ? (
-                                            <div className='flex justify-end items-center gap-3'>
-                                                <Tooltip title="Save" arrow>
-                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleSubmitEditorData("WhyDoAnything")}>
-                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                                <Tooltip title="Cancel" arrow>
-                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => setIsWhyDoAnythingEdit(false)}>
-                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
+                                            <Editor
+                                                editorState={whyDoAnythingState}
+                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                toolbarClassName="toolbar-class border-b border-gray-300"
+                                                onEditorStateChange={(state) => {
+                                                    setWhyDoAnythingState(state)
+                                                }}
+                                                toolbar={toolbarProperties}
+                                            />
+                                        ) :
+                                            <div>
+                                                <div dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        whyDoAnythingStateHTML ||
+                                                        "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                                }} />
                                             </div>
-                                        ) : (
-                                            <Tooltip title="Edit" arrow>
-                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => setIsWhyDoAnythingEdit(true)}>
-                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        )
                                     }
                                 </div>
                             </div>
 
-                            <div className='h-60 overflow-y-auto'>
-                                {
-                                    isWhyDoAnythingEdit ? (
-                                        <Editor
-                                            editorState={whyDoAnythingState}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                            onEditorStateChange={(state) => {
-                                                setWhyDoAnythingState(state)
-                                            }}
-                                            toolbar={toolbarProperties}
-                                        />
-                                    ) :
-                                        <div>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html:
-                                                    whyDoAnythingStateHTML ||
-                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
-                                            }} />
-                                        </div>
-                                }
-                            </div>
-                        </div>
+                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                <div className='flex justify-between items-center mb-4'>
+                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                        Current Environment
+                                    </p>
 
-                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                            <div className='flex justify-between items-center mb-4'>
-                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                    Current Environment
-                                </p>
+                                    <div className='flex justify-end'>
+                                        {
+                                            isCurrentEnvironmentEdit ? (
+                                                <div className='flex justify-end items-center gap-3'>
+                                                    <Tooltip title="Save" arrow>
+                                                        <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
+                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title="Cancel" arrow>
+                                                        <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => setIsCurrentEnvironmentEdit(false)}>
+                                                                <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
+                                                <Tooltip title="Edit" arrow>
+                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsCurrentEnvironmentEdit(true)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            )
+                                        }
+                                    </div>
+                                </div>
 
-                                <div className='flex justify-end'>
+                                <div className='h-60 overflow-y-auto'>
                                     {
                                         isCurrentEnvironmentEdit ? (
-                                            <div className='flex justify-end items-center gap-3'>
-                                                <Tooltip title="Save" arrow>
-                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
-                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                                <Tooltip title="Cancel" arrow>
-                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => setIsCurrentEnvironmentEdit(false)}>
-                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
+                                            <Editor
+                                                editorState={currentEnvironmentState}
+                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                toolbarClassName="toolbar-class border-b border-gray-300"
+                                                onEditorStateChange={(state) => {
+                                                    setCurrentEnvironmentState(state)
+                                                }}
+                                                toolbar={toolbarProperties}
+                                            />
+                                        ) :
+                                            <div>
+                                                <div dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        currentEnvironmentHTML ||
+                                                        "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                                }} />
                                             </div>
-                                        ) : (
-                                            <Tooltip title="Edit" arrow>
-                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => setIsCurrentEnvironmentEdit(true)}>
-                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        )
                                     }
                                 </div>
                             </div>
-
-                            <div className='h-60 overflow-y-auto'>
-                                {
-                                    isCurrentEnvironmentEdit ? (
-                                        <Editor
-                                            editorState={currentEnvironmentState}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                            onEditorStateChange={(state) => {
-                                                setCurrentEnvironmentState(state)
-                                            }}
-                                            toolbar={toolbarProperties}
-                                        />
-                                    ) :
-                                        <div>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html:
-                                                    currentEnvironmentHTML ||
-                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
-                                            }} />
-                                        </div>
-                                }
-                            </div>
                         </div>
-                    </div>
 
-                    <div className='col-span-2 flex justify-start items-center gap-4'>
-                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                            <div className='flex justify-between items-center mb-4'>
-                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                    Business Value
-                                </p>
-                                <div className='flex justify-end'>
+                        <div className='flex justify-start items-center gap-4'>
+                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                <div className='flex justify-between items-center mb-4'>
+                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                        Business Value
+                                    </p>
+                                    <div className='flex justify-end'>
+                                        {
+                                            isBusinessValueEdit ? (
+                                                <div className='flex justify-end items-center gap-3'>
+                                                    <Tooltip title="Save" arrow>
+                                                        <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleSubmitEditorData("BusinessValue")}>
+                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title="Cancel" arrow>
+                                                        <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => setIsBusinessValueEdit(false)}>
+                                                                <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
+                                                <Tooltip title="Edit" arrow>
+                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsBusinessValueEdit(true)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            )
+                                        }
+                                    </div>
+                                </div>
+
+                                <div className='h-60 overflow-y-auto'>
                                     {
                                         isBusinessValueEdit ? (
-                                            <div className='flex justify-end items-center gap-3'>
-                                                <Tooltip title="Save" arrow>
-                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleSubmitEditorData("BusinessValue")}>
-                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                                <Tooltip title="Cancel" arrow>
-                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => setIsBusinessValueEdit(false)}>
-                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
+                                            <Editor
+                                                editorState={businessValueState}
+                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                toolbarClassName="toolbar-class border-b border-gray-300"
+                                                onEditorStateChange={(state) => {
+                                                    setBusinessValueState(state)
+                                                }}
+                                                toolbar={toolbarProperties}
+                                            />
+                                        ) :
+                                            <div>
+                                                <div dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        businessValueStateHTML ||
+                                                        "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                                }} />
                                             </div>
-                                        ) : (
-                                            <Tooltip title="Edit" arrow>
-                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => setIsBusinessValueEdit(true)}>
-                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        )
                                     }
                                 </div>
                             </div>
 
-                            <div className='h-60 overflow-y-auto'>
-                                {
-                                    isBusinessValueEdit ? (
-                                        <Editor
-                                            editorState={businessValueState}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                            onEditorStateChange={(state) => {
-                                                setBusinessValueState(state)
-                                            }}
-                                            toolbar={toolbarProperties}
-                                        />
-                                    ) :
-                                        <div>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html:
-                                                    businessValueStateHTML ||
-                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
-                                            }} />
-                                        </div>
-                                }
-                            </div>
-                        </div>
+                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                <div className='flex justify-between items-center mb-4'>
+                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                        Decision Map
+                                    </p>
+                                    <div className='flex justify-end'>
+                                        {
+                                            isDecisionMapEdit ? (
+                                                <div className='flex justify-end items-center gap-3'>
+                                                    <Tooltip title="Save" arrow>
+                                                        <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleSubmitEditorData("DecisionMap")}>
+                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title="Cancel" arrow>
+                                                        <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => setIsDecisionMapEdit(false)}>
+                                                                <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                </div>
+                                            ) : (
+                                                <Tooltip title="Edit" arrow>
+                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => setIsDecisionMapEdit(true)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            )
+                                        }
+                                    </div>
+                                </div>
 
-                        <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                            <div className='flex justify-between items-center mb-4'>
-                                <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                    Decision Map
-                                </p>
-                                <div className='flex justify-end'>
+                                <div className='h-60 overflow-y-auto'>
                                     {
                                         isDecisionMapEdit ? (
-                                            <div className='flex justify-end items-center gap-3'>
-                                                <Tooltip title="Save" arrow>
-                                                    <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleSubmitEditorData("DecisionMap")}>
-                                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                                <Tooltip title="Cancel" arrow>
-                                                    <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => setIsDecisionMapEdit(false)}>
-                                                            <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
+                                            <Editor
+                                                editorState={decisionMapState}
+                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                toolbarClassName="toolbar-class border-b border-gray-300"
+                                                onEditorStateChange={(state) => {
+                                                    setDecisionMapState(state)
+                                                }}
+                                                toolbar={toolbarProperties}
+                                            />
+                                        ) :
+                                            <div>
+                                                <div dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        decisionMapHTML ||
+                                                        "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
+                                                }} />
                                             </div>
-                                        ) : (
-                                            <Tooltip title="Edit" arrow>
-                                                <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => setIsDecisionMapEdit(true)}>
-                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        )
                                     }
                                 </div>
                             </div>
-
-                            <div className='h-60 overflow-y-auto'>
-                                {
-                                    isDecisionMapEdit ? (
-                                        <Editor
-                                            editorState={decisionMapState}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                            onEditorStateChange={(state) => {
-                                                setDecisionMapState(state)
-                                            }}
-                                            toolbar={toolbarProperties}
-                                        />
-                                    ) :
-                                        <div>
-                                            <div dangerouslySetInnerHTML={{
-                                                __html:
-                                                    decisionMapHTML ||
-                                                    "<span style='color:#9ca3af;font-style:italic;'>No information added yet.</span>",
-                                            }} />
-                                        </div>
-                                }
-                            </div>
                         </div>
-                    </div>
-
-                    <div className="flex items-center col-span-2">
-                        <div className="flex-grow border-t border-gray-300"></div>
-                        <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
-                        <div className="flex-grow border-t border-gray-300"></div>
-                    </div>
-                    {
-                        files?.length > 0 && (
-                            <div className='flex justify-end items-center col-span-2'>
-                                <Tooltip title="Upload" arrow>
-                                    <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={uploadSelectedFiles} title="Upload docs">
-                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            </div>
-                        )
-                    }
-                    <div className='col-span-2'>
-                        <MultipleFileUpload
-                            files={files}
-                            setFiles={setFiles}
-                            setAlert={setAlert}
-                            setValue={setValue}
-                            existingImages={existingImages}
-                            setExistingImages={setExistingImages}
-                            type="oppDocs"
-                            multiple={true}
-                            placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
-                            uploadedFiles={uploadedFiles}
-                        />
-                    </div>
-                </div>
-            </div >
-
-            <ContactsSection list={opportunitiesContacts} />
-            <PartnersSection list={opportunitiesPartner} />
-            <ProductsSection list={opportunitiesProducts} />
+                    </>
+                )
+            }
 
             {/* Contact Modal */}
             <OpportunityContactModel
