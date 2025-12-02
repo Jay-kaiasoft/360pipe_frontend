@@ -1,13 +1,26 @@
-import { useForm } from "react-hook-form";
-import { getAllOpportunitiesContact } from "../../../service/opportunities/opportunitiesContactService";
-import { getOpportunityDetails } from "../../../service/opportunities/opportunitiesService";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+
 import Components from "../../../components/muiComponents/components";
 import CustomIcons from "../../../components/common/icons/CustomIcons";
 
+import { getAllOpportunitiesContact } from "../../../service/opportunities/opportunitiesContactService";
+import { getOpportunityDetails } from "../../../service/opportunities/opportunitiesService";
+import Dropdown from "../../../components/common/dropdown/dropdown";
+
 const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
+    const [menuAnchor, setMenuAnchor] = useState(null);
+
+    const [opportunitiesKeyContact, setOpportunitiesKeyContacts] = useState([]);
     const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
     const [economicBuyerContacts, setEconomicBuyerContacts] = useState([]);
+    const [selectedType, setSelectedType] = useState("Opp360")
+
+    const handleOpen = (event) => {
+        setMenuAnchor(event.currentTarget);
+    };
+
+    const handleCloseMenu = () => setMenuAnchor(null);
 
     const {
         reset,
@@ -20,6 +33,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
             currentEnvironment: null,
             decisionMap: null,
             decisionCriteria: null,
+            logo: null
         },
     });
 
@@ -37,6 +51,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
             const res = await getAllOpportunitiesContact(opportunityId);
             const list = Array.isArray(res?.result) ? res.result : [];
             setEconomicBuyerContacts(list?.filter((row) => row.role?.toLowerCase() === "economic buyer"));
+            setOpportunitiesKeyContacts(list?.filter((row) => row.isKey === true));
             setOpportunitiesContacts(list)
 
         }
@@ -80,11 +95,55 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                     ${isOpen ? "translate-x-0" : "translate-x-full"}
                 `}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300">
-                    <h2 className="text-lg font-bold text-gray-800">
-                        {watch("accountName")} Opt 360
-                    </h2>
+                    <div className="flex justify-start items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center overflow-hidden bg-white">
+                            {watch("logo") ? (
+                                <a href={watch("logo")} target="_blank" rel="noreferrer">
+                                    <img
+                                        src={watch("logo")}
+                                        alt="Opp Logo"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </a>
+                            ) : (
+                                <h2 className="text-lg font-bold text-gray-800 capitalize">
+                                    {watch("accountName")?.slice(0,3)[0]}
+                                </h2>
+                            )}
+                        </div>
+
+                        {/* Name + menu */}
+                        <h2 className="text-lg font-bold text-gray-800">
+                            {watch("accountName")}
+                        </h2>
+
+                        <div className="flex justify-start items-center gap-2">
+                            <span className="text-sm text-gray-600">
+                                {selectedType}
+                            </span>
+
+                            <Components.IconButton onClick={handleOpen}>
+                                <CustomIcons
+                                    iconName="fa-solid fa-angle-down"
+                                    css="cursor-pointer h-4 w-4 text-black"
+                                />
+                            </Components.IconButton>
+
+                            <Dropdown
+                                value={selectedType}
+                                onChange={(val) => setSelectedType(val)}
+                                anchorEl={menuAnchor}
+                                setAnchorEl={setMenuAnchor}
+                                options={[
+                                    { label: "Opp360", value: "Opp360" },
+                                    { label: "MEDDIC", value: "MEDDIC" },
+                                ]}
+                            />
+                        </div>
+                    </div>
+
                     <Components.IconButton onClick={handleClose}>
                         <CustomIcons
                             iconName={"fa-solid fa-close"}
@@ -93,108 +152,217 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                     </Components.IconButton>
                 </div>
 
-                {/* MEDDIC Content */}
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-                    <div className="max-w-3xl mx-auto border-[7px] border-[#ECECEC] bg-white">
-                        {/* M - Metrics */}
-                        <MeddicRow letter="M">
-                            <div
-                                className="text-sm text-gray-700 leading-relaxed space-y-1"
-                                dangerouslySetInnerHTML={{
-                                    __html:
-                                        watch("businessValue") ||
-                                        "<span class='text-gray-400 italic'>-</span>",
-                                }}
-                            />
-                        </MeddicRow>
+                {
+                    selectedType === "Opp360" && (
+                        <div className="flex-1 px-4 py-3 overflow-y-auto overflow-x-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-[360px]">
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col">
+                                    <h3 className="text-base font-semibold text-gray-800 mb-2">
+                                        Why Do Anything
+                                    </h3>
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("whyDoAnything") ||
+                                                "<span class='text-gray-400 italic'>No information added yet.</span>",
+                                        }}
+                                    />
+                                </div>
 
-                        {/* E - Economic Buyer */}
-                        <MeddicRow letter="E">
-                            {
-                                economicBuyerContacts?.length > 0 ? (
-                                    // <div className="space-y-1 text-sm text-gray-800">
-                                    <ul className="space-y-1 text-sm">
-                                        {economicBuyerContacts?.map((c) => (
-                                            <li key={c.id}>
-                                                <span className="font-medium text-indigo-600">
-                                                    {c.contactName}
-                                                </span>
-                                                {c.title && (
-                                                    <>
-                                                        <span className="mx-1 text-gray-500">–</span>
-                                                        <span>{c.title}</span>
-                                                    </>
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    // </div>
-                                ) : (
-                                    <p className="text-sm text-gray-400 italic">
-                                       -
-                                    </p>
-                                )
-                            }
-                        </MeddicRow>
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col">
+                                    <h3 className="text-base font-semibold text-gray-800 mb-2">
+                                        Current Environment
+                                    </h3>
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("currentEnvironment") ||
+                                                "<span class='text-gray-400 italic'>No information added yet.</span>",
+                                        }}
+                                    />
+                                </div>
 
-                        {/* D - Decision Criteria */}
-                        <MeddicRow letter="D">
-                            N/A
-                        </MeddicRow>
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col">
+                                    <h3 className="text-base font-semibold text-gray-800 mb-2">
+                                        Value
+                                    </h3>
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("businessValue") ||
+                                                "<span class='text-gray-400 italic'>No value summary added yet.</span>",
+                                        }}
+                                    />
+                                </div>
 
-                        {/* D - Decision Process */}
-                        <MeddicRow letter="D">
-                            <div
-                                className="text-sm text-gray-700 leading-relaxed space-y-1"
-                                dangerouslySetInnerHTML={{
-                                    __html:
-                                        watch("decisionMap") ||
-                                        "<span class='text-gray-400 italic'>-</span>",
-                                }}
-                            />
-                        </MeddicRow>
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col">
+                                    <h3 className="text-base font-semibold text-gray-800 mb-2">
+                                        Key Contacts
+                                    </h3>
 
-                        <MeddicRow letter="I">
-                            <div
-                                className="text-sm text-gray-700 leading-relaxed space-y-1"
-                                dangerouslySetInnerHTML={{
-                                    __html:
-                                        watch("whyDoAnything") ||
-                                        "<span class='text-gray-400 italic'>-</span>",
-                                }}
-                            />
-                        </MeddicRow>
+                                    {opportunitiesContacts && opportunitiesContacts.length > 0 ? (
+                                        <ul className="space-y-1 text-sm">
+                                            {opportunitiesContacts.map((c) => (
+                                                <li key={c.id}>
+                                                    <span className="font-medium text-indigo-600">
+                                                        {c.contactName}
+                                                    </span>
+                                                    {c.title && (
+                                                        <>
+                                                            <span className="mx-1 text-gray-500">–</span>
+                                                            <span>{c.title}</span>
+                                                        </>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">
+                                            No contacts linked to this opportunity.
+                                        </p>
+                                    )}
+                                </div>
 
-                        {/* C - Champion */}
-                        <MeddicRow letter="C">
-                            {
-                                opportunitiesContacts?.length > 0 ? (
-                                    // <div className="space-y-1 text-sm text-gray-800">
-                                    <ul className="space-y-1 text-sm">
-                                        {opportunitiesContacts?.map((c) => (
-                                            <li key={c.id}>
-                                                <span className="font-medium text-indigo-600">
-                                                    {c.contactName}
-                                                </span>
-                                                {c.title && (
-                                                    <>
-                                                        <span className="mx-1 text-gray-500">–</span>
-                                                        <span>{c.title}</span>
-                                                    </>
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    // </div>
-                                ) : (
-                                    <p className="text-sm text-gray-400 italic">
-                                       -
-                                    </p>
-                                )
-                            }
-                        </MeddicRow>
-                    </div>
-                </div>
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col">
+                                    <h3 className="text-base font-semibold text-gray-800 mb-2">
+                                        Decision Map
+                                    </h3>
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("decisionMap") ||
+                                                "<span class='text-gray-400 italic'>No information added yet.</span>",
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col">
+                                    <h3 className="text-base font-semibold text-gray-800 mb-2">
+                                        Next Steps
+                                    </h3>
+                                    {watch("nextSteps") ? (
+                                        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                                            {watch("nextSteps")}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">
+                                            No next steps defined.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+                {
+                    selectedType === "MEDDIC" && (
+                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                            <div className="max-w-3xl mx-auto border-[7px] border-[#ECECEC] bg-white">
+                                {/* M - Metrics */}
+                                <MeddicRow letter="M">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("businessValue") ||
+                                                "<span class='text-gray-400 italic'>-</span>",
+                                        }}
+                                    />
+                                </MeddicRow>
+
+                                {/* E - Economic Buyer */}
+                                <MeddicRow letter="E">
+                                    {
+                                        economicBuyerContacts?.length > 0 ? (
+                                            // <div className="space-y-1 text-sm text-gray-800">
+                                            <ul className="space-y-1 text-sm">
+                                                {economicBuyerContacts?.map((c) => (
+                                                    <li key={c.id}>
+                                                        <span className="font-medium text-indigo-600">
+                                                            {c.contactName}
+                                                        </span>
+                                                        {c.title && (
+                                                            <>
+                                                                <span className="mx-1 text-gray-500">–</span>
+                                                                <span>{c.title}</span>
+                                                            </>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            // </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-400 italic">
+                                                -
+                                            </p>
+                                        )
+                                    }
+                                </MeddicRow>
+
+                                {/* D - Decision Criteria */}
+                                <MeddicRow letter="D">
+                                    N/A
+                                </MeddicRow>
+
+                                {/* D - Decision Process */}
+                                <MeddicRow letter="D">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("decisionMap") ||
+                                                "<span class='text-gray-400 italic'>-</span>",
+                                        }}
+                                    />
+                                </MeddicRow>
+
+                                <MeddicRow letter="I">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                watch("whyDoAnything") ||
+                                                "<span class='text-gray-400 italic'>-</span>",
+                                        }}
+                                    />
+                                </MeddicRow>
+
+                                {/* C - Champion */}
+                                <MeddicRow letter="C">
+                                    {
+                                        opportunitiesContacts?.length > 0 ? (
+                                            // <div className="space-y-1 text-sm text-gray-800">
+                                            <ul className="space-y-1 text-sm">
+                                                {opportunitiesContacts?.map((c) => (
+                                                    <li key={c.id}>
+                                                        <span className="font-medium text-indigo-600">
+                                                            {c.contactName}
+                                                        </span>
+                                                        {c.title && (
+                                                            <>
+                                                                <span className="mx-1 text-gray-500">–</span>
+                                                                <span>{c.title}</span>
+                                                            </>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            // </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-400 italic">
+                                                -
+                                            </p>
+                                        )
+                                    }
+                                </MeddicRow>
+                            </div>
+                        </div>
+                    )
+                }
             </div>
         </>
     );

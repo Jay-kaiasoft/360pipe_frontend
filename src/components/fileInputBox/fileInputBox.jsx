@@ -43,7 +43,7 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = nu
     return (
         <div className="w-full h-full">
             {value ? (
-                <div className="relative w-full h-full border border-dashed border-gray-400 rounded-full overflow-hidden z-50">
+                <div className="relative w-full h-full border border-dashed border-gray-400 rounded-full overflow-hidden">
                     <a href={value} target='_blank'>
                         <img
                             src={value}
@@ -51,7 +51,7 @@ function FileInputBox({ setAlert, onFileSelect, value, onRemove, text, size = nu
                             className="w-full h-full object-contain"
                         />
                     </a>
-                    <div className='absolute z-50 top-5 right-7 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500'>
+                    <div className='absolute top-5 right-7 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500'>
                         <button type='button' onClick={onRemove}>
                             <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white' />
                         </button>

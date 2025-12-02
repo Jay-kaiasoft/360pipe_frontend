@@ -56,7 +56,7 @@ const toolbarProperties = {
 
 const tableData = [
     { label: 'Opportunity Details' },
-    { label: 'MEDDIC Details' },
+    { label: 'Opp360' },
 ]
 
 const ViewOpportunity = ({ setAlert }) => {
