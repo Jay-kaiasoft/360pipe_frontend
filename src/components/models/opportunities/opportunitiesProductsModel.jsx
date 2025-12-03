@@ -120,6 +120,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
         if (id) {
             const res = await updateOpportunitiesProducts(id, newData)
             if (res.status === 200) {
+                setSyncingPushStatus(true)
                 handleGetAllOpportunitiesProducts()
                 onClose()
             } else {
@@ -141,8 +142,6 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                 })
             }
         }
-        setSyncingPushStatus(true);
-
     }
 
 
