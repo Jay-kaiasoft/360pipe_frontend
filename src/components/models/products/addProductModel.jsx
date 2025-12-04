@@ -139,7 +139,7 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
 
                 <form noValidate onSubmit={handleSubmit(submit)}>
                     <Components.DialogContent dividers>
-                        <div className='grid grid-cols-2 md:grid-cols-2 gap-4'>
+                        <div>
                             <div>
                                 <Controller
                                     name="type"

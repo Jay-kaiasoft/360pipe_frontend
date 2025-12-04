@@ -43,6 +43,8 @@ import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../
 import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService'
 import { Tabs } from '../../../components/common/tabs/tabs';
+import AddSalesProcessModel from '../../../components/models/opportunities/salesProcess/addSalesProcessModel';
+import { deleteSalesProcess, getAllBySalesOpportunity } from '../../../service/salesProcessService/salesProcessService';
 
 const toolbarProperties = {
     options: ['inline', 'list', 'link', 'history'],
@@ -72,8 +74,10 @@ const ViewOpportunity = ({ setAlert }) => {
 
     const [isWhyDoAnythingEdit, setIsWhyDoAnythingEdit] = useState(null);
     const [isBusinessValueEdit, setIsBusinessValueEdit] = useState(null);
-    const [isDecisionMapEdit, setIsDecisionMapEdit] = useState(null);
+    const [openDecisionMapModel, setOpenDecisionMapModel] = useState(null);
     const [isCurrentEnvironmentEdit, setIsCurrentEnvironmentEdit] = useState(null);
+    const [salesProcess, setSalesProcess] = useState([])
+    const [salesProcessId, setSalesProcessId] = useState(null)
 
     const [whyDoAnythingState, setWhyDoAnythingState] = useState(
         EditorState.createEmpty()
@@ -117,6 +121,7 @@ const ViewOpportunity = ({ setAlert }) => {
     const [editedContacts, setEditedContacts] = useState([]);
 
     const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [dialogDeleteDecisionMap, setDialogDeleteDecisionMap] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const [files, setFiles] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
@@ -144,9 +149,51 @@ const ViewOpportunity = ({ setAlert }) => {
         },
     });
 
+    const handleOpenDecisionMapModel = async (id = null) => {
+        setSalesProcessId(id)
+        setOpenDecisionMapModel(true)
+    }
+
+    const handleCloseDecisionMapModel = async () => {
+        setSalesProcessId(null)
+        setOpenDecisionMapModel(false)
+    }
+
+    const handleOpenDecisionMapDelete = async (id) => {
+        setSalesProcessId(id)
+        setDialogDeleteDecisionMap({ open: true, title: 'Delete Decision Map', message: 'Are you sure! Do you want to delete decision map ?', actionButtonText: 'yes' })
+    }
+
+    const handleCloseDecisionMapDelete = async () => {
+        setSalesProcessId(null)
+        setDialogDeleteDecisionMap({ open: false, title: '', message: '', actionButtonText: '' })
+    }
+
+    const handleDeteleDecisionMap = async () => {
+        if (salesProcessId) {
+            const res = await deleteSalesProcess(salesProcessId);
+            if (res.status === 200) {
+                handleGetAllSalesProcess()
+                handleCloseDecisionMapDelete()
+                setAlert({
+                    open: true,
+                    message: "Decision-Map deleted successfully",
+                    type: "success"
+                })
+            } else {
+                setAlert({
+                    open: true,
+                    message: res.message,
+                    type: "error"
+                })
+            }
+        }
+    }
+
     const handleChangeTab = (value) => {
         setSelectedTab(value);
     }
+
     const uploadSelectedFiles = async () => {
         const newFiles = [];
         try {
@@ -430,12 +477,21 @@ const ViewOpportunity = ({ setAlert }) => {
         }
     };
 
+    const handleGetAllSalesProcess = async () => {
+        if (opportunityId) {
+            const res = await getAllBySalesOpportunity(opportunityId)
+            if (res.status === 200) {
+                setSalesProcess(res.result || [])
+            }
+        }
+    }
     useEffect(() => {
         handleGetOppProduct()
         handleGetAllOpportunitiesPartner()
         handleGetAllAccounts()
         handleGetOppContacts()
         handleGetOpportunityDetails()
+        handleGetAllSalesProcess()
     }, [])
 
     const getDisplayName = (id, options) => {
@@ -1358,7 +1414,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
                                                 {row.email && (
                                                     <p className="text-xs text-gray-500 truncate mt-1">{row.email}</p>
-                                                )}                                               
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1559,9 +1615,9 @@ const ViewOpportunity = ({ setAlert }) => {
             if (type === "BusinessValue") {
                 setIsBusinessValueEdit(false)
             }
-            if (type === "DecisionMap") {
-                setIsDecisionMapEdit(false)
-            }
+            // if (type === "DecisionMap") {
+            //     setOpenDecisionMapModel(false)
+            // }
             if (type === "WhyDoAnything") {
                 setIsWhyDoAnythingEdit(false)
             }
@@ -1576,6 +1632,106 @@ const ViewOpportunity = ({ setAlert }) => {
             });
         }
     }
+
+    const DecisionMapTimeline = ({ items = [] }) => {
+        if (!items || items.length === 0) {
+            return (
+                <div className="h-full flex items-center justify-center">
+                    <p className="text-sm text-gray-400 italic">
+                        No decision map added yet.
+                    </p>
+                </div>
+            );
+        }
+
+        const formatStepDate = (dateString) => {
+            if (!dateString) return '';
+            return new Date(dateString).toLocaleDateString('en-US', {
+                month: 'numeric',
+                day: 'numeric'
+            });
+        };
+
+        const goLiveItem = items.find((s) => s.goLive);
+        const goLiveText = goLiveItem
+            ? new Date(goLiveItem.goLive).toLocaleDateString('en-US', {
+                month: 'numeric',
+                day: 'numeric'
+            })
+            : null;
+
+        const reasonText = goLiveItem?.notes || items[0]?.notes || null;
+
+        return (
+            <div className="w-full h-full flex flex-col justify-between">
+                {/* Timeline Container with Scroll */}
+                <div className="mt-4 mb-4 overflow-x-auto w-full pb-2 no-scrollbar">
+                    <div className="flex items-center min-w-max px-2">
+                        {items.map((step, index) => (
+                            <React.Fragment key={step.id ?? index}>
+                                {/* STEP COLUMN */}
+                                <div className="flex flex-col items-center min-w-[70px] flex-shrink-0">
+                                    <span className="font-semibold text-sm text-gray-800 text-center leading-tight break-words px-1">
+                                        {step.process}
+                                    </span>
+                                    <span className="w-px h-3 bg-black my-1" />
+                                    <span className="text-sm text-gray-600">
+                                        {formatStepDate(step.processDate)}
+                                    </span>
+                                    <div className='flex items-center gap-2 mt-2'>
+                                        <Tooltip title="Edit" arrow>
+                                            <div className='bg-blue-600 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                                                <Components.IconButton onClick={() => handleOpenDecisionMapModel(step.id)}>
+                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-2.5 w-2.5' />
+                                                </Components.IconButton>
+                                            </div>
+                                        </Tooltip>
+                                        <Tooltip title="Delete" arrow>
+                                            <div className='bg-red-600 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                                                <Components.IconButton onClick={() => handleOpenDecisionMapDelete(step.id)}>
+                                                    <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-2.5 w-2.5' />
+                                                </Components.IconButton>
+                                            </div>
+                                        </Tooltip>
+                                    </div>
+                                </div>
+
+                                {/* HORIZONTAL LINE COLUMN (between steps) */}
+                                {index < items.length - 1 && (
+                                    <div className="flex items-center flex-1 min-w-[60px] flex-shrink-0">
+                                        <div className="h-px bg-gray-400 w-full mx-1" />
+                                        {index === items.length - 2 && (
+                                            <span className="text-gray-400">
+                                                <CustomIcons iconName="fa-solid fa-angle-right" />
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Footer Info (Fixed at bottom, does not scroll) */}
+                {(goLiveText || reasonText) && (
+                    <div className="flex justify-between items-center text-xs text-gray-700 gap-1 border-t border-gray-100 pt-2">
+                        {goLiveText && (
+                            <span>
+                                <span className="font-semibold">Go Live: </span>
+                                {goLiveText}
+                            </span>
+                        )}
+                        {reasonText && (
+                            <span className='truncate max-w-[50%] text-right' title={reasonText}>
+                                <span className="font-semibold">Note: </span>
+                                {reasonText}
+                            </span>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className='mx-auto relative p-4 sm:p-6 my-3'>
@@ -1764,7 +1920,7 @@ const ViewOpportunity = ({ setAlert }) => {
             {
                 selectedTab === 1 && (
                     <>
-                        <div className='flex justify-start items-center gap-4 mb-3'>
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-3">
                             <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
                                 <div className='flex justify-between items-center mb-4'>
                                     <p className='font-medium text-gray-500 tracking-wider text-sm'>
@@ -1891,7 +2047,7 @@ const ViewOpportunity = ({ setAlert }) => {
                             </div>
                         </div>
 
-                        <div className='flex justify-start items-center gap-4'>
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
                                 <div className='flex justify-between items-center mb-4'>
                                     <p className='font-medium text-gray-500 tracking-wider text-sm'>
@@ -1960,8 +2116,15 @@ const ViewOpportunity = ({ setAlert }) => {
                                         Decision Map
                                     </p>
                                     <div className='flex justify-end'>
-                                        {
-                                            isDecisionMapEdit ? (
+                                        <Tooltip title="Add" arrow>
+                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                <Components.IconButton onClick={() => handleOpenDecisionMapModel()}>
+                                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
+                                                </Components.IconButton>
+                                            </div>
+                                        </Tooltip>
+                                        {/* {
+                                            openDecisionMapModel ? (
                                                 <div className='flex justify-end items-center gap-3'>
                                                     <Tooltip title="Save" arrow>
                                                         <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
@@ -1972,7 +2135,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     </Tooltip>
                                                     <Tooltip title="Cancel" arrow>
                                                         <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => setIsDecisionMapEdit(false)}>
+                                                            <Components.IconButton onClick={() => setOpenDecisionMapModel(false)}>
                                                                 <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
                                                             </Components.IconButton>
                                                         </div>
@@ -1981,19 +2144,20 @@ const ViewOpportunity = ({ setAlert }) => {
                                             ) : (
                                                 <Tooltip title="Edit" arrow>
                                                     <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => setIsDecisionMapEdit(true)}>
+                                                        <Components.IconButton onClick={() => setOpenDecisionMapModel(true)}>
                                                             <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
                                                         </Components.IconButton>
                                                     </div>
                                                 </Tooltip>
                                             )
-                                        }
+                                        } */}
                                     </div>
                                 </div>
 
-                                <div className='h-60 overflow-y-auto'>
+                                {/* <div className='h-60 overflow-y-auto'>
+
                                     {
-                                        isDecisionMapEdit ? (
+                                        openDecisionMapModel ? (
                                             <Editor
                                                 editorState={decisionMapState}
                                                 wrapperClassName="wrapper-class border border-gray-300 rounded-md"
@@ -2013,7 +2177,11 @@ const ViewOpportunity = ({ setAlert }) => {
                                                 }} />
                                             </div>
                                     }
+                                </div> */}
+                                <div className="h-60 w-full">
+                                    <DecisionMapTimeline items={salesProcess} />
                                 </div>
+
                             </div>
                         </div>
                     </>
@@ -2078,6 +2246,16 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeleteOppLogo()}
                 handleClose={() => handleCloseDeleteLogoDialog()}
             />
+
+            <AlertDialog
+                open={dialogDeleteDecisionMap.open}
+                title={dialogDeleteDecisionMap.title}
+                message={dialogDeleteDecisionMap.message}
+                actionButtonText={dialogDeleteDecisionMap.actionButtonText}
+                handleAction={() => handleDeteleDecisionMap()}
+                handleClose={() => handleCloseDecisionMapDelete()}
+            />
+            <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
         </div >
     )
 }

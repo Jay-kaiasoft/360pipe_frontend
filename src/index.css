@@ -79,6 +79,18 @@ body {
   background: #d6d6d6;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
 
 .process-left {
   position: sticky;
@@ -775,13 +787,15 @@ body {
 /* Editor css */
 
 .wrapper-class {
-    padding: 1rem;
-    border: 1px solid #ccc;
+  padding: 1rem;
+  border: 1px solid #ccc;
 }
+
 .editor-class {
-    padding: 1rem;
-    border: 1px solid #ccc;
+  padding: 1rem;
+  border: 1px solid #ccc;
 }
+
 .toolbar-class {
-    border: 1px solid #ccc;
+  border: 1px solid #ccc;
 }
