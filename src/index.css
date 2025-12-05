@@ -64,33 +64,29 @@ body {
   height: 5px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
   background: white;
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
   background: #d6d6d6;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #d6d6d6;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
-  display: none;
+  /* display: none; */
+  width: 2px;
+  height: 2px;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
+/* Hide scrollbar for IE, Edge and Firefox
 .no-scrollbar {
   -ms-overflow-style: none;
-  /* IE and Edge */
   scrollbar-width: none;
-  /* Firefox */
-}
+} */
 
 .process-left {
   position: sticky;

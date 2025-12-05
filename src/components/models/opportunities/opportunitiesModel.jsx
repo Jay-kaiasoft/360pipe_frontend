@@ -954,7 +954,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 />
                                             </div>
 
-                                            <div className='my-4'>
+                                            {/* <div className='my-4'>
                                                 <p className='mb-2'>
                                                     Decision Map
                                                 </p>
@@ -968,7 +968,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     }}
                                                     toolbar={toolbarProperties}
                                                 />
-                                            </div>
+                                            </div> */}
 
                                             <div>
                                                 <p className='mb-2'>

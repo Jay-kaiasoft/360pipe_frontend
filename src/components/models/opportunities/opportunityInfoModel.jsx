@@ -180,14 +180,17 @@ function OpportunityInfoModel({ open, handleClose, opportunityId }) {
                                     <ul className="space-y-1 text-sm">
                                         {opportunitiesContacts.map((c) => (
                                             <li key={c.id}>
+                                                {
+                                                    console.log("c",c)
+                                                }
                                                 <span className="font-medium text-indigo-600">
                                                     {c.contactName}
                                                 </span>
-                                                {c.title && (
+                                                {c.role && (
                                                     <>
                                                         <span className="mx-1 text-gray-500">–</span>
                                                         <span>
-                                                            {c.title}
+                                                            {c.role}
                                                         </span>
                                                     </>
                                                 )}

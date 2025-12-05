@@ -757,7 +757,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     return (
         <>
-            <div className='border rounded-lg bg-white w-full lg:w-full '>
+            <div className='border rounded-lg bg-white w-full lg:w-full'>
                 <GroupedDataTable
                     groups={opportunities}
                     columns={columns}
@@ -777,9 +777,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     }}
                     // ⬇️ NEW: only the grid that contains this row id will grow in height
                     editingRowId={editingRowId}
-                    getRowClassName={getRowClassNameForGrid}   // ⬅️ new line
+                    getRowClassName={getRowClassNameForGrid}
                 />
-
             </div>
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             {openInfoModel && (

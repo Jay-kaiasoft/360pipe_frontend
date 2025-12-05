@@ -36,17 +36,6 @@ const UnsortedIcon = () => (
     />
 );
 
-/**
- * GroupedDataTable
- *
- * props:
- *  - groups: [{ stagename: string, data: array }]
- *  - columns: DataGrid columns
- *  - height: number | string (height of each grid)
- *  - showSearch, showButtons, showFilters, filtersComponent, buttons: same as table.jsx
- *  - getRowClassName, checkboxSelection, setRowSelectionModel, rowSelectionModel, processRowUpdate: same as table.jsx
- *  - editingRowId: id of the row that is currently being edited (used to expand only that table)
- */
 export default function GroupedDataTable({
     groups,
     columns,
@@ -98,6 +87,11 @@ export default function GroupedDataTable({
             )}
 
             <div className="border border-t-0 rounded-b-lg bg-white">
+                {(!groups || groups.length === 0) && (
+                    <div className="w-full h-full text-center py-10 text-gray-500 text-sm italic">
+                        No data available.
+                    </div>
+                )}
                 {groups?.map((group, groupIndex) => {
                     const statusname = group?.statusname || 'No Stage';
                     const rowsWithIndex = (group?.data || []).map((row, idx) => ({

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { NavLink } from "react-router-dom";
 import { connect } from "react-redux";
@@ -8,6 +8,7 @@ import { deleteImagesById } from "../../service/todo/todoService";
 import Components from "../muiComponents/components";
 import { deleteOpportunitiesDocs, updateOpportunitiesDocs } from "../../service/opportunities/opportunitiesService";
 import PermissionWrapper from "../common/permissionWrapper/PermissionWrapper";
+import AlertDialog from "../common/alertDialog/alertDialog";
 
 function MultipleFileUpload({
   files,
@@ -22,7 +23,9 @@ function MultipleFileUpload({
   uploadedFiles,
   setDeleteLogo
 }) {
-  // --- Helpers ---
+  const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+  const [selectedImageId, setSelectedImageId] = useState(null)
+
   const getExt = (name = "", fallbackMime = "") => {
     const qless = name.split("?")[0];
     const idx = qless.lastIndexOf(".");
@@ -264,26 +267,39 @@ function MultipleFileUpload({
     });
   };
 
-  const handleRemoveImages = async (id) => {
+  const handleRemoveImages = async () => {
     if (type === "todo") {
-      const response = await deleteImagesById(id);
+      const response = await deleteImagesById(selectedImageId);
       if (response?.status === 200) {
-        const data = existingImages?.filter((row) => row.imageId !== id);
+        const data = existingImages?.filter((row) => row.imageId !== selectedImageId);
         setExistingImages(data);
+        handleCloseDeleteDialog()
       } else {
         setAlert({ open: true, message: response.message, type: "error" });
       }
     }
     if (type === "oppDocs") {
-      const response = await deleteOpportunitiesDocs(id);
+      const response = await deleteOpportunitiesDocs(selectedImageId);
       if (response?.status === 200) {
-        const data = existingImages?.filter((row) => row.imageId !== id);
+        const data = existingImages?.filter((row) => row.imageId !== selectedImageId);
         setExistingImages(data);
+        handleCloseDeleteDialog()
       } else {
         setAlert({ open: true, message: response.message, type: "error" });
       }
     }
   };
+
+  const handleOpenDeleteDialog = (id = null) => {
+    setSelectedImageId(id)
+    setDialog({ open: true, title: 'Delete Image Or Document', message: 'Are you sure! Do you want to delete this document?', actionButtonText: 'yes' });
+  }
+
+  const handleCloseDeleteDialog = () => {
+    setSelectedImageId(null)
+    setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+  }
+
 
   return (
 
@@ -322,7 +338,7 @@ function MultipleFileUpload({
                 name,
                 ext,
                 removable: true,
-                onRemove: () => handleRemoveImages(item.imageId),
+                onRemove: () => handleOpenDeleteDialog(item.imageId),
                 isInternal: !!item.isInternal,
                 onCheckboxChange: (checked) =>
                   handleCheckboxChange(item.imageId, "existing", idx, checked)
@@ -363,6 +379,14 @@ function MultipleFileUpload({
             });
           })}
       </aside>
+      <AlertDialog
+        open={dialog.open}
+        title={dialog.title}
+        message={dialog.message}
+        actionButtonText={dialog.actionButtonText}
+        handleAction={() => handleRemoveImages()}
+        handleClose={() => handleCloseDeleteDialog()}
+      />
     </div>
   );
 }

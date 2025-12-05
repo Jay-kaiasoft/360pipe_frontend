@@ -1412,8 +1412,8 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     {row.contactName || "—"}
                                                 </p>
 
-                                                {row.email && (
-                                                    <p className="text-xs text-gray-500 truncate mt-1">{row.email}</p>
+                                                {row.role && (
+                                                    <p className="text-xs text-gray-500 truncate mt-1">{row.role}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -1483,7 +1483,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         {items.map((row, i) => {
                                             const qty = parseFloat(row?.qty) || 0;
                                             const price = parseFloat(row?.price) || 0;
-                                            const total = qty * price;
+                                            const total = parseFloat(qty * price);
 
                                             return (
                                                 <tr
@@ -1660,8 +1660,6 @@ const ViewOpportunity = ({ setAlert }) => {
             })
             : null;
 
-        const reasonText = goLiveItem?.notes || items[0]?.notes || null;
-
         return (
             <div className="w-full h-full flex flex-col justify-between">
                 {/* Timeline Container with Scroll */}
@@ -1671,9 +1669,11 @@ const ViewOpportunity = ({ setAlert }) => {
                             <React.Fragment key={step.id ?? index}>
                                 {/* STEP COLUMN */}
                                 <div className="flex flex-col items-center min-w-[70px] flex-shrink-0">
-                                    <span className="font-semibold text-sm text-gray-800 text-center leading-tight break-words px-1">
-                                        {step.process}
-                                    </span>
+                                    <Tooltip title={step.notes} arrow>
+                                        <span className="font-semibold text-sm text-gray-800 text-center leading-tight break-words px-1 cursor-pointer">
+                                            {step.process}
+                                        </span>
+                                    </Tooltip>
                                     <span className="w-px h-3 bg-black my-1" />
                                     <span className="text-sm text-gray-600">
                                         {formatStepDate(step.processDate)}
@@ -1713,7 +1713,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 </div>
 
                 {/* Footer Info (Fixed at bottom, does not scroll) */}
-                {(goLiveText || reasonText) && (
+                {(goLiveText) && (
                     <div className="flex justify-between items-center text-xs text-gray-700 gap-1 border-t border-gray-100 pt-2">
                         {goLiveText && (
                             <span>
@@ -1721,12 +1721,12 @@ const ViewOpportunity = ({ setAlert }) => {
                                 {goLiveText}
                             </span>
                         )}
-                        {reasonText && (
+                        {/* {reasonText && (
                             <span className='truncate max-w-[50%] text-right' title={reasonText}>
                                 <span className="font-semibold">Note: </span>
                                 {reasonText}
                             </span>
-                        )}
+                        )} */}
                     </div>
                 )}
             </div>
@@ -1865,7 +1865,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                     />
                                 </>
 
-                                <div className='col-span-2'>
+                                <div className='md:col-span-2'>
                                     <OpportunityField
                                         label="Next Step"
                                         value={watch("nextSteps")}
@@ -1876,7 +1876,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                     />
                                 </div>
 
-                                <div className="flex items-center col-span-2">
+                                <div className="flex items-center md:col-span-2">
                                     <div className="flex-grow border-t border-gray-300"></div>
                                     <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
                                     <div className="flex-grow border-t border-gray-300"></div>
@@ -1894,7 +1894,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         </div>
                                     )
                                 }
-                                <div className='col-span-2'>
+                                <div className='md:col-span-2'>
                                     <MultipleFileUpload
                                         files={files}
                                         setFiles={setFiles}
@@ -2115,7 +2115,8 @@ const ViewOpportunity = ({ setAlert }) => {
                                     <p className='font-medium text-gray-500 tracking-wider text-sm'>
                                         Decision Map
                                     </p>
-                                    <div className='flex justify-end'>
+                                    <div className='flex justify-end gap-3'>
+                                        <p className='text-red-600'><strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.</p>
                                         <Tooltip title="Add" arrow>
                                             <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
                                                 <Components.IconButton onClick={() => handleOpenDecisionMapModel()}>
