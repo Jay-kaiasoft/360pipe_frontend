@@ -3,34 +3,36 @@ import { styled, useTheme } from '@mui/material/styles';
 import { Controller, useForm } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+
 import draftToHtml from 'draftjs-to-html';
 import { EditorState, convertToRaw } from 'draft-js';
 import { Editor } from "react-draft-wysiwyg";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import { getUserDetails } from '../../../utils/getUserDetails';
 
+import Checkbox from '../../common/checkBox/checkbox';
+import OpportunityContactModel from './opportunityContactModel';
+import { Tooltip } from '@mui/material';
+import Stapper from '../../common/stapper/stapper';
+import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
 import Input from '../../../components/common/input/input';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
-
-import { createOpportunity, deleteOpportunityLogo, getOpportunityDetails, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
-import { getAllAccounts } from '../../../service/account/accountService';
-import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService';
-import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
-import AlertDialog from '../../common/alertDialog/alertDialog';
-import OpportunitiesPartnersModel from "./opportunityPartnerModel";
-import { deleteOpportunitiesProducts, getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import OpportunitiesProductsModel from './opportunitiesProductsModel';
-import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
-import Checkbox from '../../common/checkBox/checkbox';
-import OpportunityContactModel from './opportunityContactModel';
+import OpportunitiesPartnersModel from "./opportunityPartnerModel";
 import FileInputBox from '../../fileInputBox/fileInputBox';
-import { getUserDetails } from '../../../utils/getUserDetails';
-import { Tooltip } from '@mui/material';
-import Stapper from '../../common/stapper/stapper';
-import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
+import AlertDialog from '../../common/alertDialog/alertDialog';
+
+import { createOpportunity, deleteOpportunityLogo, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { getAllAccounts } from '../../../service/account/accountService';
+import { opportunityStatus, uploadFiles, opportunityStages } from '../../../service/common/commonService';
+import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
+import { deleteOpportunitiesProducts, getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
+import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+// import { getAllSalesStages } from '../../../service/salesStage/salesStageService';
 
 const toolbarProperties = {
     options: ['inline', 'list', 'link', 'history'],
@@ -61,6 +63,7 @@ const steps = [
 function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, setSyncingPushStatus }) {
     const userdata = getUserDetails();
     const [activeStep, setActiveStep] = useState(0)
+    // const [opportunityStages, setOpportunityStages] = useState([])
 
     const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
     const [businessValue, setBusinessValue] = useState(() => EditorState.createEmpty());
@@ -187,7 +190,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             nextSteps: null,
             accountId: null,
             salesforceOpportunityId: null,
-            status: 1,
+            status: 3,
             logo: null,
             newLogo: null,
             whyDoAnything: null,
@@ -351,6 +354,21 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             setEditedContacts([]);
         }
     };
+
+    // const handleGetAllStages = async () => {
+    //     if (open) {
+    //         const res = await getAllSalesStages()
+    //         if (res.result) {
+    //             const data = res.result?.map((row) => {
+    //                 return {
+    //                     id: row.id,
+    //                     title: row.shortName,
+    //                 }
+    //             })
+    //             setOpportunityStages(data)
+    //         }
+    //     }
+    // }
 
     const handleToggleKeyContact = (rowId) => {
         const current = opportunitiesContacts.find(r => r.id === rowId);
@@ -590,6 +608,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
     useEffect(() => {
         handleGetAllAccounts()
+        // handleGetAllStages()
     }, [open])
 
     return (

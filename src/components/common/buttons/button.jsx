@@ -12,7 +12,6 @@ const Button = ({
     endIcon = null,
     value = null,
     id,
-    height = 0,
 }) => {
     const theme = useTheme();
     const ButtonComponent = isLoading ? Components.LoadingButton : Components.Button;
@@ -91,7 +90,7 @@ const Button = ({
 
     return (
         <ButtonComponent
-            fullWidth
+            // fullWidth
             disabled={disabled || isLoading}
             type={type}
             onClick={onClick}

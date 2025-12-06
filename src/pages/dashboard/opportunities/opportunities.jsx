@@ -13,12 +13,15 @@ import Components from '../../../components/muiComponents/components';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import CheckBoxSelect from '../../../components/common/select/checkBoxSelect';
+import GroupedDataTable from '../../../components/common/table/groupedTable';
+import OpportunitiesInfo from './opportunitiesInfo';
 
 import { deleteOpportunity, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
-import { opportunityStatus, stageColors } from '../../../service/common/commonService';
-import GroupedDataTable from '../../../components/common/table/groupedTable';
-import OpportunityInfoModel from '../../../components/models/opportunities/opportunityInfoModel';
-import OpportunitiesInfo from './opportunitiesInfo';
+import { opportunityStatus, stageColors, opportunityStages } from '../../../service/common/commonService';
+import { getAllAccounts } from '../../../service/account/accountService';
+import Select from '../../../components/common/select/select';
+import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
+import { useForm } from 'react-hook-form';
 
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
@@ -32,6 +35,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     // ⬇️ was isEditing (boolean), now we track which row is editing
     const [editingRowId, setEditingRowId] = useState(null);
+    const [accounts, setAccounts] = useState([]);
 
     const [opportunities, setOpportunities] = useState([]);
     const [open, setOpen] = useState(false);
@@ -165,7 +169,20 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     }
 
+    const handleGetAllAccounts = async () => {
+        const res = await getAllAccounts("fetchType=Options");
+        if (res?.status === 200) {
+            const data = res?.result?.map((acc) => ({
+                title: acc.accountName,
+                id: acc.id,
+                salesforceAccountId: acc.salesforceAccountId
+            }));
+            setAccounts(data);
+        }
+    };
+
     useEffect(() => {
+        handleGetAllAccounts()
         handleGetOpportunityOptions()
     }, []);
 
@@ -206,12 +223,18 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 150,
-            renderCell: (params) => {
-                return (
-                    <span>{params.value ? params.value : '-'}</span>
-                )
-            }
+            editable: canEditOpps,
+            renderCell: (params) =>
+                withEditTooltip(
+                    "Click To Edit",
+                    params,
+                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap">
+                        {params.value ? params.value : '-'}
+                    </span>
+                ),
+            renderEditCell: (params) => <AccountEditCell {...params} />,
         },
+
         {
             field: 'opportunity',
             headerName: 'Opportunity Name',
@@ -277,10 +300,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             flex: 1,
             maxWidth: 200,
             headerClassName: 'uppercase',
+            editable: canEditOpps,
             renderCell: (params) => {
                 const stage = params.value;
                 const bg = stageColors[stage] || "#e0e0e0";
-                return (
+                return withEditTooltip(
+                    "Click To Edit",
+                    params,
                     <Chip
                         label={stage}
                         size="small"
@@ -294,20 +320,27 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     />
                 );
             },
+            renderEditCell: (params) => <SalesStageEditCell {...params} />,
         },
         {
             field: 'closeDate',
-            headerName: 'close Date',
+            headerName: 'Close Date',
             headerClassName: 'uppercase',
             flex: 1,
             maxWidth: 150,
             align: 'center',
-            renderCell: (params) => {
-                return (
-                    <span>{params.value ? new Date(params.value).toLocaleDateString() : ''}</span>
-                )
-            }
+            editable: canEditOpps,
+            renderCell: (params) =>
+                withEditTooltip(
+                    "Click To Edit",
+                    params,
+                    <span>
+                        {params.value ? new Date(params.value).toLocaleDateString() : ''}
+                    </span>
+                ),
+            renderEditCell: (params) => <CloseDateEditCell {...params} />,
         },
+
         {
             field: 'nextSteps',
             headerName: 'Next Step',
@@ -374,6 +407,395 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             },
         },
     ];
+
+    const CloseDateEditCell = (params) => {
+        const { id, field, api, value } = params;
+
+        const originalValue = React.useRef(value ?? null);
+
+        // Local RHF form just for this cell
+        const { control, setValue: rhfSetValue, watch } = useForm({
+            defaultValues: {
+                closeDate: value ?? null,
+            },
+        });
+
+        const currentDate = watch("closeDate");
+
+        // This will be passed into DatePickerComponent
+        const handleSetValue = (name, newValue) => {
+            // update RHF internal value so the picker shows correctly
+            rhfSetValue(name, newValue);
+
+            // update the DataGrid cell value
+            api.setEditCellValue(
+                { id, field, value: newValue },
+                null
+            );
+        };
+
+        const handleSave = () => {
+            api.stopCellEditMode({ id, field });
+        };
+
+        const handleCancel = () => {
+            rhfSetValue("closeDate", originalValue.current);
+            api.setEditCellValue({
+                id,
+                field,
+                value: originalValue.current,
+            });
+            api.stopCellEditMode({
+                id,
+                field,
+                ignoreModifications: true,
+            });
+        };
+
+        return (
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+                <div className="flex-1 w-60">
+                    <DatePickerComponent
+                        name="closeDate"
+                        // label="Close Date"
+                        control={control}
+                        setValue={handleSetValue}
+                        minDate={new Date()}
+                        maxDate={null}
+                        required={true}
+                    />
+                </div>
+
+                <Tooltip title="Save" arrow>
+                    <div
+                        className={`${!currentDate ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-5 w-5 flex justify-center items-center rounded-full text-white`}
+                    >
+                        <Components.IconButton
+                            disabled={!currentDate}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                if (!currentDate) return;
+                                handleSave();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-floppy-disk'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+
+                <Tooltip title="Cancel" arrow>
+                    <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleCancel();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-close'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+            </div>
+        );
+    };
+
+    const SalesStageEditCell = (params) => {
+        const { id, field, api, value } = params;
+
+        const stageOptions = opportunityStages || [];
+
+        const originalValue = React.useRef(value ?? "");
+
+        const [selectedId, setSelectedId] = React.useState(() => {
+            const found = stageOptions.find((opt) => opt.title === value);
+            return found ? found.id : null;
+        });
+
+        const handleChange = (event, newValue) => {
+            const newStage = newValue?.title ?? "";
+            const newId = newValue?.id ?? null;
+
+            setSelectedId(newId);
+
+            api.setEditCellValue(
+                { id, field, value: newStage },
+                event
+            );
+        };
+
+        const handleSave = () => {
+            api.stopCellEditMode({ id, field });
+        };
+
+        const handleCancel = () => {
+            api.setEditCellValue({
+                id,
+                field,
+                value: originalValue.current,
+            });
+            api.stopCellEditMode({
+                id,
+                field,
+                ignoreModifications: true,
+            });
+        };
+
+        return (
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+                <div className="flex-1 w-60">
+                    <Select
+                        placeholder="Select stage"
+                        options={stageOptions}
+                        value={selectedId}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                <Tooltip title="Save" arrow>
+                    <div className="bg-green-600 cursor-pointer h-5 w-5 flex justify-center items-center rounded-full text-white">
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleSave();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-floppy-disk'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+
+                <Tooltip title="Cancel" arrow>
+                    <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleCancel();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-close'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+            </div>
+        );
+    };
+
+    const AccountEditCell = (params) => {
+        const { id, api, row } = params;
+
+        const originalValue = React.useRef({
+            accountId: row.accountId ?? null,
+            accountName: row.accountName ?? "",
+        });
+
+        const [selectedId, setSelectedId] = React.useState(() => {
+            const found = accounts.find(
+                (opt) => opt.id === row.accountId || opt.title === row.accountName
+            );
+            return found ? found.id : null;
+        });
+
+        const handleChange = (event, newValue) => {
+            const newId = newValue?.id ?? null;
+            const newName = newValue?.title ?? "";
+
+            setSelectedId(newId);
+
+            // ✅ This is the only thing the grid *must* know:
+            api.setEditCellValue(
+                { id, field: "accountName", value: newName },
+                event
+            );
+
+            // optional – visually keep row in sync, but we won't depend on it
+            api.setEditCellValue(
+                { id, field: "accountId", value: newId },
+                event
+            );
+        };
+
+        const handleSave = () => {
+            api.stopCellEditMode({ id, field: "accountName" });
+        };
+
+        const handleCancel = () => {
+            api.setEditCellValue({
+                id,
+                field: "accountName",
+                value: originalValue.current.accountName,
+            });
+            api.setEditCellValue({
+                id,
+                field: "accountId",
+                value: originalValue.current.accountId,
+            });
+            api.stopCellEditMode({
+                id,
+                field: "accountName",
+                ignoreModifications: true,
+            });
+        };
+
+        return (
+            <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+                <div className="flex-1 w-60">
+                    <Select
+                        placeholder="Select account"
+                        options={accounts}
+                        value={selectedId}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                <Tooltip title="Save" arrow>
+                    <div className="bg-green-600 cursor-pointer h-5 w-5 flex justify-center items-center rounded-full text-white">
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleSave();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-floppy-disk'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+
+                <Tooltip title="Cancel" arrow>
+                    <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+                        <Components.IconButton
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                handleCancel();
+                            }}
+                        >
+                            <CustomIcons
+                                iconName={'fa-solid fa-close'}
+                                css='cursor-pointer text-white h-3 w-3'
+                            />
+                        </Components.IconButton>
+                    </div>
+                </Tooltip>
+            </div>
+        );
+    };
+
+    // const AccountEditCell = (params) => {
+    //     const { id, api, row } = params;
+
+    //     const originalValue = React.useRef({
+    //         accountId: row.accountId ?? null,
+    //         accountName: row.accountName ?? "",
+    //     });
+
+    //     const [selectedId, setSelectedId] = React.useState(() => {
+    //         const found = accounts.find(
+    //             (opt) => opt.id === row.accountId || opt.title === row.accountName
+    //         );
+    //         return found ? found.id : null;
+    //     });
+
+    //     const handleChange = (event, newValue) => {
+    //         const newId = newValue?.id ?? null;
+    //         const newName = newValue?.title ?? "";
+
+    //         setSelectedId(newId);
+
+    //         // Update both accountId and accountName in the grid row
+    //         api.setEditCellValue(
+    //             { id, field: "accountId", value: newId },
+    //             event
+    //         );
+    //         api.setEditCellValue(
+    //             { id, field: "accountName", value: newName },
+    //             event
+    //         );
+    //     };
+
+    //     const handleSave = () => {
+    //         api.stopCellEditMode({ id, field: "accountName" });
+    //     };
+
+    //     const handleCancel = () => {
+    //         api.setEditCellValue({
+    //             id,
+    //             field: "accountId",
+    //             value: originalValue.current.accountId,
+    //         });
+    //         api.setEditCellValue({
+    //             id,
+    //             field: "accountName",
+    //             value: originalValue.current.accountName,
+    //         });
+    //         api.stopCellEditMode({
+    //             id,
+    //             field: "accountName",
+    //             ignoreModifications: true,
+    //         });
+    //     };
+
+    //     return (
+    //         <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
+    //             <div className="flex-1 w-60">
+    //                 <Select
+    //                     // label="Account"
+    //                     placeholder="Select account"
+    //                     options={accounts}
+    //                     value={selectedId}
+    //                     onChange={handleChange}
+    //                 />
+    //             </div>
+
+    //             <Tooltip title="Save" arrow>
+    //                 <div
+    //                     className="bg-green-600 cursor-pointer h-5 w-5 flex justify-center items-center rounded-full text-white"
+    //                 >
+    //                     <Components.IconButton
+    //                         onClick={(event) => {
+    //                             event.stopPropagation();
+    //                             handleSave();
+    //                         }}
+    //                     >
+    //                         <CustomIcons
+    //                             iconName={'fa-solid fa-floppy-disk'}
+    //                             css='cursor-pointer text-white h-3 w-3'
+    //                         />
+    //                     </Components.IconButton>
+    //                 </div>
+    //             </Tooltip>
+
+    //             <Tooltip title="Cancel" arrow>
+    //                 <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
+    //                     <Components.IconButton
+    //                         onClick={(event) => {
+    //                             event.stopPropagation();
+    //                             handleCancel();
+    //                         }}
+    //                     >
+    //                         <CustomIcons
+    //                             iconName={'fa-solid fa-close'}
+    //                             css='cursor-pointer text-white h-3 w-3'
+    //                         />
+    //                     </Components.IconButton>
+    //                 </div>
+    //             </Tooltip>
+    //         </div>
+    //     );
+    // };
 
     const OpportunityNameEditCell = (params) => {
         const { id, field, api, value } = params;
@@ -654,32 +1076,56 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 newRow.dealAmount === '' || newRow.dealAmount == null
                     ? null
                     : parseFloat(newRow.dealAmount).toFixed(2);
+
+            // 🔹 Build base payload
             const updatedData = {
                 ...newRow,
                 nextSteps: newRow.nextSteps,
-                dealAmount: cleanedAmount, // float with max 2 decimals
+                dealAmount: cleanedAmount,
             };
+
+            // 🔹 If account name changed, map it to accountId
+            if (newRow.accountName && newRow.accountName !== oldRow.accountName) {
+                const selectedAccount = accounts.find(
+                    (acc) => acc.title === newRow.accountName
+                );
+
+                if (selectedAccount) {
+                    updatedData.accountId = selectedAccount.id;
+                }
+            }
+
+            // ✅ (optional) also ensure the row the grid keeps uses the new id
+            const rowToReturn = {
+                ...newRow,
+                dealAmount: cleanedAmount,
+                accountId: updatedData.accountId ?? newRow.accountId,
+            };
+
             if (cleanedAmount === null || cleanedAmount === "") {
                 setAlert({
                     open: true,
                     message: "Deal amount can not be empty",
                     type: "error"
-                })
-                return
+                });
+                return oldRow;
             }
+
             if (newRow.nextSteps === null || newRow.nextSteps === "") {
                 setAlert({
                     open: true,
                     message: "Next step can not be empty",
                     type: "error"
-                })
-                return
+                });
+                return oldRow;
             }
+
+            // 👇 accountId is now included in updatedData
             const res = await updateOpportunity(newRow.id, updatedData);
             if (res.status === 200) {
                 setSyncingPushStatus(true);
                 handleGetOpportunities();
-                return newRow;
+                return rowToReturn;
             } else {
                 setAlert({
                     open: true,
@@ -691,12 +1137,62 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         } catch (error) {
             setAlert({
                 open: true,
-                message: "Failed to update opportunity",
+                message: "Something went wrong while updating opportunity",
                 type: "error",
             });
             return oldRow;
         }
     };
+
+    // const processRowUpdate = async (newRow, oldRow) => {
+    //     try {
+    //         const cleanedAmount =
+    //             newRow.dealAmount === '' || newRow.dealAmount == null
+    //                 ? null
+    //                 : parseFloat(newRow.dealAmount).toFixed(2);
+    //         const updatedData = {
+    //             ...newRow,
+    //             nextSteps: newRow.nextSteps,
+    //             dealAmount: cleanedAmount, // float with max 2 decimals
+    //         };
+    //         if (cleanedAmount === null || cleanedAmount === "") {
+    //             setAlert({
+    //                 open: true,
+    //                 message: "Deal amount can not be empty",
+    //                 type: "error"
+    //             })
+    //             return
+    //         }
+    //         if (newRow.nextSteps === null || newRow.nextSteps === "") {
+    //             setAlert({
+    //                 open: true,
+    //                 message: "Next step can not be empty",
+    //                 type: "error"
+    //             })
+    //             return
+    //         }
+    //         const res = await updateOpportunity(newRow.id, updatedData);
+    //         if (res.status === 200) {
+    //             setSyncingPushStatus(true);
+    //             handleGetOpportunities();
+    //             return newRow;
+    //         } else {
+    //             setAlert({
+    //                 open: true,
+    //                 message: res?.message || "Failed to update opportunity",
+    //                 type: "error",
+    //             });
+    //             return oldRow;
+    //         }
+    //     } catch (error) {
+    //         setAlert({
+    //             open: true,
+    //             message: "Failed to update opportunity",
+    //             type: "error",
+    //         });
+    //         return oldRow;
+    //     }
+    // };
 
     const actionButtons = () => {
         return (
@@ -746,6 +1242,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             </div>
         )
     }
+
     const getRowClassNameForGrid = (params) => {
         // params.row.id is your opportunityId (from API)
         if (params?.row?.id === infoRowId) {
@@ -753,7 +1250,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
         return '';
     };
-
 
     return (
         <>

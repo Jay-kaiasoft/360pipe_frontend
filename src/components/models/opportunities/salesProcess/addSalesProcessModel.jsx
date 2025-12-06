@@ -3,20 +3,20 @@ import { styled, useTheme } from '@mui/material/styles';
 import { connect } from 'react-redux';
 import { Controller, useForm } from 'react-hook-form';
 import { setAlert, setLoading } from '../../../../redux/commonReducers/commonReducers';
+import { getUserDetails } from '../../../../utils/getUserDetails';
 
+import { Tooltip } from '@mui/material';
+import AddSalesProcessName from './addSalesProcessName';
 import Select from '../../../common/select/select';
 import Components from '../../../../components/muiComponents/components';
 import Button from '../../../../components/common/buttons/button';
 import Input from '../../../../components/common/input/input';
 import CustomIcons from '../../../../components/common/icons/CustomIcons';
+import DatePickerComponent from '../../../common/datePickerComponent/datePickerComponent';
 
 import { getAllProcessNameByCustomer } from '../../../../service/processName/processNameService';
-import { getUserDetails } from '../../../../utils/getUserDetails';
-import { createSalesProcess, getSalesProcess, updateSalesProcess } from '../../../../service/salesProcessService/salesProcessService';
 import { getAllContacts } from '../../../../service/contact/contactService';
-import DatePickerComponent from '../../../common/datePickerComponent/datePickerComponent';
-import { Tooltip } from '@mui/material';
-import AddSalesProcessName from './addSalesProcessName';
+import { createSalesProcess, getSalesProcess, updateSalesProcess } from '../../../../service/salesProcess/salesProcessService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -35,6 +35,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
 
     const [salesProcessName, setSalesProcessName] = useState([])
     const [contacts, setContacts] = useState([])
+    const [goLiveStage, setGoLiveStage] = useState(false)
 
     const {
         handleSubmit,
@@ -48,6 +49,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
             id: "",
             oppId: "",
             goLive: null,
+            reason: null,
             processDate: null,
             process: null,
             notes: "",
@@ -71,6 +73,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
             process: "",
             notes: "",
             contactId: null,
+            reason: null
         });
         handleClose();
     };
@@ -120,38 +123,62 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
         handleGetSalesProcess()
     }, [open])
 
-    const submit = async (data) => {
+    const submit = async (data, actionType = "submit") => {
         const newData = {
             ...data,
             process: salesProcessName?.find(stage => stage.id === parseInt(data.process))?.title || null,
             oppId: oppId
-        }
+        };
+
         if (id) {
+            // UPDATE
             const res = await updateSalesProcess(id, newData);
             if (res.status === 200) {
-                onClose()
-                handleGetAllSalesProcess()
+                // For update we always close
+                onClose();
+                handleGetAllSalesProcess();
             } else {
                 setAlert({
                     open: true,
                     message: res.message,
-                    type: "error"
-                })
+                    type: "error",
+                });
             }
         } else {
+            // CREATE
             const res = await createSalesProcess(newData);
             if (res.status === 201) {
-                onClose()
-                handleGetAllSalesProcess()
+
+                if (actionType === "submitAndNew") {
+                    // ✅ Keep modal open, just clear form for a new entry
+                    reset({
+                        id: "",
+                        oppId: "",
+                        goLive: null,
+                        processDate: null,
+                        process: "",
+                        notes: "",
+                        contactId: null,
+                        reason: null,
+                    });
+                    setGoLiveStage(false); // hide Go Live fields again
+                    handleGetAllSalesProcess();
+                } else {
+                    // Normal Submit → close modal
+                    onClose();
+                    handleGetAllSalesProcess();
+                }
+
             } else {
                 setAlert({
                     open: true,
                     message: res.message,
-                    type: "error"
-                })
+                    type: "error",
+                });
             }
         }
-    }
+    };
+
 
     return (
         <React.Fragment>
@@ -178,7 +205,10 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                     <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-black w-5 h-5' />
                 </Components.IconButton>
 
-                <form noValidate onSubmit={handleSubmit(submit)}>
+                <form
+                    noValidate
+                    onSubmit={handleSubmit((data) => submit(data, "submit"))}
+                >
                     <Components.DialogContent dividers>
                         <div className='grid gap-[30px]'>
                             <div className="flex items-center gap-3">
@@ -196,8 +226,12 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {
                                                         field.onChange(newValue.id);
+                                                        if (newValue.title === "Go Live") {
+                                                            setGoLiveStage(true)
+                                                        }
                                                     } else {
                                                         setValue("process", null);
+                                                        setGoLiveStage(false)
                                                     }
                                                 }}
                                                 error={errors?.process}
@@ -260,9 +294,6 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                             <div>
                                 <DatePickerComponent setValue={setValue} control={control} name='processDate' label={`Process Date`} minDate={new Date()} maxDate={null} required={true} />
                             </div>
-                            <div>
-                                <DatePickerComponent setValue={setValue} control={control} name='goLive' label={`Go Live`} minDate={new Date()} maxDate={null} />
-                            </div>
 
                             <div>
                                 <Controller
@@ -282,12 +313,57 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                     )}
                                 />
                             </div>
+
+                            {
+                                goLiveStage && (
+                                    <>
+                                        <div>
+                                            <DatePickerComponent setValue={setValue} control={control} name='goLive' label={`Go Live`} minDate={new Date()} maxDate={null} required={true} />
+                                        </div>
+
+                                        <div>
+                                            <Controller
+                                                name="reason"
+                                                control={control}
+                                                rules={{ required: true }}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        {...field}
+                                                        label="Reason"
+                                                        type={`text`}
+                                                        onChange={(e) => {
+                                                            field.onChange(e);
+                                                        }}
+                                                        multiline={true}
+                                                        rows={2}
+                                                        error={errors?.reason}
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+                                    </>
+                                )
+                            }
                         </div>
                     </Components.DialogContent>
 
                     <Components.DialogActions>
                         <div className='flex justify-end items-center gap-4'>
-                            <Button type={`submit`} text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                            {
+                                !id && (
+                                    <Button
+                                        type="button"
+                                        text="Submit & New"
+                                        onClick={handleSubmit((data) => submit(data, "submitAndNew"))}
+                                        endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />}
+                                    />
+                                )
+                            }
+                            <Button
+                                type="submit"
+                                text={id ? "Update" : "Submit"}
+                                endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />}
+                            />
                             <Button type="button" text={"Cancel"} useFor='disabled' onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                         </div>
                     </Components.DialogActions>
