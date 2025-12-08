@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { connect } from "react-redux";
+import { setAlert, setSyncingPushStatus } from "../../../redux/commonReducers/commonReducers";
 
 import { Editor } from "react-draft-wysiwyg";
 import {
@@ -38,6 +40,7 @@ import {
     updateOpportunity,
 } from "../../../service/opportunities/opportunitiesService";
 
+
 const toolbarProperties = {
     options: ["inline", "list", "link", "history"],
     inline: {
@@ -48,7 +51,6 @@ const toolbarProperties = {
     },
 };
 
-// Simple MEDDIC row block
 const MeddicRow = ({ letter, children }) => (
     <div className="flex border-b-[7px] border-[#ECECEC] last:border-b-0">
         <div className="w-16 bg-[#0478DC] flex items-center justify-center">
@@ -58,7 +60,6 @@ const MeddicRow = ({ letter, children }) => (
     </div>
 );
 
-// Decision Map Timeline (for SALES_PROCESS rows)
 const DecisionMapTimeline = ({ items = [], onEdit, onDelete }) => {
     if (!items || items.length === 0) {
         return (
@@ -178,15 +179,15 @@ const DecisionMapTimeline = ({ items = [], onEdit, onDelete }) => {
     );
 };
 
-const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
+const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose, setAlert, setSyncingPushStatus }) => {
     const [menuAnchor, setMenuAnchor] = useState(null);
+    const [activeEditorHint, setActiveEditorHint] = useState(null);
 
     const [opportunitiesKeyContact, setOpportunitiesKeyContacts] = useState([]);
     const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
     const [economicBuyerContacts, setEconomicBuyerContacts] = useState([]);
     const [selectedType, setSelectedType] = useState("Opp360");
 
-    // Opp360 editor states
     const [whyDoAnythingState, setWhyDoAnythingState] = useState(
         EditorState.createEmpty()
     );
@@ -213,17 +214,29 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
     const [isEditingMValue, setIsEditingMValue] = useState(false);
     // I => Why Do Anything
     const [isEditingIWhy, setIsEditingIWhy] = useState(false);
+    // E => Economic Buyer contacts
+    const [isEditingEContacts, setIsEditingEContacts] = useState(false);
+    // C => Champion (all contacts)
+    const [isEditingCContacts, setIsEditingCContacts] = useState(false);
 
     const isAnyOpp360Editing =
         isEditingWhy ||
         isEditingCurrentEnv ||
         isEditingValue ||
-        isEditingContacts ||
+        isEditingContacts ||   // Opp360 Key Contacts
         isEditingNextSteps;
 
+    // MEDDIC: all types of editing
+    const isAnyMeddicEditing =
+        isEditingMValue ||
+        isEditingIWhy ||
+        isEditingEContacts ||
+        isEditingCContacts;
 
-    const isAnyMeddicEditing = isEditingMValue || isEditingIWhy;
-
+    // MEDDIC: header SAVE should only appear for text edits (M & I)
+    const isAnyMeddicEditingHeader =
+        isEditingMValue ||
+        isEditingIWhy;
 
     // Key contacts edit tracking
     const [initialIsKey, setInitialIsKey] = useState({});
@@ -342,7 +355,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
             handleGetOppContacts();
             handleGetAllSalesProcess();
         }
-        // reset edit flags when drawer closes
+
         if (!isOpen) {
             setIsEditingWhy(false);
             setIsEditingCurrentEnv(false);
@@ -352,8 +365,9 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
 
             setIsEditingMValue(false);
             setIsEditingIWhy(false);
+            setIsEditingEContacts(false);
+            setIsEditingCContacts(false);
         }
-
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, opportunityId]);
@@ -371,10 +385,12 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
             case "BusinessValue":
                 setIsEditingValue(true);
                 break;
-            case "KeyContacts":
-                // Opp360 key contacts => use small save button, so hide header save
-                setSaveButton(false);
+            case "KeyContacts": // Opp360 Key Contacts
+                setSaveButton(false);      // hide header save
                 setIsEditingContacts(true);
+                // Make sure MEDDIC contact edits are off
+                setIsEditingEContacts(false);
+                setIsEditingCContacts(false);
                 break;
             case "NextSteps":
                 setIsEditingNextSteps(true);
@@ -388,19 +404,23 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                 setIsEditingIWhy(true);
                 break;
             case "MeddicE": // E = Economic Buyer contacts
-                setIsEditingContacts(true);
+                setIsEditingEContacts(true);
+                setIsEditingCContacts(false);
+                setIsEditingContacts(false); // Opp360 key contacts off
                 break;
-            case "MeddicC": // C = All contacts
-                setIsEditingContacts(true);
+            case "MeddicC": // C = Champion (all contacts)
+                setIsEditingCContacts(true);
+                setIsEditingEContacts(false);
+                setIsEditingContacts(false); // Opp360 key contacts off
                 break;
-
             default:
                 break;
         }
     };
 
+
     const handleCancelOpp360 = () => {
-        // Reset editor states from last HTML snapshot
+        // Reset editor states ...
         setWhyDoAnythingState(initEditorFromHtml(whyDoAnythingHTML));
         setCurrentEnvironmentState(initEditorFromHtml(currentEnvironmentHTML));
         setBusinessValueState(initEditorFromHtml(businessValueHTML));
@@ -415,9 +435,10 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
         // MEDDIC flags
         setIsEditingMValue(false);
         setIsEditingIWhy(false);
+        setIsEditingEContacts(false);
+        setIsEditingCContacts(false);
 
         setSaveButton(true);
-
     };
 
     const handleSaveKeyContacts = async () => {
@@ -459,9 +480,9 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                 nextSteps: nextStepsValue
             };
 
-
             const res = await updateOpportunity(opportunityId, payload);
             if (res?.status === 200) {
+                setSyncingPushStatus(true);
                 setWhyDoAnythingHTML(whyHtml || "");
                 setCurrentEnvironmentHTML(curEnvHtml || "");
                 setBusinessValueHTML(valHtml || "");
@@ -471,6 +492,12 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                 setIsEditingCurrentEnv(false);
                 setIsEditingValue(false);
                 setIsEditingNextSteps(false);
+
+                // MEDDIC flags
+                setIsEditingMValue(false);
+                setIsEditingIWhy(false);
+                setIsEditingEContacts(false);
+                setIsEditingCContacts(false);
             } else {
                 console.error("Failed to update opportunity Opp360 fields");
             }
@@ -541,6 +568,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
         try {
             const res = await deleteOpportunitiesContact(selectedContactId);
             if (res?.status === 200) {
+                setSyncingPushStatus(true);
                 handleCloseDeleteContactDialog();
                 await handleGetOppContacts();
             }
@@ -549,12 +577,20 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
         }
     };
 
-    const contactsWithEdits = opportunitiesKeyContact.map((c) => {
+    // For Opp360 "Key Contacts" card: only key contacts
+    const keyContactsWithEdits = opportunitiesKeyContact.map((c) => {
         const edit = editedContacts.find((e) => e.id === c.id);
         return { ...c, isKey: edit ? edit.isKey : c.isKey };
     });
 
-    const currentKeyContactsCount = contactsWithEdits.filter(
+    // For MEDDIC & key-count logic: ALL contacts with edits applied
+    const allContactsWithEdits = opportunitiesContacts.map((c) => {
+        const edit = editedContacts.find((e) => e.id === c.id);
+        return { ...c, isKey: edit ? edit.isKey : c.isKey };
+    });
+
+    // Always compute key count from all contacts
+    const currentKeyContactsCount = allContactsWithEdits.filter(
         (c) => c.isKey
     ).length;
 
@@ -682,25 +718,31 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {/* Header SAVE / CANCEL */}
                         {(
                             (selectedType === "Opp360" && isAnyOpp360Editing) ||
-                            (selectedType === "MEDDIC" && (isEditingMValue || isEditingIWhy || isEditingContacts))
+                            (selectedType === "MEDDIC" && isAnyMeddicEditing)
                         ) && (
                                 <>
                                     {saveButton && (
-                                        <Tooltip title="Save" arrow>
-                                            <div className="bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white">
-                                                <Components.IconButton
-                                                    onClick={handleSaveAllOpp360}
-                                                >
-                                                    <CustomIcons
-                                                        iconName="fa-solid fa-floppy-disk"
-                                                        css="cursor-pointer text-white h-3 w-3"
-                                                    />
-                                                </Components.IconButton>
-                                            </div>
-                                        </Tooltip>
+                                        ((selectedType === "Opp360" && isAnyOpp360Editing) ||
+                                            (selectedType === "MEDDIC" && isAnyMeddicEditingHeader)) && (
+                                            <Tooltip title="Save" arrow>
+                                                <div className="bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white">
+                                                    <Components.IconButton
+                                                        onClick={handleSaveAllOpp360}
+                                                    >
+                                                        <CustomIcons
+                                                            iconName="fa-solid fa-floppy-disk"
+                                                            css="cursor-pointer text-white h-3 w-3"
+                                                        />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        )
                                     )}
+
+                                    {/* CANCEL: always show when *anything* is in edit mode */}
                                     <Tooltip title="Cancel" arrow>
                                         <div className="bg-black h-7 w-7 flex justify-center items-center rounded-full text-white">
                                             <Components.IconButton
@@ -715,6 +757,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                     </Tooltip>
                                 </>
                             )}
+
                         <Components.IconButton onClick={handleClose}>
                             <CustomIcons
                                 iconName={"fa-solid fa-close"}
@@ -730,7 +773,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-[360px]">
                             {/* WHY DO ANYTHING */}
                             <div
-                                className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col cursor-pointer"
+                                className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col cursor-pointer relative"
                                 onClick={() =>
                                     startEditField("WhyDoAnything")
                                 }
@@ -749,7 +792,20 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                             wrapperClassName="wrapper-class border border-gray-300 rounded-md"
                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                             toolbarClassName="toolbar-class border-b border-gray-300"
+                                            onFocus={() => setActiveEditorHint("WhyDoAnything")}
+                                            onBlur={() => { setActiveEditorHint(null) }}
                                         />
+                                        {activeEditorHint === "WhyDoAnything" && (
+                                            <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
+                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
+                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                <img
+                                                    src="/images/WhyDoAnything2.png"
+                                                    alt="WhyDoAnything"
+                                                    className="max-w-xs max-h-48 object-contain relative z-10"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div
@@ -802,7 +858,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
 
                             {/* VALUE */}
                             <div
-                                className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col cursor-pointer"
+                                className="bg-white rounded-2xl shadow-sm border border-gray-200 px-5 py-4 flex flex-col cursor-pointer relative"
                                 onClick={() => startEditField("BusinessValue")}
                             >
                                 <h3 className="text-base font-semibold text-gray-800 mb-2">
@@ -819,7 +875,20 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                             wrapperClassName="wrapper-class border border-gray-300 rounded-md"
                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                             toolbarClassName="toolbar-class border-b border-gray-300"
+                                            onFocus={() => setActiveEditorHint("BusinessValue")}
+                                            onBlur={() => { setActiveEditorHint(null) }}
                                         />
+                                        {activeEditorHint === "BusinessValue" && (
+                                            <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
+                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
+                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                <img
+                                                    src="/images/BusinessValue2.png"
+                                                    alt="Business value guidance"
+                                                    className="max-w-xs max-h-48 object-contain relative z-10"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div
@@ -926,8 +995,8 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                     )
                                 ) : (
                                     <div className="space-y-2 max-h-44 overflow-y-auto">
-                                        {contactsWithEdits.length > 0 ? (
-                                            contactsWithEdits.map((c) => (
+                                        {keyContactsWithEdits.length > 0 ? (
+                                            keyContactsWithEdits.map((c) => (
                                                 <div
                                                     key={c.id}
                                                     className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey
@@ -1097,7 +1166,6 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                     <div className="flex-1 overflow-y-auto p-4 bg-[rgb(224,239,251)]">
                         <div className="max-w-3xl mx-auto border-[7px] border-[#ECECEC] bg-[rgb(224,239,251)]">
                             {/* M - Metrics (Value) */}
-                            {/* M - Metrics (Value) */}
                             <MeddicRow letter="M">
                                 <div
                                     className="text-sm text-gray-700 leading-relaxed space-y-1 cursor-pointer"
@@ -1133,7 +1201,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                     className="text-sm text-gray-700 leading-relaxed space-y-1 cursor-pointer"
                                     onClick={() => startEditField("MeddicE")}
                                 >
-                                    {!isEditingContacts ? (
+                                    {!isEditingEContacts ? (
                                         economicBuyerContacts?.length > 0 ? (
                                             <ul className="space-y-1 text-sm">
                                                 {economicBuyerContacts.map((c) => (
@@ -1199,12 +1267,12 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                             </div>
 
                                             <div className="space-y-2 max-h-44 overflow-y-auto">
-                                                {contactsWithEdits.filter(
+                                                {allContactsWithEdits.filter(
                                                     (c) =>
                                                         c.role &&
                                                         c.role.toLowerCase() === "economic buyer"
                                                 ).length > 0 ? (
-                                                    contactsWithEdits
+                                                    allContactsWithEdits
                                                         .filter(
                                                             (c) =>
                                                                 c.role &&
@@ -1213,9 +1281,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                                         .map((c) => (
                                                             <div
                                                                 key={c.id}
-                                                                className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey
-                                                                    ? "border-blue-500 bg-blue-50"
-                                                                    : "border-gray-200"
+                                                                className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey ? "border-blue-500 bg-blue-50" : "border-gray-200"
                                                                     }`}
                                                             >
                                                                 <div className="flex items-center gap-2">
@@ -1227,8 +1293,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                                                             <Checkbox
                                                                                 checked={!!c.isKey}
                                                                                 disabled={
-                                                                                    currentKeyContactsCount >=
-                                                                                    4 && !c.isKey
+                                                                                    currentKeyContactsCount >= 4 && !c.isKey
                                                                                 }
                                                                                 onChange={(e) => {
                                                                                     e.stopPropagation();
@@ -1285,6 +1350,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                                         No economic buyer contacts.
                                                     </p>
                                                 )}
+
                                             </div>
                                         </>
                                     )}
@@ -1294,8 +1360,8 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
 
                             {/* D - Decision Criteria (not mapped) */}
                             <MeddicRow letter="D">
-                                <p className="text-sm text-gray-400 italic">
-                                    -
+                                <p className="text-sm text-gray-900 italic">
+                                    N/A
                                 </p>
                             </MeddicRow>
 
@@ -1368,8 +1434,6 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                 )}
                             </MeddicRow>
 
-
-
                             {/* I - Implicate the Pain (Why Do Anything) */}
                             <MeddicRow letter="I">
                                 <div
@@ -1406,12 +1470,12 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                     className="text-sm text-gray-700 leading-relaxed space-y-1 cursor-pointer"
                                     onClick={() => startEditField("MeddicC")}
                                 >
-                                    {!isEditingContacts ? (
+                                    {!isEditingCContacts ? (
                                         opportunitiesContacts?.length > 0 ? (
                                             <ul className="space-y-1 text-sm">
                                                 {opportunitiesContacts.map((c) => (
                                                     <li key={c.id}>
-                                                        <span className="font-medium text-indigo-600">
+                                                        <span className={`font-medium ${c.isKey ? "text-indigo-600" : "text-black"}`}>
                                                             {c.contactName}
                                                         </span>
                                                         {c.role && (
@@ -1430,8 +1494,8 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                         <>
                                             {/* Same mini save/add as E row */}
                                             <div className="flex items-center justify-end gap-2 mb-2">
-                                                {editedContacts.length > 0 && (
-                                                    <Tooltip title="Save key contacts only" arrow>
+                                                {opportunitiesContacts.length > 0 && (
+                                                    <Tooltip title="Save" arrow>
                                                         <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
                                                             <Components.IconButton
                                                                 onClick={(e) => {
@@ -1472,13 +1536,11 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                             </div>
 
                                             <div className="space-y-2 max-h-44 overflow-y-auto">
-                                                {contactsWithEdits.length > 0 ? (
-                                                    contactsWithEdits.map((c) => (
+                                                {allContactsWithEdits.length > 0 ? (
+                                                    allContactsWithEdits.map((c) => (
                                                         <div
                                                             key={c.id}
-                                                            className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey
-                                                                ? "border-blue-500 bg-blue-50"
-                                                                : "border-gray-200"
+                                                            className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey ? "border-blue-500 bg-blue-50" : "border-gray-200"
                                                                 }`}
                                                         >
                                                             <div className="flex items-center gap-2">
@@ -1490,8 +1552,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                                                         <Checkbox
                                                                             checked={!!c.isKey}
                                                                             disabled={
-                                                                                currentKeyContactsCount >=
-                                                                                4 && !c.isKey
+                                                                                currentKeyContactsCount >= 4 && !c.isKey
                                                                             }
                                                                             onChange={(e) => {
                                                                                 e.stopPropagation();
@@ -1519,17 +1580,12 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                                                 moduleName="Opportunities"
                                                                 actionId={2}
                                                                 component={
-                                                                    <Tooltip
-                                                                        title="Delete contact"
-                                                                        arrow
-                                                                    >
+                                                                    <Tooltip title="Delete contact" arrow>
                                                                         <div className="bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
                                                                             <Components.IconButton
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
-                                                                                    handleOpenDeleteContactDialog(
-                                                                                        c.id
-                                                                                    );
+                                                                                    handleOpenDeleteContactDialog(c.id);
                                                                                 }}
                                                                             >
                                                                                 <CustomIcons
@@ -1548,6 +1604,7 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
                                                         No contacts linked to this opportunity.
                                                     </p>
                                                 )}
+
                                             </div>
                                         </>
                                     )}
@@ -1595,4 +1652,9 @@ const OpportunitiesInfo = ({ isOpen, opportunityId, handleClose }) => {
     );
 };
 
-export default OpportunitiesInfo;
+const mapDispatchToProps = {
+    setAlert,
+    setSyncingPushStatus
+};
+
+export default connect(null, mapDispatchToProps)(OpportunitiesInfo)

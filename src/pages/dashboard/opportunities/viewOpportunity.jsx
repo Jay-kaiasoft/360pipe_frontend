@@ -2153,35 +2153,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
                                                 </Components.IconButton>
                                             </div>
-                                        </Tooltip>
-                                        {/* {
-                                            openDecisionMapModel ? (
-                                                <div className='flex justify-end items-center gap-3'>
-                                                    <Tooltip title="Save" arrow>
-                                                        <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleSubmitEditorData("DecisionMap")}>
-                                                                <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                            </Components.IconButton>
-                                                        </div>
-                                                    </Tooltip>
-                                                    <Tooltip title="Cancel" arrow>
-                                                        <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => setOpenDecisionMapModel(false)}>
-                                                                <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                            </Components.IconButton>
-                                                        </div>
-                                                    </Tooltip>
-                                                </div>
-                                            ) : (
-                                                <Tooltip title="Edit" arrow>
-                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => setOpenDecisionMapModel(true)}>
-                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            )
-                                        } */}
+                                        </Tooltip>                                      
                                     </div>
                                 </div>
                                 
