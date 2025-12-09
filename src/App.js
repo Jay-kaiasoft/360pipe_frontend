@@ -32,10 +32,10 @@ import AddMemberRoles from "./pages/members/addMemberRoles";
 import Accounts from "./pages/dashboard/accounts/accounts";
 import Todo from "./pages/dashboard/todo/todo";
 import ManageMails from "./pages/mailScraper/manageMails";
-import MyCalendar from "./pages/calendar/myCalendar";
-import GoogleCalendarOauthRedirect from "./pages/calendar/googleCalendarOauthRedirect";
 import Products from "./pages/dashboard/products/products";
 import ViewOpportunity from "./pages/dashboard/opportunities/viewOpportunity";
+import Calendar from "./pages/dashboard/calendar/Calendar";
+import GoogleCalendarOAuthRedirect from "./pages/dashboard/calendar/GoogleCalendarOAuthRedirect";
 
 library.add(fas, far, fab)
 
@@ -72,6 +72,10 @@ const App = ({ setLoading }) => {
     {
       path: "/resetpassword/:token",
       element: <ResetPassword />,
+    },
+    {
+      path: "googlecalendaroauthredirect",
+      element: <GoogleCalendarOAuthRedirect />
     },
     {
       path: "/dashboard",
@@ -138,18 +142,14 @@ const App = ({ setLoading }) => {
           element: <ManageMails />,
         },
         {
-          path: "mycalendar",
-          element: <MyCalendar />,
-        },
-        {
           path: "products",
           element: <Products />,
         },
+        {
+          path: "calendar",
+          element: <Calendar />,
+        },
       ],
-    },
-    {
-      path: "/googlecalendaroauthredirect",
-      element: <GoogleCalendarOauthRedirect />,
     },
   ])
 

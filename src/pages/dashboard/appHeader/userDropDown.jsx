@@ -64,6 +64,11 @@ const items = [
             actionId: [4],
         },
     },
+    {
+        label: "My Calendar",
+        path: "/dashboard/calendar",
+        iconName: "fa-solid fa-calendar",
+    },
 ];
 
 
