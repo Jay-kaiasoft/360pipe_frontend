@@ -24,14 +24,24 @@ export const oauth2CallbackGoogleCalendar = async (code, state) => {
     }
 };
 
-export const getGoogleCalendarEvents = async (customerId, timeMin, timeMax) => {
+export const getGoogleCalendarEvents = async (timeMin, timeMax) => {
     try {
         const response = await axiosInterceptor().get(
-            `/google-calendar/events?customerId=${customerId}&timeMin=${timeMin}&timeMax=${timeMax}`
+            `/google-calendar/events?timeMin=${timeMin}&timeMax=${timeMax}`
         );
         return response.data;
     } catch (error) {
         console.error('Failed to get Google Calendar events:', error);
+        throw error;
+    }
+};
+
+export const getCalendarAuthentication = async () => {
+    try {
+        const response = await axiosInterceptor().get(`${googleCalendarURL}/getCalendarAuthentication`);
+        return response.data;
+    } catch (error) {
+        console.error("Error to get calendar authentication:", error);
         throw error;
     }
 };
