@@ -228,14 +228,14 @@ const ViewOpportunity = ({ setAlert }) => {
             const currentEnvironmentHtmlData = currentEnvironmentState
                 ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
                 : null;
-     
+
 
             let payload = {
                 ...currentValues,
                 opportunityDocs: newFiles,
                 whyDoAnything: whyDoAnythingHtmlData,
                 businessValue: businessValueHtmlData,
-                currentEnvironment: currentEnvironmentHtmlData,                
+                currentEnvironment: currentEnvironmentHtmlData,
             };
             const res = await updateOpportunity(opportunityId, payload);
             if (res?.status !== 200) {
@@ -362,7 +362,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 } else {
                     setCurrentEnvironmentState(EditorState.createEmpty());
                     setCurrentEnvironmentHTML("");
-                }              
+                }
 
                 setValue("accountId", res?.result?.accountId || null);
                 setValue("opportunity", res?.result?.opportunity || null);
@@ -532,13 +532,13 @@ const ViewOpportunity = ({ setAlert }) => {
 
             const currentEnvironmentHtmlData = currentEnvironmentState
                 ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
-                : null;          
+                : null;
 
             let payload = {
                 ...currentValues,
                 whyDoAnything: whyDoAnythingHtmlData,
                 businessValue: businessValueHtmlData,
-                currentEnvironment: currentEnvironmentHtmlData,                
+                currentEnvironment: currentEnvironmentHtmlData,
             };
 
             // 🔢 Normalize numeric values with comma cleaning
@@ -1631,13 +1631,13 @@ const ViewOpportunity = ({ setAlert }) => {
         const currentEnvironmentHtmlData = currentEnvironmentState
             ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
             : null;
-     
+
 
         let payload = {
             ...currentValues,
             whyDoAnything: whyDoAnythingHtmlData,
             businessValue: businessValueHtmlData,
-            currentEnvironment: currentEnvironmentHtmlData,            
+            currentEnvironment: currentEnvironmentHtmlData,
         };
         const res = await updateOpportunity(opportunityId, payload);
         if (res?.status === 200) {
@@ -2153,10 +2153,10 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
                                                 </Components.IconButton>
                                             </div>
-                                        </Tooltip>                                      
+                                        </Tooltip>
                                     </div>
                                 </div>
-                                
+
                                 <div className="h-60 w-full">
                                     <DecisionMapTimeline items={salesProcess} />
                                 </div>

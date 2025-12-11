@@ -386,3 +386,20 @@ export const fetchDNSMXRecords = async (domain) => {
         throw error;
     }
 }
+
+export const handleGetRepeatEveryList = () => {
+    const repeatEveryList = [];
+    for (let i = 1; i < 100; i++) {
+        repeatEveryList.push({
+            id: i,
+            title: i,
+            value: i
+        });
+    }
+    return repeatEveryList
+}
+
+export const dateTimeFormatDB = (value) => {
+    if (!value) return null;
+    return dayjs(value).format('MM/DD/YYYY HH:mm:ss');
+}
