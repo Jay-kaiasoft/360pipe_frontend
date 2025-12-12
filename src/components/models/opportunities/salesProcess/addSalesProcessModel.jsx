@@ -76,6 +76,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
             reason: null
         });
         handleClose();
+        setGoLiveStage(false)
     };
 
     const handleGetAllSalesProcessName = async () => {
@@ -228,6 +229,8 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                                         field.onChange(newValue.id);
                                                         if (newValue.title === "Go Live") {
                                                             setGoLiveStage(true)
+                                                        } else {
+                                                            setGoLiveStage(false)
                                                         }
                                                     } else {
                                                         setValue("process", null);

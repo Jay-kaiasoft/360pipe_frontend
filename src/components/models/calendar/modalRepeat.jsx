@@ -23,10 +23,10 @@ const calRepeatEveryList = Array.from({ length: 99 }, (_, idx) => {
 
 
 const calRepeatEveryTypeList = [
-    { id: 1, title: 'Day', value: 'days' },
-    { id: 2, title: 'Week', value: 'weeks' },
-    { id: 3, title: 'Month', value: 'months' },
-    { id: 4, title: 'Year', value: 'years' },
+    { id: 1, title: 'Day', value: 'day' },
+    { id: 2, title: 'Week', value: 'week' },
+    { id: 3, title: 'Month', value: 'month' },
+    { id: 4, title: 'Year', value: 'year' },
 ];
 
 const daysList = [
@@ -48,9 +48,15 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
+
 function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
     const theme = useTheme();
 
+    const setIfExists = (name, value) => {
+        if (value !== undefined && value !== null && value !== "") {
+            setValues(name, value, { shouldDirty: false, shouldValidate: false });
+        }
+    };
     // local UI state
     const [repeatEveryId, setRepeatEveryId] = useState(1); // maps to calRepeatEveryList.id
     const [repeatTypeId, setRepeatTypeId] = useState(1); // maps to calRepeatEveryTypeList.id
@@ -65,85 +71,115 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
     const repeatTypeOption =
         calRepeatEveryTypeList.find((o) => o.id === repeatTypeId) || calRepeatEveryTypeList[0];
 
-    // initialize from parent values when dialog opens
     useEffect(() => {
         if (!open) return;
 
-        // repeat every
-        if (values?.calRepeatEvery) {
-            const match = calRepeatEveryList.find(
-                (o) => o.value === Number(values.calRepeatEvery),
-            );
-            setRepeatEveryId(match ? match.id : 1);
-        } else {
-            setRepeatEveryId(1);
-        }
+        if (values) {
+            setIfExists("calRepeatType", values.calRepeatType);
+            setIfExists("calRepeatEvery", values.calRepeatEvery);
+            setIfExists("calRepeatEveryType", values.calRepeatEveryType);
+            setIfExists("calRepeatDayName", values.calRepeatDayName);
+            setIfExists("calRepeatSelectedOption", values.calRepeatSelectedOption);
 
-        // repeat type (days/weeks/months/years)
-        if (values?.calRepeatEveryType) {
-            const matchType = calRepeatEveryTypeList.find(
-                (o) => o.value === values.calRepeatEveryType,
-            );
-            setRepeatTypeId(matchType ? matchType.id : 1);
-        } else {
-            // default from calRepeatType (Daily / Weekly / Monthly / Yearly)
-            let defaultTypeVal = 'days';
-            switch (values?.calRepeatType) {
-                case 3: // Weekly
-                    defaultTypeVal = 'weeks';
-                    break;
-                case 4: // Monthly
-                    defaultTypeVal = 'months';
-                    break;
-                case 5: // Yearly
-                    defaultTypeVal = 'years';
-                    break;
-                default:
-                    defaultTypeVal = 'days';
+            if (values.calRepeatEndDate) {
+                const repEnd = dayjs(values.calRepeatEndDate, "MM/DD/YYYY HH:mm:ss", true);
+                if (repEnd.isValid()) setValues("calRepeatEndDate", repEnd, { shouldDirty: false });
             }
-            const matchType = calRepeatEveryTypeList.find(
-                (o) => o.value === defaultTypeVal,
-            );
-            setRepeatTypeId(matchType ? matchType.id : 1);
-        }
 
-        // selected days (for weekly)
-        if (values?.calRepeatDayName) {
-            const arr = String(values.calRepeatDayName)
-                .split(',')
-                .map((v) => parseInt(v, 10))
-                .filter((v) => !Number.isNaN(v));
-            setSelectedDays(arr);
-        } else if (values?.start) {
-            const d = dayjs(values.start);
-            const dow = d.day(); // 0..6
-            setSelectedDays([dow + 1]); // store as 1..7
+            if (values.calRepeatDate) {
+                setIfExists("calRepeatDate", values.calRepeatDate);
+            }
+
+            if (values.calParentId) {
+                setIfExists("calParentId", values.calParentId);
+            }
+
         } else {
-            setSelectedDays([]);
+            if (!values?.calRepeatType) {
+                setValues("calRepeatType", 1, { shouldDirty: false });
+            }
         }
-
-        // Normalize date to remove timezone shifts
-        const normalize = (d) => dayjs(dayjs(d).format("YYYY-MM-DD"));
-
-        // NEW: series start & end
-        let startVal = values?.start ? normalize(values.start) : normalize(dayjs());
-
-        // If no end date set → default = +1 year from START DATE
-        let endVal;
-
-        if (values?.calRepeatEndDate) {
-            endVal = normalize(values.calRepeatEndDate);
-        } else if (values?.end) {
-            endVal = normalize(values.end);
-        } else {
-            endVal = normalize(startVal.add(1, "year"));
-        }
-
-        setSeriesStart(startVal);
-        setSeriesEnd(endVal);
-
 
     }, [open, values]);
+
+    // useEffect(() => {
+    //     if (!open) return;
+
+    //     // repeat every
+    //     if (values?.calRepeatEvery) {
+    //         const match = calRepeatEveryList.find(
+    //             (o) => o.value === Number(values.calRepeatEvery),
+    //         );
+    //         setRepeatEveryId(match ? match.id : 1);
+    //     } else {
+    //         setRepeatEveryId(1);
+    //     }
+
+    //     // repeat type (days/weeks/months/years)
+    //     if (values?.calRepeatEveryType) {
+    //         const matchType = calRepeatEveryTypeList.find(
+    //             (o) => o.value === values.calRepeatEveryType,
+    //         );
+    //         setRepeatTypeId(matchType ? matchType.id : 1);
+    //     } else {
+    //         // default from calRepeatType (Daily / Weekly / Monthly / Yearly)
+    //         let defaultTypeVal = 'days';
+    //         switch (values?.calRepeatType) {
+    //             case 3: // Weekly
+    //                 defaultTypeVal = 'weeks';
+    //                 break;
+    //             case 4: // Monthly
+    //                 defaultTypeVal = 'months';
+    //                 break;
+    //             case 5: // Yearly
+    //                 defaultTypeVal = 'years';
+    //                 break;
+    //             default:
+    //                 defaultTypeVal = 'days';
+    //         }
+    //         const matchType = calRepeatEveryTypeList.find(
+    //             (o) => o.value === defaultTypeVal,
+    //         );
+    //         setRepeatTypeId(matchType ? matchType.id : 1);
+    //     }
+
+    //     // selected days (for weekly)
+    //     if (values?.calRepeatDayName) {
+    //         const arr = String(values.calRepeatDayName)
+    //             .split(',')
+    //             .map((v) => parseInt(v, 10))
+    //             .filter((v) => !Number.isNaN(v));
+    //         setSelectedDays(arr);
+    //     } else if (values?.start) {
+    //         const d = dayjs(values.start);
+    //         const dow = d.day(); // 0..6
+    //         setSelectedDays([dow + 1]); // store as 1..7
+    //     } else {
+    //         setSelectedDays([]);
+    //     }
+
+    //     // Normalize date to remove timezone shifts
+    //     const normalize = (d) => dayjs(dayjs(d).format("YYYY-MM-DD"));
+
+    //     // NEW: series start & end
+    //     let startVal = values?.start ? normalize(values.start) : normalize(dayjs());
+
+    //     // If no end date set → default = +1 year from START DATE
+    //     let endVal;
+
+    //     if (values?.calRepeatEndDate) {
+    //         endVal = normalize(values.calRepeatEndDate);
+    //     } else if (values?.end) {
+    //         endVal = normalize(values.end);
+    //     } else {
+    //         endVal = normalize(startVal.add(1, "year"));
+    //     }
+
+    //     setSeriesStart(startVal);
+    //     setSeriesEnd(endVal);
+
+
+    // }, [open, values]);
 
     const onClose = () => {
         handleClose();
@@ -187,7 +223,7 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
         setValues('calRepeatEveryType', repeatEveryType);
 
         if (repeatEveryType === 'weeks' && selectedDays.length > 0) {
-            console.log("selectedDays",selectedDays)
+            console.log("selectedDays", selectedDays)
             setValues('calRepeatDayName', selectedDays.join(','));
         } else {
             setValues('calRepeatDayName', null);
