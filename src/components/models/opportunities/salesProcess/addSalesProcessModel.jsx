@@ -190,7 +190,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {id ? "Update" : "Add"} Sales Process
+                    {id ? "Update" : "Add"} Close Plan
                 </Components.DialogTitle>
 
                 <Components.IconButton

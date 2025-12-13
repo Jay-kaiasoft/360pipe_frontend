@@ -22,7 +22,11 @@ import { getAllAccounts } from '../../../service/account/accountService';
 import Select from '../../../components/common/select/select';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import { useForm } from 'react-hook-form';
+import { Tabs } from '../../../components/common/tabs/tabs';
 
+const filterTab = [
+    { id: 1, label: "Summary", },
+]
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -33,7 +37,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         actionId: 2,
     });
 
-    // ⬇️ was isEditing (boolean), now we track which row is editing
+    const [activeFilterTab, setActiveFilterTab] = useState(0);
     const [editingRowId, setEditingRowId] = useState(null);
     const [accounts, setAccounts] = useState([]);
 
@@ -51,6 +55,10 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [selectedOppName, setSelectedOppName] = useState([])
     const [selectedOppStage, setSelectedOppStage] = useState([])
     const [selectedOppStatus, setSelectedOppStatus] = useState([])
+
+    const handleSetActiveFilterTab = (id) => {
+        setActiveFilterTab(id);
+    }
 
     const handleGetOpportunityOptions = async () => {
         const res = await getOpportunityOptions()
@@ -143,7 +151,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setOpen(false);
     }
 
-
     const handleOpenDeleteDialog = (opportunityId) => {
         setSelectedOpportunityId(opportunityId);
         setDialog({ open: true, title: 'Delete Opportunity', message: 'Are you sure! Do you want to delete this opportunity?', actionButtonText: 'yes' });
@@ -218,6 +225,19 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             sortable: false,
         },
         {
+            field: 'valid8',
+            headerName: 'Valid8',
+            headerClassName: 'uppercase',
+            flex: 1,
+            maxWidth: 80,
+            sortable: false,
+            renderCell: (params) => {
+                return (
+                    <span>-</span>
+                )
+            }
+        },
+        {
             field: 'accountName',
             headerName: 'Account',
             headerClassName: 'uppercase',
@@ -234,7 +254,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 ),
             renderEditCell: (params) => <AccountEditCell {...params} />,
         },
-
         {
             field: 'opportunity',
             headerName: 'Opportunity Name',
@@ -340,7 +359,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 ),
             renderEditCell: (params) => <CloseDateEditCell {...params} />,
         },
-
         {
             field: 'nextSteps',
             headerName: 'Next Step',
@@ -381,10 +399,10 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                 </Components.IconButton>
                             </div>
                         </Tooltip>
-                        <Tooltip title="View" arrow>
+                        <Tooltip title="Edit" arrow>
                             <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => navigate(`/dashboard/opportunity-view/${params.row.id}`)}>
-                                    <CustomIcons iconName={'fa-solid fa-eye'} css='cursor-pointer text-white h-4 w-4' />
+                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                 </Components.IconButton>
                             </div>
                         </Tooltip>
@@ -1253,6 +1271,10 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     return (
         <>
+            <div className="mb-2">
+                <Tabs tabsData={filterTab} selectedTab={activeFilterTab} handleChange={handleSetActiveFilterTab} />
+            </div>
+
             <div className='border rounded-lg bg-white w-full lg:w-full'>
                 <GroupedDataTable
                     groups={opportunities}
@@ -1276,6 +1298,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     getRowClassName={getRowClassNameForGrid}
                 />
             </div>
+            
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             {openInfoModel && (
                 <OpportunitiesInfo

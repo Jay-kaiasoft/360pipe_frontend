@@ -76,11 +76,11 @@ export const opportunityStatus = [
 ];
 
 export const statusColors = {
-    "Pipeline": "#9C27B0",
-    "Upside": "#42A5F5",    // Blue
-    "Commit": "#F4C542",    // Yellow
-    "Lost": "#D32F2F",      // Red
-    "Won": "#2E7D32",       // Green
+    "Pipeline": "#a09f9f",
+    "Upside": "#FFC857",
+    "Commit": "#4CAF50",
+    "Lost": "#E53935",
+    "Won": "#2E7D32",
 };
 
 export const stageColors = {

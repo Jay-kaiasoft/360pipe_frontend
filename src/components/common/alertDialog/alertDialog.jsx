@@ -13,7 +13,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-export default function AlertDialog({ open, handleClose, title, message, handleAction, actionButtonText, loading, closeIcon = true }) {
+export default function AlertDialog({ open, handleClose, title, message, handleAction, actionButtonText, loading, closeIcon = true, cancelButtonText = "No" }) {
     const theme = useTheme();
 
     const onClose = () => {
@@ -59,7 +59,7 @@ export default function AlertDialog({ open, handleClose, title, message, handleA
                             <Button useFor={`error`} type={`button`} text={actionButtonText} onClick={handleAction} isLoading={loading} />
                         </div>
                         <div>
-                            <Button useFor={`disabled`} type={`button`} text={"No"} onClick={handleClose} isLoading={loading} />
+                            <Button useFor={`disabled`} type={`button`} text={cancelButtonText} onClick={handleClose} isLoading={loading} />
                         </div>
                     </div>
                 </Components.DialogActions>
