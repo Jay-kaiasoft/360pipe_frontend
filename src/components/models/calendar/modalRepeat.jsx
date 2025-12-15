@@ -67,6 +67,50 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
 
     const normalizeDateOnly = (d) => dayjs(dayjs(d).format('YYYY-MM-DD'));
 
+    const ALL_DAY_IDS = useMemo(() => daysList.map((d) => d.id), []);
+
+    const idsToDayNames = (ids) =>
+        daysList
+            .filter((d) => ids.includes(d.id))
+            .map((d) => d.title)
+            .join(',');
+
+    const parseDayNamesOrIdsToIds = (raw) => {
+        if (!raw) return [];
+        const parts = String(raw)
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+        // legacy: "5,6"
+        const numeric = parts
+            .map((v) => parseInt(v, 10))
+            .filter((v) => !Number.isNaN(v));
+        if (numeric.length) return numeric;
+
+        // new: "Tuesday,Wednesday"
+        const ids = parts
+            .map((name) => daysList.find((d) => d.title.toLowerCase() === name.toLowerCase())?.id)
+            .filter(Boolean);
+        return ids;
+    };
+
+    // const getCalRepeatTypeLabel = (unit) => {      
+    //     console.log("unit",unit)  
+    //     switch (unit) {
+    //         case 'day':
+    //             return 'Daily';
+    //         case 'week':
+    //             return 'Weekly';
+    //         case 'month':
+    //             return 'Monthly';
+    //         case 'year':
+    //             return 'Yearly';
+    //         default:
+    //             return null;
+    //     }
+    // };
+
     useEffect(() => {
         if (!open) return;
 
@@ -89,18 +133,22 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
         // --- unit
         const unit = values?.calRepeatEveryType || null; // day|week|month|year
         const unitMatch = calRepeatEveryTypeList.find((o) => o.value === unit);
+        const initialUnit = unitMatch ? unitMatch.value : 'day';
         setRepeatTypeId(unitMatch ? unitMatch.id : 1);
 
-        // --- selected days for weekly
-        if (values?.calRepeatDayName) {
-            const arr = String(values.calRepeatDayName)
-                .split(',')
-                .map((v) => parseInt(v, 10))
-                .filter((v) => !Number.isNaN(v));
-            setSelectedDays(arr);
-        } else if (values?.start) {
-            const dow = dayjs(values.start).day(); // 0..6
-            setSelectedDays([dow + 1]); // store 1..7
+        // --- selected days
+        // Daily => default ALL selected
+        if (initialUnit === 'day') {
+            setSelectedDays(ALL_DAY_IDS);
+        } else if (initialUnit === 'week') {
+            if (values?.calRepeatDayName) {
+                setSelectedDays(parseDayNamesOrIdsToIds(values.calRepeatDayName));
+            } else if (values?.start) {
+                const dow = dayjs(values.start).day(); // 0..6
+                setSelectedDays([dow + 1]); // store 1..7
+            } else {
+                setSelectedDays([]);
+            }
         } else {
             setSelectedDays([]);
         }
@@ -118,9 +166,46 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
     }, [open]);
 
     const toggleDay = (dayId) => {
-        setSelectedDays((prev) =>
-            prev.includes(dayId) ? prev.filter((id) => id !== dayId) : [...prev, dayId].sort((a, b) => a - b),
-        );
+        const unit = repeatTypeOption.value; // current unit
+
+        setSelectedDays((prev) => {
+            const next = prev.includes(dayId) ? prev.filter((id) => id !== dayId) : [...prev, dayId].sort((a, b) => a - b);
+
+            // ✅ Daily behavior
+            // - Daily starts with ALL selected.
+            // - If user unselects any one => convert to Weekly with remaining.
+            // - If user unselects all => back to Daily (ALL selected).
+            if (unit === 'day') {
+                if (next.length === 0) {
+                    // back to Daily => ALL
+                    setRepeatTypeId(1); // Day
+                    return ALL_DAY_IDS;
+                }
+                if (next.length < 7) {
+                    // convert to weekly with remaining
+                    setRepeatTypeId(2); // Week
+                    return next;
+                }
+                return next;
+            }
+
+            // ✅ Weekly behavior
+            // - If user selects ALL => convert to Daily
+            // - If user unselects all => convert to Daily (ALL)
+            if (unit === 'week') {
+                if (next.length === 0) {
+                    setRepeatTypeId(1); // Day
+                    return ALL_DAY_IDS;
+                }
+                if (next.length === 7) {
+                    setRepeatTypeId(1); // Day
+                    return ALL_DAY_IDS;
+                }
+                return next;
+            }
+
+            return next;
+        });
     };
 
     const onClose = () => handleClose();
@@ -149,26 +234,22 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
         // --- write back to parent RHF ---
         setValues('calRepeatEvery', repeatEvery);
         setValues('calRepeatEveryType', repeatEveryType);
+        // setValues('calRepeatType', getCalRepeatTypeLabel(repeatEveryType));
 
-        if (repeatEveryType === 'week' && selectedDays.length > 0) {
-            setValues('calRepeatDayName', selectedDays.join(','));
+        // ✅ day/week both store day names
+        if ((repeatEveryType === 'day' || repeatEveryType === 'week') && selectedDays.length > 0) {
+            // Daily must always be ALL days
+            const ids = repeatEveryType === 'day' ? ALL_DAY_IDS : selectedDays;
+            setValues('calRepeatDayName', idsToDayNames(ids));
         } else {
             setValues('calRepeatDayName', null);
         }
 
-        // calRepeatEndDate (keep date from picker, but time from start if possible)
-        // If you want end time same as event start time, keep it as chosen in parent anyway.
-        setValues('calRepeatEndDate', seriesEnd);
+        // ✅ store repeat date anchors consistently
+        setValues('calRepeatDate', dateTimeFormatDB(seriesStart));
+        setValues('calRepeatEndDate', dateTimeFormatDB(seriesEnd));
 
-        if (repeatEveryType === 'month' || repeatEveryType === 'year') {
-            setValues('calRepeatDate', dateTimeFormatDB(seriesStart)); // full datetime string
-        } else {
-            setValues('calRepeatDate', null);
-        }
-
-        // keep the actual event start/end in parent (don’t destroy time)
-        setValues('start', seriesStart);
-        setValues('end', values?.end ? dayjs(values.end) : seriesStart.add(30, 'minute'));
+        // ✅ IMPORTANT: do NOT modify event start/end here (Repeat modal should not change event time)
 
         handleClose();
     };
@@ -178,12 +259,12 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
         const unitLabel = repeatTypeOption.title + (count > 1 ? 's' : '');
         let text = `Repeats every ${count} ${unitLabel}`;
 
-        if (repeatTypeOption.value === 'week' && selectedDays.length) {
+        if ((repeatTypeOption.value === 'week' || repeatTypeOption.value === 'day') && selectedDays.length) {
             const dayLabels = daysList
                 .filter((d) => selectedDays.includes(d.id))
                 .map((d) => d.title)
                 .join(', ');
-            text += ` on ${dayLabels}`;
+            text += repeatTypeOption.value === 'day' ? ` (${dayLabels})` : ` on ${dayLabels}`;
         }
 
         if (seriesStart) text += ` starting ${dayjs(seriesStart).format('MM/DD/YYYY')}`;
@@ -321,14 +402,32 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
                                         placeholder="Select"
                                         value={repeatTypeId}
                                         onChange={(_, newValue) => {
-                                            if (newValue?.id) setRepeatTypeId(newValue.id);
+                                            if (!newValue?.id) return;
+                                            setRepeatTypeId(newValue.id);
+
+                                            // when user explicitly changes unit, keep UI consistent
+                                            const unit = newValue.value; // day|week|month|year
+                                            if (unit === 'day') {
+                                                setSelectedDays(ALL_DAY_IDS);
+                                            } else if (unit === 'week') {
+                                                // if empty, default to start day
+                                                setSelectedDays((prev) => {
+                                                    if (prev?.length) return prev;
+                                                    const dow = seriesStart ? dayjs(seriesStart).day() : dayjs().day();
+                                                    return [dow + 1];
+                                                });
+                                            } else {
+                                                setSelectedDays([]);
+                                            }
                                         }}
                                     />
                                 </div>
 
-                                {repeatTypeOption.value === 'week' && (
+                                {(repeatTypeOption.value === 'week' || repeatTypeOption.value === 'day') && (
                                     <div className="flex flex-col gap-2">
-                                        <p className="text-xs font-medium text-gray-600">Repeat on</p>
+                                        <p className="text-xs font-medium text-gray-600">
+                                            {repeatTypeOption.value === 'day' ? 'Occurs every day (select days to convert to weekly)' : 'Repeat on'}
+                                        </p>
                                         <div className="flex flex-wrap gap-2">
                                             {daysList.map((day) => {
                                                 const isSelected = selectedDays.includes(day.id);
@@ -382,598 +481,3 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
 const mapDispatchToProps = { setAlert };
 
 export default connect(null, mapDispatchToProps)(ModalRepeat);
-
-
-// import React, { useEffect, useState } from 'react';
-// import { styled, useTheme } from '@mui/material/styles';
-// import { connect } from 'react-redux';
-// import dayjs from 'dayjs';
-// import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-// import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-
-// import Components from '../../../components/muiComponents/components';
-// import Button from '../../../components/common/buttons/button';
-// import CustomIcons from '../../../components/common/icons/CustomIcons';
-// import Select from '../../common/select/select';
-// import { setAlert } from '../../../redux/commonReducers/commonReducers';
-// import { dateTimeFormatDB } from '../../../service/common/commonService';
-
-// const calRepeatEveryList = Array.from({ length: 99 }, (_, idx) => {
-//     const v = idx + 1;
-//     return {
-//         id: v,
-//         title: `${v}`,
-//         value: v,
-//     };
-// });
-
-
-// const calRepeatEveryTypeList = [
-//     { id: 1, title: 'Day', value: 'day' },
-//     { id: 2, title: 'Week', value: 'week' },
-//     { id: 3, title: 'Month', value: 'month' },
-//     { id: 4, title: 'Year', value: 'year' },
-// ];
-
-// const daysList = [
-//     { id: 1, title: 'Sunday', label: 'S' },
-//     { id: 2, title: 'Monday', label: 'M' },
-//     { id: 3, title: 'Tuesday', label: 'T' },
-//     { id: 4, title: 'Wednesday', label: 'W' },
-//     { id: 5, title: 'Thursday', label: 'T' },
-//     { id: 6, title: 'Friday', label: 'F' },
-//     { id: 7, title: 'Saturday', label: 'S' },
-// ];
-
-// const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
-//     '& .MuiDialogContent-root': {
-//         padding: theme.spacing(2),
-//     },
-//     '& .MuiDialogActions-root': {
-//         padding: theme.spacing(1),
-//     },
-// }));
-
-
-// function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
-//     const theme = useTheme();
-
-//     const setIfExists = (name, value) => {
-//         if (value !== undefined && value !== null && value !== "") {
-//             setValues(name, value, { shouldDirty: false, shouldValidate: false });
-//         }
-//     };
-//     // local UI state
-//     const [repeatEveryId, setRepeatEveryId] = useState(1); // maps to calRepeatEveryList.id
-//     const [repeatTypeId, setRepeatTypeId] = useState(1); // maps to calRepeatEveryTypeList.id
-//     const [selectedDays, setSelectedDays] = useState([]); // [1..7]
-
-//     // NEW: start & end of series
-//     const [seriesStart, setSeriesStart] = useState(null);
-//     const [seriesEnd, setSeriesEnd] = useState(null);
-
-//     const repeatEveryOption =
-//         calRepeatEveryList.find((o) => o.id === repeatEveryId) || calRepeatEveryList[0];
-//     const repeatTypeOption =
-//         calRepeatEveryTypeList.find((o) => o.id === repeatTypeId) || calRepeatEveryTypeList[0];
-
-//     useEffect(() => {
-//         if (!open) return;
-
-//         if (values) {
-//             setIfExists("calRepeatType", values.calRepeatType);
-//             setIfExists("calRepeatEvery", values.calRepeatEvery);
-//             setIfExists("calRepeatEveryType", values.calRepeatEveryType);
-//             setIfExists("calRepeatDayName", values.calRepeatDayName);
-//             setIfExists("calRepeatSelectedOption", values.calRepeatSelectedOption);
-
-//             if (values.calRepeatEndDate) {
-//                 const repEnd = dayjs(values.calRepeatEndDate, "MM/DD/YYYY HH:mm:ss", true);
-//                 if (repEnd.isValid()) setValues("calRepeatEndDate", repEnd, { shouldDirty: false });
-//             }
-
-//             if (values.calRepeatDate) {
-//                 setIfExists("calRepeatDate", values.calRepeatDate);
-//             }
-
-//             if (values.calParentId) {
-//                 setIfExists("calParentId", values.calParentId);
-//             }
-
-//         } else {
-//             if (!values?.calRepeatType) {
-//                 setValues("calRepeatType", 1, { shouldDirty: false });
-//             }
-//         }
-
-//     }, [open, values]);
-
-//     // useEffect(() => {
-//     //     if (!open) return;
-
-//     //     // repeat every
-//     //     if (values?.calRepeatEvery) {
-//     //         const match = calRepeatEveryList.find(
-//     //             (o) => o.value === Number(values.calRepeatEvery),
-//     //         );
-//     //         setRepeatEveryId(match ? match.id : 1);
-//     //     } else {
-//     //         setRepeatEveryId(1);
-//     //     }
-
-//     //     // repeat type (days/weeks/months/years)
-//     //     if (values?.calRepeatEveryType) {
-//     //         const matchType = calRepeatEveryTypeList.find(
-//     //             (o) => o.value === values.calRepeatEveryType,
-//     //         );
-//     //         setRepeatTypeId(matchType ? matchType.id : 1);
-//     //     } else {
-//     //         // default from calRepeatType (Daily / Weekly / Monthly / Yearly)
-//     //         let defaultTypeVal = 'days';
-//     //         switch (values?.calRepeatType) {
-//     //             case 3: // Weekly
-//     //                 defaultTypeVal = 'weeks';
-//     //                 break;
-//     //             case 4: // Monthly
-//     //                 defaultTypeVal = 'months';
-//     //                 break;
-//     //             case 5: // Yearly
-//     //                 defaultTypeVal = 'years';
-//     //                 break;
-//     //             default:
-//     //                 defaultTypeVal = 'days';
-//     //         }
-//     //         const matchType = calRepeatEveryTypeList.find(
-//     //             (o) => o.value === defaultTypeVal,
-//     //         );
-//     //         setRepeatTypeId(matchType ? matchType.id : 1);
-//     //     }
-
-//     //     // selected days (for weekly)
-//     //     if (values?.calRepeatDayName) {
-//     //         const arr = String(values.calRepeatDayName)
-//     //             .split(',')
-//     //             .map((v) => parseInt(v, 10))
-//     //             .filter((v) => !Number.isNaN(v));
-//     //         setSelectedDays(arr);
-//     //     } else if (values?.start) {
-//     //         const d = dayjs(values.start);
-//     //         const dow = d.day(); // 0..6
-//     //         setSelectedDays([dow + 1]); // store as 1..7
-//     //     } else {
-//     //         setSelectedDays([]);
-//     //     }
-
-//     //     // Normalize date to remove timezone shifts
-//     //     const normalize = (d) => dayjs(dayjs(d).format("YYYY-MM-DD"));
-
-//     //     // NEW: series start & end
-//     //     let startVal = values?.start ? normalize(values.start) : normalize(dayjs());
-
-//     //     // If no end date set → default = +1 year from START DATE
-//     //     let endVal;
-
-//     //     if (values?.calRepeatEndDate) {
-//     //         endVal = normalize(values.calRepeatEndDate);
-//     //     } else if (values?.end) {
-//     //         endVal = normalize(values.end);
-//     //     } else {
-//     //         endVal = normalize(startVal.add(1, "year"));
-//     //     }
-
-//     //     setSeriesStart(startVal);
-//     //     setSeriesEnd(endVal);
-
-
-//     // }, [open, values]);
-
-//     const onClose = () => {
-//         handleClose();
-//     };
-
-//     const toggleDay = (dayId) => {
-//         setSelectedDays((prev) =>
-//             prev.includes(dayId)
-//                 ? prev.filter((id) => id !== dayId)
-//                 : [...prev, dayId].sort((a, b) => a - b),
-//         );
-//     };
-
-//     const handleSave = () => {
-//         const repeatEvery = repeatEveryOption.value;
-//         const repeatEveryType = repeatTypeOption.value;
-
-//         if (!repeatEvery || repeatEvery <= 0) {
-//             setAlert({ severity: 'error', message: 'Please select a repeat interval.' });
-//             return;
-//         }
-
-//         if (!seriesStart) {
-//             setAlert({ severity: 'error', message: 'Please select a start date.' });
-//             return;
-//         }
-//         if (!seriesEnd) {
-//             setAlert({ severity: 'error', message: 'Please select an end date.' });
-//             return;
-//         }
-//         if (seriesEnd.isBefore(seriesStart, 'day')) {
-//             setAlert({
-//                 severity: 'error',
-//                 message: 'End date cannot be before start date.',
-//             });
-//             return;
-//         }
-
-//         // write recurrence info
-//         setValues('calRepeatEvery', repeatEvery);
-//         setValues('calRepeatEveryType', repeatEveryType);
-
-//         if (repeatEveryType === 'weeks' && selectedDays.length > 0) {
-//             console.log("selectedDays", selectedDays)
-//             setValues('calRepeatDayName', selectedDays.join(','));
-//         } else {
-//             setValues('calRepeatDayName', null);
-//         }
-
-//         // store end date in repeat metadata if needed
-//         setValues('calRepeatEndDate', seriesEnd);
-
-//         // for monthly / yearly, store day-of-month
-//         if (repeatEveryType === 'months' || repeatEveryType === 'years') {
-//             const d = seriesStart;
-//             setValues('calRepeatDate', dateTimeFormatDB(d)); // 1..31
-//         } else {
-//             setValues('calRepeatDate', null);
-//         }
-
-//         // also update main start/end on the parent form
-//         setValues('start', seriesStart);
-//         setValues('end', seriesEnd);
-
-//         handleClose();
-//     };
-
-//     const renderSummary = () => {
-//         const count = repeatEveryOption.value;
-//         const unitLabel = repeatTypeOption.title + (count > 1 ? 's' : '');
-//         let text = `Repeats every ${count} ${unitLabel}`;
-
-//         if (repeatEveryOption.value && repeatTypeOption.value === 'weeks' && selectedDays.length) {
-//             const dayLabels = daysList
-//                 .filter((d) => selectedDays.includes(d.id))
-//                 .map((d) => d.title)
-//                 .join(', ');
-//             text += ` on ${dayLabels}`;
-//         }
-
-//         if (seriesStart) {
-//             text += ` starting ${seriesStart.format('MM/DD/YYYY')}`;
-//         }
-//         if (seriesEnd) {
-//             text += ` until ${seriesEnd.format('MM/DD/YYYY')}`;
-//         }
-
-//         return text;
-//     };
-
-//     return (
-//         <React.Fragment>
-//             <BootstrapDialog
-//                 open={open}
-//                 aria-labelledby="customized-dialog-title"
-//                 fullWidth
-//                 maxWidth="sm"
-//             >
-//                 <Components.DialogTitle
-//                     sx={{ m: 0, p: 2, color: theme.palette.text.primary }}
-//                     id="customized-dialog-title"
-//                 >
-//                     Repeat
-//                 </Components.DialogTitle>
-
-//                 <Components.IconButton
-//                     aria-label="close"
-//                     onClick={onClose}
-//                     sx={(theme) => ({
-//                         position: 'absolute',
-//                         right: 8,
-//                         top: 8,
-//                         color: theme.palette.primary.icon,
-//                     })}
-//                 >
-//                     <CustomIcons
-//                         iconName={'fa-solid fa-xmark'}
-//                         css="cursor-pointer text-black w-5 h-5"
-//                     />
-//                 </Components.IconButton>
-
-//                 <div>
-//                     <Components.DialogContent dividers>
-//                         <div className="flex flex-col gap-6">
-//                             {/* NEW: Start & End dates */}
-//                             <div className="flex flex-col gap-3">
-//                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-//                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-//                                         <DatePicker
-//                                             label="Start date"
-//                                             value={seriesStart}
-//                                             format="MM/DD/YYYY"
-//                                             onChange={(date) => setSeriesStart(date)}
-//                                             slotProps={{
-//                                                 textField: {
-//                                                     variant: 'outlined',
-//                                                     size: 'small',
-//                                                     fullWidth: true,
-//                                                     sx: {
-//                                                         '& .MuiOutlinedInput-root':
-//                                                         {
-//                                                             borderRadius:
-//                                                                 '4px',
-//                                                             transition:
-//                                                                 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
-//                                                             '& fieldset':
-//                                                             {
-//                                                                 borderColor:
-//                                                                     theme
-//                                                                         .palette
-//                                                                         .secondary
-//                                                                         ?.main,
-//                                                             },
-//                                                             '&:hover fieldset':
-//                                                             {
-//                                                                 borderColor:
-//                                                                     theme
-//                                                                         .palette
-//                                                                         .secondary
-//                                                                         ?.main,
-//                                                             },
-//                                                             '&.Mui-focused fieldset':
-//                                                             {
-//                                                                 borderColor:
-//                                                                     theme
-//                                                                         .palette
-//                                                                         .secondary
-//                                                                         ?.main,
-//                                                             },
-//                                                         },
-//                                                         '& .MuiInputLabel-root':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                             textTransform:
-//                                                                 'capitalize',
-//                                                         },
-//                                                         '& .MuiInputLabel-root.Mui-focused':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                         },
-//                                                         '& .MuiInputBase-input':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                         },
-//                                                         '& .Mui-disabled': {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                         },
-//                                                         '& .MuiFormHelperText-root':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .error
-//                                                                 .main,
-//                                                             fontSize:
-//                                                                 '14px',
-//                                                             fontWeight:
-//                                                                 '500',
-//                                                             marginX: 0.5,
-//                                                         },
-//                                                         fontFamily:
-//                                                             '"Inter", sans-serif',
-//                                                     },
-//                                                 },
-//                                             }}
-//                                         />
-//                                     </LocalizationProvider>
-
-//                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-//                                         <DatePicker
-//                                             label="End date"
-//                                             value={seriesEnd}
-//                                             format="MM/DD/YYYY"
-//                                             minDate={seriesStart || undefined}
-//                                             onChange={(date) => setSeriesEnd(date)}
-//                                             slotProps={{
-//                                                 textField: {
-//                                                     variant: 'outlined',
-//                                                     size: 'small',
-//                                                     fullWidth: true,
-//                                                     sx: {
-//                                                         '& .MuiOutlinedInput-root':
-//                                                         {
-//                                                             borderRadius:
-//                                                                 '4px',
-//                                                             transition:
-//                                                                 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
-//                                                             '& fieldset':
-//                                                             {
-//                                                                 borderColor:
-//                                                                     theme
-//                                                                         .palette
-//                                                                         .secondary
-//                                                                         ?.main,
-//                                                             },
-//                                                             '&:hover fieldset':
-//                                                             {
-//                                                                 borderColor:
-//                                                                     theme
-//                                                                         .palette
-//                                                                         .secondary
-//                                                                         ?.main,
-//                                                             },
-//                                                             '&.Mui-focused fieldset':
-//                                                             {
-//                                                                 borderColor:
-//                                                                     theme
-//                                                                         .palette
-//                                                                         .secondary
-//                                                                         ?.main,
-//                                                             },
-//                                                         },
-//                                                         '& .MuiInputLabel-root':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                             textTransform:
-//                                                                 'capitalize',
-//                                                         },
-//                                                         '& .MuiInputLabel-root.Mui-focused':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                         },
-//                                                         '& .MuiInputBase-input':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                         },
-//                                                         '& .Mui-disabled': {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .text
-//                                                                 .primary,
-//                                                         },
-//                                                         '& .MuiFormHelperText-root':
-//                                                         {
-//                                                             color: theme
-//                                                                 .palette
-//                                                                 .error
-//                                                                 .main,
-//                                                             fontSize:
-//                                                                 '14px',
-//                                                             fontWeight:
-//                                                                 '500',
-//                                                             marginX: 0.5,
-//                                                         },
-//                                                         fontFamily:
-//                                                             '"Inter", sans-serif',
-//                                                     },
-//                                                 },
-//                                             }}
-//                                         />
-//                                     </LocalizationProvider>
-//                                 </div>
-//                             </div>
-
-//                             {/* Repeat pattern */}
-//                             <div className="flex flex-col gap-3">
-//                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-//                                     <Select
-//                                         options={calRepeatEveryList}
-//                                         label="Repeat every"
-//                                         placeholder="Select"
-//                                         value={repeatEveryId}
-//                                         onChange={(_, newValue) => {
-//                                             if (newValue?.id) setRepeatEveryId(newValue.id);
-//                                         }}
-//                                     />
-//                                     <Select
-//                                         options={calRepeatEveryTypeList}
-//                                         label="Time unit"
-//                                         placeholder="Select"
-//                                         value={repeatTypeId}
-//                                         onChange={(_, newValue) => {
-//                                             if (newValue?.id) setRepeatTypeId(newValue.id);
-//                                         }}
-//                                     />
-//                                 </div>
-
-//                                 {/* Weekly days selector */}
-//                                 {repeatTypeOption.value === 'weeks' && (
-//                                     <div className="flex flex-col gap-2">
-//                                         <p className="text-xs font-medium text-gray-600">
-//                                             Repeat on
-//                                         </p>
-//                                         <div className="flex flex-wrap gap-2">
-//                                             {daysList.map((day) => {
-//                                                 const isSelected = selectedDays.includes(day.id);
-//                                                 return (
-//                                                     <button
-//                                                         key={day.id}
-//                                                         type="button"
-//                                                         onClick={() => toggleDay(day.id)}
-//                                                         className={`w-9 h-9 flex items-center justify-center rounded-full border text-sm font-medium transition
-//                                                         ${isSelected
-//                                                                 ? 'bg-blue-600 text-white border-blue-600'
-//                                                                 : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-//                                                             }`}
-//                                                     >
-//                                                         {day.label}
-//                                                     </button>
-//                                                 );
-//                                             })}
-//                                         </div>
-//                                     </div>
-//                                 )}
-//                             </div>
-
-//                             {/* Summary */}
-//                             <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
-//                                 {renderSummary()}
-//                             </div>
-//                         </div>
-//                     </Components.DialogContent>
-
-//                     <Components.DialogActions>
-//                         <div className="flex justify-end items-center gap-4 px-2">
-//                             <Button
-//                                 type="button"
-//                                 text={'Submit'}
-//                                 onClick={handleSave}
-//                                 endIcon={
-//                                     <CustomIcons
-//                                         iconName={'fa-solid fa-floppy-disk'}
-//                                         css="cursor-pointer"
-//                                     />
-//                                 }
-//                             />
-//                             <Button
-//                                 type="button"
-//                                 text={'Cancel'}
-//                                 useFor="disabled"
-//                                 onClick={onClose}
-//                                 startIcon={
-//                                     <CustomIcons
-//                                         iconName={'fa-solid fa-xmark'}
-//                                         css="cursor-pointer mr-2"
-//                                     />
-//                                 }
-//                             />
-//                         </div>
-//                     </Components.DialogActions>
-//                 </div>
-//             </BootstrapDialog>
-//         </React.Fragment>
-//     );
-// }
-
-// const mapDispatchToProps = {
-//     setAlert,
-// };
-
-// export default connect(null, mapDispatchToProps)(ModalRepeat);

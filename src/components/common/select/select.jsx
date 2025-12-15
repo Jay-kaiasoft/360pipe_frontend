@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 
-const Select = forwardRef(({ size = "small", label, placeholder, error, helperText, value, onChange, options, disabled = false }, ref) => {
+const Select = forwardRef(({ size = "small", label, placeholder, error, helperText, value, onChange, options, disabled = false, onClick }, ref) => {
     const theme = useTheme();
     const selectOptions = Array.isArray(options) && options.length > 0 ? options : [];
 
@@ -22,6 +22,9 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
                 isOptionEqualToValue={(option, value) => option?.id === value?.id}
                 onChange={(event, newValue) => {
                     onChange(event, newValue);
+                }}
+                onClick={(event, newValue) => {
+                    onClick(event, newValue);
                 }}
                 noOptionsText={'No data found'}
                 renderInput={(params) => (
