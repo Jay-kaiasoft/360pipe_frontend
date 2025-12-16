@@ -30,3 +30,13 @@ export const getEventById = async (userTimeZone, id) => {
         throw error;
     }
 };
+
+export const getSync = async (userTimeZone) => {
+    try {
+        const response = await axiosInterceptor().get(`${calendarURL}/getSync?timeZone=${userTimeZone}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching actions:", error);
+        throw error;
+    }
+};
