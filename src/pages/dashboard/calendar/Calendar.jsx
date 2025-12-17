@@ -19,8 +19,9 @@ import {
 import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import AddEventModel from '../../../components/models/calendar/addEventModel';
-import { getEventList } from '../../../service/calendar/calendarService';
+import { getEventList, getSync } from '../../../service/calendar/calendarService';
 import { userTimeZone } from '../../../service/common/commonService';
+import { calenderName } from '../../../config/config';
 
 const locales = {
   'en-US': enUS,
@@ -34,6 +35,19 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+const setBgColor = (event) => {
+  if (event?.calEventReminder === "reminder") {
+    return "#9e69af";
+  } else {
+    if (event?.calType === "google") {
+      return "#ef6c00";
+    } else if (event?.calType === "outlook") {
+      return "#1072E0";
+    } else {
+      return "#7986CB";
+    }
+  }
+}
 const Calendar = ({ setAlert }) => {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
@@ -132,6 +146,9 @@ const Calendar = ({ setAlert }) => {
             end: parse(event.end, "MM/dd/yyyy HH:mm:ss", new Date()),
             description: event.description || "",
             allDay: !!event.allDay,
+            backgroundColor: setBgColor(event),
+            borderColor: setBgColor(event),
+            textColor: '#ffffff'
           }));
 
           setEvents(formatted);
@@ -160,6 +177,24 @@ const Calendar = ({ setAlert }) => {
     });
   };
 
+  const handleGetSync = async () => {
+    const res = await getSync(userTimeZone);
+    if (res.status === 200) {
+      loadEvents(date);
+      setAlert({
+        open: true,
+        message: 'Sync Event Successfully',
+        type: 'success',
+      });
+    } else {
+      setAlert({
+        open: true,
+        message: 'Failed to sync calendar',
+        type: 'error',
+      });
+    }
+  }
+
   useEffect(() => {
     displayGetCalendarAuthentication();
   }, []);
@@ -184,6 +219,18 @@ const Calendar = ({ setAlert }) => {
               >
                 <CustomIcons
                   iconName="fa-solid fa-plus"
+                  css="w-4 h-4 group-hover:text-white"
+                />
+              </div>
+            </Tooltip>
+
+            <Tooltip title="Sync" arrow>
+              <div
+                onClick={handleGetSync}
+                className="group w-8 h-8 flex items-center justify-center rounded-full hover:bg-green-600 transition-all cursor-pointer"
+              >
+                <CustomIcons
+                  iconName="fa-solid fa-arrows-rotate"
                   css="w-4 h-4 group-hover:text-white"
                 />
               </div>
@@ -312,6 +359,31 @@ const Calendar = ({ setAlert }) => {
               }}
             />
           </LocalizationProvider>
+          <div className="pl-14">
+            {/* Calendar Name Item */}
+            <div className="flex items-center mb-3">
+              <span className="flex w-[30px] h-[30px] rounded-[3px] border-2 border-[#dee2e6] mr-2 bg-[#1072E0]"></span>
+              {calenderName}
+            </div>
+
+            {/* Google Calendar Item */}
+            <div className="flex items-center mb-3">
+              <span className="flex w-[30px] h-[30px] rounded-[3px] border-2 border-[#dee2e6] mr-2 bg-[#E67C73]"></span>
+              Google Calendar
+            </div>
+
+            {/* Outlook Calendar Item */}
+            <div className="flex items-center mb-3">
+              <span className="flex w-[30px] h-[30px] rounded-[3px] border-2 border-[#dee2e6] mr-2 bg-[#ef6c00]"></span>
+              Outlook Calendar
+            </div>
+
+            {/* Reminder Item */}
+            <div className="flex items-center mb-3">
+              <span className="flex w-[30px] h-[30px] rounded-[3px] border-2 border-[#dee2e6] mr-2 bg-[#9e69af]"></span>
+              Reminder
+            </div>
+          </div>
         </div>
 
         {/* MAIN CALENDAR */}
@@ -333,6 +405,18 @@ const Calendar = ({ setAlert }) => {
               ),
             }}
             views={['month', 'week', 'day']}
+            eventPropGetter={
+              (event) => {
+                var style = {
+                  backgroundColor: event.backgroundColor,
+                  borderColor: event.borderColor,
+                  color: event.textColor
+                };
+                return {
+                  style: style
+                };
+              }
+            }
           />
         </div>
       </div>

@@ -50,3 +50,5 @@ export const salesStageURL = baseURL + '/salesStage'
 export const googleCalendarURL = baseURL + '/google-calendar'
 export const timeZonesURL = baseURL + '/time-zones'
 export const calendarURL = baseURL + '/calendar'
+
+export const calenderName = '360Pipe Calendar'
