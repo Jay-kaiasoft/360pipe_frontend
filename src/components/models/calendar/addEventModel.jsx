@@ -24,6 +24,7 @@ import Checkbox from '../../common/checkBox/checkbox';
 import Select from '../../common/select/select';
 import { dateTimeFormatDB, userTimeZone } from '../../../service/common/commonService';
 import { getEventById, saveEvents } from '../../../service/calendar/calendarService';
+import DeleteEventAlert from './deleteEventAlert';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -48,6 +49,7 @@ const repeatList = [
 const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
 const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const ordinalWord = (n) => {
@@ -107,7 +109,7 @@ const buildOccursText = ({ unit, every, startDate, selectedDays }) => {
 const isToday = (d) => d && dayjs(d).isSame(dayjs(), 'day');
 const isSameDay = (a, b) => a && b && dayjs(a).isSame(dayjs(b), 'day');
 
-function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEvents }) {
+function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEvents, thirdPartyCalendar }) {
     const theme = useTheme();
 
     const [openRepeat, setOpenRepeat] = useState(false);
@@ -116,6 +118,8 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
     const [loading, setLoading] = useState(false);
     const [timeZones, setTimeZones] = useState([]);
     const [editorState, setEditorState] = useState(EditorState.createEmpty());
+    const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+    const [deleteAll, setDeleteAll] = useState(null)
 
     const {
         handleSubmit,
@@ -177,13 +181,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         },
     });
 
-    const repeatTypeObj = useMemo(() => {
-        const id = Number(watch('calRepeatType') || 1);
-        return repeatList.find((r) => r.id === id) || repeatList[0];
-    }, [watch('calRepeatType')]);
-
-    const handleCloseRepeatModel = () => setOpenRepeat(false);
-
     const onClose = () => {
         setTimeZones([]);
         setEditAll(false);
@@ -191,6 +188,18 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         reset();
         handleClose();
     };
+
+    const handleOpenDeleteAlert = (value) => {
+        setDeleteAll(value);
+        setOpenDeleteAlert(true);
+    }
+
+    const handleCloseDeleteAlert = () => {        
+        setOpenDeleteAlert(false)
+        onClose()
+    };
+
+    const handleCloseRepeatModel = () => setOpenRepeat(false);
 
     const handleGetAllTimeZones = async () => {
         const res = await getTimeZones();
@@ -201,7 +210,11 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 value: item.tmzValue,
             }));
             setTimeZones(data);
-            setValue('calTimeZone', data?.find((row) => row.value === watch("calTimeZone"))?.id || null);
+            if (slotInfo?.id) {
+                setValue('calTimeZone', data?.find((row) => row.value === watch("calTimeZone"))?.id || null);
+            } else {
+                setValue('calTimeZone', data?.find((row) => row.value === userTimeZone)?.id || null);
+            }
         }
     };
 
@@ -231,7 +244,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 setValue('allDay', !!event.allDay);
                 setValue('start', start);
                 setValue('end', end);
-                // setValue('calTimeZone', timeZones?.find((row) => row.value === event.calTimeZone)?.id || null);
                 setValue("calTimeZone", event.calTimeZone)
                 setValue('calAttendees', event.calAttendees ?? null);
                 setValue('calAetId', event.calAetId ?? null);
@@ -310,11 +322,11 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
 
     useEffect(() => {
         if (open) {
-            handleGetEvent();
             handleGetAllTimeZones();
+            handleGetEvent();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, slotInfo, setValue]);
+    }, [open, slotInfo]);
 
     // When calRepeatType changes (Daily/Weekly/Monthly/Yearly), initialize repeat json defaults
     const applyRepeatDefaults = (repeatId) => {
@@ -444,7 +456,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
             // original editAll logic
             editAll: editAll && selectedRepeat?.id !== 1 ? 'Y' : 'N',
         };
-        console.log("payload", payload)
         const res = await saveEvents(payload);
         if (res.status === 200) {
             setAlert({ open: true, message: res?.message, type: 'success' });
@@ -752,6 +763,26 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
 
                     <Components.DialogActions>
                         <div className="flex justify-end items-center gap-4">
+                            {
+                                slotInfo?.id && (
+                                    <Button
+                                        type="button"
+                                        text={'Delete'}
+                                        isLoading={loading}
+                                        onClick={() => handleOpenDeleteAlert("N")}
+                                        endIcon={<CustomIcons iconName={'fa-solid fa-trash'} css="cursor-pointer" />}
+                                    />
+                                )
+                            }
+                            {editAll && Number(watch('calRepeatType') || 1) !== 1 && (
+                                <Button
+                                    type="button"
+                                    text={'Delete All'}
+                                    isLoading={loading}
+                                    onClick={() => handleOpenDeleteAlert("Y")}
+                                    endIcon={<CustomIcons iconName={'fa-solid fa-trash'} css="cursor-pointer" />}
+                                />
+                            )}
                             <Button
                                 type="submit"
                                 text={'Save'}
@@ -778,7 +809,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                     </Components.DialogActions>
                 </form>
             </BootstrapDialog>
-
+            <DeleteEventAlert open={openDeleteAlert} handleClose={handleCloseDeleteAlert} thirdPartyCalendar={thirdPartyCalendar} calParentId={watch("calParentId")} deleteAll={deleteAll} id={watch("id")} handleGetAllEvents={handleGetAllEvents} />
             <ModalRepeat open={openRepeat} handleClose={handleCloseRepeatModel} values={getValues()} setValues={setValue} />
         </React.Fragment>
     );

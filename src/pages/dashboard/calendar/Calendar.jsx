@@ -21,7 +21,8 @@ import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import AddEventModel from '../../../components/models/calendar/addEventModel';
 import { getEventList, getSync } from '../../../service/calendar/calendarService';
 import { userTimeZone } from '../../../service/common/commonService';
-import { calenderName } from '../../../config/config';
+import { calenderName, outlookCalendarUrl } from '../../../config/config';
+import { outlookCalendarOauth } from '../../../service/outlookCalendar/outlookCalendarService';
 
 const locales = {
   'en-US': enUS,
@@ -36,15 +37,16 @@ const localizer = dateFnsLocalizer({
 });
 
 const setBgColor = (event) => {
+
   if (event?.calEventReminder === "reminder") {
     return "#9e69af";
   } else {
     if (event?.calType === "google") {
-      return "#ef6c00";
+      return "#E67C73";
     } else if (event?.calType === "outlook") {
-      return "#1072E0";
+      return "#ef6c00";
     } else {
-      return "#7986CB";
+      return "#1072E0";
     }
   }
 }
@@ -101,6 +103,33 @@ const Calendar = ({ setAlert }) => {
     setEventModalOpen(true);
   };
 
+  const handleClickOutlookCalendar = () => {
+    let x = window.innerWidth / 2 - 600 / 2;
+    let y = window.innerHeight / 2 - 700 / 2;
+    window.open(outlookCalendarUrl + '/outlookCalendarSignIn', "OutlookCalendarWindow", "width=600,height=700,left=" + x + ",top=" + y);
+    window.ocSuccess = function (data) {
+      outlookCalendarOauth(data).then(res => {
+        if (res.status === 200) {
+          displayGetCalendarAuthentication();
+          handleGetSync()
+        } else {
+          setAlert({
+            open: true,
+            type: "Error",
+            message: res.message,
+          });
+        }
+      });
+    }
+    window.ocError = function () {
+      setAlert({
+        open: true,
+        type: "Error",
+        message: "Something went wrong!!!",
+      });
+    }
+  }
+  
   const handleConnectWithGoogleCalendar = async () => {
     try {
       const res = await handleConnectGoogle();
@@ -261,7 +290,12 @@ const Calendar = ({ setAlert }) => {
                 )}
 
                 {thirdPartyCalendar !== null && !thirdPartyCalendar?.outlookCalendar && (
-                  <MenuItem>
+                  <MenuItem
+                    onClick={(event) => {
+                      handleClickOutlookCalendar();
+                      handleClose(event);
+                    }}
+                  >
                     <img
                       src={'/images/outlookcalendar.png'}
                       alt="Outlook Calendar"
@@ -293,6 +327,7 @@ const Calendar = ({ setAlert }) => {
             </Tooltip>
           </div>
         </div>
+
         <div>
           {thirdPartyCalendar !== null &&
             (thirdPartyCalendar?.googleCalendar || thirdPartyCalendar.outlookCalendar) && (
@@ -426,6 +461,7 @@ const Calendar = ({ setAlert }) => {
         handleClose={() => setEventModalOpen(false)}
         slotInfo={selectedSlot}          // used when adding
         handleGetAllEvents={() => loadEvents(date)}
+        thirdPartyCalendar={thirdPartyCalendar}
       />
 
     </>

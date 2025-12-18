@@ -40,3 +40,13 @@ export const getSync = async (userTimeZone) => {
         throw error;
     }
 };
+
+export const deleteEvent = async (data) => {
+    try {
+        const response = await axiosInterceptor().post(calendarURL + `/deleteEvent`, data).then(res => res)
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching actions:", error);
+        throw error;
+    }
+}

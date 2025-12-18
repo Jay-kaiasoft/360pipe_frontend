@@ -48,6 +48,7 @@ export const processNameURL = baseURL + '/process-name'
 export const salesProcessURL = baseURL + '/sales-process'
 export const salesStageURL = baseURL + '/salesStage'
 export const googleCalendarURL = baseURL + '/google-calendar'
+export const outlookCalendarUrl = baseURL + '/outlookCalendar'
 export const timeZonesURL = baseURL + '/time-zones'
 export const calendarURL = baseURL + '/calendar'
 

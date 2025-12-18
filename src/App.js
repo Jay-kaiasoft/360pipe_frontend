@@ -36,6 +36,7 @@ import Products from "./pages/dashboard/products/products";
 import ViewOpportunity from "./pages/dashboard/opportunities/viewOpportunity";
 import Calendar from "./pages/dashboard/calendar/Calendar";
 import GoogleCalendarOAuthRedirect from "./pages/dashboard/calendar/GoogleCalendarOAuthRedirect";
+import OutlookCalendarOauthRedirect from "./pages/dashboard/calendar/outlookCalendarOauthRedirect";
 
 library.add(fas, far, fab)
 
@@ -76,6 +77,10 @@ const App = ({ setLoading }) => {
     {
       path: "googlecalendaroauthredirect",
       element: <GoogleCalendarOAuthRedirect />
+    },
+    {
+      path: "outlookcalendaroauthredirect",
+      element: <OutlookCalendarOauthRedirect />
     },
     {
       path: "/dashboard",

@@ -8,7 +8,7 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+export const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone === "Asia/Kolkata" ? "Asia/Calcutta" : Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export const partnerRoles = [
     { id: 1, title: "System Integrator" },
