@@ -51,7 +51,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:local": "env-cmd -f .env.local react-scripts build",
-    "build:prod": "env-cmd -f .env.prod react-scripts build"
+    "build:dev": "env-cmd -f .env.dev react-scripts build"
   },
   "eslintConfig": {
     "extends": [
