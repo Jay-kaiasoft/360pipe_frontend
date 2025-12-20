@@ -37,6 +37,7 @@ import ViewOpportunity from "./pages/dashboard/opportunities/viewOpportunity";
 import Calendar from "./pages/dashboard/calendar/Calendar";
 import GoogleCalendarOAuthRedirect from "./pages/dashboard/calendar/GoogleCalendarOAuthRedirect";
 import OutlookCalendarOauthRedirect from "./pages/dashboard/calendar/outlookCalendarOauthRedirect";
+import Closeplan from "./pages/closeplan/closeplan";
 
 library.add(fas, far, fab)
 
@@ -81,6 +82,10 @@ const App = ({ setLoading }) => {
     {
       path: "outlookcalendaroauthredirect",
       element: <OutlookCalendarOauthRedirect />
+    },
+    {
+      path: "closeplan/:token",
+      element: <Closeplan />
     },
     {
       path: "/dashboard",

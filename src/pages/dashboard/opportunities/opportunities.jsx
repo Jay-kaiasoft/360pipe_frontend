@@ -8,7 +8,6 @@ import { Chip, Tooltip } from '@mui/material';
 import Input from '../../../components/common/input/input';
 import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
-import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 import Components from '../../../components/muiComponents/components';
 import OpportunitiesModel from '../../../components/models/opportunities/opportunitiesModel';
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
@@ -16,13 +15,15 @@ import CheckBoxSelect from '../../../components/common/select/checkBoxSelect';
 import GroupedDataTable from '../../../components/common/table/groupedTable';
 import OpportunitiesInfo from './opportunitiesInfo';
 
-import { deleteOpportunity, getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
+import { getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { opportunityStatus, stageColors, opportunityStages } from '../../../service/common/commonService';
 import { getAllAccounts } from '../../../service/account/accountService';
 import Select from '../../../components/common/select/select';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import { useForm } from 'react-hook-form';
 import { Tabs } from '../../../components/common/tabs/tabs';
+import KeyContactModel from '../../../components/models/closePlan/keyContactModel';
+import ClosePlanUrlModel from '../../../components/models/closePlan/closePlanUrlModel';
 
 const filterTab = [
     { id: 1, label: "Summary", },
@@ -48,13 +49,35 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
 
-    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
 
     // NOTE: these now hold ARRAYS OF OPTION OBJECTS from CheckBoxSelect
     const [selectedOppName, setSelectedOppName] = useState([])
     const [selectedOppStage, setSelectedOppStage] = useState([])
     const [selectedOppStatus, setSelectedOppStatus] = useState([])
+
+    const [openContactModel, setOpenContactModel] = useState(false);
+    const [closePlanUrl, setClosePlanUrl] = useState([])
+    const [closePlanUrlModel, setClosePlanUrlModel] = useState(false)
+
+    const handleOpenContactModel = (id) => {
+        setSelectedOpportunityId(id);
+        setOpenContactModel(true);
+    }
+
+    const handleCloseContactModel = () => {
+        setSelectedOpportunityId(null);
+        setOpenContactModel(false);
+    }
+
+    const handleOpenPlanUrlModel = () => {
+        setClosePlanUrlModel(true);
+    }
+
+    const handleClosePlanUrlModel = () => {
+        setClosePlanUrlModel(false);
+        setClosePlanUrl([])
+    }
 
     const handleSetActiveFilterTab = (id) => {
         setActiveFilterTab(id);
@@ -140,7 +163,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setInfoRowId(null);               // ⬅️ remove highlight when closing
     };
 
-
     const handleOpen = (opportunityId = null) => {
         setSelectedOpportunityId(opportunityId);
         setOpen(true);
@@ -149,31 +171,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const handleClose = () => {
         setSelectedOpportunityId(null);
         setOpen(false);
-    }
-
-    const handleOpenDeleteDialog = (opportunityId) => {
-        setSelectedOpportunityId(opportunityId);
-        setDialog({ open: true, title: 'Delete Opportunity', message: 'Are you sure! Do you want to delete this opportunity?', actionButtonText: 'yes' });
-    }
-
-    const handleCloseDeleteDialog = () => {
-        setSelectedOpportunityId(null);
-        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
-    }
-
-    const handleDeleteOpportunity = async () => {
-        const res = await deleteOpportunity(selectedOpportunityId);
-        if (res.status === 200) {
-            setSyncingPushStatus(true);
-            handleGetOpportunities();
-            handleCloseDeleteDialog();
-        } else {
-            setAlert({
-                open: true,
-                message: res?.message || "Failed to delete opportunity",
-                type: "error"
-            });
-        }
     }
 
     const handleGetAllAccounts = async () => {
@@ -392,34 +389,41 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
-                        <Tooltip title="Info" arrow>
-                            <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                <Components.IconButton onClick={() => handleOpenInfoModel(params.row.id)}>
-                                    <CustomIcons iconName={'fa-solid fa-info'} css='cursor-pointer text-white h-4 w-4' />
-                                </Components.IconButton>
-                            </div>
-                        </Tooltip>
-                        <Tooltip title="Edit" arrow>
-                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                <Components.IconButton onClick={() => navigate(`/dashboard/opportunity-view/${params.row.id}`)}>
-                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                </Components.IconButton>
-                            </div>
-                        </Tooltip>
                         <PermissionWrapper
                             functionalityName="Opportunities"
                             moduleName="Opportunities"
-                            actionId={3}
+                            actionId={2}
                             component={
-                                <Tooltip title="Delete" arrow>
-                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                <Tooltip title="Info" arrow>
+                                    <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenInfoModel(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-info'} css='cursor-pointer text-white h-4 w-4' />
                                         </Components.IconButton>
                                     </div>
                                 </Tooltip>
                             }
                         />
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <Tooltip title="Edit" arrow>
+                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => navigate(`/dashboard/opportunity-view/${params.row.id}`)}>
+                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
+                        <Tooltip title="Close Plane" arrow>
+                            <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <Components.IconButton onClick={() => handleOpenContactModel(params.row.id)}>
+                                    <CustomIcons iconName={'fa-solid fa-envelope'} css='cursor-pointer text-white h-4 w-4' />
+                                </Components.IconButton>
+                            </div>
+                        </Tooltip>
                     </div>
                 );
             },
@@ -711,109 +715,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             </div>
         );
     };
-
-    // const AccountEditCell = (params) => {
-    //     const { id, api, row } = params;
-
-    //     const originalValue = React.useRef({
-    //         accountId: row.accountId ?? null,
-    //         accountName: row.accountName ?? "",
-    //     });
-
-    //     const [selectedId, setSelectedId] = React.useState(() => {
-    //         const found = accounts.find(
-    //             (opt) => opt.id === row.accountId || opt.title === row.accountName
-    //         );
-    //         return found ? found.id : null;
-    //     });
-
-    //     const handleChange = (event, newValue) => {
-    //         const newId = newValue?.id ?? null;
-    //         const newName = newValue?.title ?? "";
-
-    //         setSelectedId(newId);
-
-    //         // Update both accountId and accountName in the grid row
-    //         api.setEditCellValue(
-    //             { id, field: "accountId", value: newId },
-    //             event
-    //         );
-    //         api.setEditCellValue(
-    //             { id, field: "accountName", value: newName },
-    //             event
-    //         );
-    //     };
-
-    //     const handleSave = () => {
-    //         api.stopCellEditMode({ id, field: "accountName" });
-    //     };
-
-    //     const handleCancel = () => {
-    //         api.setEditCellValue({
-    //             id,
-    //             field: "accountId",
-    //             value: originalValue.current.accountId,
-    //         });
-    //         api.setEditCellValue({
-    //             id,
-    //             field: "accountName",
-    //             value: originalValue.current.accountName,
-    //         });
-    //         api.stopCellEditMode({
-    //             id,
-    //             field: "accountName",
-    //             ignoreModifications: true,
-    //         });
-    //     };
-
-    //     return (
-    //         <div className="deal-amount-edit-container flex justify-start items-center gap-3 p-3">
-    //             <div className="flex-1 w-60">
-    //                 <Select
-    //                     // label="Account"
-    //                     placeholder="Select account"
-    //                     options={accounts}
-    //                     value={selectedId}
-    //                     onChange={handleChange}
-    //                 />
-    //             </div>
-
-    //             <Tooltip title="Save" arrow>
-    //                 <div
-    //                     className="bg-green-600 cursor-pointer h-5 w-5 flex justify-center items-center rounded-full text-white"
-    //                 >
-    //                     <Components.IconButton
-    //                         onClick={(event) => {
-    //                             event.stopPropagation();
-    //                             handleSave();
-    //                         }}
-    //                     >
-    //                         <CustomIcons
-    //                             iconName={'fa-solid fa-floppy-disk'}
-    //                             css='cursor-pointer text-white h-3 w-3'
-    //                         />
-    //                     </Components.IconButton>
-    //                 </div>
-    //             </Tooltip>
-
-    //             <Tooltip title="Cancel" arrow>
-    //                 <div className='bg-gray-800 h-5 w-5 flex justify-center items-center rounded-full text-white'>
-    //                     <Components.IconButton
-    //                         onClick={(event) => {
-    //                             event.stopPropagation();
-    //                             handleCancel();
-    //                         }}
-    //                     >
-    //                         <CustomIcons
-    //                             iconName={'fa-solid fa-close'}
-    //                             css='cursor-pointer text-white h-3 w-3'
-    //                         />
-    //                     </Components.IconButton>
-    //                 </div>
-    //             </Tooltip>
-    //         </div>
-    //     );
-    // };
 
     const OpportunityNameEditCell = (params) => {
         const { id, field, api, value } = params;
@@ -1162,56 +1063,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         }
     };
 
-    // const processRowUpdate = async (newRow, oldRow) => {
-    //     try {
-    //         const cleanedAmount =
-    //             newRow.dealAmount === '' || newRow.dealAmount == null
-    //                 ? null
-    //                 : parseFloat(newRow.dealAmount).toFixed(2);
-    //         const updatedData = {
-    //             ...newRow,
-    //             nextSteps: newRow.nextSteps,
-    //             dealAmount: cleanedAmount, // float with max 2 decimals
-    //         };
-    //         if (cleanedAmount === null || cleanedAmount === "") {
-    //             setAlert({
-    //                 open: true,
-    //                 message: "Deal amount can not be empty",
-    //                 type: "error"
-    //             })
-    //             return
-    //         }
-    //         if (newRow.nextSteps === null || newRow.nextSteps === "") {
-    //             setAlert({
-    //                 open: true,
-    //                 message: "Next step can not be empty",
-    //                 type: "error"
-    //             })
-    //             return
-    //         }
-    //         const res = await updateOpportunity(newRow.id, updatedData);
-    //         if (res.status === 200) {
-    //             setSyncingPushStatus(true);
-    //             handleGetOpportunities();
-    //             return newRow;
-    //         } else {
-    //             setAlert({
-    //                 open: true,
-    //                 message: res?.message || "Failed to update opportunity",
-    //                 type: "error",
-    //             });
-    //             return oldRow;
-    //         }
-    //     } catch (error) {
-    //         setAlert({
-    //             open: true,
-    //             message: "Failed to update opportunity",
-    //             type: "error",
-    //         });
-    //         return oldRow;
-    //     }
-    // };
-
     const actionButtons = () => {
         return (
             <PermissionWrapper
@@ -1298,8 +1149,9 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     getRowClassName={getRowClassNameForGrid}
                 />
             </div>
-            
+
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
+
             {openInfoModel && (
                 <OpportunitiesInfo
                     isOpen={openInfoModel}
@@ -1308,14 +1160,9 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 />
             )}
 
-            <AlertDialog
-                open={dialog.open}
-                title={dialog.title}
-                message={dialog.message}
-                actionButtonText={dialog.actionButtonText}
-                handleAction={() => handleDeleteOpportunity()}
-                handleClose={() => handleCloseDeleteDialog()}
-            />
+            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} setClosePlanUrl={setClosePlanUrl} handleOpenPlanUrlModel={handleOpenPlanUrlModel} />
+            <ClosePlanUrlModel open={closePlanUrlModel} handleClose={handleClosePlanUrlModel} closePlanUrl={closePlanUrl} />
+
         </>
     )
 }
