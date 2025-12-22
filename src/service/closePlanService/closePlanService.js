@@ -10,3 +10,13 @@ export const saveClosePlan = async (data) => {
         throw error;
     }
 };
+
+export const validateToken = async (token) => {
+    try {
+        const response = await axiosInterceptor().get(`${closeplanURL}/validateToken?token=${token}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error validateToken", error);
+        throw error;
+    }
+};
