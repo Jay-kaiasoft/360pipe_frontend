@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { validateToken } from "../../service/closePlanService/closePlanService";
+import { changeClosePlanStatus, validateToken } from "../../service/closePlanService/closePlanService";
 import Button from "../../components/common/buttons/button";
+import { getAllClosePlanNotes, saveClosePlanNote } from "../../service/closePlanNotes/closePlanNotesService";
+import { setAlert } from "../../redux/commonReducers/commonReducers";
+import { connect } from "react-redux";
+import CustomIcons from "../../components/common/icons/CustomIcons";
 
 // ---------- helpers ----------
 const getFileNameFromUrl = (url = "") => {
@@ -44,25 +48,26 @@ const splitNextSteps = (text = "") => {
     return [text.trim()];
 };
 
-const copyToClipboard = async (text) => {
+const formatDateTime = (date) => {
+    if (!date) return "";
     try {
-        await navigator.clipboard.writeText(text);
-        return true;
+        return new Date(date).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
     } catch {
-        // fallback
-        try {
-            const el = document.createElement("textarea");
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand("copy");
-            document.body.removeChild(el);
-            return true;
-        } catch {
-            return false;
-        }
+        return "";
     }
 };
+
+const EmptyComments = () => (
+    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        No comments yet. Be the first to ask a question or leave a note.
+    </div>
+);
 
 // ---------- small UI blocks ----------
 const Card = ({ title, right, children, className = "" }) => (
@@ -89,41 +94,23 @@ const Pill = ({ children }) => (
     </span>
 );
 
-const PrimaryBtn = ({ children, onClick, className = "" }) => (
-    <button
-        onClick={onClick}
-        className={
-            "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold " +
-            "bg-[#0478DC] text-white hover:brightness-95 active:brightness-90 " +
-            "transition " +
-            "disabled:opacity-60 disabled:cursor-not-allowed " +
-            className
-        }
-    >
-        {children}
-    </button>
-);
-
-const OutlineBtn = ({ children, onClick, className = "" }) => (
-    <button
-        onClick={onClick}
-        className={
-            "inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold " +
-            "border border-gray-200 bg-white text-[#242424] hover:bg-gray-50 " +
-            "transition " +
-            className
-        }
-    >
-        {children}
-    </button>
-);
 
 // ---------- main ----------
-const Closeplan = () => {
+const Closeplan = ({ setAlert }) => {
     const { token } = useParams();
 
     const [loading, setLoading] = useState(true);
     const [closePlan, setClosePlan] = useState(null);
+
+    const [looksPerfect, setLooksPerfect] = useState(false)
+    const [isComment, setIsComment] = useState(false)
+    const [isCommentDisabled, setIsCommentDisabled] = useState(false)
+
+    const [comments, setComments] = useState([]);
+    const [contactId, setContactId] = useState(null)
+    const [closePlanCreatedById, setClosePlanCreatedById] = useState(null)
+    const [commentText, setCommentText] = useState("")
+    const [closePlanId, setClosePlanId] = useState(null)
 
     const handleValidateToken = async () => {
         setLoading(true);
@@ -135,6 +122,15 @@ const Closeplan = () => {
             const data = res?.result?.data
 
             if (res?.status === 200 && data) {
+                setLooksPerfect(data?.status ? true : false)
+                if (data?.status) {
+                    setIsCommentDisabled(true)
+                }
+                setClosePlanCreatedById(data?.createdBy)
+                setContactId(data?.contactId)
+                setClosePlanId(data?.closePlanId)
+
+                handleGetAllComments(data?.closePlanId, data?.contactId)
                 setClosePlan(data);
             } else {
                 setClosePlan(null);
@@ -145,6 +141,50 @@ const Closeplan = () => {
             setLoading(false);
         }
     };
+
+    const handleGetAllComments = async (closePlanId, contactId) => {
+        const res = await getAllClosePlanNotes(closePlanId, contactId)
+        if (res.status === 200) {
+            setComments(res.result)
+        }
+    }
+
+    const handleSaveComment = async () => {
+        const payload = {
+            sendTo: closePlanCreatedById,
+            createdBy: contactId,
+            comments: commentText,
+            closePlanId: closePlanId
+        }
+        const res = await saveClosePlanNote(payload)
+        if (res?.status === 201) {
+            setCommentText("")
+            handleGetAllComments(closePlanId, contactId)
+        }
+    }
+
+    const handleSaveStatus = async () => {
+        if (!looksPerfect) {
+            setIsComment(false)
+            const res = await changeClosePlanStatus(closePlanId);
+            if (res.status === 200) {
+                setLooksPerfect(true)
+                setIsCommentDisabled(true)
+                setAlert({
+                    open: true,
+                    message: "Replay send successfully",
+                    type: "success"
+                })
+            } else {
+                setLooksPerfect(false)
+                setAlert({
+                    open: true,
+                    message: "Server error",
+                    type: "error"
+                })
+            }
+        }
+    }
 
     useEffect(() => {
         if (token) handleValidateToken();
@@ -190,7 +230,7 @@ const Closeplan = () => {
             </div>
 
             {/* body */}
-            <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">                               
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
                 {loading ? (
                     <div className="grid gap-4">
                         <div className="h-28 rounded-2xl bg-white border border-gray-200 animate-pulse" />
@@ -205,49 +245,9 @@ const Closeplan = () => {
                     </Card>
                 ) : (
                     <>
-                        {/* <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500">Opportunity</div>
-                    <div className="mt-1 text-xl font-extrabold text-[#242424]">
-                      {closePlan?.oppName || "—"}
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <Pill>ClosePlan #{closePlan?.closePlanId}</Pill>
-                      <Pill>OppId {closePlan?.oppId}</Pill>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600">
-                      Customer Logo
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600">
-                      Company Logo
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card title="Account Lead">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-600 font-bold">AL</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-bold text-[#242424] truncate">Account Lead</div>
-                    <div className="text-xs text-gray-500 truncate">account.lead@example.com</div>
-                    <div className="text-xs text-gray-500 truncate">(555) 555-1234</div>
-                  </div>
-                </div>
-              </Card>
-            </div> */}
-
                         {/* main grid like image */}
-                        <div className="grid grid-cols-1 gap-4">
-                            {/* left column */}
-                            <div className="grid gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <div className="grid gap-4 lg:col-span-8">
                                 {/* Executive Summary */}
                                 <Card
                                     title="Executive Summary"
@@ -339,11 +339,11 @@ const Closeplan = () => {
 
                                     <Card
                                         title="Shared Files"
-                                        // right={
-                                        //     sharedFiles?.length ? (
-                                        //         <Pill>{sharedFiles.length} files</Pill>
-                                        //     ) : null
-                                        // }
+                                    // right={
+                                    //     sharedFiles?.length ? (
+                                    //         <Pill>{sharedFiles.length} files</Pill>
+                                    //     ) : null
+                                    // }
                                     >
                                         {sharedFiles?.length ? (
                                             <div className="space-y-2">
@@ -410,45 +410,94 @@ const Closeplan = () => {
                                         )}
                                     </Card>
                                 </div>
-                             
-                                {/* Leave comment/question */}
-                                <Card title="Leave comment / Question">
-                                    <div className="rounded-xl border border-gray-200 bg-white p-3">
-                                        <textarea
-                                            rows={4}
-                                            className="w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
-                                            placeholder="Ask a question or leave a comment…"
-                                        />
-                                    </div>
-
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                       <Button text={"Submit"}/>                                    
-                                    </div>
-                                </Card>
                             </div>
 
-                            {/* <div className="grid gap-4">
-                <Card title="Key Data">
-                  <div className="grid gap-2 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">Opportunity</span>
-                      <span className="font-semibold text-[#242424] text-right truncate max-w-[180px]">
-                        {closePlan?.oppName || "—"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">OppId</span>
-                      <span className="font-semibold text-[#242424]">{closePlan?.oppId}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">ClosePlanId</span>
-                      <span className="font-semibold text-[#242424]">{closePlan?.closePlanId}</span>
-                    </div>
-                  </div>
-                </Card>
-              </div> */}
-                            {/* Shared Files */}
+                            <div className="lg:col-span-4">
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    <div className="flex justify-start items-center gap-2">
+                                        <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
+                                        <Button useFor={looksPerfect ? "success" : ""} text={"Looks Perfect"} onClick={() => handleSaveStatus()} />
+                                    </div>
+                                    <Button disabled={isCommentDisabled} useFor={isComment ? "" : "primary"} text={"Comment / Suggestion"} onClick={() => setIsComment(true)} />
 
+                                </div>
+                                {
+                                    (isComment && !looksPerfect) && (
+                                        <>
+                                            <Card title="Leave comment / Question">
+                                                <div className="rounded-xl border border-gray-200 bg-white p-3">
+                                                    <textarea
+                                                        onChange={(e) => setCommentText(e.target.value)}
+                                                        rows={4}
+                                                        className="w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
+                                                        placeholder="Ask a question or leave a comment…"
+                                                    />
+                                                </div>
+
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    <Button text={"Submit"} onClick={() => handleSaveComment()} />
+                                                </div>
+                                            </Card>
+
+                                            <div className="mt-3">
+                                                <Card
+                                                    title="Comments"
+                                                    right={
+                                                        <Pill>
+                                                            {comments?.length || 0} {comments?.length === 1 ? "comment" : "comments"}
+                                                        </Pill>
+                                                    }
+                                                >
+                                                    {!comments?.length ? (
+                                                        <EmptyComments />
+                                                    ) : (
+                                                        <div className="space-y-3">
+                                                            {comments?.map((c, idx) => {
+                                                                // Try multiple field names safely (adjust if your API uses different keys)
+                                                                const noteText = c?.comments || "";
+                                                                const createdAt = c?.createdAt;
+                                                                const createdByName = c?.createdByName
+
+                                                                return (
+                                                                    <div
+                                                                        key={c?.id ?? idx}
+                                                                        className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
+                                                                    >
+                                                                        <div className="flex items-start gap-3">
+                                                                            <div className="min-w-0 flex-1">
+                                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                                                    <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
+                                                                                        {createdByName}
+                                                                                    </div>
+
+                                                                                    {createdAt ? (
+                                                                                        <span className="text-xs text-gray-500">
+                                                                                            • {formatDateTime(createdAt)}
+                                                                                        </span>
+                                                                                    ) : null}
+                                                                                </div>
+
+                                                                                <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
+                                                                                    {noteText || "—"}
+                                                                                </div>
+
+                                                                                {/* optional: subtle divider line for “thread feel” */}
+                                                                                {idx !== comments.length - 1 ? (
+                                                                                    <div className="mt-4 h-px w-full bg-gray-100" />
+                                                                                ) : null}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </Card>
+                                            </div>
+                                        </>
+                                    )
+                                }
+                            </div>
                         </div>
                     </>
                 )}
@@ -457,4 +506,47 @@ const Closeplan = () => {
     );
 };
 
-export default Closeplan;
+const mapDispatchToProps = {
+    setAlert,
+};
+
+export default connect(null, mapDispatchToProps)(Closeplan)
+
+{/* <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <Card className="lg:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500">Opportunity</div>
+                    <div className="mt-1 text-xl font-extrabold text-[#242424]">
+                      {closePlan?.oppName || "—"}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Pill>ClosePlan #{closePlan?.closePlanId}</Pill>
+                      <Pill>OppId {closePlan?.oppId}</Pill>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600">
+                      Customer Logo
+                    </div>
+                    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600">
+                      Company Logo
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card title="Account Lead">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-600 font-bold">AL</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-[#242424] truncate">Account Lead</div>
+                    <div className="text-xs text-gray-500 truncate">account.lead@example.com</div>
+                    <div className="text-xs text-gray-500 truncate">(555) 555-1234</div>
+                  </div>
+                </div>
+              </Card>
+            </div> */}

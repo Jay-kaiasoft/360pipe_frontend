@@ -85,7 +85,7 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
                 // '& .MuiStepLabel-iconContainer': { marginBottom: 8 },
               }}
             >
-              {label || index + 1}
+              {label}
             </Components.StepLabel>
 
           </Components.Step>

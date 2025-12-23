@@ -52,5 +52,6 @@ export const outlookCalendarUrl = baseURL + '/outlookCalendar'
 export const timeZonesURL = baseURL + '/time-zones'
 export const calendarURL = baseURL + '/calendar'
 export const closeplanURL = baseURL + '/closeplan'
+export const closePlanNotesURL = baseURL + '/closeplannotes'
 
 export const calenderName = '360Pipe Calendar'

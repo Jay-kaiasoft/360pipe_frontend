@@ -226,11 +226,18 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerName: 'Valid8',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 80,
+            maxWidth: 90,
             sortable: false,
             renderCell: (params) => {
                 return (
-                    <span>-</span>
+                    <div className='flex justify-start items-center mt-2'>
+                        <Components.IconButton>
+                            <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
+                        </Components.IconButton>
+                        <Components.IconButton>
+                            <CustomIcons iconName={'fa-solid fa-comment'} css='cursor-pointer text-red-600 h-4 w-4' />
+                        </Components.IconButton>
+                    </div>
                 )
             }
         },

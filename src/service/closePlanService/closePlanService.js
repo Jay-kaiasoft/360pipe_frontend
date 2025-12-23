@@ -20,3 +20,13 @@ export const validateToken = async (token) => {
         throw error;
     }
 };
+
+export const changeClosePlanStatus = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${closeplanURL}/changeStatus/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error change staus", error);
+        throw error;
+    }
+};
