@@ -33,9 +33,13 @@ import { getAllCountry } from "../../../service/country/countryService";
 import { getAllStateByCountry } from "../../../service/state/stateService";
 import { addBusinessInfo, deleteBrandLogo, updateBusinessInfo, uploadBrandLogo } from "../../../service/businessInfo/businessInfoService";
 import { createSubUserTypes } from "../../../service/subUserType/subUserTypeService";
+import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
 
 const steps = ["", "", "", "", "", ""];
-
+const calendarType = [
+    { id: 1, title: "Calendar Year" },
+    { id: 2, title: "Financial Year" },
+]
 const Register = ({ setAlert, setLoading }) => {
     const navigate = useNavigate();
 
@@ -109,6 +113,8 @@ const Register = ({ setAlert, setLoading }) => {
             quota: "",
             evalPeriod: "",
             calendarYearType: "",
+            startEvalPeriod: null,
+            endEvalPeriod: null,
             question1: "",
             question2: "",
             question3: "",
@@ -606,6 +612,28 @@ const Register = ({ setAlert, setLoading }) => {
         handleGetAllCountrys();
     }, [activeStep])
 
+    useEffect(() => {
+        const t = Number(watch("calendarYearType"));
+        if (t === 1) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const start = new Date(y, 0, 1);      // Jan 1
+            const end = new Date(y, 11, 31);      // Dec 31
+
+            const formatDate = (date) => {
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const yyyy = date.getFullYear();
+                return `${mm}/${dd}/${yyyy}`;
+            };
+
+            setValue("startEvalPeriod", formatDate(start));
+            setValue("endEvalPeriod", formatDate(end));
+        } else {
+            setValue("startEvalPeriod", null);
+            setValue("endEvalPeriod", null);
+        }
+    }, [watch("calendarYearType")]);
     return (
         <>
             <div className="h-screen flex flex-col">
@@ -1236,6 +1264,39 @@ const Register = ({ setAlert, setLoading }) => {
                                             />
                                         </div>
 
+                                        <div>
+                                            <Controller
+                                                name="calendarYearType"
+                                                control={control}
+                                                rules={{ required: "Calendar Year Type is required" }}
+                                                render={({ field }) => (
+                                                    <Select
+                                                        options={calendarType}
+                                                        label="Calendar Type"
+                                                        placeholder="Select calendar type"
+                                                        value={parseInt(watch("calendarYearType")) || null}
+                                                        onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                        error={errors?.calendarYearType}
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+
+                                        {
+                                            watch("calendarYearType") && (
+                                                <div>
+                                                    <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                </div>
+                                            )
+                                        }
+
+                                        {
+                                            watch("calendarYearType") && (
+                                                <div>
+                                                    <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                </div>
+                                            )
+                                        }
                                         {
                                             !watch("billingAddressSameAsPrimary") && (
                                                 <>
@@ -1463,14 +1524,16 @@ const Register = ({ setAlert, setLoading }) => {
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div className="mt-3">
-                                        <FileInputBox
-                                            onFileSelect={handleImageChange}
-                                            onRemove={handleDeleteImage}
-                                            value={watch("brandLogo")}
-                                            text="Click in this area to upload brand logo"
-                                        />
+                                    
+                                    <div className='flex justify-center items-center'>
+                                        <div className="mt-3 h-40 w-40">
+                                            <FileInputBox
+                                                onFileSelect={handleImageChange}
+                                                onRemove={handleDeleteImage}
+                                                value={watch("brandLogo")}
+                                                text="Click in this area to upload brand logo"
+                                            />
+                                        </div>
                                     </div>
                                 </>
                             )

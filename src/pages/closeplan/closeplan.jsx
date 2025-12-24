@@ -94,7 +94,6 @@ const Pill = ({ children }) => (
     </span>
 );
 
-
 // ---------- main ----------
 const Closeplan = ({ setAlert }) => {
     const { token } = useParams();
@@ -145,6 +144,9 @@ const Closeplan = ({ setAlert }) => {
     const handleGetAllComments = async (closePlanId, contactId) => {
         const res = await getAllClosePlanNotes(closePlanId, contactId)
         if (res.status === 200) {
+            if (res.result?.length > 0) {
+                setIsComment(true)
+            }
             setComments(res.result)
         }
     }
@@ -157,8 +159,13 @@ const Closeplan = ({ setAlert }) => {
             closePlanId: closePlanId
         }
         const res = await saveClosePlanNote(payload)
-        if (res?.status === 201) {
+        if (res?.status === 200) {
             setCommentText("")
+            setAlert({
+                open: true,
+                message: "Comment added successfully",
+                type: "success"
+            })
             handleGetAllComments(closePlanId, contactId)
         }
     }
@@ -172,7 +179,7 @@ const Closeplan = ({ setAlert }) => {
                 setIsCommentDisabled(true)
                 setAlert({
                     open: true,
-                    message: "Replay send successfully",
+                    message: "Reply send successfully",
                     type: "success"
                 })
             } else {

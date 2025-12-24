@@ -24,6 +24,8 @@ import { useForm } from 'react-hook-form';
 import { Tabs } from '../../../components/common/tabs/tabs';
 import KeyContactModel from '../../../components/models/closePlan/keyContactModel';
 import ClosePlanUrlModel from '../../../components/models/closePlan/closePlanUrlModel';
+import ClosePlanThumbModel from '../../../components/models/closePlan/closePlanThumbModel';
+import ClosePlanCommentModel from '../../../components/models/closePlan/closePlanCommentModel';
 
 const filterTab = [
     { id: 1, label: "Summary", },
@@ -59,6 +61,29 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [openContactModel, setOpenContactModel] = useState(false);
     const [closePlanUrl, setClosePlanUrl] = useState([])
     const [closePlanUrlModel, setClosePlanUrlModel] = useState(false)
+
+    const [openThumbModel, setOpenThumbModel] = useState(false)
+    const [openCommentsModel, setOpenCommentsModel] = useState(false)
+
+    const handleOpenThumbModel = (id) => {
+        setSelectedOpportunityId(id);
+        setOpenThumbModel(true)
+    }
+
+    const handleCloseThumbModel = () => {
+        setSelectedOpportunityId(null);
+        setOpenThumbModel(false)
+    }
+
+    const handleOpenCommentModel = (id) => {
+        setSelectedOpportunityId(id);
+        setOpenCommentsModel(true)
+    }
+
+    const handleCloseCommentModel = () => {
+        setSelectedOpportunityId(null);
+        setOpenCommentsModel(false)
+    }
 
     const handleOpenContactModel = (id) => {
         setSelectedOpportunityId(id);
@@ -231,10 +256,10 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             renderCell: (params) => {
                 return (
                     <div className='flex justify-start items-center mt-2'>
-                        <Components.IconButton>
+                        <Components.IconButton onClick={() => handleOpenThumbModel(params.row.id)}>
                             <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
                         </Components.IconButton>
-                        <Components.IconButton>
+                        <Components.IconButton onClick={() => handleOpenCommentModel(params.row.id)}>
                             <CustomIcons iconName={'fa-solid fa-comment'} css='cursor-pointer text-red-600 h-4 w-4' />
                         </Components.IconButton>
                     </div>
@@ -1169,6 +1194,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
             <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} setClosePlanUrl={setClosePlanUrl} handleOpenPlanUrlModel={handleOpenPlanUrlModel} />
             <ClosePlanUrlModel open={closePlanUrlModel} handleClose={handleClosePlanUrlModel} closePlanUrl={closePlanUrl} />
+            <ClosePlanThumbModel open={openThumbModel} handleClose={handleCloseThumbModel} opportunityId={selectedOpportunityId}/>
+            <ClosePlanCommentModel open={openCommentsModel} handleClose={handleCloseCommentModel} opportunityId={selectedOpportunityId}/>
 
         </>
     )

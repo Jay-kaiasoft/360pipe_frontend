@@ -30,3 +30,23 @@ export const changeClosePlanStatus = async (id) => {
         throw error;
     }
 };
+
+export const getClosePlanByOppIdAndStatus = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${closeplanURL}/getClosePlanByStatus/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetch closeplan", error);
+        throw error;
+    }
+};
+
+export const getClosePlanByOppId = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${closeplanURL}/getClosePlanByOppId/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetch closeplan", error);
+        throw error;
+    }
+};
