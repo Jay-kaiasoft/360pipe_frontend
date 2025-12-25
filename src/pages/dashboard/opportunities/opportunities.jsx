@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
-import { Chip, Tooltip } from '@mui/material';
+import { Chip, styled, Tooltip, tooltipClasses } from '@mui/material';
 import Input from '../../../components/common/input/input';
 import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
@@ -24,12 +24,53 @@ import { useForm } from 'react-hook-form';
 import { Tabs } from '../../../components/common/tabs/tabs';
 import KeyContactModel from '../../../components/models/closePlan/keyContactModel';
 import ClosePlanUrlModel from '../../../components/models/closePlan/closePlanUrlModel';
-import ClosePlanThumbModel from '../../../components/models/closePlan/closePlanThumbModel';
 import ClosePlanCommentModel from '../../../components/models/closePlan/closePlanCommentModel';
 
 const filterTab = [
     { id: 1, label: "Summary", },
 ]
+
+const HtmlTooltip = styled(({ className, ...props }) => (
+    <Tooltip
+        {...props}
+        arrow
+        enterDelay={150}
+        enterNextDelay={150}
+        leaveDelay={80}
+        placement="right"
+        classes={{ popper: className }}
+        
+    />
+))(({ theme }) => ({
+    /* Tooltip box */
+    [`& .${tooltipClasses.tooltip}`]: {
+        background: "linear-gradient(180deg, #ffffff 0%, #fbfbff 100%)",
+        color: "#111827",
+        border: "2px solid #eab308",
+        boxShadow: "0 18px 45px rgba(0,0,0,0.12)",
+        borderRadius: 5,
+        padding: 12,
+        maxWidth: 340,
+        minWidth: 260,
+
+        /* Typography */
+        fontSize: theme.typography.pxToRem(12),
+        lineHeight: 1.35,
+
+        /* Smooth feel */
+        backdropFilter: "blur(6px)",
+    },
+
+    /* Arrow */
+    [`& .${tooltipClasses.arrow}`]: {
+        color: "#ffffff", // arrow fill
+        "&::before": {
+            border: "2px solid #eab308", // border around arrow
+            boxSizing: "border-box",
+        },
+    },
+}));
+
 const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -62,18 +103,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [closePlanUrl, setClosePlanUrl] = useState([])
     const [closePlanUrlModel, setClosePlanUrlModel] = useState(false)
 
-    const [openThumbModel, setOpenThumbModel] = useState(false)
     const [openCommentsModel, setOpenCommentsModel] = useState(false)
 
-    const handleOpenThumbModel = (id) => {
-        setSelectedOpportunityId(id);
-        setOpenThumbModel(true)
-    }
-
-    const handleCloseThumbModel = () => {
-        setSelectedOpportunityId(null);
-        setOpenThumbModel(false)
-    }
 
     const handleOpenCommentModel = (id) => {
         setSelectedOpportunityId(id);
@@ -237,6 +268,17 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         );
     };
 
+    const formatStatusTime = (date) => {
+        if (!date) return "—";
+        return new Date(date).toLocaleString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
     const columns = [
         {
             field: 'rowId',
@@ -255,14 +297,60 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             sortable: false,
             renderCell: (params) => {
                 return (
-                    <div className='flex justify-start items-center mt-2'>
-                        <Components.IconButton onClick={() => handleOpenThumbModel(params.row.id)}>
-                            <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
-                        </Components.IconButton>
+                    <div className="flex justify-start items-center mt-2">
+                        <HtmlTooltip
+                            arrow
+                            placement="right"
+                            title={
+                                params.row?.closePlanDtoList?.length ? (
+                                    <div className="min-w-[260px] max-w-[340px]">
+                                        <div className="flex items-center justify-between gap-3 pb-2">
+                                            <p className="text-[12px] font-semibold text-gray-900">Looks Perfect</p>                                           
+                                        </div>
+
+                                        <div className="h-px bg-gray-200/70 mb-2" />
+
+                                        <div className="space-y-2 max-h-56 overflow-auto">
+                                            {params.row.closePlanDtoList.map((cp, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-start justify-between gap-3 px-2"
+                                                >
+                                                    <p className="text-[12px] font-semibold text-gray-900 truncate max-w-[140px]">
+                                                        {cp.contactName}
+                                                    </p>
+
+                                                    <span className="text-[11px] font-medium text-gray-600 whitespace-nowrap">
+                                                        {formatStatusTime(cp.statusTime)}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>                                     
+                                    </div>
+                                ) : (
+                                    <div className="min-w-[240px]">
+                                        <p className="text-[12px] font-semibold text-gray-900">No close plan activity</p>                                        
+                                    </div>
+                                )
+                            }
+
+                        >
+                            <Components.IconButton>
+                                <CustomIcons
+                                    iconName={'fa-solid fa-thumbs-up'}
+                                    css="cursor-pointer text-yellow-500 h-4 w-4"
+                                />
+                            </Components.IconButton>
+                        </HtmlTooltip>
+
                         <Components.IconButton onClick={() => handleOpenCommentModel(params.row.id)}>
-                            <CustomIcons iconName={'fa-solid fa-comment'} css='cursor-pointer text-red-600 h-4 w-4' />
+                            <CustomIcons
+                                iconName={'fa-solid fa-comment'}
+                                css="cursor-pointer text-red-600 h-4 w-4"
+                            />
                         </Components.IconButton>
                     </div>
+
                 )
             }
         },
@@ -1194,9 +1282,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
             <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} setClosePlanUrl={setClosePlanUrl} handleOpenPlanUrlModel={handleOpenPlanUrlModel} />
             <ClosePlanUrlModel open={closePlanUrlModel} handleClose={handleClosePlanUrlModel} closePlanUrl={closePlanUrl} />
-            <ClosePlanThumbModel open={openThumbModel} handleClose={handleCloseThumbModel} opportunityId={selectedOpportunityId}/>
-            <ClosePlanCommentModel open={openCommentsModel} handleClose={handleCloseCommentModel} opportunityId={selectedOpportunityId}/>
-
+            <ClosePlanCommentModel open={openCommentsModel} handleClose={handleCloseCommentModel} opportunityId={selectedOpportunityId} />
         </>
     )
 }

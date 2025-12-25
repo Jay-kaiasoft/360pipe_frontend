@@ -420,13 +420,31 @@ const Closeplan = ({ setAlert }) => {
                             </div>
 
                             <div className="lg:col-span-4">
-                                <div className="flex flex-wrap gap-2 mb-3">
+                                <div className="relative max-w-md bg-[#E9DDFF] rounded-[28px] px-6 py-5 shadow-sm border-2 border-[#4B5563]">
+
+                                    <div className="absolute inset-2 rounded-[22px] border-2 border-dashed border-white pointer-events-none"></div>
+
+                                    <div className="relative z-10">
+                                        <p className="font-semibold text-[#242424] text-base">
+                                            {closePlan?.contactName},
+                                        </p>
+
+                                        <p className="my-2 text-sm text-[#242424] leading-relaxed">
+                                            Please confirm this is accurate or feel free to make any suggestions.
+                                        </p>
+
+                                        <p className="font-semibold text-[#242424] text-base">
+                                            {closePlan?.createdByName}
+                                        </p>
+                                    </div>                                  
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 mb-3 mt-10">
                                     <div className="flex justify-start items-center gap-2">
                                         <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
                                         <Button useFor={looksPerfect ? "success" : ""} text={"Looks Perfect"} onClick={() => handleSaveStatus()} />
                                     </div>
                                     <Button disabled={isCommentDisabled} useFor={isComment ? "" : "primary"} text={"Comment / Suggestion"} onClick={() => setIsComment(true)} />
-
                                 </div>
                                 {
                                     (isComment && !looksPerfect) && (
