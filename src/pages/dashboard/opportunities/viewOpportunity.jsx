@@ -44,6 +44,7 @@ import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportuni
 import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from '../../../service/common/commonService'
 import AddSalesProcessModel from '../../../components/models/opportunities/salesProcess/addSalesProcessModel';
 import { deleteSalesProcess, getAllBySalesOpportunity } from '../../../service/salesProcess/salesProcessService';
+import Calendar from '../calendar/Calendar';
 // import { getAllSalesStages } from '../../../service/salesStage/salesStageService';
 
 const toolbarProperties = {
@@ -59,6 +60,7 @@ const toolbarProperties = {
 const tableData = [
     { label: 'Opportunity Details' },
     { label: 'Opp360' },
+    { label: 'Calendar' },
 ]
 
 const ViewOpportunity = ({ setAlert }) => {
@@ -2163,6 +2165,13 @@ const ViewOpportunity = ({ setAlert }) => {
 
                             </div>
                         </div>
+                    </>
+                )
+            }
+            {
+                selectedTab === 2 && (
+                    <>
+                        <Calendar/>
                     </>
                 )
             }

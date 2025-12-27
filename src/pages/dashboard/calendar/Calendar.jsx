@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { format, parse, startOfWeek, getDay, isBefore } from 'date-fns';
 import { enUS } from 'date-fns/locale';
+import { add } from "date-fns";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -50,9 +52,11 @@ const setBgColor = (event) => {
     }
   }
 }
+
 const Calendar = ({ setAlert }) => {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
+  const location = useLocation()
 
   const [date, setDate] = useState(dayjs());
   const [events, setEvents] = useState([]);
@@ -94,6 +98,15 @@ const Calendar = ({ setAlert }) => {
   };
 
   const handleSlotSelect = (slotInfo) => {
+    if (slotInfo?.start < add(new Date(new Date()), { days: -1 })) {
+      setAlert({
+        open: true,
+        type: "warning",
+        message: "Please select time greater than current time.",
+      });
+      return;
+    }
+
     setSelectedSlot(slotInfo);
     setEventModalOpen(true);
   };
@@ -129,7 +142,7 @@ const Calendar = ({ setAlert }) => {
       });
     }
   }
-  
+
   const handleConnectWithGoogleCalendar = async () => {
     try {
       const res = await handleConnectGoogle();
@@ -236,9 +249,13 @@ const Calendar = ({ setAlert }) => {
     <>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4 px-8 grow">
-          <div>
-            <p className="text-2xl font-bold">My Calendar</p>
-          </div>
+          {
+            location?.pathname === "/dashboard/calendar" && (
+              <div>
+                <p className="text-2xl font-bold">My Calendar</p>
+              </div>
+            )
+          }
           <div className="flex items-center gap-3 text-lg">
             <Tooltip title="Add" arrow>
               <div
@@ -422,7 +439,7 @@ const Calendar = ({ setAlert }) => {
         </div>
 
         {/* MAIN CALENDAR */}
-        <div className="w-full lg:w-3/4 h-[800px]">
+        <div className={`w-full lg:w-3/4 ${location?.pathname === "/dashboard/calendar" ? " h-[800px]" : ""}`}>
           <BigCalendar
             localizer={localizer}
             selectable

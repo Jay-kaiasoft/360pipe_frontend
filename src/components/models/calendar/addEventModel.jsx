@@ -25,6 +25,7 @@ import Select from '../../common/select/select';
 import { dateTimeFormatDB, userTimeZone } from '../../../service/common/commonService';
 import { getEventById, saveEvents } from '../../../service/calendar/calendarService';
 import DeleteEventAlert from './deleteEventAlert';
+import { useLocation, useParams } from 'react-router-dom';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -111,6 +112,8 @@ const isSameDay = (a, b) => a && b && dayjs(a).isSame(dayjs(b), 'day');
 
 function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEvents, thirdPartyCalendar }) {
     const theme = useTheme();
+    const location = useLocation()
+    const { opportunityId } = useParams()
 
     const [openRepeat, setOpenRepeat] = useState(false);
     const [editAll, setEditAll] = useState(false);
@@ -194,7 +197,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         setOpenDeleteAlert(true);
     }
 
-    const handleCloseDeleteAlert = () => {        
+    const handleCloseDeleteAlert = () => {
         setOpenDeleteAlert(false)
         onClose()
     };
@@ -419,9 +422,9 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         const payload = {
             ...allValues,
 
+            oppId: (location?.pathname !== "/dashboard/calendar" && opportunityId) ? opportunityId : null,
             slots: slotIso ? [slotIso] : [],
             action: slotInfo?.action || 'click',
-            dialogTitle: watch('id') ? 'Update Event' : 'Add New Event',
 
             contactList: Array.isArray(allValues?.contactList) ? allValues.contactList : [],
             calAttendees: attendeesStr,
@@ -470,7 +473,13 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         <React.Fragment>
             <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {watch('id') ? 'Update Event' : 'Add Event'}
+                    {
+                        location?.pathname === "/dashboard/calendar" ? (
+                            watch('id') ? 'Update Event' : 'Add Event'
+                        ) : (
+                            watch('id') ? 'Update Meeting' : 'Add Meeting'
+                        )
+                    }
                 </Components.DialogTitle>
 
                 <Components.IconButton
