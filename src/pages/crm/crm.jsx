@@ -235,6 +235,7 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
     };
 
     useEffect(() => {
+        document.title = "My CRM - 360Pipe"
         handleGetUserInfo();
 
         // cleanup on unmount

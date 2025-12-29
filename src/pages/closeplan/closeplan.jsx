@@ -144,10 +144,10 @@ const Closeplan = ({ setAlert }) => {
     const handleGetAllComments = async (closePlanId, contactId) => {
         const res = await getAllClosePlanNotes(closePlanId, contactId)
         if (res.status === 200) {
+            setComments(res.result)
             if (res.result?.length > 0) {
                 setIsComment(true)
             }
-            setComments(res.result)
         }
     }
 
@@ -159,7 +159,7 @@ const Closeplan = ({ setAlert }) => {
             closePlanId: closePlanId
         }
         const res = await saveClosePlanNote(payload)
-        if (res?.status === 200) {
+        if (res?.status === 201) {
             setCommentText("")
             setAlert({
                 open: true,
@@ -167,6 +167,12 @@ const Closeplan = ({ setAlert }) => {
                 type: "success"
             })
             handleGetAllComments(closePlanId, contactId)
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message,
+                type: "error"
+            })
         }
     }
 
@@ -194,6 +200,7 @@ const Closeplan = ({ setAlert }) => {
     }
 
     useEffect(() => {
+        document.title = "ClosePlan - 360Pipe"
         if (token) handleValidateToken();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
@@ -430,13 +437,13 @@ const Closeplan = ({ setAlert }) => {
                                         </p>
 
                                         <p className="my-2 text-sm text-[#242424] leading-relaxed">
-                                            Please confirm this is accurate or feel free to make any suggestions.
+                                            {closePlan?.textMessage}
                                         </p>
 
                                         <p className="font-semibold text-[#242424] text-base">
                                             {closePlan?.createdByName}
                                         </p>
-                                    </div>                                  
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-wrap gap-2 mb-3 mt-10">
@@ -452,6 +459,7 @@ const Closeplan = ({ setAlert }) => {
                                             <Card title="Leave comment / Question">
                                                 <div className="rounded-xl border border-gray-200 bg-white p-3">
                                                     <textarea
+                                                        value={commentText}
                                                         onChange={(e) => setCommentText(e.target.value)}
                                                         rows={4}
                                                         className="w-full resize-none bg-transparent text-sm text-gray-800 outline-none"

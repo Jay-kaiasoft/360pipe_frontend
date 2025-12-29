@@ -84,6 +84,7 @@ const ManageTeam = ({ setAlert }) => {
     }
 
     useEffect(() => {
+        document.title = "My Team - 360Pipe"
         handleGetAllTeams();
     }, [])
 

@@ -105,7 +105,7 @@ export default function DataTable({
             <div className="overflow-x-auto" style={{ height: height || "full", width: '100%' }}>
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead style={{ background: theme.palette.background.paper }}>
-                        <tr className='sticky top-0 bg-white z-50 '>
+                        <tr className='sticky top-0 bg-white z-30 '>
                             <th className="w-6"></th>
                             {columns.map(col => (
                                 <th

@@ -13,7 +13,7 @@ import Input from '../input/input';
 import CustomIcons from '../icons/CustomIcons';
 import { stageColors, statusColors } from '../../../service/common/commonService';
 
-const paginationModel = { page: 0, pageSize: 10 };
+// const paginationModel = { page: 0, pageSize: 10 };
 
 const AscIcon = () => (
     <CustomIcons
@@ -150,8 +150,8 @@ export default function GroupedDataTable({
                                     <DataGrid
                                         rows={rowsWithIndex}
                                         columns={columns}
-                                        initialState={{ pagination: { paginationModel } }}
-                                        pageSizeOptions={[10, 25, 50]}
+                                        // initialState={{ pagination: { paginationModel } }}
+                                        // pageSizeOptions={[10, 25, 50]}
                                         disableRowSelectionOnClick
                                         hideFooterSelectedRowCount
                                         hideFooter={hideFooter}

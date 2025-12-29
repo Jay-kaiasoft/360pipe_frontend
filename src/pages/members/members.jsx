@@ -115,6 +115,7 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   }
 
   useEffect(() => {
+    document.title = "Members - 360Pipe"
     handleGetAllAccounts();
   }, []);
 

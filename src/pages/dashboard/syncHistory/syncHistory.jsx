@@ -46,6 +46,7 @@ const SyncHistory = () => {
         }
     }
     useEffect(() => {
+        document.title = "Sync History - 360Pipe"
         handleGetSyncHistory();
     }, []);
 

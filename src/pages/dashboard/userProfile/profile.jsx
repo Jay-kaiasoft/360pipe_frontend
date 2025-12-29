@@ -161,6 +161,7 @@ const Profile = ({ setAlert }) => {
     }
 
     useEffect(() => {
+        document.title = "Profile - 360Pipe"
         handleGetAllCountrys();
         handleGetUserDetails();
     }, [])

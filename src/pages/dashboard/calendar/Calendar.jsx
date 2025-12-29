@@ -238,6 +238,9 @@ const Calendar = ({ setAlert }) => {
   }
 
   useEffect(() => {
+    if (location?.pathname === "/dashboard/calendar") {
+      document.title = "My Calendar - 360Pipe"
+    }
     displayGetCalendarAuthentication();
   }, []);
 

@@ -128,11 +128,22 @@ function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
             closePlanId: closePlanId
         }
         const res = await saveClosePlanNote(payload)
-        if (res?.status === 200) {
+        if (res?.status === 201) {
+            setAlert({
+                open: true,
+                message: "Comment added successfully",
+                type: "success"
+            })
             setCommentText("")
             setClosePlanId(null)
             setContactId(null)
             handleGetAllComments(closePlanId, contactId)
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message,
+                type: "error"
+            })
         }
     }
 

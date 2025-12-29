@@ -166,6 +166,7 @@ const ManageMails = ({ setAlert }) => {
     }
 
     useEffect(() => {
+        document.title = "Email Scraper - 360Pipe"
         handleGetAllMails();
     }, [selectedTab])
 

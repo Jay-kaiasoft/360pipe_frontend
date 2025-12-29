@@ -66,6 +66,7 @@ const Products = ({ setAlert }) => {
   }
 
   useEffect(() => {
+    document.title = "Products & Service - 360Pipe"
     handleGetAllProducts()
   }, [])
 

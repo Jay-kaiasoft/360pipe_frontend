@@ -70,7 +70,6 @@ export default function Stapper({ steps, activeStep, orientation = "vertical", l
               StepIconComponent={CustomStepIcon}
               sx={{
                 '& .MuiStepLabel-label': {
-                  maxWidth: 220,             // force wrapping width (tune to your layout)
                   whiteSpace: 'normal',
                   textAlign: 'center',
                   lineHeight: 1.3,

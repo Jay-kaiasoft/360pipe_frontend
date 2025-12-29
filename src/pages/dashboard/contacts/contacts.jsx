@@ -99,6 +99,7 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     }
 
     useEffect(() => {
+        document.title = "Contacts - 360Pipe"
         handleGetContacts();
     }, []);
 

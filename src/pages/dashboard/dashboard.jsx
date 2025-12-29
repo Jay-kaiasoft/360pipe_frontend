@@ -53,6 +53,7 @@ const Dashboard = () => {
     }
 
     useEffect(() => {
+        document.title = "Dashboard - 360Pipe"
         handleGetDashboardData();
     }, []);
 

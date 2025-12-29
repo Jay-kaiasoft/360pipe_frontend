@@ -96,7 +96,6 @@ export const stageColors = {
     "Closed Lost": "#d32f2f",
 };
 
-
 export const uploadFiles = async (data) => {
     try {
         const response = axiosInterceptor().post(`${fileUploadURL}`, data)
@@ -368,6 +367,18 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleName": "Products & Service",
                                 "moduleAssignedActions": [1, 2, 3, 4],
                                 "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
+                            },
+                        ]
+                    },
+                    {
+                        "functionalityId": 12,
+                        "functionalityName": "Close Plan",
+                        "modules": [
+                            {
+                                "moduleId": 12,
+                                "moduleName": "Close Plan",
+                                "moduleAssignedActions": [1],
+                                "roleAssignedActions": (isSalesRep || isSalesManager) && [1]
                             },
                         ]
                     },

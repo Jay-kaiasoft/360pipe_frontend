@@ -143,8 +143,8 @@ function ClosePlanUrlModel({
                                             <button
                                                 onClick={() => handleCopyUrl(item.url, index)}
                                                 className={`p-2 rounded-lg transition-all duration-200 ${copiedIndex === index
-                                                        ? 'bg-green-100 text-green-600'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                                    ? 'bg-green-100 text-green-600'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
                                                     }`}
                                                 title={copiedIndex === index ? 'Copied!' : 'Copy URL'}
                                             >

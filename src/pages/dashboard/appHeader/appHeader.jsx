@@ -278,7 +278,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
                 </>
               )
             }
-            <div>
+            <div className="z-50">
               <UserDropdown />
             </div>
           </div>
