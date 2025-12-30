@@ -42,6 +42,8 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
             opportunityId: null,
             reportContactId: null,
             salesforceContactId: null,
+            companyName: null,
+            phone: null,
             firstName: null,
             middleName: null,
             lastName: null,
@@ -62,6 +64,8 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
             opportunityId: null,
             reportContactId: null,
             salesforceContactId: null,
+            companyName: null,
+            phone: null,
             firstName: null,
             middleName: null,
             lastName: null,
@@ -215,27 +219,37 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                     <Components.DialogContent dividers>
                         <div className='px-[30px]'>
                             <div className='grid gap-[30px]'>
-                                <div>
-                                    <Controller
-                                        name="opportunityId"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select
-                                                options={opportunities}
-                                                label={"Opportunity"}
-                                                placeholder="Select opportunity"
-                                                value={parseInt(watch("opportunityId")) || null}
-                                                onChange={(_, newValue) => {
-                                                    if (newValue?.id) {
-                                                        field.onChange(newValue.id);
-                                                    } else {
-                                                        setValue("opportunityId", null);
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                </div>
+                                <Controller
+                                    name="opportunityId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            options={opportunities}
+                                            label={"Opportunity"}
+                                            placeholder="Select opportunity"
+                                            value={parseInt(watch("opportunityId")) || null}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("opportunityId", null);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
+
+                                <Controller
+                                    name="companyName"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="First Name"
+                                            type={`text`}
+                                        />
+                                    )}
+                                />
 
                                 <Controller
                                     name="firstName"
@@ -252,6 +266,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                         />
                                     )}
                                 />
+
                                 <Controller
                                     name="lastName"
                                     control={control}
@@ -264,6 +279,23 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                             label="Last Name"
                                             type={`text`}
                                             error={errors.lastName}
+                                        />
+                                    )}
+                                />
+
+                                <Controller
+                                    name="phone"
+                                    control={control}                                    
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            label="Phone"
+                                            type={`text`}
+                                            error={errors?.phone}
+                                            onChange={(e) => {
+                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                field.onChange(numericValue);
+                                            }}
                                         />
                                     )}
                                 />
@@ -301,27 +333,26 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                         />
                                     )}
                                 />
-                                <div>
-                                    <Controller
-                                        name="reportContactId"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select
-                                                options={contacts}
-                                                label={"Reports To"}
-                                                placeholder="Select contact"
-                                                value={parseInt(watch("reportContactId")) || null}
-                                                onChange={(_, newValue) => {
-                                                    if (newValue?.id) {
-                                                        field.onChange(newValue.id);
-                                                    } else {
-                                                        setValue("reportContactId", null);
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    />
-                                </div>
+
+                                <Controller
+                                    name="reportContactId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            options={contacts}
+                                            label={"Reports To"}
+                                            placeholder="Select contact"
+                                            value={parseInt(watch("reportContactId")) || null}
+                                            onChange={(_, newValue) => {
+                                                if (newValue?.id) {
+                                                    field.onChange(newValue.id);
+                                                } else {
+                                                    setValue("reportContactId", null);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                />
                             </div>
                         </div>
                     </Components.DialogContent>

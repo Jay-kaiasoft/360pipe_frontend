@@ -1218,7 +1218,7 @@ const ViewOpportunity = ({ setAlert }) => {
             <section className="mt-8">
                 <div className="flex items-center my-4">
                     <div className="flex-grow border-t border-gray-300"></div>
-                    <span className="mx-4 font-semibold text-gray-700">Partner Or Competitors</span>
+                    <span className="mx-4 font-semibold text-gray-700">Partners</span>
                     <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
@@ -1820,12 +1820,19 @@ const ViewOpportunity = ({ setAlert }) => {
                         <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4'>
                             <div className='flex justify-center md:justify-start items-start md:col-span-1'>
                                 <div className="w-40 h-40">
-                                    <FileInputBox
+                                    {/* <FileInputBox
                                         onFileSelect={handleImageChange}
                                         onRemove={handleOpenDeleteLogoDialog}
                                         value={watch("logo") || watch("newLogo")}
                                         text="Upload jpg/png of Size 100X100 Px"
                                         size="100x100"
+                                    /> */}
+                                    <FileInputBox
+                                        type="OppLogo"
+                                        onFileSelect={handleImageChange}
+                                        onRemove={handleOpenDeleteLogoDialog}
+                                        value={watch("logo") || watch("newLogo")}
+                                        text="Upload Opportunity Logo"
                                     />
                                 </div>
                             </div>
@@ -2171,7 +2178,7 @@ const ViewOpportunity = ({ setAlert }) => {
             {
                 selectedTab === 2 && (
                     <>
-                        <Calendar/>
+                        <Calendar />
                     </>
                 )
             }

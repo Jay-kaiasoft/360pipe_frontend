@@ -467,7 +467,7 @@ function EmailTable({
         <div className="mt-3 border border-gray-200 rounded overflow-hidden">
             {/* Filter bar */}
             <div className=" p-3 bg-gray-50 border-b border-gray-200 flex justify-start items-center">
-                <div className="flex justify-start items-center grow gap-3">
+                <div className="flex justify-start items-end grow gap-3">
                     <div className="w-72">
                         <SelectMultiple
                             label="Filter by Email"

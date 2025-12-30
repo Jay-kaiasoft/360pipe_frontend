@@ -35,6 +35,9 @@ export default function DataTable({
     getRowClassName,
     checkboxSelection = false,
     showSearch = false,
+    onChangeSearch,
+    searchValue = "",
+    searchPlaceholder = "Search...",
     showButtons = false,
     showFilters = false,
     filtersComponent = null,
@@ -199,7 +202,7 @@ export default function DataTable({
                     <div className='grow'>
                         {showSearch && (
                             <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
-                                <Input name="search" label="Search" endIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
+                                <Input value={searchValue} onChange={onChangeSearch} placeholder={searchPlaceholder}  name="search" startIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
                             </div>
                         )}
                         <div>

@@ -1,6 +1,23 @@
 import { contactURL } from "../../config/config";
 import axiosInterceptor from "../axiosInterceptor/axiosInterceptor"
 
+export const searchContact = async (params, signal) => {
+    try {
+        const response = await axiosInterceptor().get(`${contactURL}/search?${params}`, {
+            signal, // ✅ allows aborting
+        });
+        return response.data;
+    } catch (error) {
+        // ✅ If request is aborted, just stop silently
+        if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") {
+            return null;
+        }
+        console.error("Error fetching contacts:", error);
+        throw error;
+    }
+};
+
+
 export const getAllContacts = async (params) => {
     try {
         const response = await axiosInterceptor().get(`${contactURL}/get/all?${params ? `?${params}` : ''}`);

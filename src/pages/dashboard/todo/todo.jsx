@@ -19,6 +19,7 @@ import { setStatusToCompleted } from '../../../service/todoAssign/todoAssignServ
 import { Tooltip } from '@mui/material';
 import { dateTimeFormatDB } from '../../../service/common/commonService';
 import dayjs from 'dayjs';
+import AttachmentsModel from '../../../components/models/todo/attachmentsModel';
 
 const filterTab = [
     { id: 1, label: "Master", },
@@ -45,6 +46,25 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [dialogCompleteTodo, setDialogCompleteTodo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedTodo, setSelectedTodo] = useState(null);
+
+    const [openAttachmentsModel, setOpenAttachmentsModel] = useState(false);
+    const [attachmentsData, setAttachmentsData] = useState(false);
+
+
+    const handleOpenAttachmentsModel = (row) => {
+        console.log("row", row)
+        const data = {
+            task: row?.task,
+            attachments: row?.images
+        }
+        setAttachmentsData(data)
+        setOpenAttachmentsModel(true);
+    };
+
+    const handleCloseAttachmentsModel = () => {
+        setAttachmentsData(null)
+        setOpenAttachmentsModel(false);
+    };
 
     const handleSetActiveFilterTab = (id) => {
         setTodos([]);
@@ -335,7 +355,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'Task',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 500,
+            maxWidth: 400,
         },
         {
             field: 'status',
@@ -360,7 +380,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             valueGetter: (value) => (value ? value.toDate() : null),
             valueFormatter: (value) => (value ? dayjs(value).format("MM/DD/YYYY") : "-"),
         },
-
         {
             field: 'complectedWork',
             headerName: 'Completed Work',
@@ -381,12 +400,23 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             headerName: 'action',
             headerClassName: 'uppercase',
             sortable: false,
-            minWidth: 150,
+            minWidth: 250,
             align: 'right',
             headerAlign: 'right',
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-end h-full'>
+                        {
+                            params.row?.images?.length > 0 && (
+                                <Tooltip title="Attachments" arrow>
+                                    <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenAttachmentsModel(params.row)}>
+                                            <CustomIcons iconName={'fa-solid fa-info'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            )
+                        }
                         {
                             params.row.status?.toLowerCase() !== 'completed' ? (
                                 <PermissionWrapper
@@ -395,7 +425,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                                     actionId={2}
                                     component={
                                         <Tooltip title="Complate Todo" arrow>
-                                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                            <div className='bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                                 <Components.IconButton onClick={() => handleOpenCompleteTodoDialog(params.row)}>
                                                     <CustomIcons iconName={'fa-solid fa-check'} css='cursor-pointer text-white h-4 w-4' />
                                                 </Components.IconButton>
@@ -412,7 +442,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                             actionId={2}
                             component={
                                 <Tooltip title="Edit" arrow>
-                                    <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                         <Components.IconButton onClick={() => handleOpen(params.row.id)}>
                                             <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                         </Components.IconButton>
@@ -490,6 +520,7 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
             </div>
             <AddTodo open={open} handleClose={handleClose} todoId={selectedTodoId} handleGetAllTodos={handleGetTodoByFilter} />
+            <AttachmentsModel open={openAttachmentsModel} handleClose={handleCloseAttachmentsModel} data={attachmentsData}/>
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}

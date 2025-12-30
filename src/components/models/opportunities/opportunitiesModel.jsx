@@ -55,7 +55,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
 
 const steps = [
     "Opportunity Details",
-    "Partner Or Competitors Details",
+    "Partner Details",
     "Contact Details",
     "Product & Service Details",
 ]
@@ -653,11 +653,11 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                             <div className='flex justify-center items-center'>
                                                 <div className='w-40 h-40'>
                                                     <FileInputBox
+                                                        type="OppLogo"
                                                         onFileSelect={handleImageChange}
                                                         onRemove={handleOpenDeleteLogoDialog}
                                                         value={watch("logo") || watch("newLogo")}
-                                                        text="Upload jpg/png of Size 100X100 Px"
-                                                        size="100x100"
+                                                        text="Upload Opportunity Logo"
                                                     />
                                                 </div>
                                             </div>

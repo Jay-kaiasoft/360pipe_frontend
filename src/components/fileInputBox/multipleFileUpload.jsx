@@ -21,7 +21,9 @@ function MultipleFileUpload({
   multiple = true,
   placeHolder,
   uploadedFiles,
-  setDeleteLogo
+  setDeleteLogo,
+  isFileUpload = true,
+  removableExistingAttachments = true
 }) {
   const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
   const [selectedImageId, setSelectedImageId] = useState(null)
@@ -304,7 +306,7 @@ function MultipleFileUpload({
   return (
 
     <div className="py-4">
-      <PermissionWrapper
+      {/* <PermissionWrapper
         functionalityName="Opportunities"
         moduleName="Opportunities"
         actionId={2}
@@ -323,7 +325,24 @@ function MultipleFileUpload({
             </p>
           </div>
         }
-      />
+      /> */}
+      {
+        isFileUpload && (
+          <div
+            {...getRootProps({
+              className:
+                "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
+            })}
+          >
+            <input {...getInputProps()} />
+            <p className="text-gray-700 text-center text-sm">
+              {placeHolder
+                ? placeHolder
+                : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
+            </p>
+          </div>
+        )
+      }
 
       <aside className="flex flex-wrap mt-4 justify-start">
         {/* Existing (server) files */}
@@ -337,7 +356,7 @@ function MultipleFileUpload({
                 url,
                 name,
                 ext,
-                removable: true,
+                removable: removableExistingAttachments,
                 onRemove: () => handleOpenDeleteDialog(item.imageId),
                 isInternal: !!item.isInternal,
                 onCheckboxChange: (checked) =>
