@@ -96,7 +96,6 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
     };
 
     // const getCalRepeatTypeLabel = (unit) => {      
-    //     console.log("unit",unit)  
     //     switch (unit) {
     //         case 'day':
     //             return 'Daily';

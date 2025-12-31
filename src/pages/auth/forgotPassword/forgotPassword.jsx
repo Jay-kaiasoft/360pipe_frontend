@@ -50,7 +50,6 @@ const ForgotPassword = ({ setAlert, setLoading }) => {
                 setValue("questionId", res?.data?.result?.questionId);
                 setActiveStep((prev) => prev + 1);
             } else {
-                console.log("ok", res?.data?.message)
                 setAlert({ open: true, type: 'error', message: res?.data?.message?.split(":")[1] || 'An error occurred. Please try again later.' });
             }
         } else {

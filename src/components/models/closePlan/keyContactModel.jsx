@@ -30,6 +30,7 @@ function KeyContactModel({
     open,
     handleClose,
     opportunityId,
+    handleGetAllOpportunities
 }) {
     const theme = useTheme();
     const [activeStep, setActiveStep] = useState(0)
@@ -139,6 +140,7 @@ function KeyContactModel({
             const res = await saveClosePlan(payload);
             if (res.status === 201) {
                 setClosePlanUrl(res?.result);
+                handleGetAllOpportunities()
                 handleNext()
             } else {
                 setAlert({
@@ -160,7 +162,7 @@ function KeyContactModel({
         <React.Fragment>
             <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    Send Close Plan For {oppDetails?.opportunity}
+                    Send Close Plan For <strong>{oppDetails?.opportunity}</strong>
                 </Components.DialogTitle>
 
                 <Components.IconButton

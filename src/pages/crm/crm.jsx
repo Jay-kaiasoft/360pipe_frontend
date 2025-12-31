@@ -1,10 +1,13 @@
 import { connect } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { setAlert, setLoading, setSyncingPushStatus } from '../../redux/commonReducers/commonReducers';
+import { setAlert, setLoading, setLoadingMessage, setSyncCount, setSyncingPushStatus } from '../../redux/commonReducers/commonReducers';
 
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, exchangeToken, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
+import { syncFromQ4magic } from '../../service/salesforce/syncFromQ4magic/syncFromQ4magicService';
+import { syncToQ4Magic } from '../../service/salesforce/syncToQ4Magic/syncToQ4MagicService';
+import { getAllSyncRecords } from '../../service/syncRecords/syncRecordsService';
 
 const UserInfoSkeleton = () => (
     <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full animate-pulse">
@@ -23,7 +26,7 @@ const getInitials = (name = "") => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 };
 
-const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
+const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus }) => {
     const exchangingRef = useRef(false);
     const popupRef = useRef(null);
     const intervalRef = useRef(null);
@@ -85,10 +88,100 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
         popupRef.current = null;
     };
 
+    const handleGetAllSyncRecords = async () => {
+        try {
+            const syncRecords = await getAllSyncRecords();
+            if (syncRecords?.status === 200) {
+                setSyncCount(syncRecords.result?.filter((row) => row.subjectId != null && row.deleted === false)?.length || null);
+                setSyncingPullStatus(false);
+                setSyncingPushStatus(false);
+                setLoadingMessage(null)
+            }else{
+                setLoadingMessage(null)
+            }
+        } catch (error) {
+            setLoadingMessage(null)
+            setAlert({
+                open: true,
+                message: error.message || "Error fetching sync records.",
+                type: "error"
+            });
+        }
+    }
+
+    const handleSync = async () => {
+        try {
+            const res = await syncToQ4Magic();
+            if (res?.status === 200) {
+                setLoading(false);
+                setAlert({
+                    open: true,
+                    message: res?.message || "Data synced successfully",
+                    type: "success"
+                })
+                handleGetAllSyncRecords()
+                setLoadingMessage(null)
+            } else {
+                setLoading(false);
+                setLoadingMessage(null)
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to sync data",
+                    type: "error"
+                })
+            }
+        } catch (err) {
+            setLoading(false);
+            setLoadingMessage(null)
+            setAlert({
+                open: true,
+                message: err.message || "Error syncing data.",
+                type: "error"
+            })
+        }
+    }
+
+    const handlePushData = async () => {
+        try {
+            setLoadingMessage("Please wait ! We are syncing your data.....")
+            const res = await syncFromQ4magic();
+            if (res?.status === 200) {
+                await handleSync();
+            } else if (res?.status === 401) {
+                setLoading(false);
+                localStorage.removeItem("accessToken_salesforce");
+                localStorage.removeItem("instanceUrl_salesforce");
+                localStorage.removeItem("salesforceUserData");
+                setLoadingMessage(null)
+                setAlert({
+                    open: true,
+                    message: "Your Salesforce session has expired. Please reconnect your Salesforce account.",
+                    type: "error"
+                })
+            }
+            else {
+                setLoading(false);
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to sync data",
+                    type: "error"
+                })
+            }
+        } catch (err) {
+            setLoading(false);
+            setAlert({
+                open: true,
+                message: err.message || "Error syncing accounts to Q4Magic.",
+                type: "error"
+            })
+        }
+    }
+
     const handleLogin = async () => {
         // prevent multiple clicks / multiple popups
         if (loading) return;
 
+        setLoadingMessage("Connecting to Salesforce.......")
         setLoading(true);
         exchangingRef.current = false;
 
@@ -98,6 +191,7 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
             if (!res?.result?.url) {
                 setAlert({ open: true, type: "error", message: "Failed to get Salesforce login URL." });
                 setLoading(false);
+                setLoadingMessage(null)
                 return;
             }
 
@@ -118,6 +212,7 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
             if (!popup) {
                 setAlert({ open: true, type: "error", message: "Popup blocked. Please allow popups and try again." });
                 setLoading(false);
+                setLoadingMessage(null)
                 return;
             }
 
@@ -142,6 +237,7 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
                         setAlert({ open: true, type: "error", message: "Salesforce authentication failed." });
                         closePopup();
                         setLoading(false);
+                        setLoadingMessage(null)
                         exchangingRef.current = false;
                         return;
                     }
@@ -161,6 +257,7 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
                             exchangingRef.current = false;
                             closePopup();
                             setLoading(false);
+                            setLoadingMessage(null)
                             return;
                         }
 
@@ -171,7 +268,6 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
                         if (token && instanceUrl) {
                             localStorage.setItem("accessToken_salesforce", token);
                             localStorage.setItem("instanceUrl_salesforce", instanceUrl);
-
                             setAlert({
                                 open: true,
                                 type: "success",
@@ -180,7 +276,9 @@ const Crm = ({ setLoading, setAlert, loading, setSyncingPushStatus }) => {
 
                             closePopup();
                             await handleGetUserInfo();
+                            await handlePushData()
                             setLoading(false);
+                            setLoadingMessage(null)
                             return;
                         }
 
@@ -318,7 +416,9 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
     setLoading,
     setAlert,
-    setSyncingPushStatus
+    setSyncingPushStatus,
+    setLoadingMessage,
+    setSyncCount
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Crm);

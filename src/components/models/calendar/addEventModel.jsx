@@ -746,7 +746,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                                                 }
                                             }}
                                             onClick={(_, newValue) => {
-                                                console.log("newvalue", newValue)
                                                 if (newValue.id !== 1) {
                                                     setOpenRepeat(true);
                                                 }

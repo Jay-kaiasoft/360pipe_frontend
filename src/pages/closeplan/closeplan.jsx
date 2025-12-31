@@ -182,12 +182,7 @@ const Closeplan = ({ setAlert }) => {
             const res = await changeClosePlanStatus(closePlanId);
             if (res.status === 200) {
                 setLooksPerfect(true)
-                setIsCommentDisabled(true)
-                setAlert({
-                    open: true,
-                    message: "Reply send successfully",
-                    type: "success"
-                })
+                setIsCommentDisabled(true)              
             } else {
                 setLooksPerfect(false)
                 setAlert({

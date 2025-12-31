@@ -103,7 +103,6 @@ export default function DataTable({
             setPriorityData(logArr);
         };
 
-
         return (
             <div className="overflow-x-auto" style={{ height: height || "full", width: '100%' }}>
                 <table className="min-w-full divide-y divide-gray-200">
@@ -139,7 +138,7 @@ export default function DataTable({
                         }}
                         animation={150} fallbackOnBody={true} swapThreshold={0.65} ghostClass={"ghost"} group={"shared"} forceFallback={true}
                     >
-                        {sortedRows?.map((row, idx) => (
+                        {sortedRows?.length > 0 ? sortedRows?.map((row, idx) => (
                             <tr
                                 key={String(getRowId(row))}
                                 className={`${getRowClassName ? getRowClassName({ row }) : ''} border-b`}
@@ -162,7 +161,13 @@ export default function DataTable({
                                     </td>
                                 ))}
                             </tr>
-                        ))}
+                        )) :
+                            <tr>
+                                <td colSpan={10} className="text-center h-96 font-bold text-lg">
+                                    There is no task for today.
+                                </td>
+                            </tr>
+                        }
                     </ReactSortable>
                 </table>
             </div>
@@ -201,8 +206,8 @@ export default function DataTable({
                 <div className="border border-1 py-4 px-5 rounded-lg rounded-b-none flex justify-between items-center gap-4">
                     <div className='grow'>
                         {showSearch && (
-                            <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
-                                <Input value={searchValue} onChange={onChangeSearch} placeholder={searchPlaceholder}  name="search" startIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
+                            <div className="w-full md:w-80 mb-3 md:mb-0 md:max-w-xs">
+                                <Input value={searchValue} onChange={onChangeSearch} placeholder={searchPlaceholder} name="search" startIcon={<CustomIcons iconName={'fa-solid fa-magnifying-glass'} css='mr-3' />} />
                             </div>
                         )}
                         <div>

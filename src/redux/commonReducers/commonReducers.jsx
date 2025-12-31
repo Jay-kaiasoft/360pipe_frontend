@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   loading: false,
+  loadingMessage: null,
   alert: { open: false, message: '', type: '' },
   uploadedFiles: [],
   userDetails: null,
@@ -30,6 +31,9 @@ const commonReducersSlice = createSlice({
     },
     setLoading(state, action) {
       state.loading = action.payload;
+    },
+    setLoadingMessage(state, action) {
+      state.loadingMessage = action.payload;
     },
     setAlert(state, action) {
       state.alert = action.payload;
@@ -98,6 +102,7 @@ const commonReducersSlice = createSlice({
 
 export const {
   setLoading,
+  setLoadingMessage,
   setAlert,
   setUploadedFiles,
   handleSetTitle,
@@ -107,7 +112,7 @@ export const {
   setSyncCount,
   setSyncingPullStatus,
   setSyncingPushStatus,
-  
+
   // Sidebar actions
   toggleSidebar,
   toggleMobileSidebar,

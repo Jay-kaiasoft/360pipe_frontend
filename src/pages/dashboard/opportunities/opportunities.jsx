@@ -24,6 +24,7 @@ import { useForm } from 'react-hook-form';
 import { Tabs } from '../../../components/common/tabs/tabs';
 import KeyContactModel from '../../../components/models/closePlan/keyContactModel';
 import ClosePlanCommentModel from '../../../components/models/closePlan/closePlanCommentModel';
+import OpportunityInfoModel from '../../../components/models/opportunities/opportunityInfoModel';
 
 const filterTab = [
     { id: 1, label: "Summary" },
@@ -288,7 +289,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         return new Date(date).toLocaleString("en-US", {
             month: "short",
             day: "2-digit",
-            year: "numeric",           
+            year: "numeric",
         });
     };
 
@@ -435,19 +436,21 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                             />
                                         </Components.IconButton>
                                     </HtmlTooltip>
-
-                                    <Components.IconButton onClick={() => handleOpenCommentModel(params.row.id)}>
-                                        <CustomIcons
-                                            iconName={'fa-solid fa-comment'}
-                                            css="cursor-pointer text-red-600 h-4 w-4"
-                                        />
-                                    </Components.IconButton>
+                                    {
+                                        params.row.closePlanDtoList?.some((row) => row.hasComment === true) && (
+                                            <Components.IconButton onClick={() => handleOpenCommentModel(params.row.id)}>
+                                                <CustomIcons
+                                                    iconName={'fa-solid fa-comment'}
+                                                    css="cursor-pointer text-red-600 h-4 w-4"
+                                                />
+                                            </Components.IconButton>
+                                        )
+                                    }
                                 </div>
                             ) :
                                 <p>-</p>
                         }
                     </>
-
                 )
             }
         },
@@ -1311,15 +1314,19 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
             <OpportunitiesModel open={open} handleClose={handleClose} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
 
-            {openInfoModel && (
+            {/* {openInfoModel && (
                 <OpportunitiesInfo
                     isOpen={openInfoModel}
                     handleClose={handleCloseInfoModel}
                     opportunityId={selectedOpportunityId}
                 />
-            )}
-
-            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} />
+            )} */}
+            <OpportunityInfoModel
+                open={openInfoModel}
+                handleClose={handleCloseInfoModel}
+                opportunityId={selectedOpportunityId}
+            />
+            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities}/>
             <ClosePlanCommentModel open={openCommentsModel} handleClose={handleCloseCommentModel} opportunityId={selectedOpportunityId} />
         </>
     )

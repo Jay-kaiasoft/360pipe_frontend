@@ -287,7 +287,6 @@ function MailScraper({ setAlert, setLoading }) {
                 })
             }
         } catch (e) {
-            console.log(" e?.response", e?.response)
             setLoading(false);
             setAlert({
                 open: true,

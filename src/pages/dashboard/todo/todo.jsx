@@ -52,7 +52,6 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
 
 
     const handleOpenAttachmentsModel = (row) => {
-        console.log("row", row)
         const data = {
             task: row?.task,
             attachments: row?.images

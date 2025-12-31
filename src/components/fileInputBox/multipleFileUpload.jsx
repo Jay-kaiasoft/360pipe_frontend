@@ -26,7 +26,8 @@ function MultipleFileUpload({
   removableExistingAttachments = true
 }) {
   const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-  const [selectedImageId, setSelectedImageId] = useState(null)
+  const [selectedImageId, setSelectedImageId] = useState(null);
+  const [imagePreviewModal, setImagePreviewModal] = useState({ open: false, url: '', name: '' });
 
   const getExt = (name = "", fallbackMime = "") => {
     const qless = name.split("?")[0];
@@ -134,6 +135,16 @@ function MultipleFileUpload({
     }
   };
 
+  // Open image preview modal
+  const handleImagePreview = (url, name) => {
+    setImagePreviewModal({ open: true, url, name });
+  };
+
+  // Close image preview modal
+  const handleCloseImagePreview = () => {
+    setImagePreviewModal({ open: false, url: '', name: '' });
+  };
+
   const renderFileTile = ({
     url,
     name,
@@ -149,19 +160,26 @@ function MultipleFileUpload({
     return (
       <TileFrame key={name}>
         <div className="relative w-full h-20 flex justify-center items-center">
-          <NavLink
-            target="_blank"
-            to={url}
-            className="w-full h-full flex justify-center items-center"
-          >
-            {isImg ? (
+          {isImg ? (
+            // For images: Open modal on click
+            <div
+              className="w-full h-full flex justify-center items-center cursor-pointer"
+              onClick={() => handleImagePreview(url, name)}
+            >
               <img src={url} alt={name} className="object-cover w-full h-full" />
-            ) : (
+            </div>
+          ) : (
+            // For non-images: Use NavLink to open in new tab
+            <NavLink
+              target="_blank"
+              to={url}
+              className="w-full h-full flex justify-center items-center"
+            >
               <div className="w-full h-full flex flex-col justify-center items-center gap-1 px-1 text-center">
                 <CustomIcons iconName={fileInfo.icon} css="text-gray-700 text-2xl" />
               </div>
-            )}
-          </NavLink>
+            </NavLink>
+          )}
 
           {/* only show checkbox when handler is provided */}
           <PermissionWrapper
@@ -302,30 +320,8 @@ function MultipleFileUpload({
     setDialog({ open: false, title: '', message: '', actionButtonText: '' });
   }
 
-
   return (
-
-    <div className="py-4">
-      {/* <PermissionWrapper
-        functionalityName="Opportunities"
-        moduleName="Opportunities"
-        actionId={2}
-        component={
-          <div
-            {...getRootProps({
-              className:
-                "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
-            })}
-          >
-            <input {...getInputProps()} />
-            <p className="text-gray-700 text-center text-sm">
-              {placeHolder
-                ? placeHolder
-                : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
-            </p>
-          </div>
-        }
-      /> */}
+    <div className="py-4 relative">
       {
         isFileUpload && (
           <div
@@ -398,6 +394,39 @@ function MultipleFileUpload({
             });
           })}
       </aside>
+      
+      {/* Simple Image Preview Modal */}
+      {imagePreviewModal.open && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50 p-4"
+          onClick={handleCloseImagePreview}
+        >
+          <div 
+            className="relative bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {imagePreviewModal.name}
+              </h3>
+              <button
+                className="text-gray-500 hover:text-gray-700"
+                onClick={handleCloseImagePreview}
+              >
+                <CustomIcons iconName="fa-solid fa-times" css="text-xl" />
+              </button>
+            </div>
+            <div className="p-4 overflow-auto max-h-[calc(90vh-100px)] ">
+              <img
+                src={imagePreviewModal.url}
+                alt={imagePreviewModal.name}
+                className="max-w-full max-h-full object-contain mx-auto"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <AlertDialog
         open={dialog.open}
         title={dialog.title}

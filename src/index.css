@@ -795,3 +795,60 @@ body {
 .toolbar-class {
   border: 1px solid #ccc;
 }
+
+
+/* Organization Chart Custom Styles */
+.organization-chart .react-flow__node {
+  cursor: default;
+}
+
+.organization-chart .react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.organization-chart .react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 3;
+}
+
+.organization-chart .react-flow__controls {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.organization-chart .react-flow__controls-button {
+  background: white;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  width: 32px;
+  height: 32px;
+}
+
+.organization-chart .react-flow__controls-button:hover {
+  background: #f8f9fa;
+}
+
+.organization-chart .react-flow__controls-button svg {
+  fill: #6b7280;
+}
+
+.organization-chart .react-flow__minimap {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* For better node rendering */
+.react-flow__node-person {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Ensure proper z-index for connections */
+.react-flow__edges {
+  z-index: 5;
+}
+
+.react-flow__nodes {
+  z-index: 10;
+}
