@@ -1,7 +1,7 @@
 const SalesWorkflowSection = () => (
   <section className="relative flex justify-between 4k:justify-center items-center py-12">
     <div className="max-w-xl">
-      <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-black">
+      <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-black" style={{ lineHeight: 1.2 }}>
         Revolutionize Your <br />
         Sales Workflow with <br />
         <span className="text-[#1072E0]">360Pipe</span> CRM
@@ -25,7 +25,7 @@ const SalesWorkflowSection = () => (
           Real-time Performance & Conversion Insights
         </li>
       </ul>
-      
+
       <button
         type="button"
         className="relative px-5 py-3 rounded group overflow-hidden font-medium text-[#1072E0] border border-[#1072E0]"
