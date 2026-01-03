@@ -178,64 +178,34 @@ function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
                 >
                     <div className="h-full bg-gray-50">
                         <div className="h-full overflow-auto py-4">
-                            {loading ? (
-                                <div className="space-y-3">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className="rounded-2xl border border-gray-200 bg-white p-4 animate-pulse">
-                                            <div className="flex items-start gap-3">
-                                                <div className="h-10 w-10 rounded-full bg-gray-200" />
-                                                <div className="flex-1">
-                                                    <div className="h-3 w-40 bg-gray-200 rounded mb-2" />
-                                                    <div className="h-3 w-28 bg-gray-200 rounded" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : contacts?.length ? (
-                                <div className="space-y-3">
-                                    {contacts.map((row) => {
-                                        return (
-                                            <div
-                                                onClick={() => handleGetAllComments(row.id, row.contactId)}
-                                                key={row.id}
-                                                className={`cursor-pointer group rounded-lg border bg-white p-4 shadow-sm transition-all duration-200
+                            <div className="space-y-3">
+                                {contacts.map((row) => {
+                                    return (
+                                        <div
+                                            onClick={() => handleGetAllComments(row.id, row.contactId)}
+                                            key={row.id}
+                                            className={`cursor-pointer group rounded-lg border bg-white p-4 shadow-sm transition-all duration-200
   ${closePlanId === row.id && contactId === row.contactId
-                                                        ? "border-blue-600 ring-2 ring-blue-100"
-                                                        : "border-gray-200 hover:border-blue-300 hover:shadow-md"
-                                                    }`}
+                                                    ? "border-blue-600 ring-2 ring-blue-100"
+                                                    : "border-gray-200 hover:border-blue-300 hover:shadow-md"
+                                                }`}
 
-                                            >
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-[#7413D1]/10 flex items-center justify-center">
+                                                    <span className="text-[#7413D1] font-bold text-sm">
+                                                        {getInitials(row?.contactName)}
+                                                    </span>
+                                                </div>
 
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-[#7413D1]/10 flex items-center justify-center">
-                                                        <span className="text-[#7413D1] font-bold text-sm">
-                                                            {getInitials(row?.contactName)}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[420px]">
-                                                        {row?.contactName || '—'}
-                                                    </div>
+                                                <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[420px]">
+                                                    {row?.contactName || '—'}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="h-full flex items-center justify-center">
-                                    <div className="max-w-md text-center p-6">
-                                        <div className="mx-auto h-12 w-12 rounded-2xl bg-[#0478DC]/10 flex items-center justify-center">
-                                            <CustomIcons iconName={'fa-solid fa-circle-info'} css="text-[#0478DC] h-5 w-5" />
                                         </div>
-                                        <h3 className="mt-3 text-sm font-bold text-[#242424]">No Reply Found</h3>
-                                        <p className="mt-1 text-sm text-gray-500">
-                                            This close plan doesn’t have any linked yet.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
+                                    );
+                                })}
+                            </div>
                             {
                                 (contactId && closePlanId) && (
                                     <div

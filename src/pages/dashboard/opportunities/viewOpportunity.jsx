@@ -1303,7 +1303,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
         // Sort: isKey true first
         const sortedContacts = contactsWithEdits || [];
-        const currentKeyContactsCount = sortedContacts.filter(c => c.isKey).length;
+        const currentKeyContactsCount = sortedContacts?.filter(c => c.isKey).length;
 
         return (
             <>

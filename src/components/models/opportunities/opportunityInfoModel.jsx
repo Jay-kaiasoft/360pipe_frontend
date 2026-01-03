@@ -28,6 +28,7 @@ import PermissionWrapper from '../../common/permissionWrapper/PermissionWrapper'
 import AlertDialog from '../../common/alertDialog/alertDialog';
 import Checkbox from '../../common/checkBox/checkbox';
 import Input from '../../common/input/input';
+import OpportunityKeyContactModel from './opportunityKeyContactModel';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -1327,7 +1328,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <PermissionWrapper
+                                                        {/* <PermissionWrapper
                                                             functionalityName="Opportunities"
                                                             moduleName="Opportunities"
                                                             actionId={2}
@@ -1355,7 +1356,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                                     </div>
                                                                 </Tooltip>
                                                             }
-                                                        />
+                                                        /> */}
                                                     </div>
                                                 ))
                                             ) : (
@@ -1946,7 +1947,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
 
             </BootstrapDialog>
             {/* CONTACT MODAL + CONTACT DELETE DIALOG */}
-            <OpportunityContactModel
+            <OpportunityKeyContactModel
                 open={contactModalOpen}
                 handleClose={handleCloseContactModel}
                 opportunityId={opportunityId}

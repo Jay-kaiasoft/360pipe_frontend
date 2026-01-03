@@ -6,16 +6,15 @@ import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/co
 import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
-import { getAllContacts } from '../../../service/contact/contactService';
 import Checkbox from '../../common/checkBox/checkbox';
-import { addOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import { getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
     '& .MuiDialogActions-root': { padding: theme.spacing(1) },
 }));
 
-function OpportunityContactModel({
+function OpportunityKeyContactModel({
     setAlert,
     open,
     handleClose,
@@ -25,25 +24,22 @@ function OpportunityContactModel({
 }) {
     const theme = useTheme();
     const [contacts, setContacts] = useState([]);
-    const [selectedRows, setSetectedRows] = useState([]);
 
     const onClose = () => {
-        setSetectedRows([]);
         setContacts([]);
         handleClose();
     };
 
     const handleGetAllContact = async () => {
         if (open) {
-            const res = await getAllContacts();
+            const res = await getAllOpportunitiesContact(opportunityId);
             const data = res?.result?.map((item) => ({
                 id: item.id,
-                title: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
+                title: item?.contactName,
                 oppId: opportunityId,
-                contactId: item.id,
+                contactId: item.contactId,
                 role: item?.role,
-                isKey: false,
-                isAdd: false,
+                isKey: item.isKey,
                 salesforceContactId: item?.salesforceContactId,
                 isDeleted: false,
             })) || [];
@@ -51,76 +47,25 @@ function OpportunityContactModel({
         }
     };
 
-    const getKeyCount = (arr) => arr.filter((r) => r.isKey === true).length;
-
-    const handleAddRow = (row, checked) => {
-        setContacts((prev) => {
-            const next = prev.map((item) =>
-                item.contactId === row.contactId
-                    ? {
-                        ...item,
-                        isAdd: checked,
-                        // when unselecting a row, clear its key flag
-                        isKey: checked ? item.isKey : false,
-                        salesforceContactId: item?.salesforceContactId,
-                        isDeleted: false,
-                    }
-                    : item
-            );
-            setSetectedRows(next.filter((c) => c.isAdd));
-            return next;
-        });
-    };
-
     const handleToggleKey = (row, checked) => {
         setContacts((prev) => {
-            const target = prev.find((i) => i.contactId === row.contactId);
-            if (!target?.isAdd) {
-                setAlert({ open: true, type: 'warning', message: 'Select the contact first.' });
-                return prev;
-            }
-
-            const prospectiveSelected = prev.filter((c) => c.isAdd);
-            const currentKeyCount = getKeyCount(prospectiveSelected);
-            const alreadyKey = !!target.isKey;
+            const currentKeyCount = prev.filter((r) => r.isKey).length;
+            const alreadyKey = row.isKey;
 
             if (checked && !alreadyKey && currentKeyCount >= 4) {
-                setAlert({ open: true, type: 'warning', message: 'You can mark up to 4 key contacts.' });
+                setAlert({
+                    open: true,
+                    type: 'warning',
+                    message: 'You can mark up to 4 key contacts.',
+                });
                 return prev;
             }
 
-            const next = prev.map((item) =>
+            return prev.map((item) =>
                 item.contactId === row.contactId
-                    ? {
-                        ...item,
-                        isKey: checked,
-                        isAdd: true,
-                        salesforceContactId: item?.salesforceContactId,
-                        isDeleted: false,
-                    }
+                    ? { ...item, isKey: checked, isDeleted: false }
                     : item
             );
-
-            setSetectedRows(next.filter((c) => c.isAdd));
-            return next;
-        });
-    };
-
-    // ✅ CHECK ALL logic
-    const selectedCount = contacts.filter((c) => c.isAdd).length;
-    const allChecked = contacts.length > 0 && selectedCount === contacts.length;
-    const isIndeterminate = selectedCount > 0 && selectedCount < contacts.length;
-
-    const handleToggleAll = (checked) => {
-        setContacts((prev) => {
-            const next = prev.map((item) => ({
-                ...item,
-                isAdd: checked,
-                // when unchecking all, clear all key flags
-                isKey: checked ? item.isKey : false,
-            }));
-            setSetectedRows(next.filter((c) => c.isAdd));
-            return next;
         });
     };
 
@@ -129,16 +74,16 @@ function OpportunityContactModel({
     }, [open]);
 
     const submit = async () => {
-        if (selectedRows.length > 0) {
-            const res = await addOpportunitiesContact(selectedRows);
-            if (res?.status === 201) {
+        if (contacts?.length > 0) {
+            const res = await updateOpportunitiesContact(contacts);
+            if (res?.status === 200) {
                 setSyncingPushStatus(true);
                 handleGetAllOppContact();
                 onClose();
             } else {
                 setAlert({
                     open: true,
-                    message: res.message || 'Fail to add contact',
+                    message: res.message || 'Fail to update contact',
                     type: 'error',
                 });
             }
@@ -149,7 +94,7 @@ function OpportunityContactModel({
         <React.Fragment>
             <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    Add Opportunity Contact
+                    Opportunity Key Contact
                 </Components.DialogTitle>
 
                 <Components.IconButton
@@ -179,15 +124,6 @@ function OpportunityContactModel({
                                 {/* 🔵 Blue sticky header */}
                                 <thead className="sticky top-0 z-10">
                                     <tr className="bg-[#0478DC] text-white">
-                                        {/* Check-all header (replaces '#') */}
-                                        <th className="px-4 py-3 text-left text-sm font-semibold w-14">
-                                            <Checkbox
-                                                checked={allChecked}
-                                                indeterminate={isIndeterminate}
-                                                onChange={(e) => handleToggleAll(e.target.checked)}
-                                                color={"#ffffff"}
-                                            />
-                                        </th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold w-40">Key Contact</th>
                                     </tr>
@@ -198,12 +134,6 @@ function OpportunityContactModel({
                                     {contacts?.length > 0 ? (
                                         contacts.map((row, i) => (
                                             <tr key={row.contactId ?? i} className="odd:bg-white even:bg-gray-200">
-                                                <td className="px-4 py-3 text-sm">
-                                                    <Checkbox
-                                                        onChange={(e) => handleAddRow(row, e.target.checked)}
-                                                        checked={!!row.isAdd}
-                                                    />
-                                                </td>
                                                 <td className="px-4 py-3 text-sm">
                                                     {row.title || '—'}
                                                     {row.role && (
@@ -222,8 +152,7 @@ function OpportunityContactModel({
                                                         onChange={(e) => handleToggleKey(row, e.target.checked)}
                                                         checked={!!row.isKey}
                                                         disabled={
-                                                            !row.isAdd ||
-                                                            (!row.isKey && selectedRows.filter((r) => r.isKey).length >= 4)
+                                                            !row.isKey && contacts?.filter((r) => r.isKey).length >= 4
                                                         }
                                                     />
                                                 </td>
@@ -243,8 +172,7 @@ function OpportunityContactModel({
                                     <tr>
                                         <td colSpan={3} className="px-4 py-2 text-sm font-semibold text-gray-700">
                                             <div className="flex justify-between items-center">
-                                                <span>Added: {selectedRows?.length}</span>
-                                                <span>Key Contacts: {selectedRows?.filter((r) => r.isKey).length} / 4</span>
+                                                <span>Key Contacts: {contacts?.filter((r) => r.isKey).length} / 4</span>
                                                 <span>Total Contacts: {contacts.length}</span>
                                             </div>
                                         </td>
@@ -257,7 +185,7 @@ function OpportunityContactModel({
 
                 <Components.DialogActions>
                     <div className="flex justify-end items-center gap-4">
-                        <Button disabled={selectedRows.length === 0} type="button" text={'Submit'} onClick={() => submit()} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                        <Button disabled={contacts?.length === 0} type="button" text={'Submit'} onClick={() => submit()} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                         <Button type="button" text={'Cancel'} useFor="disabled" onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                     </div>
                 </Components.DialogActions>
@@ -267,4 +195,4 @@ function OpportunityContactModel({
 }
 
 const mapDispatchToProps = { setAlert, setSyncingPushStatus };
-export default connect(null, mapDispatchToProps)(OpportunityContactModel);
+export default connect(null, mapDispatchToProps)(OpportunityKeyContactModel);

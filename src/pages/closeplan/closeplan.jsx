@@ -182,7 +182,7 @@ const Closeplan = ({ setAlert }) => {
             const res = await changeClosePlanStatus(closePlanId);
             if (res.status === 200) {
                 setLooksPerfect(true)
-                setIsCommentDisabled(true)              
+                setIsCommentDisabled(true)
             } else {
                 setLooksPerfect(false)
                 setAlert({
@@ -254,8 +254,26 @@ const Closeplan = ({ setAlert }) => {
                     </Card>
                 ) : (
                     <>
+                        <div className="relative z-10 flex justify-start items-center gap-3 text-lg font-semibold">
+                            <p>
+                                {closePlan?.contactName?.split(" ")[0]},
+                            </p>
+
+                            <p>
+                                Please comment:
+                            </p>
+
+                            <div className="flex justify-start items-center gap-3 ml-5">
+                                <div className="flex justify-start items-center gap-2">
+                                    <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
+                                    <Button useFor={looksPerfect ? "success" : ""} text={"Looks Perfect"} onClick={() => handleSaveStatus()} />
+                                </div>
+                                <Button disabled={isCommentDisabled} useFor={isComment ? "" : "primary"} text={"Comment / Suggestion"} onClick={() => setIsComment(true)} />
+                            </div>
+                        </div>
+
                         {/* main grid like image */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-2">
                             <div className="grid gap-4 lg:col-span-8">
                                 {/* Executive Summary */}
                                 <Card
@@ -422,32 +440,6 @@ const Closeplan = ({ setAlert }) => {
                             </div>
 
                             <div className="lg:col-span-4">
-                                <div className="relative max-w-md bg-[#E9DDFF] rounded-[28px] px-6 py-5 shadow-sm border-2 border-[#4B5563]">
-
-                                    <div className="absolute inset-2 rounded-[22px] border-2 border-dashed border-white pointer-events-none"></div>
-
-                                    <div className="relative z-10">
-                                        <p className="font-semibold text-[#242424] text-base">
-                                            {closePlan?.contactName},
-                                        </p>
-
-                                        <p className="my-2 text-sm text-[#242424] leading-relaxed">
-                                            {closePlan?.textMessage}
-                                        </p>
-
-                                        <p className="font-semibold text-[#242424] text-base">
-                                            {closePlan?.createdByName}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 mb-3 mt-10">
-                                    <div className="flex justify-start items-center gap-2">
-                                        <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
-                                        <Button useFor={looksPerfect ? "success" : ""} text={"Looks Perfect"} onClick={() => handleSaveStatus()} />
-                                    </div>
-                                    <Button disabled={isCommentDisabled} useFor={isComment ? "" : "primary"} text={"Comment / Suggestion"} onClick={() => setIsComment(true)} />
-                                </div>
                                 {
                                     (isComment && !looksPerfect) && (
                                         <>

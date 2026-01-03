@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { setAlert, setLoading, setLoadingMessage, setSyncCount, setSyncingPushStatus } from '../../redux/commonReducers/commonReducers';
+import { setAlert, setLoading, setLoadingMessage, setSyncCount, setSyncingPullStatus, setSyncingPushStatus } from '../../redux/commonReducers/commonReducers';
 
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, exchangeToken, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
@@ -416,6 +416,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
     setLoading,
     setAlert,
+    setSyncingPullStatus,
     setSyncingPushStatus,
     setLoadingMessage,
     setSyncCount

@@ -511,10 +511,11 @@ const Todo = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
                     columns={columns}
                     rows={todos}
                     getRowId={getRowId}
-                    height={500}
+                    height={480}
                     showButtons={true}
                     buttons={actionButtons}
                     allowSorting={activeFilterTab === 1}
+                    hideFooter={true}
                 />
 
             </div>

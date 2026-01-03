@@ -438,12 +438,55 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                     </HtmlTooltip>
                                     {
                                         params.row.closePlanDtoList?.some((row) => row.hasComment === true) && (
-                                            <Components.IconButton onClick={() => handleOpenCommentModel(params.row.id)}>
-                                                <CustomIcons
-                                                    iconName={'fa-solid fa-comment'}
-                                                    css="cursor-pointer text-red-600 h-4 w-4"
-                                                />
-                                            </Components.IconButton>
+                                            <HtmlTooltip
+                                                arrow
+                                                placement="right"
+                                                title={
+                                                    params.row?.closePlanCommentDto?.length && (
+                                                        <div className="min-w-[260px] max-w-[340px]">
+                                                            <div className="flex items-center justify-between gap-3 pb-2">
+                                                                <p className="text-[12px] font-semibold text-gray-900">Latest Comments</p>
+                                                            </div>
+
+                                                            <div className="h-px bg-gray-200/70 mb-2" />
+
+                                                            <div className="space-y-2 max-h-56 overflow-auto">
+                                                                {params.row.closePlanCommentDto?.map((item, index) => (
+                                                                    <div key={index} className="flex items-start justify-between gap-3 px-2 mb-4">
+                                                                        {/* Left side: name + comment */}
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                                <p className="text-[12px] font-semibold text-gray-900 truncate max-w-[140px]">
+                                                                                    {item.createdByName}
+                                                                                </p>
+                                                                            </div>
+
+                                                                            {/* Comment: wrap + 2-line clamp */}
+                                                                            <p className="text-[12px] text-blue-600 whitespace-normal break-words overflow-hidden text-ellipsis line-clamp-4">
+                                                                                {item?.comments}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        {/* Right side: date */}
+                                                                        <span className="text-[11px] font-medium text-gray-600 whitespace-nowrap pt-[2px]">
+                                                                            {formatStatusTime(item.createdAt)}
+                                                                        </span>
+                                                                    </div>
+
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                }
+
+                                            >
+                                                <Components.IconButton onClick={() => handleOpenCommentModel(params.row.id)}>
+                                                    <CustomIcons
+                                                        iconName={'fa-solid fa-comment'}
+                                                        css="cursor-pointer text-red-600 h-4 w-4"
+                                                    />
+                                                </Components.IconButton>
+                                            </HtmlTooltip>
                                         )
                                     }
                                 </div>
@@ -1326,7 +1369,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 handleClose={handleCloseInfoModel}
                 opportunityId={selectedOpportunityId}
             />
-            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities}/>
+            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             <ClosePlanCommentModel open={openCommentsModel} handleClose={handleCloseCommentModel} opportunityId={selectedOpportunityId} />
         </>
     )

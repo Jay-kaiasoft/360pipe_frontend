@@ -300,7 +300,7 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={contacts} getRowId={getRowId} height={550} showButtons={true} showSearch={true} buttons={actionButtons} onChangeSearch={handleSearch} searchValue={search} searchPlaceholder="Search contacts by name..." />
+                <DataTable columns={columns} rows={contacts} getRowId={getRowId} hideFooter={true} height={480} showButtons={true} showSearch={true} buttons={actionButtons} onChangeSearch={handleSearch} searchValue={search} searchPlaceholder="Search contacts by name..." />
             </div>
             <ContactModel open={open} handleClose={handleClose} contactId={selectedContactId} handleGetAllContacts={handleGetContacts} />
             <ContactReportHierarch open={openHierarchy} handleClose={handleCloseHierarchy} contactId={selectedContactId} />

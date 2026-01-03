@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useSelector, useDispatch, connect } from "react-redux"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
-import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus } from "../../../redux/commonReducers/commonReducers"
+import { toggleSidebar, toggleMobileSidebar, setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, setLoadingMessage } from "../../../redux/commonReducers/commonReducers"
 
 import UserDropdown from "./userDropDown"
 
@@ -14,7 +14,7 @@ import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUser
 import { Tabs } from "../../../components/common/tabs/tabs"
 import { useTheme } from "@mui/material"
 
-const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus }) => {
+const AppHeader = ({ setAlert, setLoadingMessage, setLoading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, syncCount, syncingPushStatus }) => {
   const theme = useTheme();
 
   const { isMobileOpen } = useSelector((state) => state.common)
@@ -120,11 +120,11 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   }, [locaiton.pathname])
 
   const handleSync = async () => {
-    setLoading(true);
     try {
       const res = await syncToQ4Magic();
       if (res?.status === 200) {
         setLoading(false);
+        setLoadingMessage(null)
         setAlert({
           open: true,
           message: res?.message || "Data synced successfully",
@@ -134,6 +134,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         handleGetAllSyncRecords()
       } else {
         setLoading(false);
+        setLoadingMessage(null)
         setAlert({
           open: true,
           message: res?.message || "Failed to sync data",
@@ -142,6 +143,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       }
     } catch (err) {
       setLoading(false);
+      setLoadingMessage(null)
       setAlert({
         open: true,
         message: err.message || "Error syncing data.",
@@ -151,6 +153,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
   }
 
   const handlePushData = async () => {
+    setLoadingMessage("Please wait ! We are syncing your data.....")
     setLoading(true);
     try {
       const res = await syncFromQ4magic();
@@ -158,6 +161,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
         handleSync();
       } else if (res?.status === 401) {
         setLoading(false);
+        setLoadingMessage(null)
         localStorage.removeItem("accessToken_salesforce");
         localStorage.removeItem("instanceUrl_salesforce");
         localStorage.removeItem("salesforceUserData");
@@ -170,6 +174,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       }
       else {
         setLoading(false);
+        setLoadingMessage(null)
         setAlert({
           open: true,
           message: res?.message || "Failed to sync data",
@@ -178,6 +183,7 @@ const AppHeader = ({ setAlert, setLoading, setSyncCount, setSyncingPushStatus, s
       }
     } catch (err) {
       setLoading(false);
+      setLoadingMessage(null)
       setAlert({
         open: true,
         message: err.message || "Error syncing accounts to Q4Magic.",
@@ -300,7 +306,8 @@ const mapDispatchToProps = {
   setAlert,
   setSyncCount,
   setSyncingPushStatus,
-  setSyncingPullStatus
+  setSyncingPullStatus,
+  setLoadingMessage
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

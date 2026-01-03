@@ -8,7 +8,6 @@ import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
 import Checkbox from '../../common/checkBox/checkbox';
-import Input from '../../common/input/input';
 
 import { saveClosePlan } from '../../../service/closePlanService/closePlanService';
 import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
@@ -37,14 +36,12 @@ function KeyContactModel({
         
     const [oppDetails, setOppDetails] = useState(null)
     const [contacts, setContacts] = useState([]);
-    const [textMessage, setTextMessage] = useState("Please confirm this is accurate or feel free to make any suggestions.")
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [closePlanUrl, setClosePlanUrl] = useState([]);
 
     const onClose = () => {
         setActiveStep(0)
         setContacts([]);
-        setTextMessage("Please confirm this is accurate or feel free to make any suggestions.")
         setOppDetails(null)
         handleClose();
     };
@@ -135,7 +132,6 @@ function KeyContactModel({
             const payload = contacts?.filter((row) => row.isAdd).map((item) => ({
                 oppId: opportunityId,
                 contactId: item.contactId,
-                textMessage: textMessage || "Please confirm this is accurate or feel free to make any suggestions."
             }))
             const res = await saveClosePlan(payload);
             if (res.status === 201) {
@@ -245,17 +241,7 @@ function KeyContactModel({
                                                 )}
                                             </tbody>
                                         </table>
-                                    </div>
-
-                                    <div className='mt-3'>
-                                        <Input
-                                            value={textMessage}
-                                            onChange={(e) => setTextMessage(e.target.value)}
-                                            multiline
-                                            placeholder="Enter message"
-                                            label="Message"
-                                        />
-                                    </div>
+                                    </div>                        
                                 </>
                             )
                         }

@@ -49,7 +49,8 @@ export default function DataTable({
     allowSorting = false,
     setRowSelectionModel,
     rowSelectionModel,
-    processRowUpdate
+    processRowUpdate,
+    hideFooter = false
 }) {
     const userInfo = getUserDetails();
     const theme = useTheme();
@@ -231,6 +232,7 @@ export default function DataTable({
                         pageSizeOptions={[10, 25, 50]}
                         disableRowSelectionOnClick
                         hideFooterSelectedRowCount
+                        hideFooter={hideFooter}
                         getRowClassName={getRowClassName}
                         getRowId={getRowId}
                         checkboxSelection={checkboxSelection}

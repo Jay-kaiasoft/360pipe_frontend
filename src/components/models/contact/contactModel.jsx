@@ -13,6 +13,7 @@ import Select from '../../../components/common/select/select';
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import { createContact, getAllContacts, getContactDetails, updateContact } from '../../../service/contact/contactService';
 import { opportunityContactRoles } from '../../../service/common/commonService';
+import { getAllAccounts } from '../../../service/account/accountService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -26,8 +27,8 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
 function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, contactId, handleGetAllContacts }) {
     const theme = useTheme()
     const [loading, setLoading] = useState(false);
-    const [opportunities, setOpportunities] = useState([]);
     const [contacts, setContacts] = useState([]);
+    const [accounts, setAccounts] = useState([]);
 
     const {
         handleSubmit,
@@ -39,10 +40,9 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
     } = useForm({
         defaultValues: {
             id: null,
-            opportunityId: null,
+            accountId: null,
             reportContactId: null,
             salesforceContactId: null,
-            companyName: null,
             phone: null,
             firstName: null,
             middleName: null,
@@ -61,10 +61,9 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
         setLoading(false);
         reset({
             id: null,
-            opportunityId: null,
+            accountId: null,
             reportContactId: null,
             salesforceContactId: null,
-            companyName: null,
             phone: null,
             firstName: null,
             middleName: null,
@@ -79,23 +78,6 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
         });
         handleClose();
     };
-
-    const handleGetAllOpportunities = async () => {
-        if (open) {
-            const res = await getAllOpportunities("fetchType=Options")
-            const data = res?.result?.map((item) => {
-                return {
-                    id: item.id,
-                    title: item.opportunity
-                }
-            })
-            const uniqueData = Array.from(
-                new Map(data.map(item => [item.title, item])).values()
-            );
-
-            setOpportunities(uniqueData);
-        }
-    }
 
     const handleGetContactDetails = async () => {
         if (contactId && open) {
@@ -124,9 +106,23 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
         }
     }
 
+    const handleGetAllAccounts = async () => {
+        if (open) {
+            const res = await getAllAccounts("fetchType=Options");
+            if (res?.status === 200) {
+                const data = res?.result?.map((acc) => ({
+                    title: acc.accountName,
+                    id: acc.id,
+                    salesforceAccountId: acc.salesforceAccountId
+                }));
+                setAccounts(data);
+            }
+        }
+    };
+
     useEffect(() => {
+        handleGetAllAccounts()
         handleGetContacts()
-        handleGetAllOpportunities()
         handleGetContactDetails()
     }, [open])
 
@@ -219,37 +215,27 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                     <Components.DialogContent dividers>
                         <div className='px-[30px]'>
                             <div className='grid gap-[30px]'>
-                                <Controller
-                                    name="opportunityId"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            options={opportunities}
-                                            label={"Opportunity"}
-                                            placeholder="Select opportunity"
-                                            value={parseInt(watch("opportunityId")) || null}
-                                            onChange={(_, newValue) => {
-                                                if (newValue?.id) {
-                                                    field.onChange(newValue.id);
-                                                } else {
-                                                    setValue("opportunityId", null);
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                />
-
-                                <Controller
-                                    name="companyName"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            label="First Name"
-                                            type={`text`}
-                                        />
-                                    )}
-                                />
+                                <div>
+                                    <Controller
+                                        name="accountId"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={accounts}
+                                                label={"Account"}
+                                                placeholder="Select Account"
+                                                value={parseInt(watch("accountId")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue("accountId", null);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
 
                                 <Controller
                                     name="firstName"
@@ -285,7 +271,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
 
                                 <Controller
                                     name="phone"
-                                    control={control}                                    
+                                    control={control}
                                     render={({ field }) => (
                                         <Input
                                             {...field}
