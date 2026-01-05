@@ -126,7 +126,8 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
             } else {
                 setAlert({
                     open: true,
-                    message: res.message || "Fail to update opportunity partner"
+                    message: res.message || "Fail to update opportunity partner",
+                    type:"error"
                 })
             }
         } else {
@@ -138,7 +139,8 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
             } else {
                 setAlert({
                     open: true,
-                    message: res.message || "Fail to add opportunity partner"
+                    message: res.message || "Fail to add opportunity partner",
+                    type:"error"
                 })
             }
         }

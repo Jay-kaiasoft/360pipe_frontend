@@ -22,7 +22,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import { getTimeZones } from '../../../service/timeZones/timeZoneService';
 import Checkbox from '../../common/checkBox/checkbox';
 import Select from '../../common/select/select';
-import { dateTimeFormatDB, userTimeZone } from '../../../service/common/commonService';
+import { convertAsiaKolkata, dateTimeFormatDB, userTimeZone } from '../../../service/common/commonService';
 import { getEventById, saveEvents } from '../../../service/calendar/calendarService';
 import DeleteEventAlert from './deleteEventAlert';
 import { useLocation, useParams } from 'react-router-dom';
@@ -213,10 +213,10 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 value: item.tmzValue,
             }));
             setTimeZones(data);
-            if (slotInfo?.id) {
-                setValue('calTimeZone', data?.find((row) => row.value === watch("calTimeZone"))?.id || null);
-            } else {
-                setValue('calTimeZone', data?.find((row) => row.value === userTimeZone)?.id || null);
+            if (slotInfo?.id) {                
+                setValue('calTimeZone', data?.find((row) => row.value === convertAsiaKolkata(watch("calTimeZone")))?.id || null);
+            } else {                
+                setValue('calTimeZone', data?.find((row) => row.value === convertAsiaKolkata(userTimeZone))?.id || null);
             }
         }
     };
@@ -242,12 +242,13 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 const start = event.start ? dayjs(event.start, 'MM/DD/YYYY HH:mm:ss') : null;
                 const end = event.end ? dayjs(event.end, 'MM/DD/YYYY HH:mm:ss') : null;
 
+                // console.log("event.calTimeZone",event.calTimeZone)
                 setValue('id', event.id);
                 setValue('title', event.title);
                 setValue('allDay', !!event.allDay);
                 setValue('start', start);
                 setValue('end', end);
-                setValue("calTimeZone", event.calTimeZone)
+                setValue("calTimeZone", convertAsiaKolkata(event.calTimeZone))
                 setValue('calAttendees', event.calAttendees ?? null);
                 setValue('calAetId', event.calAetId ?? null);
 

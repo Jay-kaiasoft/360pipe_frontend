@@ -6,6 +6,8 @@ import { getAllClosePlanNotes, saveClosePlanNote } from "../../service/closePlan
 import { setAlert } from "../../redux/commonReducers/commonReducers";
 import { connect } from "react-redux";
 import CustomIcons from "../../components/common/icons/CustomIcons";
+import Drawer from "@mui/material/Drawer";
+import Components from "../../components/muiComponents/components";
 
 // ---------- helpers ----------
 const getFileNameFromUrl = (url = "") => {
@@ -111,6 +113,8 @@ const Closeplan = ({ setAlert }) => {
     const [commentText, setCommentText] = useState("")
     const [closePlanId, setClosePlanId] = useState(null)
 
+    const closeCommentDrawer = () => setIsComment(false);
+
     const handleValidateToken = async () => {
         setLoading(true);
         try {
@@ -145,9 +149,9 @@ const Closeplan = ({ setAlert }) => {
         const res = await getAllClosePlanNotes(closePlanId, contactId)
         if (res.status === 200) {
             setComments(res.result)
-            if (res.result?.length > 0) {
-                setIsComment(true)
-            }
+            // if (res.result?.length > 0) {
+            //     setIsComment(true)
+            // }
         }
     }
 
@@ -274,7 +278,7 @@ const Closeplan = ({ setAlert }) => {
 
                         {/* main grid like image */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-2">
-                            <div className="grid gap-4 lg:col-span-8">
+                            <div className="grid gap-4 lg:col-span-12">
                                 {/* Executive Summary */}
                                 <Card
                                     title="Executive Summary"
@@ -331,7 +335,7 @@ const Closeplan = ({ setAlert }) => {
                                             </ul>
                                         ) : (
                                             <div className="text-sm text-gray-600">
-                                                Add your key milestones here (e.g., discovery, evaluation, security review, legal, signature).
+                                                -
                                             </div>
                                         )}
                                     </Card>
@@ -437,86 +441,102 @@ const Closeplan = ({ setAlert }) => {
                                         )}
                                     </Card>
                                 </div>
-                            </div>
+                            </div>                         
 
-                            <div className="lg:col-span-4">
-                                {
-                                    (isComment && !looksPerfect) && (
-                                        <>
-                                            <Card title="Leave comment / Question">
-                                                <div className="rounded-xl border border-gray-200 bg-white p-3">
-                                                    <textarea
-                                                        value={commentText}
-                                                        onChange={(e) => setCommentText(e.target.value)}
-                                                        rows={4}
-                                                        className="w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
-                                                        placeholder="Ask a question or leave a comment…"
-                                                    />
-                                                </div>
+                            {(isComment && !looksPerfect) && (
+                                <div
+                                    className="fixed inset-0 z-40 bg-black/30 lg:bg-black/20"
+                                    onClick={closeCommentDrawer}
+                                />
+                            )}
+                            <div className={`fixed top-0 right-0 z-50 mt-16 lg:mt-0 bg-white text-gray-900 h-screen border-l border-gray-300 w-[600px] flex flex-col transform transition-transform duration-300 ease-in-out shadow-xl ${(isComment && !looksPerfect) ? "translate-x-0" : "translate-x-full"}`}>
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300">
+                                    <p className="text-lg font-semibold text-[#242424]">
+                                        Comment / Suggestion
+                                    </p>
 
-                                                <div className="mt-3 flex flex-wrap gap-2">
-                                                    <Button text={"Submit"} onClick={() => handleSaveComment()} />
-                                                </div>
-                                            </Card>
+                                    <div className="flex items-center gap-3">
+                                        <Components.IconButton onClick={closeCommentDrawer}>
+                                            <CustomIcons
+                                                iconName={"fa-solid fa-close"}
+                                                css="cursor-pointer h-6 w-6 text-black"
+                                            />
+                                        </Components.IconButton>
+                                    </div>
+                                </div>
 
-                                            <div className="mt-3">
-                                                <Card
-                                                    title="Comments"
-                                                    right={
-                                                        <Pill>
-                                                            {comments?.length || 0} {comments?.length === 1 ? "comment" : "comments"}
-                                                        </Pill>
-                                                    }
-                                                >
-                                                    {!comments?.length ? (
-                                                        <EmptyComments />
-                                                    ) : (
-                                                        <div className="space-y-3">
-                                                            {comments?.map((c, idx) => {
-                                                                // Try multiple field names safely (adjust if your API uses different keys)
-                                                                const noteText = c?.comments || "";
-                                                                const createdAt = c?.createdAt;
-                                                                const createdByName = c?.createdByName
+                                <div className="p-4">
 
-                                                                return (
-                                                                    <div
-                                                                        key={c?.id ?? idx}
-                                                                        className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
-                                                                    >
-                                                                        <div className="flex items-start gap-3">
-                                                                            <div className="min-w-0 flex-1">
-                                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                                    <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
-                                                                                        {createdByName}
-                                                                                    </div>
+                                    <Card title="Leave comment / Question">
+                                        <div className="rounded-xl border border-gray-200 bg-white p-3">
+                                            <textarea
+                                                value={commentText}
+                                                onChange={(e) => setCommentText(e.target.value)}
+                                                rows={4}
+                                                className="w-full resize-none bg-transparent text-sm text-gray-800 outline-none"
+                                                placeholder="Ask a question or leave a comment…"
+                                            />
+                                        </div>
 
-                                                                                    {createdAt ? (
-                                                                                        <span className="text-xs text-gray-500">
-                                                                                            • {formatDateTime(createdAt)}
-                                                                                        </span>
-                                                                                    ) : null}
-                                                                                </div>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            <Button text={"Submit"} onClick={() => handleSaveComment()} />
+                                        </div>
+                                    </Card>
 
-                                                                                <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
-                                                                                    {noteText || "—"}
-                                                                                </div>
+                                    <div className="mt-3">
+                                        <Card
+                                            title="Comments"
+                                            right={
+                                                <Pill>
+                                                    {comments?.length || 0} {comments?.length === 1 ? "comment" : "comments"}
+                                                </Pill>
+                                            }
+                                        >
+                                            {!comments?.length ? (
+                                                <EmptyComments />
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {comments?.map((c, idx) => {
+                                                        const noteText = c?.comments || "";
+                                                        const createdAt = c?.createdAt;
+                                                        const createdByName = c?.createdByName
 
-                                                                                {/* optional: subtle divider line for “thread feel” */}
-                                                                                {idx !== comments.length - 1 ? (
-                                                                                    <div className="mt-4 h-px w-full bg-gray-100" />
-                                                                                ) : null}
+                                                        return (
+                                                            <div
+                                                                key={c?.id ?? idx}
+                                                                className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
+                                                            >
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                                            <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
+                                                                                {createdByName}
                                                                             </div>
+
+                                                                            {createdAt ? (
+                                                                                <span className="text-xs text-gray-500">
+                                                                                    • {formatDateTime(createdAt)}
+                                                                                </span>
+                                                                            ) : null}
                                                                         </div>
+
+                                                                        <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
+                                                                            {noteText || "—"}
+                                                                        </div>
+
+                                                                        {idx !== comments.length - 1 ? (
+                                                                            <div className="mt-4 h-px w-full bg-gray-100" />
+                                                                        ) : null}
                                                                     </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </Card>
-                                            </div>
-                                        </>
-                                    )
-                                }
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </Card>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </>

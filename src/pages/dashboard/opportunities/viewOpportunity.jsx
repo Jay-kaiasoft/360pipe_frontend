@@ -45,6 +45,10 @@ import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles } from 
 import AddSalesProcessModel from '../../../components/models/opportunities/salesProcess/addSalesProcessModel';
 import { deleteSalesProcess, getAllBySalesOpportunity } from '../../../service/salesProcess/salesProcessService';
 import Calendar from '../calendar/Calendar';
+import { deleteOppNotes, getNotesByOppId } from '../../../service/opportunitiesComment/opportunitiesCommentService';
+import DataTable from '../../../components/common/table/table';
+import Button from '../../../components/common/buttons/button';
+import OpportunitiesNotesModel from '../../../components/models/opportunities/opportunitiesNotesModel';
 // import { getAllSalesStages } from '../../../service/salesStage/salesStageService';
 
 const toolbarProperties = {
@@ -61,6 +65,7 @@ const tableData = [
     { label: 'Opportunity Details' },
     { label: 'Opp360' },
     { label: 'Calendar' },
+    { label: 'Notes' },
 ]
 
 const ViewOpportunity = ({ setAlert }) => {
@@ -98,6 +103,7 @@ const ViewOpportunity = ({ setAlert }) => {
     const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
     const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
+    const [opportunitiesNotes, setOpportunitiesNotes] = useState([]);
 
     // Contact CRUD states
     const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -116,6 +122,12 @@ const ViewOpportunity = ({ setAlert }) => {
     const [selectedProductId, setSelectedProductId] = useState(null);
 
     const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // Notes CRUD states
+    const [notesModalOpen, setNotesModalOpen] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState(null);
+
+    const [dialogNote, setDialogNote] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const [initialIsKey, setInitialIsKey] = useState({});
     const [editedContacts, setEditedContacts] = useState([]);
@@ -148,6 +160,48 @@ const ViewOpportunity = ({ setAlert }) => {
             opportunityDocs: []
         },
     });
+
+    const handleOpenNoteModel = (id = null) => {
+        setSelectedNoteId(id)
+        setNotesModalOpen(true)
+    }
+
+    const handleCloseNoteModel = () => {
+        setSelectedNoteId(null)
+        setNotesModalOpen(false)
+    }
+
+    const handleOpenDeleteNoteDialog = (id) => {
+        setSelectedNoteId(id);
+        setDialogNote({ open: true, title: 'Delete Note', message: 'Are you sure! Do you want to delete this note?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteNoteDialog = () => {
+        setSelectedNoteId(null);
+        setDialogNote({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteNote = async () => {
+        try {
+            const res = await deleteOppNotes(selectedNoteId);
+            if (res?.status === 200) {
+                handleCloseDeleteNoteDialog()
+                handleGetAllNotes();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete product",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: error.message || "Failed to delete product",
+                type: "error"
+            });
+        }
+    };
 
     const handleOpenDecisionMapModel = async (id = null) => {
         setSalesProcessId(id)
@@ -468,6 +522,21 @@ const ViewOpportunity = ({ setAlert }) => {
         }
     }
 
+    const handleGetAllNotes = async () => {
+        if (opportunityId) {
+            const res = await getNotesByOppId(opportunityId)
+            if (res.status === 200) {
+                const data = res.result?.map((row, index) => {
+                    return {
+                        ...row,
+                        rowId: index + 1
+                    }
+                })
+                setOpportunitiesNotes(data || [])
+            }
+        }
+    }
+
     // const handleGetAllStages = async () => {
     //     const res = await getAllSalesStages()
     //     if (res.result) {
@@ -481,6 +550,93 @@ const ViewOpportunity = ({ setAlert }) => {
     //     }
     // }
 
+
+    const columns = [
+        {
+            field: 'rowId',
+            headerName: '#',
+            headerClassName: 'uppercase',
+            flex: 1,
+            maxWidth: 50,
+            sortable: false,
+        },
+        {
+            field: 'title',
+            headerName: 'Title',
+            flex: 1,
+            headerClassName: 'uppercase',
+            sortable: false,
+        },
+        {
+            field: 'comment',
+            headerName: 'Note',
+            headerClassName: 'uppercase',
+            flex: 1,
+            sortable: false,
+        },
+        {
+            field: 'action',
+            headerName: 'action',
+            headerClassName: 'uppercase',
+            sortable: false,
+            flex: 1,
+            maxWidth: 140,
+            renderCell: (params) => {
+                return (
+                    <div className='flex items-center gap-2 justify-center h-full'>
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <Tooltip title="Edit" arrow>
+                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenNoteModel(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={3}
+                            component={
+                                <Tooltip title="Delete" arrow>
+                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                        <Components.IconButton onClick={() => handleOpenDeleteNoteDialog(params.row.id)}>
+                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
+                    </div>
+                );
+            },
+        },
+    ];
+
+    const getRowId = (row) => {
+        return row.rowId;
+    }
+
+    const actionButtons = () => {
+        return (
+            <PermissionWrapper
+                functionalityName="Opportunities"
+                moduleName="Opportunities"
+                actionId={1}
+                component={
+                    <div>
+                        <Button onClick={() => handleOpenNoteModel()} type={`button`} text={'Add Notes'} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                    </div>
+                }
+            />
+        )
+    }
+
     useEffect(() => {
         // handleGetAllStages()
         handleGetOppProduct()
@@ -489,6 +645,7 @@ const ViewOpportunity = ({ setAlert }) => {
         handleGetOppContacts()
         handleGetOpportunityDetails()
         handleGetAllSalesProcess()
+        handleGetAllNotes()
     }, [])
 
     const getDisplayName = (id, options) => {
@@ -2182,7 +2339,13 @@ const ViewOpportunity = ({ setAlert }) => {
                     </>
                 )
             }
-
+            {
+                selectedTab === 3 && (
+                    <div className='border rounded-lg bg-white w-full lg:w-full '>
+                        <DataTable columns={columns} rows={opportunitiesNotes} getRowId={getRowId} hideFooter={true} height={400} showButtons={true} buttons={actionButtons} />
+                    </div>
+                )
+            }
             {/* Contact Modal */}
             <OpportunityContactModel
                 open={contactModalOpen}
@@ -2249,6 +2412,16 @@ const ViewOpportunity = ({ setAlert }) => {
                 actionButtonText={dialogDeleteDecisionMap.actionButtonText}
                 handleAction={() => handleDeteleDecisionMap()}
                 handleClose={() => handleCloseDecisionMapDelete()}
+            />
+
+            <OpportunitiesNotesModel open={notesModalOpen} handleClose={handleCloseNoteModel} opportunityId={opportunityId} id={selectedNoteId} handleGetAllOpportunitiesNotes={handleGetAllNotes} />
+            <AlertDialog
+                open={dialogNote.open}
+                title={dialogNote.title}
+                message={dialogNote.message}
+                actionButtonText={dialogNote.actionButtonText}
+                handleAction={() => handleDeleteNote()}
+                handleClose={() => handleCloseNoteModel()}
             />
             <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
         </div>

@@ -414,3 +414,12 @@ export const dateTimeFormatDB = (value) => {
     if (!value) return null;
     return dayjs(value).format('MM/DD/YYYY HH:mm:ss');
 }
+
+export const convertAsiaKolkata = (value) => {
+    if (!value) return null;
+    if (value === "Asia/Kolkata") {
+        return "Asia/Calcutta"
+    } else {
+        return value
+    }
+}
