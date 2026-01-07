@@ -57,8 +57,8 @@ const formatDateTime = (date) => {
             month: "short",
             day: "numeric",
             year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+            // hour: "2-digit",
+            // minute: "2-digit",   
         });
     } catch {
         return "";
@@ -228,22 +228,22 @@ const Closeplan = ({ setAlert }) => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* top bar */}
-            <div className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur">
+            {/* <div className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
-                        {/* <div className="h-9 w-9 rounded-xl bg-[#7413D1]/10 flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-xl bg-[#7413D1]/10 flex items-center justify-center">
                             <span className="text-[#7413D1] font-black">Q</span>
                         </div>
                         <div>
                             <div className="text-sm font-extrabold text-[#242424] leading-4">Customer Deal Portal</div>
                             <div className="text-xs text-gray-500">360Pipe Close Plan</div>
-                        </div> */}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* body */}
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+            <div className="mx-auto max-w-full px-20 py-6 sm:py-8">
                 {loading ? (
                     <div className="grid gap-4">
                         <div className="h-28 rounded-2xl bg-white border border-gray-200 animate-pulse" />
@@ -269,8 +269,15 @@ const Closeplan = ({ setAlert }) => {
 
                             <div className="flex justify-start items-center gap-3 ml-5">
                                 <div className="flex justify-start items-center gap-2">
-                                    <CustomIcons iconName={'fa-solid fa-thumbs-up'} css='cursor-pointer text-yellow-500 h-4 w-4' />
-                                    <Button useFor={looksPerfect ? "success" : ""} text={"Looks Perfect"} onClick={() => handleSaveStatus()} />
+                                    <button
+                                        onClick={handleSaveStatus}
+                                        className={`flex items-center gap-2 px-4 py-1.5 rounded-sm border transition-all duration-400 ${looksPerfect ? "bg-green-600 border-green-600 text-white cursor-not-allowed" : "border-green-600 text-green-600 bg-transparent hover:bg-green-600 hover:text-white"} group`}>
+                                        <CustomIcons
+                                            iconName="fa-solid fa-thumbs-up"
+                                            css={`h-4 w-4 transition-colors duration-400 ${looksPerfect ? "text-yellow-400" : "text-green-600 group-hover:text-white"}`}
+                                        />
+                                        Looks Perfect
+                                    </button>
                                 </div>
                                 <Button disabled={isCommentDisabled} useFor={isComment ? "" : "primary"} text={"Comment / Suggestion"} onClick={() => setIsComment(true)} />
                             </div>
@@ -441,7 +448,7 @@ const Closeplan = ({ setAlert }) => {
                                         )}
                                     </Card>
                                 </div>
-                            </div>                         
+                            </div>
 
                             {(isComment && !looksPerfect) && (
                                 <div
@@ -449,24 +456,20 @@ const Closeplan = ({ setAlert }) => {
                                     onClick={closeCommentDrawer}
                                 />
                             )}
-                            <div className={`fixed top-0 right-0 z-50 mt-16 lg:mt-0 bg-white text-gray-900 h-screen border-l border-gray-300 w-[600px] flex flex-col transform transition-transform duration-300 ease-in-out shadow-xl ${(isComment && !looksPerfect) ? "translate-x-0" : "translate-x-full"}`}>
+                            <div
+                                className={`fixed top-0 right-0 z-50 mt-16 lg:mt-0 bg-white text-gray-900 h-screen border-l border-gray-300 w-[600px] flex flex-col transform transition-transform duration-300 ease-in-out shadow-xl ${(isComment && !looksPerfect) ? "translate-x-0" : "translate-x-full"}`}
+                            >
+                                {/* Header (fixed) */}
                                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300">
-                                    <p className="text-lg font-semibold text-[#242424]">
-                                        Comment / Suggestion
-                                    </p>
+                                    <p className="text-lg font-semibold text-[#242424]">Comment / Suggestion</p>
 
-                                    <div className="flex items-center gap-3">
-                                        <Components.IconButton onClick={closeCommentDrawer}>
-                                            <CustomIcons
-                                                iconName={"fa-solid fa-close"}
-                                                css="cursor-pointer h-6 w-6 text-black"
-                                            />
-                                        </Components.IconButton>
-                                    </div>
+                                    <Components.IconButton onClick={closeCommentDrawer}>
+                                        <CustomIcons iconName={"fa-solid fa-close"} css="cursor-pointer h-6 w-6 text-black" />
+                                    </Components.IconButton>
                                 </div>
 
-                                <div className="p-4">
-
+                                {/* ✅ Leave comment section (fixed) */}
+                                <div className="p-4 border-b border-gray-200">
                                     <Card title="Leave comment / Question">
                                         <div className="rounded-xl border border-gray-200 bg-white p-3">
                                             <textarea
@@ -479,65 +482,65 @@ const Closeplan = ({ setAlert }) => {
                                         </div>
 
                                         <div className="mt-3 flex flex-wrap gap-2">
-                                            <Button text={"Submit"} onClick={() => handleSaveComment()} />
+                                            <Button text={"Save"} onClick={handleSaveComment} startIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                                         </div>
                                     </Card>
+                                </div>
 
-                                    <div className="mt-3">
-                                        <Card
-                                            title="Comments"
-                                            right={
-                                                <Pill>
-                                                    {comments?.length || 0} {comments?.length === 1 ? "comment" : "comments"}
-                                                </Pill>
-                                            }
-                                        >
-                                            {!comments?.length ? (
-                                                <EmptyComments />
-                                            ) : (
-                                                <div className="space-y-3">
-                                                    {comments?.map((c, idx) => {
-                                                        const noteText = c?.comments || "";
-                                                        const createdAt = c?.createdAt;
-                                                        const createdByName = c?.createdByName
+                                {/* ✅ Comments section (ONLY this scrolls) */}
+                                <div className="flex-1 min-h-0 overflow-y-auto p-4">
+                                    <Card
+                                        title="Comments"
+                                        right={
+                                            <Pill>
+                                                {comments?.length || 0} {comments?.length === 1 ? "comment" : "comments"}
+                                            </Pill>
+                                        }
+                                    >
+                                        {!comments?.length ? (
+                                            <EmptyComments />
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {comments?.map((c, idx) => {
+                                                    const noteText = c?.comments || "";
+                                                    const createdAt = c?.createdAt;
+                                                    const createdByName = c?.createdByName;
 
-                                                        return (
-                                                            <div
-                                                                key={c?.id ?? idx}
-                                                                className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
-                                                            >
-                                                                <div className="flex items-start gap-3">
-                                                                    <div className="min-w-0 flex-1">
-                                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                            <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
-                                                                                {createdByName}
-                                                                            </div>
-
-                                                                            {createdAt ? (
-                                                                                <span className="text-xs text-gray-500">
-                                                                                    • {formatDateTime(createdAt)}
-                                                                                </span>
-                                                                            ) : null}
-                                                                        </div>
-
-                                                                        <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
-                                                                            {noteText || "—"}
-                                                                        </div>
-
-                                                                        {idx !== comments.length - 1 ? (
-                                                                            <div className="mt-4 h-px w-full bg-gray-100" />
-                                                                        ) : null}
+                                                    return (
+                                                        <div
+                                                            key={c?.id ?? idx}
+                                                            className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
+                                                        >
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                                    <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
+                                                                        {createdByName}
                                                                     </div>
+
+                                                                    {createdAt ? (
+                                                                        <span className="text-xs text-gray-500">
+                                                                            • {formatDateTime(createdAt)}
+                                                                        </span>
+                                                                    ) : null}
                                                                 </div>
+
+                                                                <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
+                                                                    {noteText || "—"}
+                                                                </div>
+
+                                                                {idx !== comments.length - 1 ? (
+                                                                    <div className="mt-4 h-px w-full bg-gray-100" />
+                                                                ) : null}
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </Card>
-                                    </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </Card>
                                 </div>
                             </div>
+
                         </div>
                     </>
                 )}

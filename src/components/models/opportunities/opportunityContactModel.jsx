@@ -22,6 +22,7 @@ function OpportunityContactModel({
     opportunityId,
     handleGetAllOppContact,
     setSyncingPushStatus,
+    oppName
 }) {
     const theme = useTheme();
     const [contacts, setContacts] = useState([]);
@@ -149,7 +150,7 @@ function OpportunityContactModel({
         <React.Fragment>
             <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    Add Opportunity Contact
+                    Add Contact For <strong>{oppName}</strong>
                 </Components.DialogTitle>
 
                 <Components.IconButton

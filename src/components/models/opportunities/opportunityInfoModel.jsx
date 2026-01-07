@@ -22,7 +22,6 @@ import { getOpportunityDetails, updateOpportunity } from '../../../service/oppor
 import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import { deleteSalesProcess, getAllBySalesOpportunity } from '../../../service/salesProcess/salesProcessService';
 import { Tabs } from '../../common/tabs/tabs';
-import OpportunityContactModel from './opportunityContactModel';
 import AddSalesProcessModel from './salesProcess/addSalesProcessModel';
 import PermissionWrapper from '../../common/permissionWrapper/PermissionWrapper';
 import AlertDialog from '../../common/alertDialog/alertDialog';
@@ -371,6 +370,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
     } = useForm({
         defaultValues: {
             id: null,
+            opportunity: null,
             accountName: null,
             logo: null,
             nextSteps: null,
@@ -727,26 +727,26 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
         }
     };
 
-    const getFieldDisplayName = (field) => {
-        switch (field) {
-            case "WhyDoAnything":
-            case "MeddicI":
-                return "Why Do Anything";
-            case "CurrentEnvironment":
-                return "Current Environment";
-            case "BusinessValue":
-            case "MeddicM":
-                return "Value";
-            case "NextSteps":
-                return "Next Steps";
-            case "KeyContacts":
-            case "MeddicE":
-            case "MeddicC":
-                return "Key Contacts";
-            default:
-                return "this field";
-        }
-    };
+    // const getFieldDisplayName = (field) => {
+    //     switch (field) {
+    //         case "WhyDoAnything":
+    //         case "MeddicI":
+    //             return "Why Do Anything";
+    //         case "CurrentEnvironment":
+    //             return "Current Environment";
+    //         case "BusinessValue":
+    //         case "MeddicM":
+    //             return "Value";
+    //         case "NextSteps":
+    //             return "Next Steps";
+    //         case "KeyContacts":
+    //         case "MeddicE":
+    //         case "MeddicC":
+    //             return "Key Contacts";
+    //         default:
+    //             return "this field";
+    //     }
+    // };
 
     const handleCancelOpp360 = () => {
         // Reset editor states from original values
@@ -992,7 +992,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
             <BootstrapDialog
                 open={open}
                 aria-labelledby="customized-dialog-title"
-                maxWidth={"md"}
+                maxWidth={"lg"}
                 fullWidth
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
@@ -1217,33 +1217,33 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                             </div>
                                                         </Tooltip>
                                                     )}
-                                                    <PermissionWrapper
-                                                        functionalityName="Opportunities"
-                                                        moduleName="Opportunities"
-                                                        actionId={2}
-                                                        component={
-                                                            <Tooltip
-                                                                title="Add contact"
-                                                                arrow
-                                                            >
-                                                                <div className="bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
-                                                                    <Components.IconButton
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleAddContact();
-                                                                        }}
-                                                                    >
-                                                                        <CustomIcons
-                                                                            iconName="fa-solid fa-plus"
-                                                                            css="cursor-pointer text-white h-3 w-3"
-                                                                        />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                        }
-                                                    />
                                                 </div>
                                             )}
+                                            <PermissionWrapper
+                                                functionalityName="Opportunities"
+                                                moduleName="Opportunities"
+                                                actionId={2}
+                                                component={
+                                                    <Tooltip
+                                                        title="Add contact"
+                                                        arrow
+                                                    >
+                                                        <div className="bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
+                                                            <Components.IconButton
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAddContact();
+                                                                }}
+                                                            >
+                                                                <CustomIcons
+                                                                    iconName="fa-solid fa-plus"
+                                                                    css="cursor-pointer text-white h-3 w-3"
+                                                                />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                }
+                                            />
                                         </div>
                                     </div>
 
@@ -1952,6 +1952,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                 handleClose={handleCloseContactModel}
                 opportunityId={opportunityId}
                 handleGetAllOppContact={handleGetOppContacts}
+                oppName={watch("opportunity")}
             />
             <AlertDialog
                 open={dialogContact.open}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { styled, useTheme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 
 // Import ReactFlow
 import {
@@ -94,7 +94,6 @@ const PersonNode = ({ data }) => {
     </div>
   );
 };
-
 
 /** Recursive layout that marks the active contactId */
 const convertTreeToFlowElementsSimple = (treeData, activeId) => {
@@ -199,7 +198,6 @@ const normalizeTree = (node) => {
 };
 
 function ContactReportHierarch({ open, handleClose, contactId }) {
-  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);

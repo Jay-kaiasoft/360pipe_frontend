@@ -22,7 +22,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportunityId, handleGetAllOpportunitiesProducts, setSyncingPushStatus }) {
+function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportunityId, handleGetAllOpportunitiesProducts, setSyncingPushStatus, oppName }) {
     const theme = useTheme()
     const [products, setProducts] = useState([])
 
@@ -127,7 +127,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                 setAlert({
                     open: true,
                     message: res.message || "Fail to update opportunity partner",
-                    type:"error"
+                    type: "error"
                 })
             }
         } else {
@@ -140,7 +140,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                 setAlert({
                     open: true,
                     message: res.message || "Fail to add opportunity partner",
-                    type:"error"
+                    type: "error"
                 })
             }
         }
@@ -157,7 +157,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {id ? "Update" : "Add"} Product & Service
+                    {id ? "Update" : "Add"} Product & Service For <strong>{oppName}</strong>
                 </Components.DialogTitle>
 
                 <Components.IconButton

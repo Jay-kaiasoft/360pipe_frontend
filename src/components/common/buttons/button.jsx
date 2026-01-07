@@ -24,9 +24,9 @@ const Button = ({
         // height: height || 40,
         textTransform: "uppercase",
         fontSize: "16px",
-        border:1,
+        border: 1,
         // borderColor:theme.palette.secondary.main,
-        color:theme.palette.secondary.main,        
+        color: theme.palette.secondary.main,
     };
 
     // Styles when useFor !== "primary"
@@ -50,6 +50,7 @@ const Button = ({
         overflow: "hidden",
         boxShadow: 0,
         textTransform: "uppercase",
+        cursor: disabled ? "not-allowed" : "pointer"
     };
     const primaryStyles = {
         background: theme.palette.primary.main,
@@ -101,7 +102,7 @@ const Button = ({
             sx={{
                 ...baseStyles,
                 ...(useFor === "primary" ? primaryStyles : normalStyles),
-                textTransform:"capitalize"
+                textTransform: "capitalize"
             }}
         >
             {useFor === "primary" ? (

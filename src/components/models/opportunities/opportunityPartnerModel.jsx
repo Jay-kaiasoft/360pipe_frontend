@@ -22,7 +22,7 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     },
 }));
 
-function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportunityId, handleGetAllOpportunitiesPartners, setSyncingPushStatus }) {
+function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportunityId, handleGetAllOpportunitiesPartners, setSyncingPushStatus, oppName }) {
     const theme = useTheme()
     const [accounts, setAccounts] = useState([])
 
@@ -136,7 +136,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                 maxWidth='sm'
             >
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    {id ? "Update" : "Add"} Partner
+                    {id ? "Update" : "Add"} Partner For <strong>{oppName}</strong>
                 </Components.DialogTitle>
 
                 <Components.IconButton

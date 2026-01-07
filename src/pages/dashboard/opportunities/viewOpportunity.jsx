@@ -2352,6 +2352,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleClose={handleCloseContactModel}
                 opportunityId={opportunityId}
                 handleGetAllOppContact={handleGetOppContacts}
+                oppName={watch("opportunity")}
             />
             <AlertDialog
                 open={dialogContact.open}
@@ -2369,6 +2370,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 opportunityId={opportunityId}
                 id={selectedPartnerId}
                 handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner}
+                oppName={watch("opportunity")}
             />
             <AlertDialog
                 open={dialogPartner.open}
@@ -2386,6 +2388,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 opportunityId={opportunityId}
                 id={selectedProductId}
                 handleGetAllOpportunitiesProducts={handleGetOppProduct}
+                oppName={watch("opportunity")}
             />
             <AlertDialog
                 open={dialogProduct.open}

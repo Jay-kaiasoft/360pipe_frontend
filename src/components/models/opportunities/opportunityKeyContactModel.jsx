@@ -21,6 +21,7 @@ function OpportunityKeyContactModel({
     opportunityId,
     handleGetAllOppContact,
     setSyncingPushStatus,
+    oppName
 }) {
     const theme = useTheme();
     const [contacts, setContacts] = useState([]);
@@ -94,7 +95,7 @@ function OpportunityKeyContactModel({
         <React.Fragment>
             <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
-                    Opportunity Key Contact
+                    Add Key Contact For <strong>{oppName}</strong>
                 </Components.DialogTitle>
 
                 <Components.IconButton
@@ -185,7 +186,7 @@ function OpportunityKeyContactModel({
 
                 <Components.DialogActions>
                     <div className="flex justify-end items-center gap-4">
-                        <Button disabled={contacts?.length === 0} type="button" text={'Submit'} onClick={() => submit()} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                        <Button disabled={contacts?.length === 0} type="button" text={'Save'} onClick={() => submit()} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                         <Button type="button" text={'Cancel'} useFor="disabled" onClick={() => onClose()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                     </div>
                 </Components.DialogActions>

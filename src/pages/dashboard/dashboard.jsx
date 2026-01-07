@@ -145,15 +145,52 @@ const Countdown = ({ endDate }) => {
     const pad = (n) => String(n).padStart(2, "0");
 
     return (
-        <div className="flex flex-col items-center justify-center h-full">
-            <div className="text-3xl md:text-4xl font-semibold tracking-wider text-gray-800">
-                {pad(days)} : {pad(hrs)} : {pad(mins)} : {pad(secs)}
-            </div>
-            <div className="mt-2 text-gray-500 text-sm flex gap-6">
-                <span>Days</span><span>Hrs</span><span>Min</span><span>Sec</span>
+        <div className="flex items-center justify-center h-full">
+            <div className="flex items-start">
+                <div className="flex flex-col items-center">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-wider text-gray-800">
+                        {pad(days)}
+                    </span>
+                    <span className="mt-1 text-sm text-gray-500">Days</span>
+                </div>
+
+                <span className="mx-3 md:mx-5 text-3xl md:text-4xl font-semibold text-gray-800">
+                    :
+                </span>
+
+                <div className="flex flex-col items-center">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-wider text-gray-800">
+                        {pad(hrs)}
+                    </span>
+                    <span className="mt-1 text-sm text-gray-500">Hrs</span>
+                </div>
+
+                <span className="mx-3 md:mx-5 text-3xl md:text-4xl font-semibold text-gray-800">
+                    :
+                </span>
+
+                <div className="flex flex-col items-center">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-wider text-gray-800">
+                        {pad(mins)}
+                    </span>
+                    <span className="mt-1 text-sm text-gray-500">Min</span>
+                </div>
+
+                <span className="mx-3 md:mx-5 text-3xl md:text-4xl font-semibold text-gray-800">
+                    :
+                </span>
+
+                <div className="flex flex-col items-center">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-wider text-gray-800">
+                        {pad(secs)}
+                    </span>
+                    <span className="mt-1 text-sm text-gray-500">Sec</span>
+                </div>
             </div>
         </div>
     );
+
+
 };
 
 const yearOptions = [
@@ -426,9 +463,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
 
 // import React, { useEffect, useState } from "react";
 // import { NavLink } from "react-router-dom";

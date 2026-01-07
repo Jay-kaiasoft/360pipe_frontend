@@ -10,7 +10,6 @@ import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/co
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
-import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import { createContact, getAllContacts, getContactDetails, updateContact } from '../../../service/contact/contactService';
 import { opportunityContactRoles } from '../../../service/common/commonService';
 import { getAllAccounts } from '../../../service/account/accountService';
