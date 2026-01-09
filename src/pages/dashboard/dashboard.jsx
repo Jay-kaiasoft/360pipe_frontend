@@ -1,5 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend,
+} from "recharts";
+
 import { getDashboardData } from "../../service/customers/customersService";
 import Components from "../../components/muiComponents/components";
 import Select from "../../components/common/select/select";
@@ -11,6 +21,8 @@ const formatMoneyK = (num) => {
     if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
     return `${n}`;
 };
+
+const moneyLabel = (v) => `$${formatMoneyK(v)}`;
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
@@ -73,36 +85,32 @@ const SemiGauge = ({ value = 0, target = 1 }) => {
     );
 };
 
-const StackedBar = ({ items = [], maxValue = 1 }) => {
-    const total = items.reduce((s, x) => s + Number(x.value || 0), 0);
-    const base = maxValue > 0 ? maxValue : total || 1;
+const PipelineQuarterChart = ({ q1, q2, q3, q4 }) => {
+    const data = [
+        { quarter: "Q1", commit: Number(q1?.commit || 0), pipeline: Number(q1?.pipeline || 0), upside: Number(q1?.upside || 0) },
+        { quarter: "Q2", commit: Number(q2?.commit || 0), pipeline: Number(q2?.pipeline || 0), upside: Number(q2?.upside || 0) },
+        { quarter: "Q3", commit: Number(q3?.commit || 0), pipeline: Number(q3?.pipeline || 0), upside: Number(q3?.upside || 0) },
+        { quarter: "Q4", commit: Number(q4?.commit || 0), pipeline: Number(q4?.pipeline || 0), upside: Number(q4?.upside || 0) },
+    ];
 
     return (
-        <div className="w-full">
-            <div className="h-10 w-full rounded-md overflow-hidden bg-gray-100 flex">
-                {items.map((it, idx) => {
-                    const w = (Number(it.value || 0) / base) * 100;
-                    return (
-                        <div
-                            key={idx}
-                            className={it.className || "bg-blue-500"}
-                            style={{ width: `${clamp(w, 0, 100)}%` }}
-                            title={`${it.label}: ${formatMoneyK(it.value)}`}
-                        />
-                    );
-                })}
-            </div>
+        <div style={{ width: "100%", height: 220 }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data} barCategoryGap={18}>
+                    <XAxis dataKey="quarter" />
+                    <YAxis tickFormatter={(v) => `$${formatMoneyK(v)}`} />
+                    <Tooltip
+                        formatter={(value, name) => [moneyLabel(value), name]}
+                        labelFormatter={(label) => `Quarter: ${label}`}
+                    />
+                    <Legend />
 
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
-                {items.map((it, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                        <span className={`inline-block w-3 h-3 rounded ${it.className || "bg-blue-500"}`} />
-                        <span className="truncate">
-                            {it.label}: <b className="text-gray-800">{formatMoneyK(it.value)}</b>
-                        </span>
-                    </div>
-                ))}
-            </div>
+                    {/* Stacked Bars */}
+                    <Bar dataKey="commit" stackId="a" fill="#4CAF50" name="Commit" />
+                    <Bar dataKey="upside" stackId="a" fill="#FFC857" name="Upside" />
+                    <Bar dataKey="pipeline" stackId="a" fill="#a09f9f" name="Pipeline" />
+                </BarChart>
+            </ResponsiveContainer>
         </div>
     );
 };
@@ -193,24 +201,22 @@ const Countdown = ({ endDate }) => {
 
 };
 
+const currentYear = new Date().getFullYear();
+
 const yearOptions = [
     {
-        id: new Date().getFullYear() - 3,
-        title: new Date().getFullYear() - 3?.toString()
+        id: currentYear - 1,
+        title: String(currentYear - 1),
     },
     {
-        id: new Date().getFullYear() - 2,
-        title: new Date().getFullYear() - 2?.toString()
+        id: currentYear,
+        title: String(currentYear),
     },
     {
-        id: new Date().getFullYear() - 1,
-        title: new Date().getFullYear() - 1?.toString()
+        id: currentYear + 1,
+        title: String(currentYear + 1),
     },
-    {
-        id: new Date().getFullYear(),
-        title: new Date().getFullYear()?.toString()
-    }
-]
+];
 
 const periodTypes = [
     {
@@ -233,9 +239,11 @@ const QuarterCard = ({ title, items = [], commit = 0, upside = 0 }) => {
             <div className="bg-slate-700 px-4 py-2">
                 <Components.Typography className="text-white font-semibold text-sm">{title}</Components.Typography>
             </div>
+
             <div className="h-[2px] bg-red-500" />
+
             <div className="p-3">
-                <div className="h-52 overflow-auto pr-1">
+                <div className="h-44 overflow-auto pr-1">
                     {items.length === 0 ? (
                         <Components.Typography className="text-gray-400 text-sm">No opportunities</Components.Typography>
                     ) : (
@@ -243,7 +251,7 @@ const QuarterCard = ({ title, items = [], commit = 0, upside = 0 }) => {
                             {items.map((x) => (
                                 <li key={x.id} className="text-sm">
                                     {/* you can route to opportunity details */}
-                                    <NavLink to={`/dashboard/opportunity-view/${x.id}`} className="text-blue-700 cursor-pointer">
+                                    <NavLink to={`/dashboard/opportunity-view/${x.id}`} className={`${x.status === "Upside" ? "text-[#FFC857]" : x.status === "Pipeline" ? "text-[#a09f9f]" : "text-[#4CAF50]"} cursor-pointer`}>
                                         {x.name}
                                     </NavLink>
                                 </li>
@@ -280,19 +288,11 @@ const parseQuarterEnd = (str) => {
     return Number.isNaN(d.getTime()) ? null : d;
 };
 
-
 const getQuarterFooter = (dashboardData, quarterKey) => {
     const list = Array.isArray(dashboardData?.[quarterKey]) ? dashboardData[quarterKey] : [];
     return list.find((x) => x?._type === "footer") || {};
 };
 
-const getPipelineTotalFromFooters = (dashboardData) => {
-    const quarters = ["quarter1", "quarter2", "quarter3", "quarter4"];
-    return quarters.reduce((sum, q) => {
-        const footer = getQuarterFooter(dashboardData, q);
-        return sum + Number(footer?.pipeline || 0);
-    }, 0);
-};
 /* ---------------------------
    Dashboard
 ---------------------------- */
@@ -324,13 +324,10 @@ const Dashboard = () => {
         // Target: you used totalDealsAmount as target now (ok)
         const closedTarget = Number(dashboardData?.totalDealsAmount || 0);
 
-        // ✅ Pipeline totals are coming in QUARTER footers, not as dashboardData.pipeline/commit/upside
-        const pipelineTotal = getPipelineTotalFromFooters(dashboardData);
-
         const pipelineItems = [
-            { label: "Commit", value: Number(dashboardData?.commit || 0), className: "bg-green-500" },
-            { label: "Pipeline", value: pipelineTotal, className: "bg-blue-500" },
-            { label: "Upside", value: Number(dashboardData?.upside || 0), className: "bg-orange-400" },
+            { label: "Commit", value: Number(dashboardData?.commitAmount || 0), className: "bg-green-500" },
+            { label: "Pipeline", value: Number(dashboardData?.pipelineAmount || 0), className: "bg-blue-500" },
+            { label: "Upside", value: Number(dashboardData?.upsideAmount || 0), className: "bg-orange-400" },
         ];
 
         const pipelineMax = pipelineItems.reduce((s, x) => s + Number(x.value || 0), 0) || 1;
@@ -375,12 +372,11 @@ const Dashboard = () => {
         };
     }, [dashboardData]);
 
-
     return (
-        <div className="w-full p-3">
+        <div className="w-full px-3">
             {/* Top header row */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3 w-full">
+            <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="flex justify-center items-center gap-3 w-full">
                     <div className="w-60">
                         <Select
                             options={yearOptions}
@@ -429,15 +425,15 @@ const Dashboard = () => {
                     </Components.CardContent>
                 </Components.Card>
 
-                {/* <Components.Card className="shadow-sm rounded-xl overflow-hidden">
+                <Components.Card className="shadow-sm rounded-xl overflow-hidden">
                     <div className="bg-slate-700 px-4 py-2">
                         <Components.Typography className="text-white font-semibold text-sm">PIPELINE</Components.Typography>
                     </div>
                     <div className="h-[2px] bg-red-500" />
                     <Components.CardContent className="p-4">
-                        <StackedBar items={ui.pipelineItems} maxValue={ui.pipelineMax} />
+                        <PipelineQuarterChart q1={ui.q1} q2={ui.q2} q3={ui.q3} q4={ui.q4} />
                     </Components.CardContent>
-                </Components.Card> */}
+                </Components.Card>
 
                 <Components.Card className="shadow-sm rounded-xl overflow-hidden">
                     <div className="bg-slate-700 px-4 py-2">
@@ -463,110 +459,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-// import React, { useEffect, useState } from "react";
-// import { NavLink } from "react-router-dom";
-// import { getDashboardData } from "../../service/customers/customersService";
-
-// const DashboardCard = ({ title, subtitle, value, label, stats, buttonText }) => {
-//     return (
-//         <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center w-full md:w-1/3">
-//             {/* Title & Subtitle */}
-//             <div className="text-center mb-4">
-//                 <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
-//                 <p className="text-sm text-gray-500">{subtitle}</p>
-//             </div>
-
-//             {/* Circle Value */}
-//             <div className="relative flex items-center justify-center mb-4">
-//                 <div className="w-32 h-32 rounded-full border-8 border-gray-200 flex items-center justify-center">
-//                     <div className="text-center">
-//                         <p className="text-2xl font-semibold text-gray-800">{value}</p>
-//                         <p className="text-sm text-gray-500">{label}</p>
-//                     </div>
-//                 </div>
-//             </div>
-
-//             {/* Stats
-//             <div className="space-y-2 mb-4">
-//                 {stats.map((stat, index) => (
-//                     <div key={index} className="flex items-center text-sm">
-//                         <span
-//                             className={`w-3 h-3 rounded-full mr-2`}
-//                             style={{ backgroundColor: stat.color }}
-//                         ></span>
-//                         <span className="text-gray-700">{stat.text}</span>
-//                     </div>
-//                 ))}
-//             </div> */}
-
-//             {/* Button */}
-//             <NavLink to={`/dashboard/${title.toLowerCase()}`}>
-//                 <button className="border border-gray-400 text-sm px-4 py-2 rounded-full hover:bg-gray-100">
-//                     {buttonText}
-//                 </button>
-//             </NavLink>
-//         </div>
-//     );
-// };
-
-// const Dashboard = () => {
-//     const [dashboardData, setDashboardData] = useState(null);
-
-//     const handleGetDashboardData = async () => {
-//         const res = await getDashboardData({
-//             "year": 2025,
-//             "periodType": "YEAR"
-//         }
-//         );
-//         // setDashboardData(res.data?.result);
-//     }
-
-//     useEffect(() => {
-//         document.title = "Dashboard - 360Pipe"
-//         handleGetDashboardData();
-//     }, []);
-
-//     return (
-//         <div className="flex flex-col md:flex-row gap-6 w-full">
-//             {/* Close Deals */}
-//             <DashboardCard
-//                 title="Opportunities"
-//                 subtitle="Opportunities owned by me"
-//                 value={dashboardData?.opportunityCount || "0"}
-//                 label="Opportunities"
-//                 buttonText="View Opportunities"
-//             />
-
-//             {/* Plan My Accounts */}
-//             <DashboardCard
-//                 title="Accounts"
-//                 subtitle="Accounts owned by me"
-//                 value={dashboardData?.accountCount || "0"}
-//                 label="Accounts"
-//                 buttonText="View Accounts"
-//             // stats={[
-//             //     { text: "0 Upcoming Activity", color: "#34D399" },
-//             //     { text: "0 Past Activity", color: "#60A5FA" },
-//             //     { text: "0 No Activity", color: "#FCA5A5" },
-//             // ]}
-//             />
-
-//             {/* Grow Relationships */}
-//             <DashboardCard
-//                 title="Contacts"
-//                 subtitle="Contacts owned by me"
-//                 value={dashboardData?.contactCount || "0"}
-//                 label="Contacts"
-//                 buttonText="View Contacts"
-//             // stats={[
-//             //     { text: "0 Upcoming Activity", color: "#34D399" },
-//             //     { text: "0 Past Activity", color: "#60A5FA" },
-//             //     { text: "5 No Activity", color: "#FCA5A5" },
-//             // ]}
-//             />
-//         </div>
-//     );
-// };
-
-// export default Dashboard;

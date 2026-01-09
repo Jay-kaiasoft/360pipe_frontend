@@ -8,6 +8,7 @@ import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
 import { getClosePlanByOppId } from '../../../service/closePlanService/closePlanService';
 import { getAllClosePlanNotes, saveClosePlanNote } from '../../../service/closePlanNotes/closePlanNotesService';
+import { getUserDetails } from '../../../utils/getUserDetails';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -46,8 +47,9 @@ const Pill = ({ children }) => (
 
 function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
     const theme = useTheme();
+    const userDetails = getUserDetails()
+
     const [contacts, setContacts] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [comments, setComments] = useState([])
     const [commentText, setCommentText] = useState("")
     const [closePlanId, setClosePlanId] = useState(null)
@@ -71,8 +73,6 @@ function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
             });
         } catch {
             return '';
@@ -88,8 +88,6 @@ function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
 
     const handleGetAllContact = async () => {
         if (!open || !opportunityId) return;
-
-        setLoading(true);
         try {
             const res = await getClosePlanByOppId(opportunityId);
             const data =
@@ -105,8 +103,6 @@ function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
         } catch (e) {
             setContacts([]);
             setAlert && setAlert({ message: 'Failed to load contacts', type: 'error' });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -249,27 +245,27 @@ function ClosePlanCommentModel({ setAlert, open, handleClose, opportunityId }) {
                                                             const noteText = c?.comments || "";
                                                             const createdAt = c?.createdAt;
                                                             const createdByName = c?.createdByName
-
+                                                            const createdBy = c?.createdBy
                                                             return (
                                                                 <div
                                                                     key={c?.id ?? idx}
-                                                                    className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
+                                                                    className={`rounded-2xl border ${userDetails?.userId === createdBy ? "border-blue-600" :"border-gray-200"} bg-white p-3 sm:p-4`}
                                                                 >
                                                                     <div className="flex items-start gap-3">
                                                                         <div className="min-w-0 flex-1">
                                                                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                                <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
+                                                                                <div className={`font-semibold ${userDetails?.userId === createdBy ? "text-blue-600" : "text-black "} text-sm truncate max-w-[220px] sm:max-w-[360px]`}>
                                                                                     {createdByName}
                                                                                 </div>
 
                                                                                 {createdAt ? (
-                                                                                    <span className="text-xs text-gray-500">
+                                                                                    <span className={`text-xs text-gray-500`}>
                                                                                         • {formatDateTime(createdAt)}
                                                                                     </span>
                                                                                 ) : null}
                                                                             </div>
 
-                                                                            <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
+                                                                            <div className="mt-2 text-sm text-black whitespace-pre-wrap break-words">
                                                                                 {noteText || "—"}
                                                                             </div>
 

@@ -51,7 +51,7 @@ const AppHeader = ({ setAlert, setLoadingMessage, setLoading, setSyncCount, setS
         path: "/dashboard/contacts",
       },
       {
-        label: "Todos",
+        label: "To-Do",
         path: "/dashboard/todos",
       },
       ...((userDetails?.userId === salesforceUserDetails?.userId || userDetails?.roleName === "SALES REPRESENTIVE" || !userDetails?.subUser)

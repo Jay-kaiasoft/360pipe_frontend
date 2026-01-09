@@ -8,6 +8,7 @@ import { connect } from "react-redux";
 import CustomIcons from "../../components/common/icons/CustomIcons";
 import Drawer from "@mui/material/Drawer";
 import Components from "../../components/muiComponents/components";
+import { getUserDetails } from "../../utils/getUserDetails";
 
 // ---------- helpers ----------
 const getFileNameFromUrl = (url = "") => {
@@ -505,15 +506,15 @@ const Closeplan = ({ setAlert }) => {
                                                     const noteText = c?.comments || "";
                                                     const createdAt = c?.createdAt;
                                                     const createdByName = c?.createdByName;
-
+                                                    const createdBy = c?.createdBy
                                                     return (
                                                         <div
                                                             key={c?.id ?? idx}
-                                                            className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4"
+                                                            className={`rounded-2xl border ${contactId === createdBy ? "border-blue-600" :"border-gray-200"} bg-white p-3 sm:p-4`}
                                                         >
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                    <div className="font-semibold text-[#242424] text-sm truncate max-w-[220px] sm:max-w-[360px]">
+                                                                    <div className={`font-semibold ${contactId === createdBy ? "text-blue-600" : "text-black "} text-sm truncate max-w-[220px] sm:max-w-[360px]`}>
                                                                         {createdByName}
                                                                     </div>
 

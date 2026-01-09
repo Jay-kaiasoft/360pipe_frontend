@@ -54,5 +54,6 @@ export const timeZonesURL = baseURL + '/time-zones'
 export const calendarURL = baseURL + '/calendar'
 export const closeplanURL = baseURL + '/closeplan'
 export const closePlanNotesURL = baseURL + '/closeplannotes'
+export const meetingURL = baseURL + '/meeting'
 
 export const calenderName = '360Pipe Calendar'
