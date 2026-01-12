@@ -587,7 +587,7 @@ const ViewOpportunity = ({ setAlert }) => {
     const handleSelectMeeting = async (mid) => {
         setMeetingAttendees([])
         setSelectedMeeting(mid);
-        handleGetAllMeetingAttendees(mid);
+        // handleGetAllMeetingAttendees(mid);
 
         const res = await getByMeetingId(mid);
         if (res.status === 200) {
