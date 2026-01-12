@@ -46,6 +46,10 @@ import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles, userTi
 import AddSalesProcessModel from '../../../components/models/opportunities/salesProcess/addSalesProcessModel';
 import { deleteSalesProcess, getAllBySalesOpportunity } from '../../../service/salesProcess/salesProcessService';
 import { getAllMeetingsByOppId } from '../../../service/meetings/meetingsService';
+import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
+import MeetingAttendeesModel from '../../../components/models/meeting/meetingAttendeesModel';
+import { deleteMeetingAttendees, getAllMeetingsAttendeesByMeetingId } from '../../../service/meetingAttendees/meetingAttendeesService';
+import { getByMeetingId, saveNote, updateNote } from '../../../service/notes/notesService';
 
 const toolbarProperties = {
     options: ['inline', 'list', 'link', 'history'],
@@ -61,7 +65,7 @@ const tableData = [
     { label: 'Opportunity Details' },
     { label: 'Opp360' },
     { label: 'Calendar' },
-    // { label: 'Notes' },
+    { label: 'Notes' },
 ]
 
 const ViewOpportunity = ({ setAlert }) => {
@@ -126,12 +130,35 @@ const ViewOpportunity = ({ setAlert }) => {
 
     const [files, setFiles] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
-    // const [showDates, setShowDates] = useState(null)
+    const [showDates, setShowDates] = useState(null)
+    const [meetings, setMeetings] = useState([])
+    const [filteredMeetings, setFilteredMeetings] = useState([])
+    const [selectedMeeting, setSelectedMeeting] = useState(null)
+    const [meetingAttendees, setMeetingAttendees] = useState([])
+    const [selectedMeetingAttendeesId, setSelectedMeetingAttendeesId] = useState(null)
+    const [attendeesModelOpen, setAttendeesModelOpen] = useState(false);
+    const [deleteAttendees, setDeleteAttendees] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // ---- Meeting Notes Editors ----
+    const [editingNoteField, setEditingNoteField] = useState(null);
+
+    // HTML snapshots (for cancel + dirty compare)
+    const [purposeHTML, setPurposeHTML] = useState("");
+    const [backgroundHTML, setBackgroundHTML] = useState("");
+    const [agendaHTML, setAgendaHTML] = useState("");
+    const [alignmentHTML, setAlignmentHTML] = useState("");
+
+    // EditorStates
+    const [purposeState, setPurposeState] = useState(EditorState.createEmpty());
+    const [backgroundState, setBackgroundState] = useState(EditorState.createEmpty());
+    const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
+    const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
 
     const {
         watch,
         setValue,
         getValues,
+        control
     } = useForm({
         defaultValues: {
             id: null,
@@ -147,9 +174,64 @@ const ViewOpportunity = ({ setAlert }) => {
             status: null,
             logo: null,
             newLogo: null,
-            opportunityDocs: []
+            opportunityDocs: [],
+
+            noteId: null,
+            purpose: null,
+            background: null,
+            alignment: null,
+            agenda: null,
+            meetingDate: null,
         },
     });
+
+    const htmlToEditorState = (html) => {
+        const clean = (html || "").trim();
+        if (!clean) return EditorState.createEmpty();
+
+        const blocks = htmlToDraft(clean);
+        const contentState = ContentState.createFromBlockArray(
+            blocks.contentBlocks,
+            blocks.entityMap
+        );
+        return EditorState.createWithContent(contentState);
+    };
+    const editorStateToHtml = (state) =>
+        state ? draftToHtml(convertToRaw(state.getCurrentContent())) : "";
+
+    const handleOpenDeleteAttendees = (id) => {
+        setSelectedMeetingAttendeesId(id)
+        setDeleteAttendees({ open: true, title: 'Delete Attendees', message: 'Are you sure! Do you want to delete this attendees?', actionButtonText: 'Yes' })
+    }
+
+    const handleCloseDeleteAttendees = () => {
+        setSelectedMeetingAttendeesId(null)
+        setDeleteAttendees({ open: false, title: '', message: '', actionButtonText: '' })
+    }
+
+    const handleDeleteAttendees = async () => {
+        const res = await deleteMeetingAttendees(selectedMeetingAttendeesId)
+        if (res.status === 200) {
+            handleGetAllMeetingAttendees()
+            handleCloseDeleteAttendees()
+        } else {
+            setAlert({
+                open: true,
+                message: res.message || "Fail to delete attendees",
+                type: "error"
+            })
+        }
+    }
+
+    const handleOpenAttendeesModel = (id = null) => {
+        setSelectedMeetingAttendeesId(id)
+        setAttendeesModelOpen(true)
+    }
+
+    const handleCloseAttendeesModel = () => {
+        setSelectedMeetingAttendeesId(null)
+        setAttendeesModelOpen(false)
+    }
 
     const handleOpenDecisionMapModel = async (id = null) => {
         setSalesProcessId(id)
@@ -470,31 +552,138 @@ const ViewOpportunity = ({ setAlert }) => {
         }
     }
 
-    // const handleGetMeeetingByOppId = async () => {
-    //     if (opportunityId && selectedTab === 3) {
-    //         const res = await getAllMeetingsByOppId(opportunityId, userTimeZone)
-    //         if (res.status === 200) {
-    //             const data = res.result?.map((row) => {
-    //                 return {
-    //                     id: row.id,
-    //                     oppId: row.oppId,
-    //                     cusId: row.cusId,
-    //                     calendarId: row.calendarId,
-    //                     title: row.calendarDto?.title,
-    //                     displayStart: row.calendarDto?.displayStart,
-    //                     displayEnd: row.calendarDto?.displayEnd,
-    //                 }
-    //             })
-    //             const dates = new Set(data?.map((item) => { return item.displayStart }))
-    //             setShowDates(dates)
-    //         }
+    const handleGetMeeetingByOppId = async () => {
+        if (opportunityId && selectedTab === 3) {
+            const res = await getAllMeetingsByOppId(opportunityId, userTimeZone)
+            if (res.status === 200) {
+                const data = res.result?.map((row) => {
+                    return {
+                        id: row.id,
+                        oppId: row.oppId,
+                        cusId: row.cusId,
+                        calendarId: row.calendarId,
+                        title: row.calendarDto?.title,
+                        description: row.calendarDto?.description,
+                        displayStart: row.calendarDto?.displayStart,
+                        displayEnd: row.calendarDto?.displayEnd,
+                    }
+                })
+                setMeetings(data)
+                const dates = new Set(data?.map((item) => { return item.displayStart }))
+                setShowDates(dates)
+            }
+        }
+    }
 
-    //     }
-    // }
+    const handleGetMeeetingBySelectedDate = async () => {
+        if (watch("meetingDate")) {
+            const data = meetings?.filter(row =>
+                row.displayStart?.split(" ")[0] === watch("meetingDate")
+            );
+            setFilteredMeetings(data)
+        }
+    }
 
-    // useEffect(() => {
-    //     handleGetMeeetingByOppId()
-    // }, [selectedTab])
+    const handleSelectMeeting = async (mid) => {
+        setMeetingAttendees([])
+        setSelectedMeeting(mid);
+        handleGetAllMeetingAttendees(mid);
+
+        const res = await getByMeetingId(mid);
+        if (res.status === 200) {
+            const note = res?.result || {};
+
+            setValue("noteId", note?.id || null);
+
+            // keep raw values in RHF (optional)
+            setValue("purpose", note?.purpose || "");
+            setValue("background", note?.background || "");
+            setValue("alignment", note?.alignment || "");
+            setValue("agenda", note?.agenda || "");
+
+            // snapshots
+            setPurposeHTML(note?.purpose || "");
+            setBackgroundHTML(note?.background || "");
+            setAlignmentHTML(note?.alignment || "");
+            setAgendaHTML(note?.agenda || "");
+
+            // editor states
+            setPurposeState(htmlToEditorState(note?.purpose));
+            setBackgroundState(htmlToEditorState(note?.background));
+            setAlignmentState(htmlToEditorState(note?.alignment));
+            setAgendaState(htmlToEditorState(note?.agenda));
+
+            setEditingNoteField(null);
+        }
+    };
+
+    const handleGetAllMeetingAttendees = async (mid = null) => {
+        if (opportunityId && selectedTab === 3 && (selectedMeeting || mid)) {
+            const res = await getAllMeetingsAttendeesByMeetingId(selectedMeeting || mid)
+            setMeetingAttendees(res?.result)
+        }
+    }
+
+    const handleCancelNoteEdit = (field) => {
+        if (field === "purpose") setPurposeState(htmlToEditorState(purposeHTML));
+        if (field === "background") setBackgroundState(htmlToEditorState(backgroundHTML));
+        if (field === "agenda") setAgendaState(htmlToEditorState(agendaHTML));
+        if (field === "alignment") setAlignmentState(htmlToEditorState(alignmentHTML));
+        setEditingNoteField(null);
+    };
+
+    const handleSaveNoteField = async (field) => {
+        if (!selectedMeeting) return;
+
+        const purpose = editorStateToHtml(purposeState);
+        const background = editorStateToHtml(backgroundState);
+        const agenda = editorStateToHtml(agendaState);
+        const alignment = editorStateToHtml(alignmentState);
+
+        const payload = {
+            id: watch("noteId") || null,
+            meetingId: selectedMeeting,
+            purpose,
+            background,
+            agenda,
+            alignment,
+        };
+
+        const res = payload.id ? await updateNote(watch("noteId"), payload) : await saveNote(payload);
+
+        if (res?.status === 200 || res?.status === 201) {
+            // refresh noteId (in case of create)
+            setValue("noteId", res?.result?.id || payload.id || null);
+
+            // update snapshots
+            setPurposeHTML(purpose);
+            setBackgroundHTML(background);
+            setAgendaHTML(agenda);
+            setAlignmentHTML(alignment);
+
+            setEditingNoteField(null);
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to save or update note",
+                type: "error",
+            });
+        }
+    };
+
+    useEffect(() => {
+        handleGetMeeetingBySelectedDate()
+    }, [watch("meetingDate")])
+
+    useEffect(() => {
+        handleGetMeeetingByOppId()
+        if (selectedTab !== 3) {
+            setSelectedMeeting(null)
+            setFilteredMeetings([])
+            setMeetingAttendees([])
+            setValue("meetingDate", null)
+        }
+    }, [selectedTab])
 
     useEffect(() => {
         handleGetOppProduct()
@@ -683,7 +872,6 @@ const ViewOpportunity = ({ setAlert }) => {
             if (Number.isNaN(num)) return null;
             return parseFloat(num.toFixed(2));
         };
-
 
         const handleDoubleClick = () => {
             if (!disabled) {
@@ -1803,6 +1991,87 @@ const ViewOpportunity = ({ setAlert }) => {
         );
     };
 
+    const MeetingNotesTable = () => {
+        const rows = [
+            { placeHolder: "Enter purpose of meeting", key: "purpose", label: "Purpose of meeting (desired outcome)", html: purposeHTML, state: purposeState, setState: setPurposeState },
+            { placeHolder: "Enter background", key: "background", label: "Context and Background", html: backgroundHTML, state: backgroundState, setState: setBackgroundState },
+            { placeHolder: "Enter agenda of meeting", key: "agenda", label: "Agenda", html: agendaHTML, state: agendaState, setState: setAgendaState },
+            { placeHolder: "Enter alignment", key: "alignment", label: "Alignment", html: alignmentHTML, state: alignmentState, setState: setAlignmentState },
+        ];
+
+        const isEmptyHtml = (h) => {
+            const x = (h || "").trim();
+            return !x || x === "<p></p>" || x === "<p><br></p>";
+        };
+
+        return (
+            <div className="bg-white border border-gray-300 rounded-md overflow-hidden">
+                <table className="w-full border-collapse">
+                    <tbody>
+                        {rows.map((r) => {
+                            const isEditing = editingNoteField === r.key;
+
+                            return (
+                                <tr key={r.key} className="border-b last:border-b-0">
+                                    <td className="w-[35%] align-top bg-gray-50 border-r border-gray-300 px-4 py-4 font-bold text-gray-900">
+                                        {r.label}
+                                    </td>
+
+                                    <td className="align-top px-4 py-4">
+                                        {!isEditing ? (
+                                            <div
+                                                className="cursor-pointer rounded-md hover:bg-gray-50 p-2 transition"
+                                                onClick={() => setEditingNoteField(r.key)}
+                                            >
+                                                {isEmptyHtml(r.html) ? (
+                                                    <span className="text-gray-400 italic">{r.placeHolder}</span>
+                                                ) : (
+                                                    <div
+                                                        className="prose max-w-none"
+                                                        dangerouslySetInnerHTML={{ __html: r.html }}
+                                                    />
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <Editor
+                                                    editorState={r.state}
+                                                    wrapperClassName="border border-gray-300 rounded-md"
+                                                    editorClassName="p-2 min-h-[140px] max-h-[240px] overflow-y-auto"
+                                                    toolbarClassName="border-b border-gray-300"
+                                                    onEditorStateChange={(st) => r.setState(st)}
+                                                    toolbar={toolbarProperties}
+                                                />
+
+                                                <div className="flex justify-end gap-3 mt-3">
+                                                    <button
+                                                        type="button"
+                                                        className="px-3 py-1.5 rounded bg-black text-white text-sm"
+                                                        onClick={() => handleCancelNoteEdit(r.key)}
+                                                    >
+                                                        Cancel
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        className="px-3 py-1.5 rounded bg-green-600 text-white text-sm"
+                                                        onClick={() => handleSaveNoteField(r.key)}
+                                                    >
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
     return (
         <div className='mx-auto relative p-4 sm:p-6 my-3'>
             <div>
@@ -2198,8 +2467,121 @@ const ViewOpportunity = ({ setAlert }) => {
             }
             {
                 selectedTab === 3 && (
-                    <div>
-                        ok
+                    <div className='flex justify-start items-start gap-4'>
+                        <div className='w-56 md:w-96'>
+                            <DatePickerComponent
+                                name="meetingDate"
+                                label="Meeting Date"
+                                control={control}
+                                setValue={setValue}
+                                showDates={showDates}
+                            />
+                            {
+                                filteredMeetings?.length > 0 && (
+                                    <div class="rounded-md border border-gray-200 bg-white py-4 px-2 mt-3">
+                                        <div class="flex h-[400px] w-full flex-col overflow-y-scroll">
+                                            {
+                                                filteredMeetings?.map((row, index) => (
+                                                    <button key={index} onClick={() => handleSelectMeeting(row.id)} class={`mb-2 group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 ${selectedMeeting === row.id ? "bg-blue-500" : "hover:bg-gray-100 "} `}>
+                                                        <div class={`flex flex-col items-start justify-between font-light ${selectedMeeting === row.id ? "text-white" : "text-gray-600"} `}>
+                                                            <p class="text-[15px] font-semibold">{row.title}</p>
+                                                            {/* <div
+                                                                className="space-y-1 group-hover:bg-gray-100"
+                                                                dangerouslySetInnerHTML={{
+                                                                    __html:
+                                                                        row?.description ||
+                                                                        "<span class='text-xs font-light group-hover:bg-gray-100 text-gray-400 italic'>-</span>",
+                                                                }}
+                                                            /> */}
+                                                        </div>
+                                                    </button>
+                                                ))
+                                            }
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
+                        <div className='w-full'>
+                            {
+                                selectedMeeting && (
+                                    <div>
+                                        <div className="min-h-40 overflow-y-auto border rounded-md overflow-hidden">
+                                            <table className="min-w-full border-collapse">
+                                                <thead className="sticky top-0 z-10">
+                                                    <tr>
+                                                        <th className="px-4 py-3 text-center text-lg font-bold text-black" colSpan={4}>Attendees</th>
+                                                        <th className="px-4 py-3 text-sm font-semibold flex justify-end">
+                                                            <Tooltip title="Add Attendees" arrow>
+                                                                <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenAttendeesModel()}>
+                                                                        <CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4 text-white" />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </th>
+                                                    </tr>
+                                                    <tr className="bg-gray-200 text-black">
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Title</th>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
+                                                        <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    {meetingAttendees?.length > 0 ? (
+                                                        meetingAttendees.map((row, i) => (
+                                                            <tr key={row.contactId ?? i} className={`bg-white border-b-1 border-t-0 border-l-0 border-r-0 ${i !== meetingAttendees?.length - 1 ? "border" : ""}`}>
+                                                                <td className="px-4 py-3 text-sm">
+                                                                    {row.contactName || '—'}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-sm">
+                                                                    {row.title || '—'}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-sm">
+                                                                    {row.role || '—'}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-sm">
+                                                                    {row.note || '—'}
+                                                                </td>
+                                                                <td className="px-4 py-3 flex justify-end items-center gap-3">
+                                                                    <Tooltip title="Edit" arrow>
+                                                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                            <Components.IconButton onClick={() => handleOpenAttendeesModel(row.id)}>
+                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                            </Components.IconButton>
+                                                                        </div>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Delete" arrow>
+                                                                        <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                            <Components.IconButton onClick={() => handleOpenDeleteAttendees(row.id)}>
+                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                            </Components.IconButton>
+                                                                        </div>
+                                                                    </Tooltip>
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    ) : (
+                                                        <tr>
+                                                            <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
+                                                                No records
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div className="mt-4">
+                                            <MeetingNotesTable />
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
                     </div>
                 )
             }
@@ -2273,6 +2655,16 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeteleDecisionMap()}
                 handleClose={() => handleCloseDecisionMapDelete()}
             />
+
+            <AlertDialog
+                open={deleteAttendees.open}
+                title={deleteAttendees.title}
+                message={deleteAttendees.message}
+                actionButtonText={deleteAttendees.actionButtonText}
+                handleAction={() => handleDeleteAttendees()}
+                handleClose={() => handleCloseDeleteAttendees()}
+            />
+            <MeetingAttendeesModel open={attendeesModelOpen} handleClose={handleCloseAttendeesModel} opportunityId={opportunityId} handleGetAllMeetingAttendees={handleGetAllMeetingAttendees} meetingid={selectedMeeting} id={selectedMeetingAttendeesId} />
             <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
         </div>
     )

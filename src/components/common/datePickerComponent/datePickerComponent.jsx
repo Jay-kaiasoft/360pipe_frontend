@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { useTheme } from '@mui/material';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, error = false, value, onChange }) => {
+const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, error = false, value, onChange, showDates = null }) => {
   const theme = useTheme();
 
   const customTheme = createTheme({
@@ -63,6 +63,16 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
       },
     },
   });
+
+  const enabledDatesSet = React.useMemo(() => {
+    if (!showDates || showDates.size === 0) return null;
+
+    return new Set(
+      Array.from(showDates).map((d) =>
+        dayjs(d, "MM/DD/YYYY HH:mm:ss").format("MM/DD/YYYY")
+      )
+    );
+  }, [showDates]);
 
   return (
     <div>
@@ -147,6 +157,13 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
                       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;',
                     },
                   },
+                }}
+                shouldDisableDate={(day) => {
+                  if (!enabledDatesSet) return false;
+
+                  const formatted = dayjs(day).format("MM/DD/YYYY");
+
+                  return !enabledDatesSet.has(formatted);
                 }}
               />
             )}
