@@ -93,7 +93,7 @@ function MeetingAttendeesModel({ setAlert, open, handleClose, meetingid, id, opp
         if (id) {
             const res = await updateMeetingAttendees(id, newData)
             if (res.status === 200) {
-                handleGetAllMeetingAttendees()
+                handleGetAllMeetingAttendees(meetingid)
                 onClose()
             } else {
                 setAlert({
@@ -105,7 +105,7 @@ function MeetingAttendeesModel({ setAlert, open, handleClose, meetingid, id, opp
         } else {
             const res = await saveMeetingAttendees(newData);
             if (res.status === 201) {
-                handleGetAllMeetingAttendees()
+                handleGetAllMeetingAttendees(meetingid)
                 onClose()
             } else {
                 setAlert({

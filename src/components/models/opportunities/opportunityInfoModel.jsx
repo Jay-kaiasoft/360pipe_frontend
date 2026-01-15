@@ -214,7 +214,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
     const [originalCurrentEnvironmentHTML, setOriginalCurrentEnvironmentHTML] = useState("");
     const [originalBusinessValueHTML, setOriginalBusinessValueHTML] = useState("");
     const [originalNextStepsValue, setOriginalNextStepsValue] = useState("");
-    const [originalKeyContacts, setOriginalKeyContacts] = useState([]);
+    // const [originalKeyContacts, setOriginalKeyContacts] = useState([]);
 
     const [isEditingWhy, setIsEditingWhy] = useState(false);
     const [isEditingCurrentEnv, setIsEditingCurrentEnv] = useState(false);
@@ -440,7 +440,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
         setOpportunitiesContacts(list);
 
         // Store original key contacts
-        setOriginalKeyContacts(list.map(c => ({ id: c.id, isKey: c.isKey })));
+        // setOriginalKeyContacts(list.map(c => ({ id: c.id, isKey: c.isKey })));
 
         const map = {};
         list.forEach((c) => {
@@ -787,10 +787,10 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                 setEditedContacts([]);
                 await handleGetOppContacts();
                 // Update original contacts after save
-                const updatedList = await getAllOpportunitiesContact(opportunityId);
-                if (updatedList?.result) {
-                    setOriginalKeyContacts(updatedList.result.map(c => ({ id: c.id, isKey: c.isKey })));
-                }
+                // const updatedList = await getAllOpportunitiesContact(opportunityId);
+                // if (updatedList?.result) {
+                //     // setOriginalKeyContacts(updatedList.result.map(c => ({ id: c.id, isKey: c.isKey })));
+                // }
             }
         } catch (err) {
             console.error("Error updating key contacts", err);
@@ -1946,6 +1946,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                 </Components.DialogActions>
 
             </BootstrapDialog>
+            
             {/* CONTACT MODAL + CONTACT DELETE DIALOG */}
             <OpportunityKeyContactModel
                 open={contactModalOpen}

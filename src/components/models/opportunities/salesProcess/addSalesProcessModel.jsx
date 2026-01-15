@@ -17,6 +17,7 @@ import DatePickerComponent from '../../../common/datePickerComponent/datePickerC
 import { getAllProcessNameByCustomer } from '../../../../service/processName/processNameService';
 import { getAllContacts } from '../../../../service/contact/contactService';
 import { createSalesProcess, getSalesProcess, updateSalesProcess } from '../../../../service/salesProcess/salesProcessService';
+import { getAllOpportunitiesContact } from '../../../../service/opportunities/opportunitiesContactService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -94,14 +95,18 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
 
     const handleGetAllContact = async () => {
         if (open) {
-            const res = await getAllContacts();
-            if (res.status === 200) {
-                const formattedContacts = res?.result?.map((contact) => ({
-                    "id": contact.id || null,
-                    "title": contact.firstName + " " + contact.lastName,
-                }));
-                setContacts(formattedContacts);
-            }
+            const res = await getAllOpportunitiesContact(oppId);
+            const data = res?.result?.map((item) => ({
+                id: item.id,
+                title: item?.contactName,
+                oppId: oppId,
+                contactId: item.contactId,
+                role: item?.role,
+                isKey: item.isKey,
+                salesforceContactId: item?.salesforceContactId,
+                isDeleted: false,
+            })) || [];
+            setContacts(data);
         }
     }
 
@@ -179,7 +184,6 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
             }
         }
     };
-
 
     return (
         <React.Fragment>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { Editor } from "react-draft-wysiwyg";
 import {
@@ -50,6 +50,7 @@ import DatePickerComponent from '../../../components/common/datePickerComponent/
 import MeetingAttendeesModel from '../../../components/models/meeting/meetingAttendeesModel';
 import { deleteMeetingAttendees, getAllMeetingsAttendeesByMeetingId } from '../../../service/meetingAttendees/meetingAttendeesService';
 import { getByMeetingId, saveNote, updateNote } from '../../../service/notes/notesService';
+import OpportunityKeyContactModel from '../../../components/models/opportunities/opportunityKeyContactModel';
 
 const toolbarProperties = {
     options: ['inline', 'list', 'link', 'history'],
@@ -103,11 +104,12 @@ const ViewOpportunity = ({ setAlert }) => {
     const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
     const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
     const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
+    const [opportunitiesKeyContact, setOpportunitiesKeyContacts] = useState([]);
 
     // Contact CRUD states
     const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [keyContactModalOpen, setKeyContactModalOpen] = useState(false);
     const [selectedContactId, setSelectedContactId] = useState(null);
-
     const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     // Partner CRUD states
@@ -139,20 +141,42 @@ const ViewOpportunity = ({ setAlert }) => {
     const [attendeesModelOpen, setAttendeesModelOpen] = useState(false);
     const [deleteAttendees, setDeleteAttendees] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
-    // ---- Meeting Notes Editors ----
     const [editingNoteField, setEditingNoteField] = useState(null);
 
-    // HTML snapshots (for cancel + dirty compare)
     const [purposeHTML, setPurposeHTML] = useState("");
     const [backgroundHTML, setBackgroundHTML] = useState("");
     const [agendaHTML, setAgendaHTML] = useState("");
     const [alignmentHTML, setAlignmentHTML] = useState("");
 
-    // EditorStates
     const [purposeState, setPurposeState] = useState(EditorState.createEmpty());
     const [backgroundState, setBackgroundState] = useState(EditorState.createEmpty());
     const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
     const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
+    const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
+
+    const [noteConfirm, setNoteConfirm] = useState({
+        open: false,
+        nextField: null,      // which field user wants to open after confirm
+        reason: null,         // "outside" | "switch"
+    });
+    const activeNoteEditorRef = useRef(null);
+
+    // For Opp360 "Key Contacts" card: only key contacts
+    const keyContactsWithEdits = opportunitiesKeyContact.map((c) => {
+        const edit = editedContacts.find((e) => e.id === c.id);
+        return { ...c, isKey: edit ? edit.isKey : c.isKey };
+    });
+
+    // For MEDDIC & key-count logic: ALL contacts with edits applied
+    const allContactsWithEdits = opportunitiesContacts.map((c) => {
+        const edit = editedContacts.find((e) => e.id === c.id);
+        return { ...c, isKey: edit ? edit.isKey : c.isKey };
+    });
+
+    // Always compute key count from all contacts
+    const currentKeyContactsCount = allContactsWithEdits.filter(
+        (c) => c.isKey
+    ).length;
 
     const {
         watch,
@@ -181,7 +205,7 @@ const ViewOpportunity = ({ setAlert }) => {
             background: null,
             alignment: null,
             agenda: null,
-            meetingDate: null,
+            meetingDate: dayjs(new Date()).format("MM/DD/YYYY"),
         },
     });
 
@@ -196,6 +220,7 @@ const ViewOpportunity = ({ setAlert }) => {
         );
         return EditorState.createWithContent(contentState);
     };
+
     const editorStateToHtml = (state) =>
         state ? draftToHtml(convertToRaw(state.getCurrentContent())) : "";
 
@@ -212,7 +237,7 @@ const ViewOpportunity = ({ setAlert }) => {
     const handleDeleteAttendees = async () => {
         const res = await deleteMeetingAttendees(selectedMeetingAttendeesId)
         if (res.status === 200) {
-            handleGetAllMeetingAttendees()
+            handleGetAllMeetingAttendees(selectedMeeting)
             handleCloseDeleteAttendees()
         } else {
             setAlert({
@@ -533,6 +558,7 @@ const ViewOpportunity = ({ setAlert }) => {
             });
 
             setOpportunitiesContacts(sortedList);
+            setOpportunitiesKeyContacts(list.filter((row) => row.isKey === true));
 
             const map = {};
             sortedList.forEach(c => {
@@ -569,25 +595,36 @@ const ViewOpportunity = ({ setAlert }) => {
                     }
                 })
                 setMeetings(data)
-                const dates = new Set(data?.map((item) => { return item.displayStart }))
-                setShowDates(dates)
+                const dates = new Set(
+                    data.map(item => item.displayStart?.split(" ")[0])
+                );
+                setShowDates(dates);
+                handleGetMeeetingBySelectedDate()
             }
         }
     }
 
     const handleGetMeeetingBySelectedDate = async () => {
-        if (watch("meetingDate")) {
+        const today = dayjs().format("MM/DD/YYYY");
+        const selectedDate = watch("meetingDate") || today;
+        if (selectedDate) {
             const data = meetings?.filter(row =>
-                row.displayStart?.split(" ")[0] === watch("meetingDate")
+                row.displayStart?.split(" ")[0] === selectedDate
             );
-            setFilteredMeetings(data)
+
+            setFilteredMeetings(data);
+            setSelectedMeeting(null);
+            setSelectedMeetingAttendeesId(null);
+            setMeetingAttendees([]);
+        } else {
+            setFilteredMeetings([]);
         }
-    }
+    };
 
     const handleSelectMeeting = async (mid) => {
         setMeetingAttendees([])
         setSelectedMeeting(mid);
-        // handleGetAllMeetingAttendees(mid);
+        handleGetAllMeetingAttendees(mid);
 
         const res = await getByMeetingId(mid);
         if (res.status === 200) {
@@ -618,11 +655,96 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     const handleGetAllMeetingAttendees = async (mid = null) => {
-        if (opportunityId && selectedTab === 3 && (selectedMeeting || mid)) {
-            const res = await getAllMeetingsAttendeesByMeetingId(selectedMeeting || mid)
+        if (opportunityId && selectedTab === 3 && mid) {
+            const res = await getAllMeetingsAttendeesByMeetingId(mid)
             setMeetingAttendees(res?.result)
         }
     }
+
+    const isEmptyHtml = (h) => {
+        const x = (h || "").trim();
+        return !x || x === "<p></p>" || x === "<p><br></p>";
+    };
+
+    const getSnapshotHtmlByField = (field) => {
+        if (field === "purpose") return purposeHTML;
+        if (field === "background") return backgroundHTML;
+        if (field === "agenda") return agendaHTML;
+        if (field === "alignment") return alignmentHTML;
+        return "";
+    };
+
+    const getCurrentHtmlByField = (field) => {
+        if (field === "purpose") return editorStateToHtml(purposeState);
+        if (field === "background") return editorStateToHtml(backgroundState);
+        if (field === "agenda") return editorStateToHtml(agendaState);
+        if (field === "alignment") return editorStateToHtml(alignmentState);
+        return "";
+    };
+
+    const isNoteFieldDirty = (field) => {
+        // compare current editor HTML vs snapshot HTML
+        const current = (getCurrentHtmlByField(field) || "").trim();
+        const snap = (getSnapshotHtmlByField(field) || "").trim();
+
+        // normalize empty values
+        const currentEmpty = isEmptyHtml(current);
+        const snapEmpty = isEmptyHtml(snap);
+
+        if (currentEmpty && snapEmpty) return false;
+        return current !== snap;
+    };
+
+    const openNoteConfirm = ({ nextField = null, reason = "outside" } = {}) => {
+        setNoteConfirm({ open: true, nextField, reason });
+    };
+
+    const closeNoteConfirm = () => {
+        setNoteConfirm({ open: false, nextField: null, reason: null });
+    };
+
+    const proceedAfterConfirm = async (shouldSave) => {
+        const currentField = editingNoteField;
+        const nextField = noteConfirm.nextField;
+
+        closeNoteConfirm();
+
+        if (!currentField) {
+            // nothing open
+            if (nextField) setEditingNoteField(nextField);
+            return;
+        }
+
+        if (shouldSave) {
+            await handleSaveNoteField(currentField); // saves all fields (your existing behavior)
+        } else {
+            handleCancelNoteEdit(currentField);
+        }
+
+        // After save/cancel: open next editor OR just close
+        if (nextField) {
+            setEditingNoteField(nextField);
+        } else {
+            setEditingNoteField(null);
+        }
+    };
+
+    const requestCloseOrSwitchEditor = (nextField = null, reason = "outside") => {
+        if (!editingNoteField) {
+            if (nextField) setEditingNoteField(nextField);
+            return;
+        }
+
+        // If no changes -> no dialog, just switch/close
+        if (!isNoteFieldDirty(editingNoteField)) {
+            if (nextField) setEditingNoteField(nextField);
+            else setEditingNoteField(null);
+            return;
+        }
+
+        // show confirm dialog
+        openNoteConfirm({ nextField, reason });
+    };
 
     const handleCancelNoteEdit = (field) => {
         if (field === "purpose") setPurposeState(htmlToEditorState(purposeHTML));
@@ -672,6 +794,24 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     useEffect(() => {
+        if (!editingNoteField) return;
+
+        const onMouseDown = (e) => {
+            const el = activeNoteEditorRef.current;
+            if (!el) return;
+
+            // If click is inside editor wrapper, ignore
+            if (el.contains(e.target)) return;
+
+            // Clicked outside -> ask confirm
+            requestCloseOrSwitchEditor(null, "outside");
+        };
+
+        document.addEventListener("mousedown", onMouseDown, true);
+        return () => document.removeEventListener("mousedown", onMouseDown, true);
+    }, [editingNoteField, purposeState, backgroundState, agendaState, alignmentState]);
+
+    useEffect(() => {
         handleGetMeeetingBySelectedDate()
     }, [watch("meetingDate")])
 
@@ -682,7 +822,7 @@ const ViewOpportunity = ({ setAlert }) => {
             setFilteredMeetings([])
             setMeetingAttendees([])
             setValue("meetingDate", null)
-        }
+        }     
     }, [selectedTab])
 
     useEffect(() => {
@@ -1233,6 +1373,10 @@ const ViewOpportunity = ({ setAlert }) => {
     const handleCloseContactModel = () => {
         setSelectedContactId(null);
         setContactModalOpen(false);
+    };
+
+    const handleCloseKeyContactModel = () => {
+        setKeyContactModalOpen(false);
     };
 
     const handleOpenDeleteContactDialog = (id) => {
@@ -1820,6 +1964,10 @@ const ViewOpportunity = ({ setAlert }) => {
             }
             setIsBusinessValueDirty(false);
         }
+
+        if (type === "NextSteps") {
+            setIsEditingNextSteps(false)
+        }
     };
 
     const handleSubmitEditorData = async (type) => {
@@ -1842,6 +1990,7 @@ const ViewOpportunity = ({ setAlert }) => {
             whyDoAnything: whyDoAnythingHtmlData,
             businessValue: businessValueHtmlData,
             currentEnvironment: currentEnvironmentHtmlData,
+            nextSteps: watch("nextSteps"),
         };
         const res = await updateOpportunity(opportunityId, payload);
         if (res?.status === 200) {
@@ -1849,6 +1998,7 @@ const ViewOpportunity = ({ setAlert }) => {
             setWhyDoAnythingStateHTML(whyDoAnythingHtmlData || "");
             setBusinessValueStateHTML(businessValueHtmlData || "");
             setCurrentEnvironmentHTML(currentEnvironmentHtmlData || "");
+            setIsEditingNextSteps(false)
 
             // clear only the relevant dirty flag
             if (type === "BusinessValue") {
@@ -1999,17 +2149,21 @@ const ViewOpportunity = ({ setAlert }) => {
             { placeHolder: "Enter alignment", key: "alignment", label: "Alignment", html: alignmentHTML, state: alignmentState, setState: setAlignmentState },
         ];
 
-        const isEmptyHtml = (h) => {
-            const x = (h || "").trim();
-            return !x || x === "<p></p>" || x === "<p><br></p>";
-        };
-
         return (
             <div className="bg-white border border-gray-300 rounded-md overflow-hidden">
                 <table className="w-full border-collapse">
                     <tbody>
                         {rows.map((r) => {
                             const isEditing = editingNoteField === r.key;
+
+                            const handleOpenThisEditor = () => {
+                                // If another editor open, first confirm save/cancel, then open this
+                                if (editingNoteField && editingNoteField !== r.key) {
+                                    requestCloseOrSwitchEditor(r.key, "switch");
+                                    return;
+                                }
+                                setEditingNoteField(r.key);
+                            };
 
                             return (
                                 <tr key={r.key} className="border-b last:border-b-0">
@@ -2021,7 +2175,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         {!isEditing ? (
                                             <div
                                                 className="cursor-pointer rounded-md hover:bg-gray-50 p-2 transition"
-                                                onClick={() => setEditingNoteField(r.key)}
+                                                onClick={handleOpenThisEditor}
                                             >
                                                 {isEmptyHtml(r.html) ? (
                                                     <span className="text-gray-400 italic">{r.placeHolder}</span>
@@ -2033,7 +2187,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                                 )}
                                             </div>
                                         ) : (
-                                            <div>
+                                            <div ref={activeNoteEditorRef}>
                                                 <Editor
                                                     editorState={r.state}
                                                     wrapperClassName="border border-gray-300 rounded-md"
@@ -2042,24 +2196,6 @@ const ViewOpportunity = ({ setAlert }) => {
                                                     onEditorStateChange={(st) => r.setState(st)}
                                                     toolbar={toolbarProperties}
                                                 />
-
-                                                <div className="flex justify-end gap-3 mt-3">
-                                                    <button
-                                                        type="button"
-                                                        className="px-3 py-1.5 rounded bg-black text-white text-sm"
-                                                        onClick={() => handleCancelNoteEdit(r.key)}
-                                                    >
-                                                        Cancel
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="px-3 py-1.5 rounded bg-green-600 text-white text-sm"
-                                                        onClick={() => handleSaveNoteField(r.key)}
-                                                    >
-                                                        Save
-                                                    </button>
-                                                </div>
                                             </div>
                                         )}
                                     </td>
@@ -2468,7 +2604,7 @@ const ViewOpportunity = ({ setAlert }) => {
             {
                 selectedTab === 3 && (
                     <div className='flex justify-start items-start gap-4'>
-                        <div className='w-56 md:w-96'>
+                        <div className='w-56 md:w-80'>
                             <DatePickerComponent
                                 name="meetingDate"
                                 label="Meeting Date"
@@ -2502,6 +2638,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                 )
                             }
                         </div>
+
                         <div className='w-full'>
                             {
                                 selectedMeeting && (
@@ -2575,8 +2712,356 @@ const ViewOpportunity = ({ setAlert }) => {
                                             </table>
                                         </div>
 
-                                        <div className="mt-4">
+                                        <div className="my-4">
                                             <MeetingNotesTable />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-3">
+                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                                <div className='flex justify-between items-center mb-4'>
+                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                                        Why Do Anything
+                                                    </p>
+
+                                                    {isWhyDoAnythingDirty && (
+                                                        <div className='flex justify-end items-center gap-3'>
+                                                            <Tooltip title="Save" arrow>
+                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("WhyDoAnything")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                            <Tooltip title="Cancel" arrow>
+                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleCancelEditor("WhyDoAnything")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className='relative h-60 '>
+                                                    <div className='h-full overflow-y-auto relative'>
+                                                        <Editor
+                                                            editorState={whyDoAnythingState}
+                                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                            toolbarClassName="toolbar-class border-b border-gray-300"
+                                                            onEditorStateChange={(state) => {
+                                                                setWhyDoAnythingState(state);
+                                                                const html = draftToHtml(convertToRaw(state.getCurrentContent()));
+                                                                setIsWhyDoAnythingDirty(html !== (whyDoAnythingStateHTML || ""));
+                                                            }}
+                                                            toolbar={toolbarProperties}
+                                                            onFocus={() => setActiveEditorHint("WhyDoAnything")}
+                                                            onBlur={() => { setIsWhyDoAnythingDirty(false); setActiveEditorHint(null) }} />
+                                                    </div>
+
+                                                    {activeEditorHint === "WhyDoAnything" && (
+                                                        <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
+                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
+                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                            <img
+                                                                src="/images/WhyDoAnything2.png"
+                                                                alt="WhyDoAnything"
+                                                                className="max-w-xs max-h-48 object-contain relative z-10"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                                <div className='flex justify-between items-center mb-4'>
+                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                                        Value
+                                                    </p>
+
+                                                    {isBusinessValueDirty && (
+                                                        <div className='flex justify-end items-center gap-3'>
+                                                            <Tooltip title="Save" arrow>
+                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("BusinessValue")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                            <Tooltip title="Cancel" arrow>
+                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleCancelEditor("BusinessValue")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="relative h-60">
+                                                    {/* scroll only the editor, not the whole relative container */}
+                                                    <div className="h-full overflow-y-auto relative">
+                                                        <Editor
+                                                            editorState={businessValueState}
+                                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                            toolbarClassName="toolbar-class border-b border-gray-300"
+                                                            onEditorStateChange={(state) => {
+                                                                setBusinessValueState(state);
+                                                                const html = draftToHtml(convertToRaw(state.getCurrentContent()));
+                                                                setIsBusinessValueDirty(html !== (businessValueStateHTML || ""));
+                                                            }}
+                                                            toolbar={toolbarProperties}
+                                                            onFocus={() => setActiveEditorHint("BusinessValue")}
+                                                            onBlur={() => { setIsBusinessValueDirty(false); setActiveEditorHint(null) }}
+                                                        />
+                                                    </div>
+
+                                                    {activeEditorHint === "BusinessValue" && (
+                                                        <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
+                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
+                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                            <img
+                                                                src="/images/BusinessValue2.png"
+                                                                alt="Business value guidance"
+                                                                className="max-w-xs max-h-48 object-contain relative z-10"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                className={`border border-gray-200 p-3 rounded-md flex flex-col cursor-pointer`}
+                                            >
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <h3 className="text-base font-semibold text-gray-800">
+                                                        Key Contacts
+                                                    </h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2">
+                                                            {editedContacts.length > 0 && (
+                                                                <Tooltip
+                                                                    title="Save key contacts"
+                                                                    arrow
+                                                                >
+                                                                    <div className="bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
+                                                                        <Components.IconButton
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleSaveKeyContacts();
+                                                                            }}
+                                                                        >
+                                                                            <CustomIcons
+                                                                                iconName="fa-solid fa-floppy-disk"
+                                                                                css="cursor-pointer text-white h-3 w-3"
+                                                                            />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </Tooltip>
+                                                            )}
+                                                        </div>
+                                                        <PermissionWrapper
+                                                            functionalityName="Opportunities"
+                                                            moduleName="Opportunities"
+                                                            actionId={2}
+                                                            component={
+                                                                <Tooltip
+                                                                    title="Add contact"
+                                                                    arrow
+                                                                >
+                                                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
+                                                                        <Components.IconButton
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setKeyContactModalOpen(true)
+                                                                            }}
+                                                                        >
+                                                                            <CustomIcons
+                                                                                iconName="fa-solid fa-plus"
+                                                                                css="cursor-pointer text-white h-3 w-3"
+                                                                            />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </Tooltip>
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2 max-h-80 overflow-y-auto">
+                                                    {keyContactsWithEdits.length > 0 ? (
+                                                        keyContactsWithEdits.map((c) => (
+                                                            <div
+                                                                key={c.id}
+                                                                className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey
+                                                                    ? "border-blue-500 bg-blue-50"
+                                                                    : "border-gray-200"
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <PermissionWrapper
+                                                                        functionalityName="Opportunities"
+                                                                        moduleName="Opportunities"
+                                                                        actionId={2}
+                                                                        component={
+                                                                            <Checkbox
+                                                                                checked={
+                                                                                    !!c.isKey
+                                                                                }
+                                                                                disabled={currentKeyContactsCount >= 4 && !c.isKey}
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleToggleKeyContact(
+                                                                                        c.id,
+                                                                                        !c.isKey
+                                                                                    );
+                                                                                }}
+                                                                            />
+                                                                        }
+                                                                    />
+                                                                    <div>
+                                                                        <p className="font-semibold text-gray-800">
+                                                                            {
+                                                                                c.contactName
+                                                                            }
+                                                                        </p>
+                                                                        {c.role && (
+                                                                            <p className="text-xs text-gray-500">
+                                                                                {c.role}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-sm text-gray-400 italic">
+                                                            No contacts linked to this
+                                                            opportunity.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                                <div className='flex justify-between items-center mb-4'>
+                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                                        Decision Map
+                                                    </p>
+                                                    <div className='flex justify-end gap-3'>
+                                                        <p className='text-red-600 text-sm'><strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.</p>
+                                                        <Tooltip title="Add" arrow>
+                                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton onClick={() => handleOpenDecisionMapModel()}>
+                                                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    </div>
+                                                </div>
+
+                                                <div className="h-60 w-full">
+                                                    <DecisionMapTimeline items={salesProcess} />
+                                                </div>
+                                            </div>
+
+                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                                <div className='flex justify-between items-center mb-4'>
+                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                                        Current Environment
+                                                    </p>
+
+                                                    {isCurrentEnvironmentDirty && (
+                                                        <div className='flex justify-end items-center gap-3'>
+                                                            <Tooltip title="Save" arrow>
+                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                            <Tooltip title="Cancel" arrow>
+                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleCancelEditor("CurrentEnvironment")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className='h-60 overflow-y-auto'>
+                                                    <Editor
+                                                        editorState={currentEnvironmentState}
+                                                        wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                        editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                                        toolbarClassName="toolbar-class border-b border-gray-300"
+                                                        onEditorStateChange={(state) => {
+                                                            setCurrentEnvironmentState(state);
+                                                            const html = draftToHtml(convertToRaw(state.getCurrentContent()));
+                                                            setIsCurrentEnvironmentDirty(html !== (currentEnvironmentHTML || ""));
+                                                        }}
+                                                        toolbar={toolbarProperties}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                className={'border border-gray-200 p-3 rounded-md flex flex-col cursor-pointer relative'}
+                                                onClick={() => setIsEditingNextSteps(true)}
+                                            >
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                                        Next Steps
+                                                    </p>
+
+                                                    {isEditingNextSteps && (
+                                                        <div className='flex justify-end items-center gap-3'>
+                                                            <Tooltip title="Save" arrow>
+                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("NextSteps")}>
+                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                            <Tooltip title="Cancel" arrow>
+                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => setIsEditingNextSteps(false)}>
+                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {isEditingNextSteps ? (
+                                                    <Input
+                                                        multiline
+                                                        rows={9}
+                                                        value={watch("nextSteps")}
+                                                        onChange={(e) =>
+                                                            setValue("nextSteps", e.target.value)
+                                                        }
+                                                    />
+                                                ) : watch("nextSteps") ? (
+                                                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                                                        {watch("nextSteps")}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm text-gray-400 italic">
+                                                        No next steps defined.
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )
@@ -2664,6 +3149,22 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeleteAttendees()}
                 handleClose={() => handleCloseDeleteAttendees()}
             />
+            <AlertDialog
+                open={noteConfirm.open}
+                title="Save changes?"
+                message="You have unsaved changes. Do you want to save before leaving this note?"
+                actionButtonText="Yes"
+                handleAction={() => proceedAfterConfirm(true)}
+                handleClose={() => proceedAfterConfirm(false)}
+            />
+            <OpportunityKeyContactModel
+                open={keyContactModalOpen}
+                handleClose={handleCloseKeyContactModel}
+                opportunityId={opportunityId}
+                handleGetAllOppContact={handleGetOppContacts}
+                oppName={watch("opportunity")}
+            />
+
             <MeetingAttendeesModel open={attendeesModelOpen} handleClose={handleCloseAttendeesModel} opportunityId={opportunityId} handleGetAllMeetingAttendees={handleGetAllMeetingAttendees} meetingid={selectedMeeting} id={selectedMeetingAttendeesId} />
             <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
         </div>

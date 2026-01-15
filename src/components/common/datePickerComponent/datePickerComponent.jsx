@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
@@ -64,15 +64,20 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
     },
   });
 
-  const enabledDatesSet = React.useMemo(() => {
-    if (!showDates || showDates.size === 0) return null;
+  const enabledDatesSet = useMemo(() => {
+    if (!showDates || showDates.size === 0) return new Set();
 
     return new Set(
-      Array.from(showDates).map((d) =>
-        dayjs(d, "MM/DD/YYYY HH:mm:ss").format("MM/DD/YYYY")
-      )
+      Array.from(showDates)
+        .map((d) => {
+          // d can be "01/15/2026 20:00:00" OR already "01/15/2026"
+          const datePart = String(d).split(" ")[0];
+          return dayjs(datePart, "MM/DD/YYYY").format("MM/DD/YYYY");
+        })
+        .filter(Boolean)
     );
   }, [showDates]);
+
 
   return (
     <div>
