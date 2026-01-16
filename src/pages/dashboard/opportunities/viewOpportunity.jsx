@@ -153,12 +153,13 @@ const ViewOpportunity = ({ setAlert }) => {
     const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
     const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
     const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
+    const [openDrawer, setOpenDrawer] = useState(true);
 
-    const [noteConfirm, setNoteConfirm] = useState({
-        open: false,
-        nextField: null,      // which field user wants to open after confirm
-        reason: null,         // "outside" | "switch"
-    });
+    // const [noteConfirm, setNoteConfirm] = useState({
+    //     open: false,
+    //     nextField: null,      // which field user wants to open after confirm
+    //     reason: null,         // "outside" | "switch"
+    // });
     const activeNoteEditorRef = useRef(null);
 
     // For Opp360 "Key Contacts" card: only key contacts
@@ -696,18 +697,18 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     const openNoteConfirm = ({ nextField = null, reason = "outside" } = {}) => {
-        setNoteConfirm({ open: true, nextField, reason });
+        // setNoteConfirm({ open: true, nextField, reason });
+        proceedAfterConfirm(nextField)
     };
 
-    const closeNoteConfirm = () => {
-        setNoteConfirm({ open: false, nextField: null, reason: null });
-    };
+    // const closeNoteConfirm = () => {
+    //     setNoteConfirm({ open: false, nextField: null, reason: null });
+    // };
 
-    const proceedAfterConfirm = async (shouldSave) => {
+    const proceedAfterConfirm = async (nextField) => {
         const currentField = editingNoteField;
-        const nextField = noteConfirm.nextField;
 
-        closeNoteConfirm();
+        // closeNoteConfirm();
 
         if (!currentField) {
             // nothing open
@@ -715,11 +716,11 @@ const ViewOpportunity = ({ setAlert }) => {
             return;
         }
 
-        if (shouldSave) {
-            await handleSaveNoteField(currentField); // saves all fields (your existing behavior)
-        } else {
-            handleCancelNoteEdit(currentField);
-        }
+        await handleSaveNoteField(currentField); // saves all fields (your existing behavior)
+        // if (shouldSave) {
+        // } else {
+        //     handleCancelNoteEdit(currentField);
+        // }
 
         // After save/cancel: open next editor OR just close
         if (nextField) {
@@ -818,11 +819,12 @@ const ViewOpportunity = ({ setAlert }) => {
     useEffect(() => {
         handleGetMeeetingByOppId()
         if (selectedTab !== 3) {
+            setOpenDrawer(true)
             setSelectedMeeting(null)
             setFilteredMeetings([])
             setMeetingAttendees([])
             setValue("meetingDate", null)
-        }     
+        }
     }, [selectedTab])
 
     useEffect(() => {
@@ -2167,21 +2169,21 @@ const ViewOpportunity = ({ setAlert }) => {
 
                             return (
                                 <tr key={r.key} className="border-b last:border-b-0">
-                                    <td className="w-[35%] align-top bg-gray-50 border-r border-gray-300 px-4 py-4 font-bold text-gray-900">
+                                    <td className="w-[25%] align-top bg-gray-50 border-r border-gray-300 px-4 py-2 font-bold text-gray-900">
                                         {r.label}
                                     </td>
 
-                                    <td className="align-top px-4 py-4">
+                                    <td className="align-top px-4 py-2">
                                         {!isEditing ? (
                                             <div
-                                                className="cursor-pointer rounded-md hover:bg-gray-50 p-2 transition"
+                                                className="cursor-pointer rounded-md p-2 transition"
                                                 onClick={handleOpenThisEditor}
                                             >
                                                 {isEmptyHtml(r.html) ? (
                                                     <span className="text-gray-400 italic">{r.placeHolder}</span>
                                                 ) : (
                                                     <div
-                                                        className="prose max-w-none"
+                                                        className="editor-html max-w-none"
                                                         dangerouslySetInnerHTML={{ __html: r.html }}
                                                     />
                                                 )}
@@ -2604,7 +2606,7 @@ const ViewOpportunity = ({ setAlert }) => {
             {
                 selectedTab === 3 && (
                     <div className='flex justify-start items-start gap-4'>
-                        <div className='w-56 md:w-80'>
+                        <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
                             <DatePickerComponent
                                 name="meetingDate"
                                 label="Meeting Date"
@@ -2647,7 +2649,21 @@ const ViewOpportunity = ({ setAlert }) => {
                                             <table className="min-w-full border-collapse">
                                                 <thead className="sticky top-0 z-10">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-center text-lg font-bold text-black" colSpan={4}>Attendees</th>
+                                                        <th colSpan={1}>
+                                                            <div className='flex justify-start items-center pl-5'>
+                                                                {
+                                                                    !openDrawer ? (
+                                                                        <Components.IconButton onClick={() => setOpenDrawer(true)}>
+                                                                            <CustomIcons iconName={`fa-solid fa-bars`} css={"text-black text-lg"} />
+                                                                        </Components.IconButton>
+                                                                    ) :
+                                                                        <Components.IconButton onClick={() => setOpenDrawer(false)}>
+                                                                            <CustomIcons iconName={`fa-solid fa-angle-left`} css={"text-black text-lg"} />
+                                                                        </Components.IconButton>
+                                                                }
+                                                            </div>
+                                                        </th>
+                                                        <th colSpan={3} className="px-4 py-3 text-center text-lg font-bold text-black">Attendees</th>
                                                         <th className="px-4 py-3 text-sm font-semibold flex justify-end">
                                                             <Tooltip title="Add Attendees" arrow>
                                                                 <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
@@ -2680,7 +2696,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                                                 <td className="px-4 py-3 text-sm">
                                                                     {row.role || '—'}
                                                                 </td>
-                                                                <td className="px-4 py-3 text-sm">
+                                                                <td className="white-space-pre-line px-4 py-3 text-sm">
                                                                     {row.note || '—'}
                                                                 </td>
                                                                 <td className="px-4 py-3 flex justify-end items-center gap-3">
@@ -3149,14 +3165,14 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeleteAttendees()}
                 handleClose={() => handleCloseDeleteAttendees()}
             />
-            <AlertDialog
+            {/* <AlertDialog
                 open={noteConfirm.open}
                 title="Save changes?"
                 message="You have unsaved changes. Do you want to save before leaving this note?"
                 actionButtonText="Yes"
                 handleAction={() => proceedAfterConfirm(true)}
                 handleClose={() => proceedAfterConfirm(false)}
-            />
+            /> */}
             <OpportunityKeyContactModel
                 open={keyContactModalOpen}
                 handleClose={handleCloseKeyContactModel}

@@ -1088,7 +1088,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                         </div>
                                     ) : (
                                         <div
-                                            className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                            className="editor-html text-sm text-gray-700 leading-relaxed space-y-1"
                                             dangerouslySetInnerHTML={{
                                                 __html:
                                                     whyDoAnythingHTML ||
@@ -1127,7 +1127,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                         </div>
                                     ) : (
                                         <div
-                                            className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                            className="editor-html text-sm text-gray-700 leading-relaxed space-y-1"
                                             dangerouslySetInnerHTML={{
                                                 __html:
                                                     currentEnvironmentHTML ||
@@ -1175,7 +1175,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                         </div>
                                     ) : (
                                         <div
-                                            className="text-sm text-gray-700 leading-relaxed space-y-1"
+                                            className="editor-html text-sm text-gray-700 leading-relaxed space-y-1"
                                             dangerouslySetInnerHTML={{
                                                 __html:
                                                     businessValueHTML ||
@@ -1470,7 +1470,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                             </div>
                                         ) : (
                                             <div
-                                                className="space-y-1"
+                                                className="editor-html space-y-1"
                                                 dangerouslySetInnerHTML={{
                                                     __html:
                                                         businessValueHTML ||
@@ -1762,7 +1762,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                             </div>
                                         ) : (
                                             <div
-                                                className="space-y-1"
+                                                className="editor-html space-y-1"
                                                 dangerouslySetInnerHTML={{
                                                     __html:
                                                         whyDoAnythingHTML ||

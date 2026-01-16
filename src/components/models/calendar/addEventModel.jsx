@@ -827,7 +827,3 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
 const mapDispatchToProps = { setAlert };
 
 export default connect(null, mapDispatchToProps)(AddEventModel);
-
-//select * from tbl_calendar where cal_member_id=18 and DATE(cal_start_date_time)>=2022-05-30 and DATE(cal_end_date_time) <= 2022-05-30;
-
-// select * from calendar where cus_id=196 and DATE(cal_start_date_time)>=2027-12-01 and DATE(cal_end_date_time) >= 2027-12-30;

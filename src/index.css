@@ -852,3 +852,27 @@ body {
 .react-flow__nodes {
   z-index: 10;
 }
+
+.public-DraftStyleDefault-block {
+  margin: 0 !important;
+}
+
+.editor-html ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.editor-html ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.note-html li {
+  margin: 0.15rem 0;
+}
+
+.white-space-pre-line {
+    white-space: pre-line !important;
+}

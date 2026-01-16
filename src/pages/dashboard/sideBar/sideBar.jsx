@@ -35,38 +35,39 @@ const Sidebar = ({
     ])
     const handleSetNavItems = () => {
         setNavItems([
-            {
-                icon: <CustomIcons iconName="th-large" />,
+            {                
+                icon: <CustomIcons iconName="fa-solid fa-circle" />,
                 name: "Dashboard",
                 path: "/dashboard",
-                subItems: [
-                    { name: "Accounts", path: "/dashboard/accounts", pro: false },
-                    { name: "Opportunities", path: "/dashboard/opportunities", pro: false },
-                    { name: "Contacts", path: "/dashboard/contacts", pro: false }
-                ]
+                pro: false,
+                // subItems: [
+                //     // { name: "Accounts", path: "/dashboard/accounts", pro: false },
+                //     { name: "Opportunities", path: "/dashboard/opportunities", pro: false },
+                //     { name: "Contacts", path: "/dashboard/contacts", pro: false }
+                // ]
             },
             {
-                icon: <CustomIcons iconName="th-large" />,
-                name: "Todos",
+                icon: <CustomIcons iconName="fa-solid fa-circle" />,
+                name: "Opportunities",
+                path: "/dashboard/opportunities",
+                pro: false
+            },
+            {
+                icon: <CustomIcons iconName="fa-solid fa-circle" />,
+                name: "Contacts",
+                path: "/dashboard/contacts",
+                pro: false
+            },
+            {
+                icon: <CustomIcons iconName="fa-solid fa-circle" />,
+                name: "To-Do",
                 path: "/dashboard/todos",
-                pro: false
-            },
-            {
-                icon: <CustomIcons iconName="th-large" />,
-                name: "E-Mail Scraper",
-                path: "/dashboard/managemails",
-                pro: false
-            },
-            {
-                icon: <CustomIcons iconName="th-large" />,
-                name: "Products",
-                path: "/dashboard/products",
                 pro: false
             },
             ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
                 ? [
                     {
-                        icon: <CustomIcons iconName="th-large" />,
+                        icon: <CustomIcons iconName="fa-solid fa-circle" />,
                         name: "My CRM",
                         path: "/dashboard/mycrm",
                         pro: false

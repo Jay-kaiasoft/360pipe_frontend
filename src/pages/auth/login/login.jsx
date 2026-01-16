@@ -289,12 +289,11 @@ const Login = ({ setAlert, loading }) => {
                                         </NavLink>
                                     </div>
                                     <div>
-                                        <Button type="submit" text={"Sigin in"} isLoading={loading} />
+                                        <Button type="submit" text={"Sign in"} isLoading={loading} />
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </form>
                 </div>
                 {finalUrl != null ? (
