@@ -109,9 +109,9 @@ export const changePassword = async (data) => {
     }
 }
 
-export const getDashboardData = async (data) => {
+export const getDashboardData = async () => {
     try {
-        const response = axiosInterceptor().post(`${customersURL}/get/dashboard`,data)
+        const response = axiosInterceptor().get(`${customersURL}/get/dashboard`)
         return response
 
     } catch (error) {
