@@ -3,7 +3,7 @@ import { getDashboardData } from "../../service/customers/customersService";
 
 const StatCard = ({ title, children }) => {
     return (
-        <div className="flex flex-col items-center justify-center">
+        <div className={`flex flex-col items-center justify-center group ${title === "Pipeline" ? "cursor-pointer" : ""}`}>
             <p className="mb-2 text-xl font-semibold text-gray-900">{title}</p>
 
             <div className="h-36 w-[250px] rounded-2xl border border-gray-400    px-4 py-2 shadow-sm flex items-center justify-center">
@@ -60,6 +60,7 @@ const Dashboard = () => {
                 ? ((totalClosedDealAmount / totalDealAmount) * 100).toFixed(2)
                 : null;
 
+        const pipeLineData = dashboardData?.pipeLineData || [];
         return {
             totalContacts,
             totalMeetings,
@@ -68,7 +69,8 @@ const Dashboard = () => {
             totalPipeLine,
             totalClosedDealAmount,
             totalDealAmount,
-            percentClosedDealAmount
+            percentClosedDealAmount,
+            pipeLineData
         };
     }, [dashboardData]);
 
@@ -96,6 +98,37 @@ const Dashboard = () => {
 
                 <StatCard title="Pipeline">
                     <div className="text-3xl font-extrabold text-gray-900">{ui.totalPipeLine ? `${moneyLabel(ui.totalPipeLine)}` : "$0"}</div>
+                    {
+                        ui?.pipeLineData?.length > 0 && (
+                            <div className="hidden group-hover:block h-80 w-[33%] overflow-y-auto absolute top-72 left-[480px]">
+                                <table className="border-collapse">
+                                    <thead className="sticky top-0 z-10">
+                                        <tr className="bg-[#0478DC] text-white">
+                                            <th className="px-4 py-1 text-left text-sm font-semibold">Rep</th>
+                                            <th className="px-4 py-1 text-left text-sm font-semibold">Account</th>
+                                            <th className="px-4 py-1 text-left text-sm font-semibold w-40">Amount</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {ui.pipeLineData?.map((row, i) => (
+                                            <tr key={row.contactId ?? i} className="odd:bg-white even:bg-gray-200">
+                                                <td className="px-4 py-1 text-sm">
+                                                    {row.created_by || '—'}
+                                                </td>
+                                                <td className="px-4 py-1 text-sm">
+                                                    {row.name || '—'}
+                                                </td>
+                                                <td className="px-4 py-1 text-sm">
+                                                    {moneyLabel(row.dealAmount) || '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )
+                    }
                 </StatCard>
 
                 <StatCard title="Attainment">

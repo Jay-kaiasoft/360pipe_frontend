@@ -67,7 +67,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
     const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
     const [businessValue, setBusinessValue] = useState(() => EditorState.createEmpty());
-    const [decisionMap, setDecisionMap] = useState(() => EditorState.createEmpty());
+    // const [decisionMap, setDecisionMap] = useState(() => EditorState.createEmpty());
     const [currentEnvironment, setCurrentEnvironment] = useState(() => EditorState.createEmpty());
 
     const theme = useTheme()
@@ -532,15 +532,15 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             ? draftToHtml(convertToRaw(currentEnvironment.getCurrentContent()))
             : null;
 
-        const decisionMapHtml = decisionMap
-            ? draftToHtml(convertToRaw(decisionMap.getCurrentContent()))
-            : null;
+        // const decisionMapHtml = decisionMap
+        //     ? draftToHtml(convertToRaw(decisionMap.getCurrentContent()))
+        //     : null;
 
         const newData = {
             ...data,
             whyDoAnything: whyDoAnythingHtml,
             businessValue: businessValueHtml,
-            decisionMap: decisionMapHtml,
+            // decisionMap: decisionMapHtml,
             currentEnvironment: currentEnvironmentHtml,
             opportunityDocs: uploaded,
             dealAmount: data.dealAmount ? parseFloat(parseMoneyFloat(data.dealAmount)) : null,
