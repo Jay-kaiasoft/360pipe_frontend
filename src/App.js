@@ -38,11 +38,18 @@ import Calendar from "./pages/dashboard/calendar/Calendar";
 import GoogleCalendarOAuthRedirect from "./pages/dashboard/calendar/GoogleCalendarOAuthRedirect";
 import OutlookCalendarOauthRedirect from "./pages/dashboard/calendar/outlookCalendarOauthRedirect";
 import Closeplan from "./pages/closeplan/closeplan";
+import Results from "./pages/dashboard/results/results";
+import Activities from "./pages/dashboard/activities/activities";
+import Demo from "./demo";
 
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
   const router = createBrowserRouter([
+    {
+      path: "/demoScreens",
+      element: <Demo />,
+    },
     {
       path: "*",
       element: <PageNotFound />,
@@ -158,6 +165,14 @@ const App = ({ setLoading }) => {
         {
           path: "calendar",
           element: <Calendar />,
+        },
+        {
+          path: "results",
+          element: <Results />,
+        },
+        {
+          path: "activities",
+          element: <Activities />,
         },
       ],
     },

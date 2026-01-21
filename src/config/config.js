@@ -57,5 +57,7 @@ export const closePlanNotesURL = baseURL + '/closeplannotes'
 export const meetingURL = baseURL + '/meeting'
 export const meetingAttendeesURL = baseURL + '/meeting-attendees'
 export const notesURL = baseURL + '/notes'
+export const resultsURL = baseURL + '/results'
+export const activitiesURL = baseURL + '/activities'
 
 export const calenderName = '360Pipe Calendar'

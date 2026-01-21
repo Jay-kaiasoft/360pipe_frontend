@@ -46,15 +46,28 @@ const AppHeader = ({ setAlert, setLoadingMessage, setLoading, setSyncCount, setS
         label: "Opportunities",
         path: "/dashboard/opportunities",
       },
-      {
-        label: "Contacts",
-        path: "/dashboard/contacts",
-      },
+      ...(userDetails?.roleName !== "SALES REPRESENTIVE")
+        ? [
+          {
+            label: "Activities",
+            path: "/dashboard/activities",
+          },
+          {
+            label: "Results",
+            path: "/dashboard/results",
+          }
+        ]
+        : [
+          {
+            label: "Contacts",
+            path: "/dashboard/contacts",
+          },
+        ],
       {
         label: "To-Do",
         path: "/dashboard/todos",
       },
-      ...((userDetails?.userId === salesforceUserDetails?.userId || userDetails?.roleName === "SALES REPRESENTIVE" || !userDetails?.subUser)
+      ...((userDetails?.roleName === "SALES REPRESENTIVE" && !userDetails?.subUser)
         ? [
           {
             label: "My CRM",
