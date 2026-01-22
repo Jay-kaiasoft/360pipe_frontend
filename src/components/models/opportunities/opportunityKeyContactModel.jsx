@@ -7,7 +7,9 @@ import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
 import Checkbox from '../../common/checkBox/checkbox';
-import { getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import { Tooltip } from '@mui/material';
+import AlertDialog from '../../common/alertDialog/alertDialog';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -25,11 +27,39 @@ function OpportunityKeyContactModel({
 }) {
     const theme = useTheme();
     const [contacts, setContacts] = useState([]);
+    const [selectedContactId, setSelectedContactId] = useState(null);
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const onClose = () => {
         setContacts([]);
+        setSelectedContactId(null)
         handleClose();
     };
+
+    const handleOpenDeleteDialog = (contactId) => {
+        setSelectedContactId(contactId);
+        setDialog({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setSelectedContactId(null);
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteContact = async () => {
+        const res = await deleteOpportunitiesContact(selectedContactId);
+        if (res.status === 200) {
+            setSyncingPushStatus(true);           
+            handleGetAllContact();
+            handleCloseDeleteDialog();
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to delete contact",
+                type: "error"
+            });
+        }
+    }
 
     const handleGetAllContact = async () => {
         if (open) {
@@ -127,6 +157,7 @@ function OpportunityKeyContactModel({
                                     <tr className="bg-[#0478DC] text-white">
                                         <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold w-40">Key Contact</th>
+                                        <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
                                     </tr>
                                 </thead>
 
@@ -148,7 +179,7 @@ function OpportunityKeyContactModel({
                                                         </>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td className="px-4 py-3 text-sm ">
                                                     <Checkbox
                                                         onChange={(e) => handleToggleKey(row, e.target.checked)}
                                                         checked={!!row.isKey}
@@ -156,6 +187,15 @@ function OpportunityKeyContactModel({
                                                             !row.isKey && contacts?.filter((r) => r.isKey).length >= 4
                                                         }
                                                     />
+                                                </td>
+                                                <td className="px-4 py-3 text-sm flex justify-center items-center">
+                                                    <Tooltip title="Delete" arrow>
+                                                        <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
                                                 </td>
                                             </tr>
                                         ))
@@ -191,6 +231,14 @@ function OpportunityKeyContactModel({
                     </div>
                 </Components.DialogActions>
             </BootstrapDialog>
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleDeleteContact()}
+                handleClose={() => handleCloseDeleteDialog()}
+            />
         </React.Fragment>
     );
 }

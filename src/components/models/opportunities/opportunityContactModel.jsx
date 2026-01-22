@@ -9,6 +9,8 @@ import CustomIcons from '../../common/icons/CustomIcons';
 import { getAllContacts } from '../../../service/contact/contactService';
 import Checkbox from '../../common/checkBox/checkbox';
 import { addOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import Select from '../../common/select/select';
+import { opportunityContactRoles } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -26,10 +28,9 @@ function OpportunityContactModel({
 }) {
     const theme = useTheme();
     const [contacts, setContacts] = useState([]);
-    const [selectedRows, setSetectedRows] = useState([]);
+    const selectedRows = contacts?.filter((c) => c.isAdd);
 
     const onClose = () => {
-        setSetectedRows([]);
         setContacts([]);
         handleClose();
     };
@@ -39,10 +40,11 @@ function OpportunityContactModel({
             const res = await getAllContacts();
             const data = res?.result?.map((item) => ({
                 id: item.id,
-                title: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
+                name: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
                 oppId: opportunityId,
                 contactId: item.id,
-                role: item?.role,
+                title: item?.title,
+                role: null,
                 isKey: false,
                 isAdd: false,
                 salesforceContactId: item?.salesforceContactId,
@@ -68,7 +70,6 @@ function OpportunityContactModel({
                     }
                     : item
             );
-            setSetectedRows(next.filter((c) => c.isAdd));
             return next;
         });
     };
@@ -102,7 +103,6 @@ function OpportunityContactModel({
                     : item
             );
 
-            setSetectedRows(next.filter((c) => c.isAdd));
             return next;
         });
     };
@@ -120,7 +120,6 @@ function OpportunityContactModel({
                 // when unchecking all, clear all key flags
                 isKey: checked ? item.isKey : false,
             }));
-            setSetectedRows(next.filter((c) => c.isAdd));
             return next;
         });
     };
@@ -190,7 +189,8 @@ function OpportunityContactModel({
                                             />
                                         </th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold w-40">Key Contact</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold w-60">Role</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold w-32">Key Contact</th>
                                     </tr>
                                 </thead>
 
@@ -206,19 +206,37 @@ function OpportunityContactModel({
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3 text-sm">
-                                                    {row.title || '—'}
-                                                    {row.role && (
+                                                    {row.name || '—'}
+                                                    {row.title && (
                                                         <>
                                                             <span className="mx-1 text-indigo-600">
                                                                 –
                                                             </span>
                                                             <span className='text-indigo-600'>
-                                                                {row.role}
+                                                                {row.title}
                                                             </span>
                                                         </>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm">
+                                                <td>
+                                                    <Select
+                                                        placeholder="Select Role"
+                                                        value={opportunityContactRoles?.find((item) => item.title === row.role)?.id || null}
+                                                        options={opportunityContactRoles}
+                                                        onChange={(_, newValue) => {
+                                                            const selectedRole = opportunityContactRoles?.find((item) => item.id === newValue?.id);
+                                                            setContacts((prev) =>
+                                                                prev.map((c) =>
+                                                                    c.contactId === row.contactId
+                                                                        ? { ...c, role: selectedRole?.title || null }
+                                                                        : c
+                                                                )
+                                                            );
+                                                        }}
+                                                        className="flex-1"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3 text-sm flex justify-center items-center">
                                                     <Checkbox
                                                         onChange={(e) => handleToggleKey(row, e.target.checked)}
                                                         checked={!!row.isKey}
@@ -242,7 +260,7 @@ function OpportunityContactModel({
                                 {/* Sticky footer summary */}
                                 <tfoot className="bg-gray-100 sticky bottom-0">
                                     <tr>
-                                        <td colSpan={3} className="px-4 py-2 text-sm font-semibold text-gray-700">
+                                        <td colSpan={4} className="px-4 py-2 text-sm font-semibold text-gray-700">
                                             <div className="flex justify-between items-center">
                                                 <span>Added: {selectedRows?.length}</span>
                                                 <span>Key Contacts: {selectedRows?.filter((r) => r.isKey).length} / 4</span>
