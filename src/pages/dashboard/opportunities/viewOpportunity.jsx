@@ -63,9 +63,10 @@ const toolbarProperties = {
 }
 
 const tableData = [
+    { label: 'Opportunity Details' },
     { label: 'Opp360' },
-    { label: 'Notes' },
     { label: 'Calendar' },
+    { label: 'Notes' },
 ]
 
 const ViewOpportunity = ({ setAlert }) => {
@@ -558,7 +559,6 @@ const ViewOpportunity = ({ setAlert }) => {
             });
 
             setOpportunitiesContacts(sortedList);
-            console.log("list", list)
             setOpportunitiesKeyContacts(list.filter((row) => row.isKey === true));
 
             const map = {};
@@ -580,7 +580,7 @@ const ViewOpportunity = ({ setAlert }) => {
     }
 
     const handleGetMeeetingByOppId = async () => {
-        if (opportunityId && selectedTab === 1) {
+        if (opportunityId && selectedTab === 3) {
             const res = await getAllMeetingsByOppId(opportunityId, userTimeZone)
             if (res.status === 200) {
                 const data = res.result?.map((row) => {
@@ -656,7 +656,7 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     const handleGetAllMeetingAttendees = async (mid = null) => {
-        if (opportunityId && selectedTab === 1 && mid) {
+        if (opportunityId && selectedTab === 3 && mid) {
             const res = await getAllMeetingsAttendeesByMeetingId(mid)
             setMeetingAttendees(res?.result)
         }
@@ -818,7 +818,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
     useEffect(() => {
         handleGetMeeetingByOppId()
-        if (selectedTab !== 1) {
+        if (selectedTab !== 3) {
             setOpenDrawer(true)
             setSelectedMeeting(null)
             setFilteredMeetings([])
@@ -1119,13 +1119,13 @@ const ViewOpportunity = ({ setAlert }) => {
         const displayValue = value || '—';
 
         return (
-            <div className={`w-full flex justify-start items-center text-sm py-1 ${className}`}>
-                {/* <span className="font-medium text-gray-500 tracking-wider text-sm w-52">{label}</span> */}
+            <div className={`flex justify-start items-center text-sm py-1 ${className}`}>
+                <span className="font-medium text-gray-500 tracking-wider text-sm w-52">{label}</span>
                 <div className="text-gray-900 font-semibold text-base max-w-[60%] break-words">
                     {isEditing ? (
                         <div className="flex items-center gap-2 w-full">
                             {type === 'select' ? (
-                                <div className='w-60'>
+                                <div className='w-80'>
                                     <Select
                                         value={options?.find((row) => (row.title === editValue || row.id === editValue))?.id || null}
                                         options={options}
@@ -1137,54 +1137,50 @@ const ViewOpportunity = ({ setAlert }) => {
                                     />
                                 </div>
                             ) : type === 'date' ? (
-                                <div className='w-64'>
-                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        <DatePicker
-                                            value={editValue ? dayjs(editValue) : null}
-                                            onChange={handleDateChange}
-                                            format="MM/DD/YYYY"
-                                            disabled={disabled}
-                                            slotProps={{
-                                                textField: {
-                                                    fullWidth: true,
-                                                    variant: "outlined",
-                                                    sx: {
-                                                        '& .MuiOutlinedInput-root': {
-                                                            borderRadius: '4px',
-                                                            '& fieldset': {
-                                                                borderColor: '#d1d5db',
-                                                            },
-                                                            '&:hover fieldset': {
-                                                                borderColor: '#9ca3af',
-                                                            },
-                                                            '&.Mui-focused fieldset': {
-                                                                borderColor: '#3b82f6',
-                                                            },
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        value={editValue ? dayjs(editValue) : null}
+                                        onChange={handleDateChange}
+                                        format="MM/DD/YYYY"
+                                        disabled={disabled}
+                                        slotProps={{
+                                            textField: {
+                                                fullWidth: true,
+                                                variant: "outlined",
+                                                sx: {
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '4px',
+                                                        '& fieldset': {
+                                                            borderColor: '#d1d5db',
                                                         },
-                                                        '& .MuiInputBase-input': {
-                                                            height: 7,
-                                                            fontSize: '14px',
+                                                        '&:hover fieldset': {
+                                                            borderColor: '#9ca3af',
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: '#3b82f6',
                                                         },
                                                     },
+                                                    '& .MuiInputBase-input': {
+                                                        height: 7,
+                                                        fontSize: '14px',
+                                                    },
                                                 },
-                                            }}
-                                            className="flex-1"
-                                            error={(!editValue || editValue === "") && required}
-                                        />
-                                    </LocalizationProvider>
-                                </div>
-                            ) : (
-                                <div className='w-60'>
-                                    <Input
-                                        value={editValue || ''}
-                                        onChange={handleChange}
-                                        autoFocus
+                                            },
+                                        }}
+                                        className="flex-1"
                                         error={(!editValue || editValue === "") && required}
-                                        multiline={multiline}
-                                        rows={3}
-                                        disabled={disabled}
                                     />
-                                </div>
+                                </LocalizationProvider>
+                            ) : (
+                                <Input
+                                    value={editValue || ''}
+                                    onChange={handleChange}
+                                    autoFocus
+                                    error={(!editValue || editValue === "") && required}
+                                    multiline={multiline}
+                                    rows={3}
+                                    disabled={disabled}
+                                />
                             )}
                             <div className='flex items-center gap-3'>
                                 <Tooltip title="Save" arrow>
@@ -1385,6 +1381,38 @@ const ViewOpportunity = ({ setAlert }) => {
         setKeyContactModalOpen(false);
     };
 
+    const handleOpenDeleteContactDialog = (id) => {
+        setSelectedContactId(id);
+        setDialogContact({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteContactDialog = () => {
+        setSelectedContactId(null);
+        setDialogContact({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteContact = async () => {
+        try {
+            const res = await deleteOpportunitiesContact(selectedContactId);
+            if (res?.status === 200) {
+                handleCloseDeleteContactDialog()
+                handleGetOppContacts();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete contact",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: error.message || "Failed to delete contact",
+                type: "error"
+            });
+        }
+    };
+
     // ✅ Contact toggle handlers (FIXED)
     const handleToggleKeyContact = (id, isKey) => {
         setEditedContacts(prev => {
@@ -1483,6 +1511,417 @@ const ViewOpportunity = ({ setAlert }) => {
                 type: "error"
             });
         }
+    };
+
+    // Product CRUD handlers
+    const handleAddProduct = () => {
+        setSelectedProductId(null);
+        setProductModalOpen(true);
+    };
+
+    const handleCloseProductModel = () => {
+        setSelectedProductId(null);
+        setProductModalOpen(false);
+    };
+
+    const handleEditProduct = (productId) => {
+        setSelectedProductId(productId);
+        setProductModalOpen(true);
+    };
+
+    const handleOpenDeleteProductDialog = (id) => {
+        setSelectedProductId(id);
+        setDialogProduct({ open: true, title: 'Delete Product', message: 'Are you sure! Do you want to delete this product?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteProductDialog = () => {
+        setSelectedProductId(null);
+        setDialogProduct({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteProduct = async () => {
+        try {
+            const res = await deleteOpportunitiesProducts(selectedProductId);
+            if (res?.status === 200) {
+                handleCloseDeleteProductDialog()
+                handleGetOppProduct();
+            } else {
+                setAlert({
+                    open: true,
+                    message: res?.message || "Failed to delete product",
+                    type: "error"
+                });
+            }
+        } catch (error) {
+            setAlert({
+                open: true,
+                message: error.message || "Failed to delete product",
+                type: "error"
+            });
+        }
+    };
+
+    const PartnersSection = ({ list = [] }) => {
+        return (
+            <section className="mt-8">
+                <div className="flex items-center my-4">
+                    <div className="flex-grow border-t border-gray-300"></div>
+                    <span className="mx-4 font-semibold text-gray-700">Partners</span>
+                    <div className="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <div className='flex justify-end mb-4 gap-2'>
+                    <PermissionWrapper
+                        functionalityName="Opportunities"
+                        moduleName="Opportunities"
+                        actionId={2}
+                        component={
+                            <Tooltip title="Add" arrow>
+                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                    <Components.IconButton onClick={() => handleAddPartner()}>
+                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                    </Components.IconButton>
+                                </div>
+                            </Tooltip>
+                        }
+                    />
+                </div>
+                {
+                    list?.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 4k:grid-cols-6 gap-4">
+                            {list.map((row, i) => (
+                                <div
+                                    key={row.id ?? i}
+                                    className="relative bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+                                >
+                                    <div className="absolute right-2 flex items-center justify-end gap-2">
+                                        <PermissionWrapper
+                                            functionalityName="Opportunities"
+                                            moduleName="Opportunities"
+                                            actionId={2}
+                                            component={
+                                                <Tooltip title="Edit" arrow>
+                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleEditPartner(row.id)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            }
+                                        />
+                                        <PermissionWrapper
+                                            functionalityName="Opportunities"
+                                            moduleName="Opportunities"
+                                            actionId={2}
+                                            component={
+                                                <Tooltip title="Delete" arrow>
+                                                    <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
+                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            }
+                                        />
+                                    </div>
+                                    <p className="font-semibold text-gray-800 text-lg">
+                                        {row.accountName || "—"}
+                                    </p>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {row.role || "—"}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    ) :
+                        <div className="border rounded-lg text-center py-10 font-bold">
+                            No Competitors Found.
+                        </div>
+                }
+            </section>
+        );
+    };
+
+    const ContactsSection = ({ list = [] }) => {
+        // Apply edits to the list
+        const contactsWithEdits = list.map(c => {
+            const edit = editedContacts.find(e => e.id === c.id);
+            return { ...c, isKey: edit ? edit.isKey : c.isKey };
+        });
+
+        // Sort: isKey true first
+        const sortedContacts = contactsWithEdits || [];
+        const currentKeyContactsCount = sortedContacts?.filter(c => c.isKey).length;
+
+        return (
+            <>
+
+                <section className="mt-8">
+                    <div className="mt-4">
+                        <div className="flex items-center">
+                            <div className="flex-grow border-t border-gray-300"></div>
+                            <span className="mx-4 font-semibold text-gray-700">Contacts</span>
+                            <div className="flex-grow border-t border-gray-300"></div>
+                        </div>
+                    </div>
+
+                    <div className='flex justify-end mb-4 gap-2'>
+                        {editedContacts.length > 0 && (
+                            <PermissionWrapper
+                                functionalityName="Opportunities"
+                                moduleName="Opportunities"
+                                actionId={2}
+                                component={
+                                    <Tooltip title="Save" arrow>
+                                        <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                            <Tooltip title="Save" arrow>
+                                                <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
+                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                </Components.IconButton>
+                                            </Tooltip>
+                                        </div>
+                                    </Tooltip>
+                                }
+                            />
+
+                        )}
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddContact()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
+                    </div>
+                    {
+                        list?.length > 0 ? (
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
+                                {sortedContacts.map((row, i) => (
+                                    <div
+                                        key={row.id ?? i}
+                                        className={`
+            relative bg-white border rounded-xl p-4 shadow-sm 
+            hover:shadow-md transition-shadow cursor-pointer
+            ${row.isKey ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
+        `}
+                                    >
+
+                                        {/* ====== Checkbox on Top-Right ====== */}
+                                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                                            <PermissionWrapper
+                                                functionalityName="Opportunities"
+                                                moduleName="Opportunities"
+                                                actionId={2}
+                                                component={
+                                                    <>
+                                                        <Checkbox
+                                                            checked={!!row.isKey}
+                                                            disabled={currentKeyContactsCount >= 4 && !row.isKey}
+                                                            onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
+                                                        />
+                                                        <Tooltip title="Delete" arrow>
+                                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
+                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    </>
+                                                }
+                                            />
+
+                                        </div>
+
+                                        {/* Avatar & Details */}
+                                        <div className="flex gap-3 pr-8">
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold
+                ${row.isKey ? 'bg-blue-600' : 'bg-gray-400'}`}
+                                            >
+                                                {(row.contactName || "—").charAt(0)}
+                                            </div>
+
+                                            <div className="flex-1 overflow-hidden">
+                                                <p className="font-semibold text-gray-800 truncate">
+                                                    {row.contactName || "—"}
+                                                </p>
+
+                                                {row.role && (
+                                                    <p className="text-xs text-gray-500 truncate mt-1">{row.role}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                            </div>
+                        ) :
+                            <div className="border rounded-lg text-center py-10 font-bold">
+                                No Contact Found.
+                            </div>
+                    }
+                </section>
+            </>
+        );
+    };
+
+    const ProductsSection = ({ list = [] }) => {
+        const items = Array.isArray(list) ? list : [];
+        const grandTotal = items.reduce((sum, row) => {
+            const qty = parseFloat(row?.qty) || 0;
+            const price = parseFloat(row?.price) || 0;
+            return sum + qty * price;
+        }, 0);
+
+        return (
+            <>
+                <section className="mt-8">
+                    <div className="flex items-center my-4">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="mx-4 font-semibold text-gray-700">
+                            Products &amp; Services
+                        </span>
+                        <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+                    <div className='flex justify-end mb-4 gap-2'>
+                        <PermissionWrapper
+                            functionalityName="Opportunities"
+                            moduleName="Opportunities"
+                            actionId={2}
+                            component={
+                                <Tooltip title="Add" arrow>
+                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
+                                        <Components.IconButton onClick={() => handleAddProduct()}>
+                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
+                            }
+                        />
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                        <table className="w-full">
+                            <thead className="hidden sm:table-header-group">
+                                <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
+                                    <th className="px-4 py-3 text-left">Product Name</th>
+                                    <th className="px-4 py-3 text-right">Qty</th>
+                                    <th className="px-4 py-3 text-right">Price</th>
+                                    <th className="px-4 py-3 text-right">Total</th>
+                                    <th className="px-4 py-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            {
+                                items.length > 0 ? (
+                                    <tbody className="divide-y divide-gray-100">
+                                        {items.map((row, i) => {
+                                            const qty = parseFloat(row?.qty) || 0;
+                                            const price = parseFloat(row?.price) || 0;
+                                            const total = parseFloat(qty * price);
+
+                                            return (
+                                                <tr
+                                                    key={row.id ?? i}
+                                                    className="hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <td className="px-4 py-3">
+                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Product Name:</div>
+                                                        <p className="font-semibold text-gray-800 text-base break-words">
+                                                            {row.name || "—"}
+                                                        </p>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Qty:</div>
+                                                        <span className="font-semibold">{qty || "—"}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Price:</div>
+                                                        <span className="font-semibold">
+                                                            {price
+                                                                ? `$${price.toLocaleString(undefined, {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2,
+                                                                })}`
+                                                                : "—"}
+                                                        </span>
+                                                    </td>
+
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="sm:hidden text-xs text-blue-600 mb-1">Total:</div>
+                                                        <span className="font-bold text-blue-600 text-base">
+                                                            {total
+                                                                ? `$${total.toLocaleString(undefined, {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2,
+                                                                })}`
+                                                                : "—"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <PermissionWrapper
+                                                                functionalityName="Opportunities"
+                                                                moduleName="Opportunities"
+                                                                actionId={2}
+                                                                component={
+                                                                    <>
+                                                                        <Tooltip title="Edit" arrow>
+                                                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleEditProduct(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
+                                                                        <Tooltip title="Delete" arrow>
+                                                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                                                <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
+                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                </Components.IconButton>
+                                                                            </div>
+                                                                        </Tooltip>
+                                                                    </>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                ) :
+                                    <tbody className="divide-y divide-gray-100">
+                                        <tr className="hover:bg-gray-50 transition-colors">
+                                            <td className="py-10 text-center font-bold" colSpan={5}>
+                                                Product & Service Not Found.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                            }
+                        </table>
+                        {
+                            items.length > 0 ? (
+                                <div className="flex justify-between items-center px-4 py-3 border-t border-gray-200 bg-[#F9FAFB] rounded-b-xl">
+                                    <p className="text-base font-bold text-gray-700">
+                                        Total Expected Revenue
+                                    </p>
+                                    <p className="text-lg font-extrabold text-[#1072E0]">
+                                        {grandTotal
+                                            ? `$${grandTotal.toLocaleString()}`
+                                            : "—"}
+                                    </p>
+                                </div>
+                            ) : null
+                        }
+                    </div>
+                </section>
+            </>
+        );
     };
 
     const handleCancelEditor = (type) => {
@@ -1799,8 +2238,8 @@ const ViewOpportunity = ({ setAlert }) => {
                             currentStageId={opportunityStages.find(stage => stage.title === watch("salesStage"))?.id}
                         />
 
-                        <div className='flex justify-start items-start gap-10 pt-4'>
-                            <div className='flex justify-center md:justify-start items-start'>
+                        <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4'>
+                            <div className='flex justify-center md:justify-start items-start md:col-span-1'>
                                 <div className="w-40 h-40">
                                     {/* <FileInputBox
                                         onFileSelect={handleImageChange}
@@ -1819,88 +2258,156 @@ const ViewOpportunity = ({ setAlert }) => {
                                 </div>
                             </div>
 
-                            <div className='flex justify-start items-center w-full'>
-                                <OpportunityField
-                                    label="Account"
-                                    value={getDisplayName(watch("accountId"), accounts)}
-                                    type="select"
-                                    options={accounts}
-                                    onSave={(newValue) => handleSaveField("accountId", newValue)}
-                                />
+                            <div className='grid md:grid-cols-2 gap-y-5 w-full md:col-span-4'>
+                                <>
+                                    <OpportunityField
+                                        label="Opportunity Name"
+                                        value={watch("opportunity")}
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                        required={true}
+                                    />
 
-                                <OpportunityField
-                                    label="List Amount"
-                                    value={
-                                        watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
-                                            ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}`
-                                            : "—"
-                                    }
-                                    type="text"
-                                    onSave={(newValue) => handleSaveField("listPrice", newValue)}
-                                    required={true}
-                                />
+                                    <OpportunityField
+                                        label="Stage"
+                                        value={watch("salesStage")}
+                                        type="select"
+                                        options={opportunityStages}
+                                        onSave={(newValue) => handleSaveField("salesStage", newValue)}
+                                        required={true}
+                                    />
+                                    <OpportunityField
+                                        label="List Amount"
+                                        value={
+                                            watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
+                                                ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "—"
+                                        }
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("listPrice", newValue)}
+                                        required={true}
+                                    />
 
-                                <OpportunityField
-                                    label="Discount(%)"
-                                    value={
-                                        watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
-                                            ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}`
-                                            : "—"
-                                    }
-                                    type="text"
-                                    onSave={(newValue) => handleSaveField("discountPercentage", newValue)}
-                                    required={true}
-                                />
-                                <OpportunityField
-                                    label="Deal Amount"
-                                    value={
-                                        watch("dealAmount") !== null &&
-                                            watch("dealAmount") !== undefined &&
-                                            watch("dealAmount") !== ""
-                                            ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}`
-                                            : "—"
-                                    }
-                                    type="text"
-                                    onSave={(newValue) => handleSaveField("dealAmount", newValue)}
-                                    required={false}
-                                />
+                                    <OpportunityField
+                                        label="Discount(%)"
+                                        value={
+                                            watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
+                                                ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "—"
+                                        }
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("discountPercentage", newValue)}
+                                        required={true}
+                                    />
 
-                                <OpportunityField
-                                    label="Opportunity Name"
-                                    value={watch("opportunity")}
-                                    type="text"
-                                    onSave={(newValue) => handleSaveField("opportunity", newValue)}
-                                    required={true}
-                                />
+                                    <OpportunityField
+                                        label="Deal Amount"
+                                        value={
+                                            watch("dealAmount") !== null &&
+                                                watch("dealAmount") !== undefined &&
+                                                watch("dealAmount") !== ""
+                                                ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "—"
+                                        }
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("dealAmount", newValue)}
+                                        required={false}
+                                    />
 
-                                <OpportunityField
-                                    label="Close Date"
-                                    value={formatDate(watch("closeDate"))}
-                                    type="date"
-                                    onSave={(newValue) => handleSaveField("closeDate", newValue)}
-                                    required={true}
-                                />
-                                <OpportunityField
-                                    label="Status"
-                                    value={watch("status")}
-                                    type="select"
-                                    options={opportunityStatus}
-                                    onSave={(newValue) => handleSaveField("status", newValue)}
-                                    required={true}
-                                />
+
+                                    <OpportunityField
+                                        label="Close Date"
+                                        value={formatDate(watch("closeDate"))}
+                                        type="date"
+                                        onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                        required={true}
+                                    />
+                                </>
+
+                                <>
+                                    <OpportunityField
+                                        label="Account"
+                                        value={getDisplayName(watch("accountId"), accounts)}
+                                        type="select"
+                                        options={accounts}
+                                        onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                    />
+
+                                    <OpportunityField
+                                        label="Status"
+                                        value={watch("status")}
+                                        type="select"
+                                        options={opportunityStatus}
+                                        onSave={(newValue) => handleSaveField("status", newValue)}
+                                        required={true}
+                                    />
+                                </>
+
+                                <div className='md:col-span-2'>
+                                    <OpportunityField
+                                        label="Next Step"
+                                        value={watch("nextSteps")}
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("nextSteps", newValue)}
+                                        required={true}
+                                        multiline={true}
+                                    />
+                                </div>
+
+                                <div className="flex items-center md:col-span-2">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                </div>
+                                {
+                                    files?.length > 0 && (
+                                        <div className='flex justify-end items-center col-span-2'>
+                                            <Tooltip title="Upload" arrow>
+                                                <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={uploadSelectedFiles} title="Upload docs">
+                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        </div>
+                                    )
+                                }
+                                <div className='md:col-span-2'>
+                                    <MultipleFileUpload
+                                        files={files}
+                                        setFiles={setFiles}
+                                        setAlert={setAlert}
+                                        setValue={setValue}
+                                        existingImages={existingImages}
+                                        setExistingImages={setExistingImages}
+                                        type="oppDocs"
+                                        multiple={true}
+                                        placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
+                                    // uploadedFiles={uploadedFiles}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                        <ContactsSection list={opportunitiesContacts} />
+                        <PartnersSection list={opportunitiesPartner} />
+                        <ProductsSection list={opportunitiesProducts} />
+                    </>
+                )
+            }
+            {
+                selectedTab === 1 && (
+                    <>
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-3">
                             <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
                                 <div className='flex justify-between items-center mb-4'>
                                     <p className='font-medium text-gray-500 tracking-wider text-sm'>
@@ -1926,7 +2433,6 @@ const ViewOpportunity = ({ setAlert }) => {
                                         </div>
                                     )}
                                 </div>
-
                                 <div className='relative h-60 '>
                                     <div className='h-full overflow-y-auto relative'>
                                         <Editor
@@ -1958,6 +2464,52 @@ const ViewOpportunity = ({ setAlert }) => {
                                 </div>
                             </div>
 
+
+                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
+                                <div className='flex justify-between items-center mb-4'>
+                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
+                                        Current Environment
+                                    </p>
+
+                                    {isCurrentEnvironmentDirty && (
+                                        <div className='flex justify-end items-center gap-3'>
+                                            <Tooltip title="Save" arrow>
+                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
+                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                            <Tooltip title="Cancel" arrow>
+                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleCancelEditor("CurrentEnvironment")}>
+                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className='h-60 overflow-y-auto'>
+                                    <Editor
+                                        editorState={currentEnvironmentState}
+                                        wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                        editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                                        toolbarClassName="toolbar-class border-b border-gray-300"
+                                        onEditorStateChange={(state) => {
+                                            setCurrentEnvironmentState(state);
+                                            const html = draftToHtml(convertToRaw(state.getCurrentContent()));
+                                            setIsCurrentEnvironmentDirty(html !== (currentEnvironmentHTML || ""));
+                                        }}
+                                        toolbar={toolbarProperties}
+                                    />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
                                 <div className='flex justify-between items-center mb-4'>
                                     <p className='font-medium text-gray-500 tracking-wider text-sm'>
@@ -2015,169 +2567,16 @@ const ViewOpportunity = ({ setAlert }) => {
                                         </div>
                                     )}
                                 </div>
+
                             </div>
 
-                            <div
-                                className={`border border-gray-200 p-3 rounded-md flex flex-col cursor-pointer`}
-                            >
-                                <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-base font-semibold text-gray-800">
-                                        Key Contacts
-                                    </h3>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-2">
-                                            {editedContacts.length > 0 && (
-                                                <Tooltip
-                                                    title="Add contacts"
-                                                    arrow
-                                                >
-                                                    <div className="bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
-                                                        <Components.IconButton
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleSaveKeyContacts();
-                                                            }}
-                                                        >
-                                                            <CustomIcons
-                                                                iconName="fa-solid fa-floppy-disk"
-                                                                css="cursor-pointer text-white h-3 w-3"
-                                                            />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            )}
-                                        </div>
-                                        <PermissionWrapper
-                                            functionalityName="Opportunities"
-                                            moduleName="Opportunities"
-                                            actionId={2}
-                                            component={
-                                                <Tooltip
-                                                    title="Add contact"
-                                                    arrow
-                                                >
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setKeyContactModalOpen(true)
-                                                        }}
-                                                        className="bg-black px-2 flex justify-center items-center rounded text-white"
-                                                    >
-                                                        Select
-                                                    </button>
-                                                </Tooltip>
-                                            }
-                                        />
-                                        <PermissionWrapper
-                                            functionalityName="Opportunities"
-                                            moduleName="Opportunities"
-                                            actionId={2}
-                                            component={
-                                                <Tooltip
-                                                    title="Add contact"
-                                                    arrow
-                                                >
-                                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
-                                                        <Components.IconButton
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleAddContact()
-                                                            }}
-                                                        >
-                                                            <CustomIcons
-                                                                iconName="fa-solid fa-plus"
-                                                                css="cursor-pointer text-white h-3 w-3"
-                                                            />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            }
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 max-h-80 overflow-y-auto">
-                                    {keyContactsWithEdits.length > 0 ? (
-                                        keyContactsWithEdits.map((c) => (
-                                            <div
-                                                key={c.id}
-                                                className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey
-                                                    ? "border-blue-500 bg-blue-50"
-                                                    : "border-gray-200"
-                                                    }`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <PermissionWrapper
-                                                        functionalityName="Opportunities"
-                                                        moduleName="Opportunities"
-                                                        actionId={2}
-                                                        component={
-                                                            <Checkbox
-                                                                checked={
-                                                                    !!c.isKey
-                                                                }
-                                                                disabled={currentKeyContactsCount >= 4 && !c.isKey}
-                                                                onChange={(
-                                                                    e
-                                                                ) => {
-                                                                    e.stopPropagation();
-                                                                    handleToggleKeyContact(
-                                                                        c.id,
-                                                                        !c.isKey
-                                                                    );
-                                                                }}
-                                                            />
-                                                        }
-                                                    />
-                                                    <div>
-                                                        <p className="font-semibold text-indigo-600">
-                                                            {
-                                                                c.contactName
-                                                            }
-                                                            {c.title && (
-                                                                <span className="text-xs text-gray-500">
-                                                                    <span className="mx-1 text-indigo-600">
-                                                                        –
-                                                                    </span>
-                                                                    {c.title}
-                                                                </span>
-                                                            )}
-                                                            {c.role && (
-                                                                <>
-                                                                    {c.title && (
-                                                                        <span className="mx-1 text-indigo-600">
-                                                                            –
-                                                                        </span>
-                                                                    )}
-                                                                    <span className='text-xs text-indigo-600'>
-                                                                        {c.role}
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-gray-400 italic">
-                                            No contacts linked to this
-                                            opportunity.
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                             <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
                                 <div className='flex justify-between items-center mb-4'>
                                     <p className='font-medium text-gray-500 tracking-wider text-sm'>
                                         Decision Map
                                     </p>
                                     <div className='flex justify-end gap-3'>
-                                        <p className='text-red-600 text-sm'><strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.</p>
+                                        <p className='text-red-600'><strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.</p>
                                         <Tooltip title="Add" arrow>
                                             <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
                                                 <Components.IconButton onClick={() => handleOpenDecisionMapModel()}>
@@ -2191,103 +2590,21 @@ const ViewOpportunity = ({ setAlert }) => {
                                 <div className="h-60 w-full">
                                     <DecisionMapTimeline items={salesProcess} />
                                 </div>
-                            </div>
 
-                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                <div className='flex justify-between items-center mb-4'>
-                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                        Current Environment
-                                    </p>
-
-                                    {isCurrentEnvironmentDirty && (
-                                        <div className='flex justify-end items-center gap-3'>
-                                            <Tooltip title="Save" arrow>
-                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title="Cancel" arrow>
-                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleCancelEditor("CurrentEnvironment")}>
-                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className='h-60 overflow-y-auto'>
-                                    <Editor
-                                        editorState={currentEnvironmentState}
-                                        wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                        editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                        toolbarClassName="toolbar-class border-b border-gray-300"
-                                        onEditorStateChange={(state) => {
-                                            setCurrentEnvironmentState(state);
-                                            const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                            setIsCurrentEnvironmentDirty(html !== (currentEnvironmentHTML || ""));
-                                        }}
-                                        toolbar={toolbarProperties}
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                className={'border border-gray-200 p-3 rounded-md flex flex-col cursor-pointer relative'}
-                                onClick={() => setIsEditingNextSteps(true)}
-                            >
-                                <div className="flex justify-between items-center mb-2">
-                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                        Next Steps
-                                    </p>
-
-                                    {isEditingNextSteps && (
-                                        <div className='flex justify-end items-center gap-3'>
-                                            <Tooltip title="Save" arrow>
-                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleSubmitEditorData("NextSteps")}>
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title="Cancel" arrow>
-                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => setIsEditingNextSteps(false)}>
-                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                    )}
-                                </div>
-                                {isEditingNextSteps ? (
-                                    <Input
-                                        multiline
-                                        rows={9}
-                                        value={watch("nextSteps")}
-                                        onChange={(e) =>
-                                            setValue("nextSteps", e.target.value)
-                                        }
-                                    />
-                                ) : watch("nextSteps") ? (
-                                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                                        {watch("nextSteps")}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-gray-400 italic">
-                                        No next steps defined.
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </>
                 )
             }
             {
-                selectedTab === 1 && (
+                selectedTab === 2 && (
+                    <>
+                        <Calendar />
+                    </>
+                )
+            }
+            {
+                selectedTab === 3 && (
                     <div className='flex justify-start items-start gap-4'>
                         <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
                             <DatePickerComponent
@@ -2769,13 +3086,6 @@ const ViewOpportunity = ({ setAlert }) => {
                     </div>
                 )
             }
-            {
-                selectedTab === 2 && (
-                    <>
-                        <Calendar />
-                    </>
-                )
-            }
             {/* Contact Modal */}
             <OpportunityContactModel
                 open={contactModalOpen}
@@ -2783,6 +3093,14 @@ const ViewOpportunity = ({ setAlert }) => {
                 opportunityId={opportunityId}
                 handleGetAllOppContact={handleGetOppContacts}
                 oppName={watch("opportunity")}
+            />
+            <AlertDialog
+                open={dialogContact.open}
+                title={dialogContact.title}
+                message={dialogContact.message}
+                actionButtonText={dialogContact.actionButtonText}
+                handleAction={() => handleDeleteContact()}
+                handleClose={() => handleCloseDeleteContactDialog()}
             />
 
             {/* Partner Modal */}
@@ -2801,6 +3119,24 @@ const ViewOpportunity = ({ setAlert }) => {
                 actionButtonText={dialogPartner.actionButtonText}
                 handleAction={() => handleDeletePartner()}
                 handleClose={() => handleCloseDeletePartnerDialog()}
+            />
+
+            {/* Product Modal */}
+            <OpportunitiesProductsModel
+                open={productModalOpen}
+                handleClose={handleCloseProductModel}
+                opportunityId={opportunityId}
+                id={selectedProductId}
+                handleGetAllOpportunitiesProducts={handleGetOppProduct}
+                oppName={watch("opportunity")}
+            />
+            <AlertDialog
+                open={dialogProduct.open}
+                title={dialogProduct.title}
+                message={dialogProduct.message}
+                actionButtonText={dialogProduct.actionButtonText}
+                handleAction={() => handleDeleteProduct()}
+                handleClose={() => handleCloseDeleteProductDialog()}
             />
 
             <AlertDialog

@@ -17,6 +17,7 @@ import Select from "./components/common/select/select";
 import Checkbox from "./components/common/checkBox/checkbox";
 import { Tabs } from "./components/common/tabs/tabs";
 import DatePickerComponent from "./components/common/datePickerComponent/datePickerComponent";
+import { opportunityContactRoles } from "./service/common/commonService";
 
 // ----------------------------
 // Demo constants / helpers
@@ -55,6 +56,14 @@ const DEMO_ACCOUNTS = [
   { id: 102, title: "Stark Industries" },
   { id: 103, title: "Wayne Enterprises" },
 ];
+
+const demoContactsArray = [
+  { id: 1, name: "John Smith" },
+  { id: 2, name: "Tony Stark" },
+  { id: 3, name: "Emma Watson" },
+  { id: 4, name: "Michael Scott" },
+];
+
 
 const isEmptyHtml = (h) => {
   const x = (h || "").trim();
@@ -114,9 +123,6 @@ export default function Demo() {
     logo: null,
   });
 
-  // Editors (Opp360)
-  const [activeEditorHint, setActiveEditorHint] = useState(null);
-
   const [whyDoAnythingStateHTML, setWhyDoAnythingStateHTML] = useState(
     "<p>We want to reduce manual work and improve pipeline visibility.</p>"
   );
@@ -131,46 +137,73 @@ export default function Demo() {
   const [businessValueState, setBusinessValueState] = useState(htmlToEditorState(businessValueStateHTML));
   const [currentEnvironmentState, setCurrentEnvironmentState] = useState(htmlToEditorState(currentEnvironmentHTML));
 
-  const [isWhyDoAnythingDirty, setIsWhyDoAnythingDirty] = useState(false);
-  const [isBusinessValueDirty, setIsBusinessValueDirty] = useState(false);
-  const [isCurrentEnvironmentDirty, setIsCurrentEnvironmentDirty] = useState(false);
+  // --- NEW: click-to-edit toggles ---
   const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
+  const [isEditingWhy, setIsEditingWhy] = useState(false);
+  const [isEditingValue, setIsEditingValue] = useState(false);
+  const [isEditingEnv, setIsEditingEnv] = useState(false);
 
-
-  const whyRef = useRef(null);
-  useClickOutside(whyRef, () => {
-    // only save if changed
-    const html = editorStateToHtml(whyDoAnythingState);
-    if (html !== (whyDoAnythingStateHTML || "")) {
-      setWhyDoAnythingStateHTML(html);
-      setIsWhyDoAnythingDirty(false);
-    }
-  }, true);
-
+  const whyCardRef = useRef(null);
+  const valueCardRef = useRef(null);
+  const envCardRef = useRef(null)
   const nextStepsRef = useRef(null);
+
+  useClickOutside(
+    whyCardRef,
+    () => {
+      if (!isEditingWhy) return;
+      const html = editorStateToHtml(whyDoAnythingState);
+      setWhyDoAnythingStateHTML(html);
+      setIsEditingWhy(false);
+    },
+    isEditingWhy
+  );
+
+  useClickOutside(
+    valueCardRef,
+    () => {
+      if (!isEditingValue) return;
+      const html = editorStateToHtml(businessValueState);
+      setBusinessValueStateHTML(html);
+      setIsEditingValue(false);
+    },
+    isEditingValue
+  );
+
+  useClickOutside(
+    envCardRef,
+    () => {
+      if (!isEditingEnv) return;
+      const html = editorStateToHtml(currentEnvironmentState);
+      setCurrentEnvironmentHTML(html);
+      setIsEditingEnv(false);
+    },
+    isEditingEnv
+  );
+
+
   useClickOutside(nextStepsRef, () => {
     if (!isEditingNextSteps) return;
     setIsEditingNextSteps(false); // since you already keep value in opp state, this is "saved"
   }, isEditingNextSteps);
 
-  // Key Contacts (Opp360)
-  const [contacts, setContacts] = useState([
-    { id: 1, contactName: "Tony Stark", title: "CTO", role: "Decision Maker", isKey: true },
-    { id: 2, contactName: "Pepper Potts", title: "COO", role: "Champion", isKey: true },
-    { id: 3, contactName: "Bruce Banner", title: "Architect", role: "Influencer", isKey: false },
-  ]);
-
+  const [contacts, setContacts] = useState([demoContactsArray]);
   const [initialIsKey, setInitialIsKey] = useState({});
   const [editedContacts, setEditedContacts] = useState([]);
 
-  // Decision Map
+  const [allContactsWithEdits, setAllContactsWithEdits] = useState(
+    contacts.map((c) => {
+      const edit = editedContacts.find((e) => e.id === c.id);
+      return { ...c, isKeyContact: edit ? edit.isKeyContact : c.isKeyContact };
+    })
+  );
+
   const [salesProcess, setSalesProcess] = useState([
     { id: 11, process: "Discovery", notes: "Confirm pain + stakeholders", processDate: dayjs().subtract(10, "day").toISOString() },
     { id: 12, process: "Demo", notes: "Show pipeline + reports", processDate: dayjs().subtract(6, "day").toISOString() },
     { id: 13, process: "Proposal", notes: "Share pricing + scope", processDate: dayjs().subtract(2, "day").toISOString(), goLive: dayjs().add(30, "day").toISOString(), reason: "Fiscal cycle alignment" },
   ]);
 
-  // Notes Tab (Meetings)
   const [openDrawer, setOpenDrawer] = useState(true);
   const [showDates, setShowDates] = useState(null);
   const [meetings, setMeetings] = useState([]);
@@ -180,6 +213,66 @@ export default function Demo() {
   const [meetingAttendees, setMeetingAttendees] = useState([]);
   const [editingNoteField, setEditingNoteField] = useState(null);
   const activeNoteEditorRef = useRef(null);
+
+  // Add Contact (demo) modal
+  const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+
+  const emptyContactRow = () => ({
+    tempId: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    nameId: "",           // selected contact id
+    nameText: "",         // typed text in input
+    isNameOpen: false,    // dropdown open/close
+
+    roleId: "",
+    title: "",
+    isKeyContact: false,
+  });
+
+
+  const [contactRows, setContactRows] = useState([emptyContactRow()]);
+
+  const openAddContactModal = () => {
+    setContactRows([emptyContactRow()]);
+    setIsAddContactOpen(true);
+  };
+
+  const closeAddContactModal = () => setIsAddContactOpen(false);
+
+  const addContactRow = () => setContactRows((prev) => [...prev, emptyContactRow()]);
+
+  const removeContactRow = (tempId) =>
+    setContactRows((prev) => (prev.length === 1 ? prev : prev.filter((r) => r.tempId !== tempId)));
+
+  const updateContactRow = (tempId, key, value) =>
+    setContactRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [key]: value } : r)));
+
+  const saveContactsFromModal = () => {
+    // Basic validation: require name + role (and optional title)
+    const validRows = contactRows.filter((r) => r.nameId && r.roleId);
+
+    // only key contacts
+    const keyContacts = validRows.filter((r) => r.isKeyContact === true);
+
+    // map to your final structure
+    const mapped = keyContacts.map((r) => ({
+      id: r.nameId + "-" + r.roleId, // demo id (you can change)
+      nameId: r.nameId,
+      name: demoContactsArray.find((x) => String(x.id) === String(r.nameId))?.name || "",
+      roleId: r.roleId,
+      role: opportunityContactRoles.find((x) => String(x.id) === String(r.roleId))?.title || "",
+      title: r.title || "",
+      isKeyContact: true,
+    }));
+
+    setAllContactsWithEdits((prev) => {
+      // remove duplicates by nameId (optional)
+      const prevMap = new Map(prev.map((p) => [String(p.nameId), p]));
+      mapped.forEach((m) => prevMap.set(String(m.nameId), m));
+      return Array.from(prevMap.values()).filter((x) => x.isKeyContact === true);
+    });
+
+    closeAddContactModal();
+  };
 
   // Meeting notes snapshots + editor states
   const [purposeHTML, setPurposeHTML] = useState("<p>Align on success criteria.</p>");
@@ -229,7 +322,6 @@ export default function Demo() {
     setShowPricingBox(true);
   };
 
-
   const closePricingBox = () => {
     setShowPricingBox(false);
   };
@@ -240,8 +332,6 @@ export default function Demo() {
     await handleSaveField("dealAmount", pricingDraft.dealAmount);
     setShowPricingBox(false);
   };
-
-
 
   const { control, setValue, watch } = useForm({
     defaultValues: {
@@ -261,7 +351,7 @@ export default function Demo() {
   useEffect(() => {
     // init initialIsKey map
     const map = {};
-    contacts.forEach((c) => (map[c.id] = !!c.isKey));
+    contacts.forEach((c) => (map[c.id] = !!c.isKeyContact));
     setInitialIsKey(map);
 
     // init meetings
@@ -485,8 +575,8 @@ export default function Demo() {
     const displayValue = value || "—";
 
     return (
-      <div ref={wrapRef} className="w-full flex justify-start items-center text-sm py-1">
-        <div className="text-gray-900 font-semibold text-base max-w-[60%] break-words">
+      <div ref={wrapRef} className="w-full flex justify-start items-center py-1">
+        <div className="text-gray-900 font-semibold">
           {isEditing ? (
             <div className="flex items-center gap-2 w-full">
               {type === "select" ? (
@@ -524,7 +614,7 @@ export default function Demo() {
               )}
             </div>
           ) : (
-            <span onClick={handleStartEdit} className="cursor-pointer hover:bg-gray-100 px-1 rounded">
+            <span onClick={handleStartEdit} className="cursor-pointer hover:bg-gray-100 px-1 rounded text-lg">
               {displayValue}
             </span>
           )}
@@ -532,7 +622,6 @@ export default function Demo() {
       </div>
     );
   };
-
 
   const StageTimeline = ({ stages, currentStageId }) => {
     const handleStageClick = (stage) => {
@@ -542,7 +631,7 @@ export default function Demo() {
 
     return (
       <div className="px-3 py-4 mb-0">
-        <div className="flex flex-wrap xl:justify-evenly gap-3 md:gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap xl:justify-evenly gap-1 overflow-x-auto pb-1">
           {stages?.map((stage) => {
             const isActive = stage.id === currentStageId;
             const isCompleted = currentStageId !== null && stage.id < currentStageId;
@@ -556,7 +645,7 @@ export default function Demo() {
               <div key={stage.id}>
                 <div
                   onClick={() => handleStageClick(stage)}
-                  className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
+                  className={`inline-flex items-center justify-center px-3 py-2 text-sm font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
                 >
                   <span className="truncate">{stage.title}</span>
                   {isCompleted && <CustomIcons iconName="fa-solid fa-check" css="h-3 w-3 inline-block ml-2" />}
@@ -569,25 +658,19 @@ export default function Demo() {
     );
   };
 
-  // Key contact editing (demo)
-  const allContactsWithEdits = contacts.map((c) => {
-    const edit = editedContacts.find((e) => e.id === c.id);
-    return { ...c, isKey: edit ? edit.isKey : c.isKey };
-  });
+  const currentKeyContactsCount = allContactsWithEdits.filter((c) => c.isKeyContact).length;
 
-  const currentKeyContactsCount = allContactsWithEdits.filter((c) => c.isKey).length;
-
-  const handleToggleKeyContact = (id, isKey) => {
+  const handleToggleKeyContact = (id, isKeyContact) => {
     setEditedContacts((prev) => {
       const next = [...prev];
       const idx = next.findIndex((e) => e.id === id);
 
-      if (idx >= 0) next[idx] = { id, isKey };
-      else next.push({ id, isKey });
+      if (idx >= 0) next[idx] = { id, isKeyContact };
+      else next.push({ id, isKeyContact });
 
       const original = initialIsKey[id] ?? false;
       const idxAfter = next.findIndex((e) => e.id === id);
-      if (idxAfter >= 0 && next[idxAfter].isKey === original) next.splice(idxAfter, 1);
+      if (idxAfter >= 0 && next[idxAfter].isKeyContact === original) next.splice(idxAfter, 1);
 
       return next;
     });
@@ -598,13 +681,13 @@ export default function Demo() {
     setContacts((prev) =>
       prev.map((c) => {
         const edit = editedContacts.find((e) => e.id === c.id);
-        return edit ? { ...c, isKey: edit.isKey } : c;
+        return edit ? { ...c, isKeyContact: edit.isKeyContact } : c;
       })
     );
 
     // rebuild initial map to match saved
     const map = {};
-    allContactsWithEdits.forEach((c) => (map[c.id] = !!c.isKey));
+    allContactsWithEdits.forEach((c) => (map[c.id] = !!c.isKeyContact));
     setInitialIsKey(map);
 
     setEditedContacts([]);
@@ -774,8 +857,8 @@ export default function Demo() {
 
     // demo attendees
     setMeetingAttendees([
-      { id: 1, contactName: "Tony Stark", title: "CTO", role: "Host", note: "Main stakeholder" },
-      { id: 2, contactName: "Bruce Banner", title: "Architect", role: "Attendee", note: "Asked about integrations" },
+      { id: 1, name: "Tony Stark", title: "CTO", role: "Host", note: "Main stakeholder" },
+      { id: 2, name: "Bruce Banner", title: "Architect", role: "Attendee", note: "Asked about integrations" },
     ]);
   };
 
@@ -795,7 +878,7 @@ export default function Demo() {
 
         {selectedTab === 0 ? (
           <div className="absolute top-2 right-5">
-            <p className="text-red-600">
+            <p className="text-red-600 text-lg">
               <strong>Note:&nbsp;</strong>Fields can be edited by clicking.
             </p>
           </div>
@@ -811,24 +894,24 @@ export default function Demo() {
         <>
           <StageTimeline stages={DEMO_STAGES} currentStageId={currentStageId} />
 
-          <div className="flex justify-start items-start gap-10 pt-4">
+          <div className="flex justify-start items-center gap-10">
             {/* Left: Logo placeholder */}
-            <div className="flex justify-center md:justify-start items-start">
-              <div className="w-40 h-40 border border-gray-200 rounded-full flex items-center justify-center text-gray-400">
+            <div className="flex justify-center md:justify-start items-center">
+              <div className="w-32 h-32 border border-gray-200 rounded-full flex items-center justify-center text-gray-400">
                 <div className="flex flex-col items-center justify-center text-gray-500">
                   <CustomIcons
                     iconName="fa-solid fa-image"
                     css="mb-3 w-6 h-6"
                   />
                   <p className="text-center text-xs">
-                    {'Click to upload image'}
+                    {'Opportunity Logo'}
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Fields */}
-            <div className='flex justify-start items-center w-full'>
+            <div className='flex justify-center items-center w-full'>
               <OpportunityField
                 label="Account"
                 value={getDisplayName(opp.accountId, DEMO_ACCOUNTS)}
@@ -956,64 +1039,95 @@ export default function Demo() {
             </div>
           </div>
 
-          {/* 3 cards */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
             {/* Why */}
-            <div ref={whyRef} className="w-full rounded-md shadow-sm border border-gray-400 px-5 py-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="font-medium text-gray-500 tracking-wider text-sm">Why Do Anything</p>              
+            <div
+              ref={whyCardRef}
+              className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4"
+            >
+              <div className="mb-4">
+                <p className="font-medium text-black tracking-wider text-xl text-center">Why Do Anything</p>
               </div>
 
               <div className="relative h-60">
-                <div className="h-full overflow-y-auto relative">
-                  <Editor
-                    editorState={whyDoAnythingState}
-                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                    toolbarClassName="toolbar-class border-b border-gray-300"
-                    onEditorStateChange={(state) => {
-                      setWhyDoAnythingState(state);
-                      const html = editorStateToHtml(state);
-                      setIsWhyDoAnythingDirty(html !== (whyDoAnythingStateHTML || ""));
-                    }}
-                    toolbar={toolbarProperties}
-                    onFocus={() => setActiveEditorHint("WhyDoAnything")}
-                    onBlur={() => setActiveEditorHint(null)}
-                  />
-                </div>
+                {!isEditingWhy ? (
+                  <div
+                    className="h-full overflow-y-auto cursor-pointer rounded-md p-2 transition"
+                    onClick={() => setIsEditingWhy(true)}
+                  >
+                    <div
+                      className="editor-html space-y-1"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          whyDoAnythingStateHTML ||
+                          "<span class='text-gray-400 italic'>-</span>",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full overflow-y-auto">
+                    <Editor
+                      editorState={whyDoAnythingState}
+                      wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                      editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                      toolbarClassName="toolbar-class border-b border-gray-300"
+                      onEditorStateChange={(state) => {
+                        setWhyDoAnythingState(state);
+                      }}
+                      toolbar={toolbarProperties}
+                      autoFocus
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Value */}
-            <div className="w-full rounded-md shadow-sm border border-gray-400 px-5 py-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="font-medium text-gray-500 tracking-wider text-sm">Value</p>          
+            <div
+              ref={valueCardRef}
+              className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4"
+            >
+              <div className="mb-4">
+                <p className="font-medium text-black tracking-wider text-xl text-center">Value</p>
               </div>
 
               <div className="relative h-60">
-                <div className="h-full overflow-y-auto relative">
-                  <Editor
-                    editorState={businessValueState}
-                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                    toolbarClassName="toolbar-class border-b border-gray-300"
-                    onEditorStateChange={(state) => {
-                      setBusinessValueState(state);
-                      const html = editorStateToHtml(state);
-                      setIsBusinessValueDirty(html !== (businessValueStateHTML || ""));
-                    }}
-                    toolbar={toolbarProperties}
-                    onFocus={() => setActiveEditorHint("BusinessValue")}
-                    onBlur={() => setActiveEditorHint(null)}
-                  />
-                </div>
+                {!isEditingValue ? (
+                  <div
+                    className="h-full overflow-y-auto cursor-pointer rounded-md p-2 transition"
+                    onClick={() => setIsEditingValue(true)}
+                  >
+                    <div
+                      className="editor-html space-y-1"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          businessValueStateHTML ||
+                          "<span class='text-gray-400 italic'>-</span>",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full overflow-y-auto">
+                    <Editor
+                      editorState={businessValueState}
+                      wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                      editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                      toolbarClassName="toolbar-class border-b border-gray-300"
+                      onEditorStateChange={(state) => {
+                        setBusinessValueState(state);
+                      }}
+                      toolbar={toolbarProperties}
+                      autoFocus
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Key Contacts */}
-            <div className="border border-gray-400 p-3 rounded-md flex flex-col cursor-pointer">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-base font-semibold text-gray-800">Key Contacts</h3>
+            <div className="border-2 border-black p-3 rounded-3xl flex flex-col cursor-pointer relative">
+              <div className="flex justify-start items-center mb-2">
+                <p className="font-medium text-black tracking-wider text-xl text-center grow">Key Contacts</p>
 
                 <div className="flex items-center gap-2">
                   {editedContacts.length > 0 && (
@@ -1026,21 +1140,135 @@ export default function Demo() {
                     </Tooltip>
                   )}
 
-                  <Tooltip title="Add contact (demo)" arrow>
+                  <Tooltip title="Add contact" arrow>
                     <div
                       className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white"
-                      onClick={() =>
-                        setContacts((prev) => [
-                          ...prev,
-                          { id: Date.now(), contactName: "New Contact", title: "Manager", role: "Influencer", isKey: false },
-                        ])
-                      }
                     >
-                      <Components.IconButton>
+                      <Components.IconButton onClick={openAddContactModal}>
                         <CustomIcons iconName="fa-solid fa-plus" css="cursor-pointer text-white h-3 w-3" />
                       </Components.IconButton>
                     </div>
                   </Tooltip>
+
+                  {isAddContactOpen && (
+                    <div className="absolute top-0 -left-60 right-20 z-10 max-w-4xl rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                      {/* Header */}
+                      <div className="flex items-center justify-end px-5 py-1 border-b">
+                        <button
+                          onClick={closeAddContactModal}
+                          className="h-9 w-9 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                          type="button"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Table */}
+                      <div className="px-4 py-4">
+                        {/* Purple header row like screenshot */}
+                        <div className="grid grid-cols-12 gap-2 rounded-md bg-[#5B45A6] px-3 py-2 text-white text-sm font-medium">
+                          <div className="col-span-3">Name</div>
+                          <div className="col-span-3">Title</div>
+                          <div className="col-span-3">Role</div>
+                          <div className="col-span-2">Key</div>
+                          <div className="col-span-1 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={addContactRow}
+                              className="h-6 w-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                              title="Add row"
+                            >
+                              <CustomIcons iconName="fa-solid fa-plus" css="cursor-pointer text-white h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Rows */}
+                        <div className="mt-2 space-y-2">
+                          {contactRows.map((row) => (
+                            <div key={row.tempId} className="grid grid-cols-12 gap-2 items-center px-2">
+                              {/* Name */}
+                              <div className="col-span-3">
+                                <select
+                                  className="w-full rounded-md border border-gray-300 px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  value={row.nameId}
+                                  onChange={(e) => updateContactRow(row.tempId, "nameId", e.target.value)}
+                                >
+                                  <option value="">Select</option>
+                                  {demoContactsArray.map((x) => (
+                                    <option key={x.id} value={String(x.id)}>
+                                      {x.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Title */}
+                              <div className="col-span-3">
+                                <input
+                                  className="w-full rounded-md border border-gray-300 px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Title"
+                                  value={row.title}
+                                  onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                />
+                              </div>
+
+                              {/* Role */}
+                              <div className="col-span-3">
+                                <select
+                                  className="w-full rounded-md border border-gray-300 px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  value={row.roleId}
+                                  onChange={(e) => updateContactRow(row.tempId, "roleId", e.target.value)}
+                                >
+                                  <option value="">Select</option>
+                                  {opportunityContactRoles.map((r) => (
+                                    <option key={r.id} value={String(r.id)}>
+                                      {r.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Key Contact */}
+                              <div className="col-span-2 flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4"
+                                  checked={row.isKeyContact}
+                                  onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                />
+                              </div>
+
+                              {/* Remove */}
+                              <div className="col-span-1 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => removeContactRow(row.tempId)}
+                                  className="h-8 w-8 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                  title="Remove row"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex justify-end gap-2 px-5 py-4 border-t">
+                        <button
+                          type="button"
+                          onClick={saveContactsFromModal}
+                          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+
                 </div>
               </div>
 
@@ -1049,19 +1277,19 @@ export default function Demo() {
                   allContactsWithEdits.map((c) => (
                     <div
                       key={c.id}
-                      className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                      className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKeyContact ? "border-blue-500 bg-blue-50" : "border-gray-200"
                         }`}
                     >
                       <div className="flex items-center gap-2">
                         <Checkbox
-                          checked={!!c.isKey}
-                          disabled={currentKeyContactsCount >= 4 && !c.isKey}
-                          onChange={() => handleToggleKeyContact(c.id, !c.isKey)}
+                          checked={!!c.isKeyContact}
+                          disabled={currentKeyContactsCount >= 4 && !c.isKeyContact}
+                          onChange={() => handleToggleKeyContact(c.id, !c.isKeyContact)}
                         />
 
                         <div>
                           <p className="font-semibold text-indigo-600">
-                            {c.contactName}
+                            {c.name}
                             {c.title && (
                               <span className="text-xs text-gray-500">
                                 <span className="mx-1 text-indigo-600">–</span>
@@ -1086,17 +1314,12 @@ export default function Demo() {
             </div>
           </div>
 
-          {/* 2nd row */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             {/* Decision Map */}
-            <div className="w-full rounded-md shadow-sm border border-gray-400 px-5 py-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="font-medium text-gray-500 tracking-wider text-sm">Decision Map</p>
-
-                <div className="flex justify-end gap-3 items-center">
-                  <p className="text-red-600 text-sm">
-                    <strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.
-                  </p>
+            <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4">
+              <div className="mb-4">
+                <div className="flex justify-start items-center  mb-2 ">
+                  <p className="font-medium text-black tracking-wider text-xl text-center grow">Decision Map</p>
 
                   <Tooltip title="Add (demo)" arrow>
                     <div
@@ -1119,6 +1342,12 @@ export default function Demo() {
                     </div>
                   </Tooltip>
                 </div>
+
+                <div className="flex justify-start items-center gap-8">
+                  <p className="text-red-600 text-sm">
+                    <strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.
+                  </p>
+                </div>
               </div>
 
               <div className="h-60 w-full">
@@ -1127,33 +1356,53 @@ export default function Demo() {
             </div>
 
             {/* Current Env */}
-            <div className="w-full rounded-md shadow-sm border border-gray-400 px-5 py-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="font-medium text-gray-500 tracking-wider text-sm">Current Environment</p>                
+            <div
+              ref={envCardRef}
+              className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4"
+            >
+              <div className="mb-4">
+                <p className="font-medium text-black tracking-wider text-xl text-center">Current Environment</p>
               </div>
 
-              <div className="h-60 overflow-y-auto">
-                <Editor
-                  editorState={currentEnvironmentState}
-                  wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                  editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                  toolbarClassName="toolbar-class border-b border-gray-300"
-                  onEditorStateChange={(state) => {
-                    setCurrentEnvironmentState(state);
-                    const html = editorStateToHtml(state);
-                    setIsCurrentEnvironmentDirty(html !== (currentEnvironmentHTML || ""));
-                  }}
-                  toolbar={toolbarProperties}
-                />
+              <div className="relative h-60">
+                {!isEditingEnv ? (
+                  <div
+                    className="h-full overflow-y-auto cursor-pointer rounded-md p-2 transition"
+                    onClick={() => setIsEditingEnv(true)}
+                  >
+                    <div
+                      className="editor-html space-y-1"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          currentEnvironmentHTML ||
+                          "<span class='text-gray-400 italic'>-</span>",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full overflow-y-auto">
+                    <Editor
+                      editorState={currentEnvironmentState}
+                      wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                      editorClassName="editor-class p-2 h-40 overflow-y-auto"
+                      toolbarClassName="toolbar-class border-b border-gray-300"
+                      onEditorStateChange={(state) => {
+                        setCurrentEnvironmentState(state);
+                      }}
+                      toolbar={toolbarProperties}
+                      autoFocus
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Next Steps */}
             <div
               ref={nextStepsRef}
-              className="border border-gray-400 p-3 rounded-md flex flex-col cursor-pointer relative" onClick={() => setIsEditingNextSteps(true)}>
-              <div className="flex justify-between items-center mb-2">
-                <p className="font-medium text-gray-500 tracking-wider text-sm">Next Steps</p>
+              className="border-2 border-black p-3 rounded-3xl flex flex-col cursor-pointer relative" onClick={() => setIsEditingNextSteps(true)}>
+              <div className="mb-2">
+                <p className="font-medium text-black tracking-wider text-xl text-center">Next Steps</p>
               </div>
 
               {isEditingNextSteps ? (
@@ -1164,7 +1413,7 @@ export default function Demo() {
                   onChange={(e) => setOpp((p) => ({ ...p, nextSteps: e.target.value }))}
                 />
               ) : opp.nextSteps ? (
-                <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{opp.nextSteps}</div>
+                <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{opp.nextSteps}</div>
               ) : (
                 <p className="text-sm text-gray-400 italic">No next steps defined.</p>
               )}
@@ -1242,7 +1491,7 @@ export default function Demo() {
                               onClick={() =>
                                 setMeetingAttendees((prev) => [
                                   ...prev,
-                                  { id: Date.now(), contactName: "New Attendee", title: "Manager", role: "Attendee", note: "Demo note" },
+                                  { id: Date.now(), name: "New Attendee", title: "Manager", role: "Attendee", note: "Demo note" },
                                 ])
                               }
                             >
@@ -1267,7 +1516,7 @@ export default function Demo() {
                       {meetingAttendees?.length > 0 ? (
                         meetingAttendees.map((row, i) => (
                           <tr key={row.id ?? i} className={`bg-white border-b-1 border-t-0 border-l-0 border-r-0 ${i !== meetingAttendees?.length - 1 ? "border" : ""}`}>
-                            <td className="px-4 py-3 text-sm">{row.contactName || "—"}</td>
+                            <td className="px-4 py-3 text-sm">{row.name || "—"}</td>
                             <td className="px-4 py-3 text-sm">{row.title || "—"}</td>
                             <td className="px-4 py-3 text-sm">{row.role || "—"}</td>
                             <td className="white-space-pre-line px-4 py-3 text-sm">{row.note || "—"}</td>
