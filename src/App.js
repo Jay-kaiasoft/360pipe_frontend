@@ -40,15 +40,15 @@ import OutlookCalendarOauthRedirect from "./pages/dashboard/calendar/outlookCale
 import Closeplan from "./pages/closeplan/closeplan";
 import Results from "./pages/dashboard/results/results";
 import Activities from "./pages/dashboard/activities/activities";
-import Demo from "./demo";
+import OppView from "./demoScreens/oppView";
 
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
   const router = createBrowserRouter([
     {
-      path: "/demoScreens",
-      element: <Demo />,
+      path: "/demoscreens/opportunityview",
+      element: <OppView />,
     },
     {
       path: "*",
