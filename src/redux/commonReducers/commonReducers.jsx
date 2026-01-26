@@ -20,6 +20,9 @@ const initialState = {
   isHovered: false,
   activeItem: null,
   openSubmenu: null,
+
+  filterStartDate: null,
+  filterEndDate: null,
 };
 
 const commonReducersSlice = createSlice({
@@ -96,7 +99,13 @@ const commonReducersSlice = createSlice({
     },
     setOpenSubmenu(state, action) {
       state.openSubmenu = action.payload;
-    }
+    },
+    setFilterStartDate(state, action) {
+      state.filterStartDate = action.payload;
+    },
+    setFilterEndDate(state, action) {
+      state.filterEndDate = action.payload;
+    },
   },
 });
 
@@ -112,7 +121,9 @@ export const {
   setSyncCount,
   setSyncingPullStatus,
   setSyncingPushStatus,
-
+  setFilterStartDate,
+  setFilterEndDate,
+  
   // Sidebar actions
   toggleSidebar,
   toggleMobileSidebar,
@@ -121,6 +132,7 @@ export const {
   toggleSubmenu,
   setIsMobile,
   setOpenSubmenu,
+
 } = commonReducersSlice.actions;
 
 export default commonReducersSlice.reducer;

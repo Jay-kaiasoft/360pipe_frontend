@@ -1734,7 +1734,7 @@ export default function OppView() {
               </div>
 
               {isEditingNextSteps ? (
-                <Input multiline rows={9} value={opp.nextSteps} onChange={(e) => setOpp((p) => ({ ...p, nextSteps: e.target.value }))} />
+                <Input multiline rows={6} value={opp.nextSteps} onChange={(e) => setOpp((p) => ({ ...p, nextSteps: e.target.value }))} />
               ) : opp.nextSteps ? (
                 <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{opp.nextSteps}</div>
               ) : (

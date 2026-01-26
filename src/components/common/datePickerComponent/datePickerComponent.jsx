@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { useTheme } from '@mui/material';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, error = false, value, onChange, showDates = null }) => {
+const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, showDates = null }) => {
   const theme = useTheme();
 
   const customTheme = createTheme({
@@ -65,7 +65,7 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
   });
 
   const enabledDatesSet = useMemo(() => {
-    if (!showDates || showDates.size === 0) return new Set();
+    if (!showDates || showDates.size === 0) return false;
 
     return new Set(
       Array.from(showDates)
@@ -165,7 +165,6 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
                 }}
                 shouldDisableDate={(day) => {
                   if (!enabledDatesSet) return false;
-
                   const formatted = dayjs(day).format("MM/DD/YYYY");
 
                   return !enabledDatesSet.has(formatted);

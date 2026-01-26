@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getDashboardData } from "../../service/customers/customersService";
+import { connect } from "react-redux";
 
 const StatCard = ({ title, children }) => {
     return (
@@ -22,12 +23,12 @@ const formatMoneyK = (num) => {
 
 const moneyLabel = (v) => `$${formatMoneyK(v)}`;
 
-const Dashboard = () => {
+const Dashboard = ({ filterStartDate, filterEndDate }) => {
     const [dashboardData, setDashboardData] = useState(null);
 
     const handleGetDashboardData = async () => {
         try {
-            const res = await getDashboardData();
+            const res = await getDashboardData({ startDate: filterStartDate, endDate: filterEndDate });
             setDashboardData(res?.data?.result || null);
         } catch (e) {
             console.log("Error", e);
@@ -36,9 +37,14 @@ const Dashboard = () => {
 
     useEffect(() => {
         document.title = "Dashboard - 360Pipe";
-        handleGetDashboardData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (filterStartDate && filterEndDate) {
+            handleGetDashboardData();
+        }
+    }, [filterStartDate, filterEndDate])
 
     const ui = useMemo(() => {
         const totalContacts = Number(dashboardData?.totalContacts || 0);
@@ -148,4 +154,9 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+const mapStateToProps = (state) => ({
+    filterStartDate: state.common.filterStartDate,
+    filterEndDate: state.common.filterEndDate,
+})
+
+export default connect(mapStateToProps, null)(Dashboard)
