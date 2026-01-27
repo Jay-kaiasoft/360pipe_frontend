@@ -96,6 +96,34 @@ export const stageColors = {
     "Closed Lost": "#d32f2f",
 };
 
+export const headerTitles = [
+    { title: "Dashboard", path: "/dashboard" },
+    { title: "Summary", path: "/dashboard/opportunities" },
+    { title: "Deal Management", path: "/dashboard/opportunity-view/:opportunityId" },
+    { title: "Contacts", path: "/dashboard/contacts" },
+    { title: "My CRM", path: "/dashboard/mycrm" },
+    { title: "To-Do", path: "/dashboard/todos" },
+    { title: "Profile", path: "/dashboard/profile" },
+    { title: "Manage Teams", path: "/dashboard/myteam" },
+    { title: "Manage Members", path: "/dashboard/members" },
+    { title: "Sync History", path: "/dashboard/syncHistory" },
+    { title: "Sync History", path: "/dashboard/syncHistory" },
+    { title: "Mail Scraper", path: "/dashboard/managemails" },
+    { title: "Products & Service", path: "/dashboard/products" },
+];
+
+export const matchRoute = (routePath, currentPath) => {
+    const routeParts = routePath.split("/").filter(Boolean)
+    const currentParts = currentPath.split("/").filter(Boolean)
+
+    if (routeParts.length !== currentParts.length) return false
+
+    return routeParts.every((part, i) => {
+        return part.startsWith(":") || part === currentParts[i]
+    })
+}
+
+
 export const uploadFiles = async (data) => {
     try {
         const response = axiosInterceptor().post(`${fileUploadURL}`, data)

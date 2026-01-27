@@ -136,7 +136,7 @@ const MemberRolesList = ({ setAlert }) => {
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={subUserTypes} getRowId={getRowId} height={470} showButtons={true} buttons={actionButtons} />
+                <DataTable columns={columns} rows={subUserTypes} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true}/>
             </div>
             <AlertDialog
                 open={dialog.open}

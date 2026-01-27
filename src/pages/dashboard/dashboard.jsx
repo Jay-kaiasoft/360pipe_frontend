@@ -52,8 +52,8 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
         const totalPipeLine = Number(dashboardData?.totalPipeLine || 0);
 
         // If later you add these fields from backend, this UI will automatically show them:
-        const netNew = Number(dashboardData?.netNewMeetings || 0);
-        const existing = Number(dashboardData?.existingMeetings || 0);
+        const netNew = Number(dashboardData?.totalNewMeetings || 0);
+        const existing = Number(dashboardData?.totalOldMeetings || 0);
 
         const totalClosedDealAmount =
             dashboardData?.totalClosedDealAmount != null ? Number(dashboardData.totalClosedDealAmount) : null;

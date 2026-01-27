@@ -113,7 +113,7 @@ const SyncHistory = () => {
     return (
         <>
             <div className='border rounded-lg bg-white mt-4'>
-                <DataTable columns={columns} rows={syncHistory} getRowId={getRowId} height={610} />
+                <DataTable columns={columns} rows={syncHistory} getRowId={getRowId} height={550} hideFooter={true}/>
             </div>
         </>
     )

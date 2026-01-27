@@ -26,6 +26,8 @@ import { convertAsiaKolkata, dateTimeFormatDB, userTimeZone } from '../../../ser
 import { getEventById, saveEvents } from '../../../service/calendar/calendarService';
 import DeleteEventAlert from './deleteEventAlert';
 import { useLocation, useParams } from 'react-router-dom';
+import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
+import SelectMultiple from '../../common/select/selectMultiple';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -114,6 +116,8 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
     const theme = useTheme();
     const location = useLocation()
     const { opportunityId } = useParams()
+    const [contacts, setContacts] = useState([]);
+    const [contactsIds, setContactsIds] = useState([]);
 
     const [openRepeat, setOpenRepeat] = useState(false);
     const [editAll, setEditAll] = useState(false);
@@ -135,6 +139,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
     } = useForm({
         defaultValues: {
             id: null,
+            meetingId: null,
             customerId: null,
             title: null,
             description: null,
@@ -213,9 +218,9 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 value: item.tmzValue,
             }));
             setTimeZones(data);
-            if (slotInfo?.id) {                
+            if (slotInfo?.id) {
                 setValue('calTimeZone', data?.find((row) => row.value === convertAsiaKolkata(watch("calTimeZone")))?.id || null);
-            } else {                
+            } else {
                 setValue('calTimeZone', data?.find((row) => row.value === convertAsiaKolkata(userTimeZone))?.id || null);
             }
         }
@@ -243,7 +248,10 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 const end = event.end ? dayjs(event.end, 'MM/DD/YYYY HH:mm:ss') : null;
 
                 // console.log("event.calTimeZone",event.calTimeZone)
+                setContactsIds((event?.contactIds != null || event?.contactIds != "") ? JSON.parse(event?.contactIds) : [])
                 setValue('id', event.id);
+                setValue('meetingId', event.meetingId);
+
                 setValue('title', event.title);
                 setValue('allDay', !!event.allDay);
                 setValue('start', start);
@@ -324,10 +332,24 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         }
     };
 
+    const handleGetAllOpportunitiesContact = async () => {
+        if (open && opportunityId) {
+            const res = await getAllOpportunitiesContact(opportunityId);
+            const data = res?.result?.map((item) => ({
+                id: item.contactId,
+                title: item.contactName,
+                role: item.role,
+                contactTitle: item.role,
+            })) || [];
+            setContacts(data);
+        }
+    }
+
     useEffect(() => {
         if (open) {
             handleGetAllTimeZones();
             handleGetEvent();
+            handleGetAllOpportunitiesContact()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, slotInfo]);
@@ -424,6 +446,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
             ...allValues,
 
             oppId: (location?.pathname !== "/dashboard/calendar" && opportunityId) ? opportunityId : null,
+            contactIds: contactsIds?.length > 0 ? JSON.stringify(contactsIds) : null,
             slots: slotIso ? [slotIso] : [],
             action: slotInfo?.action || 'click',
 
@@ -756,6 +779,20 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                                     )}
                                 />
                             </div>
+
+                            {
+                                opportunityId && (
+                                    <div>
+                                        <SelectMultiple
+                                            placeholder="Select contacts"
+                                            label="Guest List"
+                                            options={contacts}
+                                            value={contactsIds}
+                                            onChange={setContactsIds}
+                                        />
+                                    </div>
+                                )
+                            }
 
                             <div>
                                 <Editor

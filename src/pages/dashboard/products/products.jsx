@@ -194,9 +194,10 @@ const Products = ({ setAlert }) => {
           columns={columns}
           rows={products}
           getRowId={getRowId}
-          height={600}
           showButtons={false}
           buttons={actionButtons}
+          height={550}
+          hideFooter={true}
         />
         <AddProductModel open={open} handleClose={handleClose} id={selectedProductId} handleGetAllProducts={handleGetAllProducts} />
         <AlertDialog

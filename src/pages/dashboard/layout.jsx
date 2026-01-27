@@ -6,34 +6,34 @@ import AppHeader from "./appHeader/appHeader"
 import Dashboard from "./dashboard"
 import SideBar from "./sideBar/sideBar"
 import BackDrop from "./sideBar/backDrop"
+import SubHeader from "./appHeader/subHeader"
 
 const Layout = ({ sessionEndModel }) => {
-
   const navigate = useNavigate()
   const location = useLocation()
 
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col">
-      {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+    // overflow-hidden makes sure ONLY main scrolls (not the body/page)
+    <div className="bg-gray-50 h-screen flex flex-col overflow-hidden">
+      {/* Sticky Header Stack (does NOT overlap content like fixed) */}
+      <div className="sticky top-0 left-0 right-0 z-50">
+        <SubHeader />
         <AppHeader />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 pt-20">
+      <div className="flex flex-1 min-h-0">
         {/* Sidebar for mobile */}
         <div className="lg:hidden">
           <SideBar />
           <BackDrop />
         </div>
 
-        {/* Scrollable Content */}
-        <main className="flex-1">
-          <div className="h-full overflow-y-auto">
-            <div className="px-4 mx-auto">
-              <Outlet />
-              {location.pathname === '/dashboard' && <Dashboard />}
-            </div>
+        {/* Scrollable Content (ONLY this scrolls) */}
+        <main className="flex-1 min-h-0 overflow-y-auto pt-3">
+          <div className="px-4 mx-auto">
+            <Outlet />
+            {location.pathname === "/dashboard" && <Dashboard />}
           </div>
         </main>
       </div>
@@ -43,7 +43,7 @@ const Layout = ({ sessionEndModel }) => {
         title="Session Expired"
         message="Your session has expired. Please log in to continue."
         actionButtonText="Login"
-        handleAction={() => navigate('/login')}
+        handleAction={() => navigate("/login")}
         closeIcon={false}
       />
     </div>

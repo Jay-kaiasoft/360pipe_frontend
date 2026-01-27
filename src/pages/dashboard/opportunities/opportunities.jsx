@@ -25,9 +25,6 @@ import KeyContactModel from '../../../components/models/closePlan/keyContactMode
 import ClosePlanCommentModel from '../../../components/models/closePlan/closePlanCommentModel';
 import OpportunityInfoModel from '../../../components/models/opportunities/opportunityInfoModel';
 
-const filterTab = [
-    { id: 1, label: "Summary" },
-]
 
 const HtmlTooltip = styled(({ className, ...props }) => (
     <Tooltip
@@ -80,7 +77,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         actionId: 2,
     });
 
-    const [activeFilterTab, setActiveFilterTab] = useState(0);
     const [editingRowId, setEditingRowId] = useState(null);
     const [accounts, setAccounts] = useState([]);
 
@@ -1330,11 +1326,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     };
 
     return (
-        <>
-            <div className="mb-2">
-                <Tabs tabsData={filterTab} selectedTab={activeFilterTab} handleChange={handleSetActiveFilterTab} />
-            </div>
-
+        <>       
             <div className='border rounded-lg bg-white w-full lg:w-full'>
                 <GroupedDataTable
                     groups={opportunities}

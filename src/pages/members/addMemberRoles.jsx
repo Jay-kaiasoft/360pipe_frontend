@@ -172,7 +172,7 @@ const AddMemberRoles = () => {
     return (
         <>
             <form onSubmit={handleSubmit(handleSave)}>
-                <div className='my-5 md:w-96'>
+                <div className='md:w-96 mb-2'>
                     <Controller
                         name="name"
                         control={control}
@@ -294,7 +294,7 @@ const AddMemberRoles = () => {
                     </table>
                 </div>
 
-                <div className='flex justify-end mt-5 gap-3'>
+                <div className='flex justify-end my-3 gap-3'>
                     <div>
                         <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/members")} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                     </div>

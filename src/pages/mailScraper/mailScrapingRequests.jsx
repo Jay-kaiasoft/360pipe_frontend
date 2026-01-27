@@ -165,7 +165,7 @@ const MailScrapingRequests = ({ setAlert, setSelectedTab }) => {
     return (
         <>
             <div className='border rounded-lg bg-white mt-4'>
-                <DataTable columns={columns} rows={mails} getRowId={getRowId} height={550} />
+                <DataTable columns={columns} rows={mails} getRowId={getRowId} height={500} hideFooter={true}/>
             </div>
             <AlertDialog
                 open={dialog.open}

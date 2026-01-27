@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
+  headerTitle: null,
   loading: false,
   loadingMessage: null,
   alert: { open: false, message: '', type: '' },
@@ -23,12 +24,16 @@ const initialState = {
 
   filterStartDate: null,
   filterEndDate: null,
+
 };
 
 const commonReducersSlice = createSlice({
   name: "commonReducers",
   initialState,
   reducers: {
+    setHeaderTitle(state, action) {
+      state.headerTitle = action.payload;
+    },
     setSessionEndModel(state, action) {
       state.sessionEndModel = action.payload;
     },
@@ -110,6 +115,7 @@ const commonReducersSlice = createSlice({
 });
 
 export const {
+  setHeaderTitle,
   setLoading,
   setLoadingMessage,
   setAlert,
@@ -123,7 +129,7 @@ export const {
   setSyncingPushStatus,
   setFilterStartDate,
   setFilterEndDate,
-  
+
   // Sidebar actions
   toggleSidebar,
   toggleMobileSidebar,

@@ -249,7 +249,7 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   return (
     <div className='w-full'>
       <div className='border rounded-lg bg-white'>
-        <DataTable columns={columns} rows={subUsers} getRowId={getRowId} height={480} showButtons={true} buttons={actionButtons} />
+        <DataTable columns={columns} rows={subUsers} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true}/>
       </div>
       <AlertDialog
         open={dialog.open}

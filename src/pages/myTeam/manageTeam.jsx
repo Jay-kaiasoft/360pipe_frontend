@@ -102,7 +102,7 @@ const ManageTeam = ({ setAlert }) => {
             headerName: 'Name',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 300,            
+            maxWidth: 300,
         },
         {
             field: 'createdByName',
@@ -191,7 +191,7 @@ const ManageTeam = ({ setAlert }) => {
     return (
         <div>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={teams} getRowId={getRowId} height={550} showButtons={true} buttons={actionButtons} />
+                <DataTable columns={columns} rows={teams} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true} />
             </div>
             <AlertDialog
                 open={dialog.open}

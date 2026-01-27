@@ -40,7 +40,7 @@ const ManageMembers = () => {
                 <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} />
             </div>
 
-            <div className="mt-6">
+            <div className="mt-2">
                 {
                     selectedTab === 0 && <Members />
                 }
