@@ -1052,7 +1052,7 @@ useEffect(() => {
                                                 setWhyDoAnythingState(state)
                                             }
                                             toolbar={toolbarProperties}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                             toolbarClassName="toolbar-class border-b border-gray-300"
                                             onFocus={() => setActiveEditorHint("WhyDoAnything")}
@@ -1104,7 +1104,7 @@ useEffect(() => {
                                                 )
                                             }
                                             toolbar={toolbarProperties}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                             toolbarClassName="toolbar-class border-b border-gray-300"
                                         />
@@ -1139,7 +1139,7 @@ useEffect(() => {
                                                 setBusinessValueState(state)
                                             }
                                             toolbar={toolbarProperties}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                            wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                             toolbarClassName="toolbar-class border-b border-gray-300"
                                             onFocus={() => setActiveEditorHint("BusinessValue")}
@@ -1447,7 +1447,7 @@ useEffect(() => {
                                                 editorState={businessValueState}
                                                 onEditorStateChange={(state) => setBusinessValueState(state)}
                                                 toolbar={toolbarProperties}
-                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                 editorClassName="editor-class p-2 h-32 overflow-y-auto"
                                                 toolbarClassName="toolbar-class border-b border-gray-300"
                                             />
@@ -1716,7 +1716,7 @@ useEffect(() => {
                                                 editorState={whyDoAnythingState}
                                                 onEditorStateChange={(state) => setWhyDoAnythingState(state)}
                                                 toolbar={toolbarProperties}
-                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                 editorClassName="editor-class p-2 h-32 overflow-y-auto"
                                                 toolbarClassName="toolbar-class border-b border-gray-300"
                                             />
@@ -2847,7 +2847,7 @@ export default connect(null, mapDispatchToProps)(OpportunitiesInfo);
 //                                                 setWhyDoAnythingState(state)
 //                                             }
 //                                             toolbar={toolbarProperties}
-//                                             wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+//                                             wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
 //                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
 //                                             toolbarClassName="toolbar-class border-b border-gray-300"
 //                                             onFocus={() => setActiveEditorHint("WhyDoAnything")}
@@ -2897,7 +2897,7 @@ export default connect(null, mapDispatchToProps)(OpportunitiesInfo);
 //                                                 )
 //                                             }
 //                                             toolbar={toolbarProperties}
-//                                             wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+//                                             wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
 //                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
 //                                             toolbarClassName="toolbar-class border-b border-gray-300"
 //                                         />
@@ -2930,7 +2930,7 @@ export default connect(null, mapDispatchToProps)(OpportunitiesInfo);
 //                                                 setBusinessValueState(state)
 //                                             }
 //                                             toolbar={toolbarProperties}
-//                                             wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+//                                             wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
 //                                             editorClassName="editor-class p-2 h-40 overflow-y-auto"
 //                                             toolbarClassName="toolbar-class border-b border-gray-300"
 //                                             onFocus={() => setActiveEditorHint("BusinessValue")}
@@ -3235,7 +3235,7 @@ export default connect(null, mapDispatchToProps)(OpportunitiesInfo);
 //                                                 editorState={businessValueState}
 //                                                 onEditorStateChange={(state) => setBusinessValueState(state)}
 //                                                 toolbar={toolbarProperties}
-//                                                 wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+//                                                 wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
 //                                                 editorClassName="editor-class p-2 h-32 overflow-y-auto"
 //                                                 toolbarClassName="toolbar-class border-b border-gray-300"
 //                                             />
@@ -3504,7 +3504,7 @@ export default connect(null, mapDispatchToProps)(OpportunitiesInfo);
 //                                                 editorState={whyDoAnythingState}
 //                                                 onEditorStateChange={(state) => setWhyDoAnythingState(state)}
 //                                                 toolbar={toolbarProperties}
-//                                                 wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+//                                                 wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
 //                                                 editorClassName="editor-class p-2 h-32 overflow-y-auto"
 //                                                 toolbarClassName="toolbar-class border-b border-gray-300"
 //                                             />

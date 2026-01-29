@@ -110,6 +110,8 @@ export const headerTitles = [
     { title: "Sync History", path: "/dashboard/syncHistory" },
     { title: "Mail Scraper", path: "/dashboard/managemails" },
     { title: "Products & Service", path: "/dashboard/products" },
+    { title: "Activity", path: "/dashboard/activities" },
+    { title: "Results", path: "/dashboard/results" },
 ];
 
 export const matchRoute = (routePath, currentPath) => {
@@ -122,7 +124,6 @@ export const matchRoute = (routePath, currentPath) => {
         return part.startsWith(":") || part === currentParts[i]
     })
 }
-
 
 export const uploadFiles = async (data) => {
     try {

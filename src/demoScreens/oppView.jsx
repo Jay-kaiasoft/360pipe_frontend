@@ -1379,7 +1379,7 @@ export default function OppView() {
                   <div className="h-full overflow-y-auto">
                     <Editor
                       editorState={whyDoAnythingState}
-                      wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                      wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                       editorClassName="editor-class p-2 h-40 overflow-y-auto"
                       toolbarClassName="toolbar-class border-b border-gray-300"
                       onEditorStateChange={(state) => setWhyDoAnythingState(state)}
@@ -1411,7 +1411,7 @@ export default function OppView() {
                   <div className="h-full overflow-y-auto">
                     <Editor
                       editorState={businessValueState}
-                      wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                      wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                       editorClassName="editor-class p-2 h-40 overflow-y-auto"
                       toolbarClassName="toolbar-class border-b border-gray-300"
                       onEditorStateChange={(state) => setBusinessValueState(state)}
@@ -1715,7 +1715,7 @@ export default function OppView() {
                   <div className="h-full overflow-y-auto">
                     <Editor
                       editorState={currentEnvironmentState}
-                      wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                      wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                       editorClassName="editor-class p-2 h-40 overflow-y-auto"
                       toolbarClassName="toolbar-class border-b border-gray-300"
                       onEditorStateChange={(state) => setCurrentEnvironmentState(state)}

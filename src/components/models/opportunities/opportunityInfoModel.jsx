@@ -1068,7 +1068,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                     setWhyDoAnythingState(state)
                                                 }
                                                 toolbar={toolbarProperties}
-                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                 editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                 toolbarClassName="toolbar-class border-b border-gray-300"
                                                 onFocus={() => setActiveEditorHint("WhyDoAnything")}
@@ -1120,7 +1120,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                     )
                                                 }
                                                 toolbar={toolbarProperties}
-                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                 editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                 toolbarClassName="toolbar-class border-b border-gray-300"
                                             />
@@ -1155,7 +1155,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                     setBusinessValueState(state)
                                                 }
                                                 toolbar={toolbarProperties}
-                                                wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                 editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                 toolbarClassName="toolbar-class border-b border-gray-300"
                                                 onFocus={() => setActiveEditorHint("BusinessValue")}
@@ -1463,7 +1463,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                     editorState={businessValueState}
                                                     onEditorStateChange={(state) => setBusinessValueState(state)}
                                                     toolbar={toolbarProperties}
-                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                     editorClassName="editor-class p-2 h-32 overflow-y-auto"
                                                     toolbarClassName="toolbar-class border-b border-gray-300"
                                                 />
@@ -1755,7 +1755,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                                                     editorState={whyDoAnythingState}
                                                     onEditorStateChange={(state) => setWhyDoAnythingState(state)}
                                                     toolbar={toolbarProperties}
-                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                     editorClassName="editor-class p-2 h-32 overflow-y-auto"
                                                     toolbarClassName="toolbar-class border-b border-gray-300"
                                                 />

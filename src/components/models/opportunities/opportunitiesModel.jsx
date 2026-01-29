@@ -932,7 +932,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 </p>
                                                 <Editor
                                                     editorState={whyDoAnything}
-                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                     editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                     toolbarClassName="toolbar-class border-b border-gray-300"
                                                     onEditorStateChange={(state) => {
@@ -947,7 +947,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 </p>
                                                 <Editor
                                                     editorState={currentEnvironment}
-                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                     editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                     toolbarClassName="toolbar-class border-b border-gray-300"
                                                     onEditorStateChange={(state) => {
@@ -963,7 +963,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 </p>
                                                 <Editor
                                                     editorState={businessValue}
-                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                     editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                     toolbarClassName="toolbar-class border-b border-gray-300"
                                                     onEditorStateChange={(state) => {
@@ -979,7 +979,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 </p>
                                                 <Editor
                                                     editorState={decisionMap}
-                                                    wrapperClassName="wrapper-class border border-gray-300 rounded-md"
+                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
                                                     editorClassName="editor-class p-2 h-40 overflow-y-auto"
                                                     toolbarClassName="toolbar-class border-b border-gray-300"
                                                     onEditorStateChange={(state) => {

@@ -1,373 +1,564 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from 'react-router-dom';
+import { connect } from 'react-redux';
 
+// Rich Text Editor
 import { Editor } from "react-draft-wysiwyg";
-import {
-    EditorState,
-    ContentState,
-    convertToRaw
-} from "draft-js";
+import { ContentState, EditorState, convertToRaw } from "draft-js";
 import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
-import '../../../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
-import { useForm } from 'react-hook-form';
+// Dates & UI Utils
 import dayjs from "dayjs";
-import { useNavigate, useParams } from 'react-router-dom'
-import { connect } from 'react-redux';
-import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
-
+import { Tooltip, useTheme } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Tooltip } from '@mui/material';
-import { Tabs } from '../../../components/common/tabs/tabs';
 
-import Checkbox from '../../../components/common/checkBox/checkbox';
-import Select from '../../../components/common/select/select';
-import Input from '../../../components/common/input/input';
-import CustomIcons from '../../../components/common/icons/CustomIcons';
-import FileInputBox from '../../../components/fileInputBox/fileInputBox';
-import MultipleFileUpload from '../../../components/fileInputBox/multipleFileUpload';
+// Components & Icons
+import Components from "../../../components/muiComponents/components";
+import CustomIcons from "../../../components/common/icons/CustomIcons";
+import Input from "../../../components/common/input/input";
+import Select from "../../../components/common/select/select";
+import Checkbox from "../../../components/common/checkBox/checkbox";
+import { Tabs } from "../../../components/common/tabs/tabs";
+import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import Calendar from '../calendar/Calendar';
 
-import Components from '../../../components/muiComponents/components';
+// Modals
 import OpportunityContactModel from '../../../components/models/opportunities/opportunityContactModel';
-import OpportunitiesPartnersModel from '../../../components/models/opportunities/opportunityPartnerModel';
-import OpportunitiesProductsModel from '../../../components/models/opportunities/opportunitiesProductsModel';
+import AddSalesProcessModel from '../../../components/models/opportunities/salesProcess/addSalesProcessModel';
+import MeetingAttendeesModel from '../../../components/models/meeting/meetingAttendeesModel';
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 
+// Services & Actions
+import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import { getUserDetails } from '../../../utils/getUserDetails';
-import { deleteOpportunityLogo, getOpportunityDetails, updateOpportunity, updateOpportunityLogo } from '../../../service/opportunities/opportunitiesService';
+import {
+    deleteOpportunityLogo,
+    getOpportunityDetails,
+    updateOpportunity,
+    updateOpportunityLogo
+} from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { getAllOpportunitiesPartner, deleteOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
-import { getAllOpportunitiesProducts, deleteOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
-import { getAllOpportunitiesContact, updateOpportunitiesContact, deleteOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
-import { opportunityStages, opportunityStatus, partnerRoles, uploadFiles, userTimeZone } from '../../../service/common/commonService'
-import AddSalesProcessModel from '../../../components/models/opportunities/salesProcess/addSalesProcessModel';
+import {
+    getAllOpportunitiesContact,
+    updateOpportunitiesContact,
+    deleteOpportunitiesContact
+} from '../../../service/opportunities/opportunitiesContactService';
 import { deleteSalesProcess, getAllBySalesOpportunity } from '../../../service/salesProcess/salesProcessService';
 import { getAllMeetingsByOppId } from '../../../service/meetings/meetingsService';
-import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
-import MeetingAttendeesModel from '../../../components/models/meeting/meetingAttendeesModel';
 import { deleteMeetingAttendees, getAllMeetingsAttendeesByMeetingId } from '../../../service/meetingAttendees/meetingAttendeesService';
 import { getByMeetingId, saveNote, updateNote } from '../../../service/notes/notesService';
-import OpportunityKeyContactModel from '../../../components/models/opportunities/opportunityKeyContactModel';
+import {
+    opportunityStages,
+    opportunityStatus,
+    uploadFiles,
+    userTimeZone
+} from '../../../service/common/commonService';
 
+// ----------------------------
+// Constants / Helpers
+// ----------------------------
 const toolbarProperties = {
-    options: ['inline', 'list', 'link', 'history'],
-    inline: {
-        options: ['bold', 'italic', 'underline', 'strikethrough']
-    },
-    list: {
-        options: ['unordered', 'ordered'],
-    }
+    options: ["inline", "list", "link", "history"],
+    inline: { options: ["bold", "italic", "underline", "strikethrough"] },
+    list: { options: ["unordered", "ordered"] },
+};
+
+const tableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Calendar" }];
+
+const isEmptyHtml = (h) => {
+    const x = (h || "").trim();
+    return !x || x === "<p></p>" || x === "<p><br></p>";
+};
+
+const htmlToEditorState = (html) => {
+    const clean = (html || "").trim();
+    if (!clean) return EditorState.createEmpty();
+    const blocks = htmlToDraft(clean);
+    const contentState = ContentState.createFromBlockArray(blocks.contentBlocks, blocks.entityMap);
+    return EditorState.createWithContent(contentState);
+};
+
+const editorStateToHtml = (state) => (state ? draftToHtml(convertToRaw(state.getCurrentContent())) : "");
+
+// function useClickOutside(ref, handler, when = true) {
+//     useEffect(() => {
+//         if (!when) return;
+//         const listener = (event) => {
+//             const el = ref?.current;
+//             if (!el) return;
+//             if (el.contains(event.target)) return;
+//             handler(event);
+//         };
+//         document.addEventListener("mousedown", listener, true);
+//         document.addEventListener("touchstart", listener, true);
+//         return () => {
+//             document.removeEventListener("mousedown", listener, true);
+//             document.removeEventListener("touchstart", listener, true);
+//         };
+//     }, [ref, handler, when]);
+// }
+
+function useClickOutside(ref, handler, when = true) {
+    useEffect(() => {
+        if (!when) return;
+
+        const listener = (event) => {
+            const el = ref?.current;
+            if (!el) return;
+
+            // 1. Check if the click is inside the component itself
+            if (el.contains(event.target)) return;
+
+            // 2. Check if the click is inside a Portal (MUI Popover, Menu, or Calendar)
+            // Most MUI overlays use these classes:
+            const isPortal = event.target.closest(".MuiPopover-root") ||
+                event.target.closest(".MuiAutocomplete-popper") ||
+                event.target.closest(".MuiDialog-root") ||
+                event.target.closest(".MuiMenu-root");
+
+            if (isPortal) return;
+
+            handler(event);
+        };
+
+        document.addEventListener("mousedown", listener, true);
+        document.addEventListener("touchstart", listener, true);
+        return () => {
+            document.removeEventListener("mousedown", listener, true);
+            document.removeEventListener("touchstart", listener, true);
+        };
+    }, [ref, handler, when]);
 }
 
-const tableData = [
-    { label: 'Opportunity Details' },
-    { label: 'Opp360' },
-    { label: 'Calendar' },
-    { label: 'Notes' },
-]
+const normalizeDomain = (raw) => {
+    const v = (raw || "").trim();
+    if (!v) return "";
+    let d = v.replace(/^https?:\/\//i, "");
+    d = d.split("/")[0].split("?")[0].trim();
+    d = d.replace(/\.+$/, "");
+    return d;
+};
 
+const brandfetchSrc = (domain) => `https://cdn.brandfetch.io/${domain}/w/100/h/100/icon?c=1id2vhiypCcqm7fpTjx`;
+
+const getDisplayName = (id, options) => {
+    const option = options.find(opt => opt.id === id);
+    return option ? option.title : '—';
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+// ----------------------------
+// Main Component
+// ----------------------------
 const ViewOpportunity = ({ setAlert }) => {
-    const { opportunityId } = useParams()
+    const { opportunityId } = useParams();
     const navigate = useNavigate();
     const userdata = getUserDetails();
+    const theme = useTheme();
+
+    // --- Layout State ---
     const [selectedTab, setSelectedTab] = useState(0);
-    // const [opportunityStages, setOpportunityStages] = useState([])
-    const [activeEditorHint, setActiveEditorHint] = useState(null);
-
-    const [whyDoAnythingStateHTML, setWhyDoAnythingStateHTML] = useState(null);
-    const [businessValueStateHTML, setBusinessValueStateHTML] = useState(null);
-    const [currentEnvironmentHTML, setCurrentEnvironmentHTML] = useState(null);
-
-    const [isWhyDoAnythingDirty, setIsWhyDoAnythingDirty] = useState(false);
-    const [isBusinessValueDirty, setIsBusinessValueDirty] = useState(false);
-    const [isCurrentEnvironmentDirty, setIsCurrentEnvironmentDirty] = useState(false);
-    const [openDecisionMapModel, setOpenDecisionMapModel] = useState(null);
-    const [salesProcess, setSalesProcess] = useState([])
-    const [salesProcessId, setSalesProcessId] = useState(null)
-
-    const [whyDoAnythingState, setWhyDoAnythingState] = useState(
-        EditorState.createEmpty()
-    );
-    const [businessValueState, setBusinessValueState] = useState(
-        EditorState.createEmpty()
-    );
-
-    const [currentEnvironmentState, setCurrentEnvironmentState] = useState(
-        EditorState.createEmpty()
-    );
-
-    const [accounts, setAccounts] = useState([]);
-
-    const [opportunitiesPartner, setOpportunitiesPartner] = useState([]);
-    const [opportunitiesProducts, setOpportunitiesProducts] = useState([]);
-    const [opportunitiesContacts, setOpportunitiesContacts] = useState([]);
-    const [opportunitiesKeyContact, setOpportunitiesKeyContacts] = useState([]);
-
-    // Contact CRUD states
-    const [contactModalOpen, setContactModalOpen] = useState(false);
-    const [keyContactModalOpen, setKeyContactModalOpen] = useState(false);
-    const [selectedContactId, setSelectedContactId] = useState(null);
-    const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-
-    // Partner CRUD states
-    const [partnerModalOpen, setPartnerModalOpen] = useState(false);
-    const [selectedPartnerId, setSelectedPartnerId] = useState(null);
-
-    const [dialogPartner, setDialogPartner] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-
-    // Product CRUD states
-    const [productModalOpen, setProductModalOpen] = useState(false);
-    const [selectedProductId, setSelectedProductId] = useState(null);
-
-    const [dialogProduct, setDialogProduct] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-
-    const [initialIsKey, setInitialIsKey] = useState({});
-    const [editedContacts, setEditedContacts] = useState([]);
-
-    const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-    const [dialogDeleteDecisionMap, setDialogDeleteDecisionMap] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-
-    const [files, setFiles] = useState([]);
-    const [existingImages, setExistingImages] = useState([]);
-    const [showDates, setShowDates] = useState(null)
-    const [meetings, setMeetings] = useState([])
-    const [filteredMeetings, setFilteredMeetings] = useState([])
-    const [selectedMeeting, setSelectedMeeting] = useState(null)
-    const [meetingAttendees, setMeetingAttendees] = useState([])
-    const [selectedMeetingAttendeesId, setSelectedMeetingAttendeesId] = useState(null)
-    const [attendeesModelOpen, setAttendeesModelOpen] = useState(false);
-    const [deleteAttendees, setDeleteAttendees] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-
-    const [editingNoteField, setEditingNoteField] = useState(null);
-
-    const [purposeHTML, setPurposeHTML] = useState("");
-    const [backgroundHTML, setBackgroundHTML] = useState("");
-    const [agendaHTML, setAgendaHTML] = useState("");
-    const [alignmentHTML, setAlignmentHTML] = useState("");
-
-    const [purposeState, setPurposeState] = useState(EditorState.createEmpty());
-    const [backgroundState, setBackgroundState] = useState(EditorState.createEmpty());
-    const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
-    const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
-    const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
     const [openDrawer, setOpenDrawer] = useState(true);
 
-    // const [noteConfirm, setNoteConfirm] = useState({
-    //     open: false,
-    //     nextField: null,      // which field user wants to open after confirm
-    //     reason: null,         // "outside" | "switch"
-    // });
-    const activeNoteEditorRef = useRef(null);
-
-    // For Opp360 "Key Contacts" card: only key contacts
-    const keyContactsWithEdits = opportunitiesKeyContact.map((c) => {
-        const edit = editedContacts.find((e) => e.id === c.id);
-        return { ...c, isKey: edit ? edit.isKey : c.isKey };
-    });
-
-    // For MEDDIC & key-count logic: ALL contacts with edits applied
-    const allContactsWithEdits = opportunitiesContacts.map((c) => {
-        const edit = editedContacts.find((e) => e.id === c.id);
-        return { ...c, isKey: edit ? edit.isKey : c.isKey };
-    });
-
-    // Always compute key count from all contacts
-    const currentKeyContactsCount = allContactsWithEdits.filter(
-        (c) => c.isKey
-    ).length;
-
-    const {
-        watch,
-        setValue,
-        getValues,
-        control
-    } = useForm({
+    // --- Form & Data State ---
+    const { control, setValue, watch, getValues } = useForm({
         defaultValues: {
             id: null,
             opportunity: null,
             salesStage: null,
+            status: null,
+            closeDate: null,
+            accountId: null,
             dealAmount: null,
             discountPercentage: null,
             listPrice: null,
-            closeDate: null,
             nextSteps: null,
-            accountId: null,
-            salesforceOpportunityId: null,
-            status: null,
             logo: null,
-            newLogo: null,
-            opportunityDocs: [],
-
+            meetingDate: dayjs().format("MM/DD/YYYY"),
             noteId: null,
-            purpose: null,
-            background: null,
-            alignment: null,
-            agenda: null,
-            meetingDate: dayjs(new Date()).format("MM/DD/YYYY"),
         },
     });
 
-    const htmlToEditorState = (html) => {
-        const clean = (html || "").trim();
-        if (!clean) return EditorState.createEmpty();
+    const [accounts, setAccounts] = useState([]);
 
-        const blocks = htmlToDraft(clean);
-        const contentState = ContentState.createFromBlockArray(
-            blocks.contentBlocks,
-            blocks.entityMap
-        );
-        return EditorState.createWithContent(contentState);
+    // --- Rich Text Editor States ---
+    const [activeEditorHint, setActiveEditorHint] = useState(null);
+    const [whyDoAnythingStateHTML, setWhyDoAnythingStateHTML] = useState("");
+    const [businessValueStateHTML, setBusinessValueStateHTML] = useState("");
+    const [currentEnvironmentHTML, setCurrentEnvironmentHTML] = useState("");
+
+    const [whyDoAnythingState, setWhyDoAnythingState] = useState(EditorState.createEmpty());
+    const [businessValueState, setBusinessValueState] = useState(EditorState.createEmpty());
+    const [currentEnvironmentState, setCurrentEnvironmentState] = useState(EditorState.createEmpty());
+
+    // Click-to-edit toggles
+    const [isEditingWhy, setIsEditingWhy] = useState(false);
+    const [isEditingValue, setIsEditingValue] = useState(false);
+    const [isEditingEnv, setIsEditingEnv] = useState(false);
+    const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
+
+    const whyCardRef = useRef(null);
+    const valueCardRef = useRef(null);
+    const envCardRef = useRef(null);
+    const nextStepsRef = useRef(null);
+
+    // --- Contacts State ---
+    const [contacts, setContacts] = useState([]);
+    const [editedContacts, setEditedContacts] = useState([]);
+    const [initialIsKey, setInitialIsKey] = useState({});
+    const [isSelectContactsOpen, setIsSelectContactsOpen] = useState(false);
+    const selectContactsRef = useRef(null);
+
+    // Modals
+    const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [selectedContactId, setSelectedContactId] = useState(null);
+    const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // --- Decision Map State ---
+    const [salesProcess, setSalesProcess] = useState([]);
+    const [salesProcessId, setSalesProcessId] = useState(null);
+    const [openDecisionMapModel, setOpenDecisionMapModel] = useState(false);
+    const [dialogDeleteDecisionMap, setDialogDeleteDecisionMap] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // --- Pricing Box State ---
+    const [showPricingBox, setShowPricingBox] = useState(false);
+    const pricingBoxRef = useRef(null);
+    const [pricingDraft, setPricingDraft] = useState({
+        listPrice: null,
+        discountPercentage: null,
+        dealAmount: null,
+    });
+
+    // --- Logo State ---
+    const [isLogoMenuOpen, setIsLogoMenuOpen] = useState(false);
+    const [isUploadLogoOpen, setIsUploadLogoOpen] = useState(false);
+    const [isFetchLogoOpen, setIsFetchLogoOpen] = useState(false);
+
+    const logoMenuRef = useRef(null);
+    const uploadLogoRef = useRef(null);
+    const fetchLogoRef = useRef(null);
+    const fileInputRef = useRef(null);
+
+    const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [logoUploadDraft, setLogoUploadDraft] = useState({ file: null, previewUrl: "", fileName: "" });
+    const [domainDraft, setDomainDraft] = useState("");
+
+    // --- Meetings & Notes State ---
+    const [showDates, setShowDates] = useState(null);
+    const [meetings, setMeetings] = useState([]);
+    const [filteredMeetings, setFilteredMeetings] = useState([]);
+    const [selectedMeeting, setSelectedMeeting] = useState(null);
+    const [meetingAttendees, setMeetingAttendees] = useState([]);
+
+    const [selectedMeetingAttendeesId, setSelectedMeetingAttendeesId] = useState(null);
+    const [attendeesModelOpen, setAttendeesModelOpen] = useState(false);
+    const [deleteAttendees, setDeleteAttendees] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+
+    // Note Snapshots
+    const [purposeHTML, setPurposeHTML] = useState("");
+    const [backgroundHTML, setBackgroundHTML] = useState("");
+    const [agendaHTML, setAgendaHTML] = useState("");
+    const [alignmentHTML, setAlignmentHTML] = useState("");
+    const [purposeState, setPurposeState] = useState(EditorState.createEmpty());
+    const [backgroundState, setBackgroundState] = useState(EditorState.createEmpty());
+    const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
+    const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
+
+    const [editingNoteField, setEditingNoteField] = useState(null);
+    const activeNoteEditorRef = useRef(null);
+
+    // ----------------------------
+    // Data Fetching
+    // ----------------------------
+    const handleGetOpportunityDetails = async () => {
+        if (!opportunityId) return;
+        const res = await getOpportunityDetails(opportunityId);
+        if (res?.status === 200) {
+            const r = res.result;
+
+            setValue("id", r.id);
+            setValue("accountId", r.accountId);
+            setValue("opportunity", r.opportunity);
+            setValue("closeDate", r.closeDate);
+            setValue("nextSteps", r.nextSteps);
+            setValue("logo", r.logo);
+
+            const stg = opportunityStages?.find(s => s.title === r.salesStage)?.title || null;
+            setValue("salesStage", stg);
+            const sts = opportunityStatus?.find(s => s.title === r.status)?.title || null;
+            setValue("status", sts);
+
+            setValue("listPrice", r.listPrice);
+            setValue("discountPercentage", r.discountPercentage);
+            setValue("dealAmount", r.dealAmount);
+
+            const whyHtml = (r.whyDoAnything || "").trim();
+            setWhyDoAnythingStateHTML(whyHtml);
+            setWhyDoAnythingState(htmlToEditorState(whyHtml));
+
+            const valHtml = (r.businessValue || "").trim();
+            setBusinessValueStateHTML(valHtml);
+            setBusinessValueState(htmlToEditorState(valHtml));
+
+            const envHtml = (r.currentEnvironment || "").trim();
+            setCurrentEnvironmentHTML(envHtml);
+            setCurrentEnvironmentState(htmlToEditorState(envHtml));
+        }
     };
 
-    const editorStateToHtml = (state) =>
-        state ? draftToHtml(convertToRaw(state.getCurrentContent())) : "";
+    const handleGetAllAccounts = async () => {
+        const res = await getAllAccounts("fetchType=Options");
+        if (res?.status === 200) {
+            setAccounts(res.result.map(a => ({ title: a.accountName, id: a.id })));
+        }
+    };
 
-    const handleOpenDeleteAttendees = (id) => {
-        setSelectedMeetingAttendeesId(id)
-        setDeleteAttendees({ open: true, title: 'Delete Attendees', message: 'Are you sure! Do you want to delete this attendees?', actionButtonText: 'Yes' })
-    }
+    const handleGetOppContacts = async () => {
+        if (!opportunityId) return;
+        const res = await getAllOpportunitiesContact(opportunityId);
+        const list = Array.isArray(res?.result) ? res.result : [];
 
-    const handleCloseDeleteAttendees = () => {
-        setSelectedMeetingAttendeesId(null)
-        setDeleteAttendees({ open: false, title: '', message: '', actionButtonText: '' })
-    }
+        const sorted = [...list].sort((a, b) => (a.isKey === b.isKey ? 0 : a.isKey ? -1 : 1));
+        setContacts(sorted);
 
-    const handleDeleteAttendees = async () => {
-        const res = await deleteMeetingAttendees(selectedMeetingAttendeesId)
-        if (res.status === 200) {
-            handleGetAllMeetingAttendees(selectedMeeting)
-            handleCloseDeleteAttendees()
+        const map = {};
+        sorted.forEach(c => { map[c.id] = !!c.isKey; });
+        setInitialIsKey(map);
+        setEditedContacts([]);
+    };
+
+    const handleGetAllSalesProcess = async () => {
+        if (!opportunityId) return;
+        const res = await getAllBySalesOpportunity(opportunityId);
+        if (res?.status === 200) setSalesProcess(res.result || []);
+    };
+
+    const handleGetMeeetingByOppId = async () => {
+        if (!opportunityId || selectedTab !== 1) return;
+        const res = await getAllMeetingsByOppId(opportunityId, userTimeZone);
+        if (res?.status === 200) {
+            const data = res.result.map(row => ({
+                id: row.id,
+                title: row.calendarDto?.title,
+                description: row.calendarDto?.description,
+                displayStart: row.calendarDto?.displayStart,
+            }));
+            setMeetings(data);
+            const dates = new Set(data.map(m => m.displayStart?.split(" ")[0]));
+            setShowDates(dates);
+        }
+    };
+
+    useEffect(() => {
+        handleGetAllAccounts();
+        handleGetOpportunityDetails();
+        handleGetOppContacts();
+        handleGetAllSalesProcess();
+    }, [opportunityId]);
+
+    useEffect(() => {
+        handleGetMeeetingByOppId();
+        if (selectedTab !== 1) {
+            setSelectedMeeting(null);
+            setFilteredMeetings([]);
+            setMeetingAttendees([]);
+        }
+    }, [selectedTab]);
+
+    useEffect(() => {
+        const date = watch("meetingDate");
+        if (date && meetings.length) {
+            const filtered = meetings.filter(m => m.displayStart?.split(" ")[0] === date);
+            setFilteredMeetings(filtered);
+            setSelectedMeeting(null);
+            setMeetingAttendees([]);
         } else {
-            setAlert({
-                open: true,
-                message: res.message || "Fail to delete attendees",
-                type: "error"
-            })
+            setFilteredMeetings([]);
         }
-    }
+    }, [watch("meetingDate"), meetings]);
 
-    const handleOpenAttendeesModel = (id = null) => {
-        setSelectedMeetingAttendeesId(id)
-        setAttendeesModelOpen(true)
-    }
+    // ----------------------------
+    // Logic: Field Saving
+    // ----------------------------
+    const handleSaveField = async (fieldName, newValue) => {
+        const currentValues = getValues();
 
-    const handleCloseAttendeesModel = () => {
-        setSelectedMeetingAttendeesId(null)
-        setAttendeesModelOpen(false)
-    }
+        const whyHtml = editorStateToHtml(whyDoAnythingState);
+        const valHtml = editorStateToHtml(businessValueState);
+        const envHtml = editorStateToHtml(currentEnvironmentState);
 
-    const handleOpenDecisionMapModel = async (id = null) => {
-        setSalesProcessId(id)
-        setOpenDecisionMapModel(true)
-    }
+        let payload = {
+            ...currentValues,
+            [fieldName]: newValue,
+            whyDoAnything: whyHtml,
+            businessValue: valHtml,
+            currentEnvironment: envHtml,
+        };
 
-    const handleCloseDecisionMapModel = async () => {
-        setSalesProcessId(null)
-        setOpenDecisionMapModel(false)
-    }
+        if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
+            const toNumber = (v) => (v === null || v === "" || isNaN(Number(v))) ? null : Number(v);
 
-    const handleOpenDecisionMapDelete = async (id) => {
-        setSalesProcessId(id)
-        setDialogDeleteDecisionMap({ open: true, title: 'Delete Decision Map', message: 'Are you sure! Do you want to delete decision map ?', actionButtonText: 'yes' })
-    }
+            let lp = toNumber(fieldName === "listPrice" ? newValue : currentValues.listPrice);
+            let dp = toNumber(fieldName === "discountPercentage" ? newValue : currentValues.discountPercentage);
+            let da = toNumber(fieldName === "dealAmount" ? newValue : currentValues.dealAmount);
 
-    const handleCloseDecisionMapDelete = async () => {
-        setSalesProcessId(null)
-        setDialogDeleteDecisionMap({ open: false, title: '', message: '', actionButtonText: '' })
-    }
-
-    const handleDeteleDecisionMap = async () => {
-        if (salesProcessId) {
-            const res = await deleteSalesProcess(salesProcessId);
-            if (res.status === 200) {
-                handleGetAllSalesProcess()
-                handleCloseDecisionMapDelete()
-                setAlert({
-                    open: true,
-                    message: "Decision-Map deleted successfully",
-                    type: "success"
-                })
-            } else {
-                setAlert({
-                    open: true,
-                    message: res.message,
-                    type: "error"
-                })
+            if (fieldName === "listPrice") {
+                if (lp !== null && dp !== null) da = lp - (lp * dp / 100);
+                else if (lp !== null && da !== null) dp = ((lp - da) / lp) * 100;
+                else if (lp !== null) da = lp;
+            } else if (fieldName === "discountPercentage") {
+                if (lp !== null && dp !== null) da = lp - (lp * dp / 100);
+            } else if (fieldName === "dealAmount") {
+                if (lp !== null && da !== null) dp = ((lp - da) / lp) * 100;
             }
+
+            payload.listPrice = lp;
+            payload.discountPercentage = dp ? parseFloat(dp.toFixed(2)) : null;
+            payload.dealAmount = da ? parseFloat(da.toFixed(2)) : null;
         }
-    }
+        console.log("payload", payload)
+        // const res = await updateOpportunity(opportunityId, payload);
+        // if (res?.status === 200) {
+        //     setValue(fieldName, newValue);
+        //     if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
+        //         setValue("listPrice", payload.listPrice);
+        //         setValue("discountPercentage", payload.discountPercentage);
+        //         setValue("dealAmount", payload.dealAmount);
+        //     }
+        //     //    setAlert({ open: true, message: "Saved successfully", type: "success" });
+        // } else {
+        //     setAlert({ open: true, message: "Failed to save", type: "error" });
+        // }
+    };
 
-    const handleChangeTab = (value) => {
-        setSelectedTab(value);
-    }
+    const handleSaveEditor = async (key) => {
+        const currentValues = getValues();
+        const whyDoAnythingHtmlData = whyDoAnythingState
+            ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
+            : null;
 
-    const uploadSelectedFiles = async () => {
-        const newFiles = [];
-        try {
-            for (const file of files) {
-                const formData = new FormData();
-                formData.append("files", file);
-                formData.append("folderName", "opportunitiesDocuments");
+        const businessValueHtmlData = businessValueState
+            ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
+            : null;
 
-                const response = await uploadFiles(formData);
-                if (response?.data?.status === 200) {
-                    const uploadedFile = response.data.result[0];
-                    // attach isInternal to API returned object
-                    const fileWithInternal = {
-                        ...uploadedFile,
-                        isInternal: file.isInternal
-                    };
-                    // push to final return array
-                    newFiles.push(fileWithInternal);
-                } else {
-                    setAlert({ open: true, message: response?.data?.message, type: "error" });
-                    return { ok: false, files: [] };
-                }
-            }
-            // clear local selected files on success
-            const currentValues = getValues();
-            const whyDoAnythingHtmlData = whyDoAnythingState
-                ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
-                : null;
-
-            const businessValueHtmlData = businessValueState
-                ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
-                : null;
-
-            const currentEnvironmentHtmlData = currentEnvironmentState
-                ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
-                : null;
+        const currentEnvironmentHtmlData = currentEnvironmentState
+            ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
+            : null;
 
 
-            let payload = {
-                ...currentValues,
-                opportunityDocs: newFiles,
-                whyDoAnything: whyDoAnythingHtmlData,
-                businessValue: businessValueHtmlData,
-                currentEnvironment: currentEnvironmentHtmlData,
-            };
-            const res = await updateOpportunity(opportunityId, payload);
-            if (res?.status !== 200) {
-                setAlert({
-                    open: true,
-                    message: "Failed to save documents",
-                    type: "error"
-                })
-            } else {
-                setFiles([]);
-                handleGetOpportunityDetails()
-                setAlert({ open: true, message: "Deal documents uploaded successfully", type: "success" });
-            }
-            return { ok: true, files: newFiles };
-        } catch (error) {
-            setAlert({ open: true, message: 'Error uploading files', type: "error" });
-            return { ok: false, files: [] };
+        let payload = {
+            ...currentValues,
+            whyDoAnything: whyDoAnythingHtmlData,
+            businessValue: businessValueHtmlData,
+            currentEnvironment: currentEnvironmentHtmlData,
+            nextSteps: watch("nextSteps"),
+        };
+
+        const res = await updateOpportunity(opportunityId, payload);
+
+        if (res?.status === 200) {
+            setWhyDoAnythingStateHTML(whyDoAnythingHtmlData);
+            setBusinessValueStateHTML(businessValueHtmlData);
+            setCurrentEnvironmentHTML(currentEnvironmentHtmlData);
         }
     };
 
+    useClickOutside(whyCardRef, () => {
+        if (!isEditingWhy) return;
+        handleSaveEditor("whyDoAnything");
+        setIsEditingWhy(false);
+        setActiveEditorHint(null)
+    }, isEditingWhy);
+
+    useClickOutside(valueCardRef, () => {
+        if (!isEditingValue) return;
+        handleSaveEditor("businessValue");
+        setIsEditingValue(false);
+        setActiveEditorHint(null)
+    }, isEditingValue);
+
+    useClickOutside(envCardRef, () => {
+        if (!isEditingEnv) return;
+        handleSaveEditor("currentEnvironment");
+        setIsEditingEnv(false);
+    }, isEditingEnv);
+
+    useClickOutside(nextStepsRef, () => {
+        if (!isEditingNextSteps) return;
+        handleSaveField("nextSteps", watch("nextSteps"));
+        setIsEditingNextSteps(false);
+    }, isEditingNextSteps);
+
+    // ----------------------------
+    // Logic: Contacts
+    // ----------------------------
+    const allContactsWithEdits = useMemo(() => {
+        return (contacts || []).map((c) => {
+            const edit = editedContacts.find((e) => String(e.id) === String(c.id));
+            return { ...c, isKey: edit ? !!edit.isKey : !!c.isKey };
+        });
+    }, [contacts, editedContacts]);
+
+    const currentKeyContactsCount = allContactsWithEdits.filter((c) => c.isKey).length;
+
+    const handleToggleKeyContact = (id, isKey) => {
+        setEditedContacts((prev) => {
+            const next = [...prev];
+            const idx = next.findIndex((e) => String(e.id) === String(id));
+            if (idx >= 0) next[idx] = { id, isKey };
+            else next.push({ id, isKey });
+            return next;
+        });
+    };
+
+    useClickOutside(selectContactsRef, async () => {
+        if (!isSelectContactsOpen) return;
+        if (editedContacts.length > 0) {
+            const requestData = editedContacts.map(item => ({ id: item.id, isKey: item.isKey }));
+            const res = await updateOpportunitiesContact(requestData);
+            if (res?.status === 200) {
+                handleGetOppContacts();
+                // setAlert({ open: true, message: "Contacts updated", type: "success" });
+            }
+        }
+        setIsSelectContactsOpen(false);
+    }, isSelectContactsOpen);
+
+    const handleOpenDeleteDialog = async (id) => {
+        setSelectedContactId(id)
+        setDialogContact({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' })
+    }
+
+    const handleCloseDeleteDialog = async () => {
+        setSelectedContactId(null)
+        setDialogContact({ open: false, title: '', message: '', actionButtonText: '' })
+    }
+
+    const handleDeleteContact = async () => {
+        const res = await deleteOpportunitiesContact(selectedContactId);
+        if (res?.status === 200) {
+            handleGetOppContacts();
+            setDialogContact({ open: false, title: '', message: '', actionButtonText: '' });
+        }
+    };
+
+    // ----------------------------
+    // Logic: Logo (Fetch & Upload)
+    // ----------------------------
+
+    // 1. Upload Logic
     const handleOpenDeleteLogoDialog = () => {
         setDialogLogo({ open: true, title: 'Delete Logo', message: 'Are you sure! Do you want to delete this logo?', actionButtonText: 'yes' });
     }
@@ -397,613 +588,263 @@ const ViewOpportunity = ({ setAlert }) => {
         }
     }
 
-    const handleImageChange = async (file) => {
-        if (!file) return;
+    const handlePickLogoFile = (file) => {
+        if (file) {
+            const url = URL.createObjectURL(file);
+            setLogoUploadDraft({ file, previewUrl: url, fileName: file.name });
+        }
+    };
+
+    const saveUploadedLogo = async () => {
+        if (!logoUploadDraft.file) return;
 
         const formData = new FormData();
-        formData.append("file", file);                    // <-- send the File object
+        formData.append("file", logoUploadDraft.file);
         formData.append("folderName", "oppLogo");
         formData.append("userId", String(userdata?.userId || ""));
 
-        // IMPORTANT: don't set Content-Type; the browser sets multipart boundary
-        uploadFiles(formData).then(async (res) => {
-            if (res.data.status === 200) {
-                const { imageURL } = res?.data?.result?.[0] || {};
+        // 1. Upload file to server/S3
+        const res = await uploadFiles(formData);
 
-                let obj = {
-                    oppId: opportunityId,
-                    image: imageURL
-                }
-                const response = await updateOpportunityLogo(obj);
-                if (response.status === 200) {
-                    setValue("logo", response.result || imageURL)
-                    setAlert({ open: true, message: "Opportunity logo updated successfully", type: "success" });
-                } else {
-                    setAlert({ open: true, message: res?.data?.message || "Fail to upload opportunity logo", type: "error" });
-                }
+        if (res?.data?.status === 200) {
+            const { imageURL } = res.data.result[0];
+            // 2. Update Opportunity with new URL
+            const updateRes = await updateOpportunityLogo({ oppId: opportunityId, image: imageURL });
+            if (updateRes.status === 200) {
+                setValue("logo", updateRes?.result);
+                setIsUploadLogoOpen(false);
+                setLogoUploadDraft({ file: null, previewUrl: "", fileName: "" });
             } else {
-                setAlert({ open: true, message: res?.data?.message, type: "error" });
+                setAlert({ open: true, message: "Failed to update logo link", type: "error" });
             }
+        } else {
+            setAlert({ open: true, message: "File upload failed", type: "error" });
+        }
+    };
+
+    const handleSaveFetchedLogo = () => {
+        const d = normalizeDomain(domainDraft);
+        if (!d) return;
+        // console.log("d",)
+        handleSaveField("logo", brandfetchSrc(d))
+        // // setOpp((p) => ({ ...p, logoType: "brandfetch", logoDomain: d }));
+        setIsFetchLogoOpen(false);
+        setDomainDraft("");
+    };
+
+    // Close menus on click outside
+    useClickOutside(logoMenuRef, () => setIsLogoMenuOpen(false), isLogoMenuOpen);
+
+    // ----------------------------
+    // Logic: Pricing Box
+    // ----------------------------
+    const openPricingBox = () => {
+        setPricingDraft({
+            listPrice: watch("listPrice"),
+            discountPercentage: watch("discountPercentage"),
+            dealAmount: watch("dealAmount"),
         });
+        setShowPricingBox(true);
     };
 
-    const handleGetOpportunityDetails = async () => {
-        if (opportunityId) {
-            const res = await getOpportunityDetails(opportunityId);
-            if (res?.status === 200) {
-                // --- WHY DO ANYTHING ---
-                const whyHtml = (res?.result?.whyDoAnything || "").trim();  // safe default
-                if (whyHtml) {
-                    const blocksFromHtml = htmlToDraft(whyHtml);
-                    const contentState = ContentState.createFromBlockArray(
-                        blocksFromHtml.contentBlocks,
-                        blocksFromHtml.entityMap
-                    );
-                    setWhyDoAnythingState(EditorState.createWithContent(contentState));
-                    setWhyDoAnythingStateHTML(whyHtml);
-                } else {
-                    // optional: clear state if empty
-                    setWhyDoAnythingState(EditorState.createEmpty());
-                    setWhyDoAnythingStateHTML("");
-                }
-
-                // --- BUSINESS VALUE ---
-                const valueHtml = (res?.result?.businessValue || "").trim();
-                if (valueHtml) {
-                    const blocksFromHtml = htmlToDraft(valueHtml);
-                    const contentState = ContentState.createFromBlockArray(
-                        blocksFromHtml.contentBlocks,
-                        blocksFromHtml.entityMap
-                    );
-                    setBusinessValueState(EditorState.createWithContent(contentState));
-                    setBusinessValueStateHTML(valueHtml);
-                } else {
-                    setBusinessValueState(EditorState.createEmpty());
-                    setBusinessValueStateHTML("");
-                }
-
-                const currentEnvironmentHtml = (res?.result?.currentEnvironment || "").trim();
-                if (currentEnvironmentHtml) {
-                    const blocksFromHtml = htmlToDraft(currentEnvironmentHtml);
-                    const contentState = ContentState.createFromBlockArray(
-                        blocksFromHtml.contentBlocks,
-                        blocksFromHtml.entityMap
-                    );
-                    setCurrentEnvironmentState(EditorState.createWithContent(contentState));
-                    setCurrentEnvironmentHTML(currentEnvironmentHtml);
-                } else {
-                    setCurrentEnvironmentState(EditorState.createEmpty());
-                    setCurrentEnvironmentHTML("");
-                }
-
-                setValue("accountId", res?.result?.accountId || null);
-                setValue("opportunity", res?.result?.opportunity || null);
-                setValue("closeDate", res?.result?.closeDate ? res?.result?.closeDate : null);
-                setValue("nextSteps", res?.result?.nextSteps || null);
-                setValue("salesforceOpportunityId", res?.result?.salesforceOpportunityId || null);
-                // Important: Map stage/status titles from API back to the local ID for `watch()`
-                setValue("salesStage", opportunityStages?.find(stage => stage.title === res?.result?.salesStage)?.title || null);
-                setValue("status", opportunityStatus?.find(stage => stage.title === res?.result?.status)?.title || null);
-                setValue("logo", res?.result?.logo)
-                setValue("id", res?.result?.id)
-                setValue("dealAmount", res?.result?.dealAmount || null);
-                setValue("discountPercentage", res?.result?.discountPercentage || null);
-                setValue("listPrice", res?.result?.listPrice || null);
-                setFiles([]);
-
-                if (Array.isArray(res?.result?.opportunityDocs) && res.result.opportunityDocs.length) {
-                    setExistingImages(res.result.opportunityDocs);
-                }
-
-                if (res?.result?.opportunityPartnerDetails?.length > 0) {
-                    const formattedDetails = res?.result?.opportunityPartnerDetails?.map((item) => ({
-                        ...item,
-                        roleid: partnerRoles?.find(role => role.title === item.role)?.id || null,
-                        partnerId: item.id
-                    }));
-                    setValue('opportunityPartnerDetails', formattedDetails);
-                } else {
-                    setValue('opportunityPartnerDetails', [{
-                        id: null,
-                        salesforceOpportunityPartnerId: null,
-                        opportunityId: null,
-                        accountToId: null,
-                        accountId: null,
-                        role: null,
-                        roleid: null,
-                        isPrimary: false,
-                        isDeleted: false,
-                    }]);
-                }
-            }
-        }
-    }
-
-    const handleGetAllAccounts = async () => {
-        if (opportunityId) {
-            const res = await getAllAccounts("fetchType=Options");
-            if (res?.status === 200) {
-                const data = res?.result?.map((acc) => ({
-                    title: acc.accountName,
-                    id: acc.id,
-                    salesforceAccountId: acc.salesforceAccountId
-                }));
-                setAccounts(data);
-            }
-        }
-    };
-
-    const handleGetAllOpportunitiesPartner = async () => {
-        if (watch("id") || opportunityId) {
-            const res = await getAllOpportunitiesPartner(watch("id") || opportunityId)
-            setOpportunitiesPartner(res?.result)
-        }
-    }
-
-    const handleGetOppProduct = async () => {
-        if (watch("id") || opportunityId) {
-            const res = await getAllOpportunitiesProducts(watch("id") || opportunityId)
-            setOpportunitiesProducts(res.result)
-        }
-    }
-
-    const handleGetOppContacts = async () => {
-        if (watch("id") || opportunityId) {
-            const res = await getAllOpportunitiesContact(watch("id") || opportunityId);
-            const list = Array.isArray(res?.result) ? res.result : [];
-
-            // ✅ Sort: isKey === true first
-            const sortedList = [...list].sort((a, b) => {
-                if (a.isKey === b.isKey) return 0;
-                return a.isKey ? -1 : 1;
-            });
-
-            setOpportunitiesContacts(sortedList);
-            setOpportunitiesKeyContacts(list.filter((row) => row.isKey === true));
-
-            const map = {};
-            sortedList.forEach(c => {
-                if (c?.id != null) map[c.id] = !!c.isKey;
-            });
-            setInitialIsKey(map);
-            setEditedContacts([]); // Reset edits on fresh load
-        }
-    };
-
-    const handleGetAllSalesProcess = async () => {
-        if (opportunityId) {
-            const res = await getAllBySalesOpportunity(opportunityId)
-            if (res.status === 200) {
-                setSalesProcess(res.result || [])
-            }
-        }
-    }
-
-    const handleGetMeeetingByOppId = async () => {
-        if (opportunityId && selectedTab === 3) {
-            const res = await getAllMeetingsByOppId(opportunityId, userTimeZone)
-            if (res.status === 200) {
-                const data = res.result?.map((row) => {
-                    return {
-                        id: row.id,
-                        oppId: row.oppId,
-                        cusId: row.cusId,
-                        calendarId: row.calendarId,
-                        title: row.calendarDto?.title,
-                        description: row.calendarDto?.description,
-                        displayStart: row.calendarDto?.displayStart,
-                        displayEnd: row.calendarDto?.displayEnd,
-                    }
-                })
-                setMeetings(data)
-                const dates = new Set(
-                    data.map(item => item.displayStart?.split(" ")[0])
-                );
-                setShowDates(dates);
-                handleGetMeeetingBySelectedDate()
-            }
-        }
-    }
-
-    const handleGetMeeetingBySelectedDate = async () => {
-        const today = dayjs().format("MM/DD/YYYY");
-        const selectedDate = watch("meetingDate") || today;
-        if (selectedDate) {
-            const data = meetings?.filter(row =>
-                row.displayStart?.split(" ")[0] === selectedDate
-            );
-
-            setFilteredMeetings(data);
-            setSelectedMeeting(null);
-            setSelectedMeetingAttendeesId(null);
-            setMeetingAttendees([]);
-        } else {
-            setFilteredMeetings([]);
-        }
-    };
-
-    const handleSelectMeeting = async (mid) => {
-        setMeetingAttendees([])
-        setSelectedMeeting(mid);
-        handleGetAllMeetingAttendees(mid);
-
-        const res = await getByMeetingId(mid);
-        if (res.status === 200) {
-            const note = res?.result || {};
-
-            setValue("noteId", note?.id || null);
-
-            // keep raw values in RHF (optional)
-            setValue("purpose", note?.purpose || "");
-            setValue("background", note?.background || "");
-            setValue("alignment", note?.alignment || "");
-            setValue("agenda", note?.agenda || "");
-
-            // snapshots
-            setPurposeHTML(note?.purpose || "");
-            setBackgroundHTML(note?.background || "");
-            setAlignmentHTML(note?.alignment || "");
-            setAgendaHTML(note?.agenda || "");
-
-            // editor states
-            setPurposeState(htmlToEditorState(note?.purpose));
-            setBackgroundState(htmlToEditorState(note?.background));
-            setAlignmentState(htmlToEditorState(note?.alignment));
-            setAgendaState(htmlToEditorState(note?.agenda));
-
-            setEditingNoteField(null);
-        }
-    };
-
-    const handleGetAllMeetingAttendees = async (mid = null) => {
-        if (opportunityId && selectedTab === 3 && mid) {
-            const res = await getAllMeetingsAttendeesByMeetingId(mid)
-            setMeetingAttendees(res?.result)
-        }
-    }
-
-    const isEmptyHtml = (h) => {
-        const x = (h || "").trim();
-        return !x || x === "<p></p>" || x === "<p><br></p>";
-    };
-
-    const getSnapshotHtmlByField = (field) => {
-        if (field === "purpose") return purposeHTML;
-        if (field === "background") return backgroundHTML;
-        if (field === "agenda") return agendaHTML;
-        if (field === "alignment") return alignmentHTML;
-        return "";
-    };
-
-    const getCurrentHtmlByField = (field) => {
-        if (field === "purpose") return editorStateToHtml(purposeState);
-        if (field === "background") return editorStateToHtml(backgroundState);
-        if (field === "agenda") return editorStateToHtml(agendaState);
-        if (field === "alignment") return editorStateToHtml(alignmentState);
-        return "";
-    };
-
-    const isNoteFieldDirty = (field) => {
-        // compare current editor HTML vs snapshot HTML
-        const current = (getCurrentHtmlByField(field) || "").trim();
-        const snap = (getSnapshotHtmlByField(field) || "").trim();
-
-        // normalize empty values
-        const currentEmpty = isEmptyHtml(current);
-        const snapEmpty = isEmptyHtml(snap);
-
-        if (currentEmpty && snapEmpty) return false;
-        return current !== snap;
-    };
-
-    const openNoteConfirm = ({ nextField = null, reason = "outside" } = {}) => {
-        // setNoteConfirm({ open: true, nextField, reason });
-        proceedAfterConfirm(nextField)
-    };
-
-    // const closeNoteConfirm = () => {
-    //     setNoteConfirm({ open: false, nextField: null, reason: null });
-    // };
-
-    const proceedAfterConfirm = async (nextField) => {
-        const currentField = editingNoteField;
-
-        // closeNoteConfirm();
-
-        if (!currentField) {
-            // nothing open
-            if (nextField) setEditingNoteField(nextField);
-            return;
-        }
-
-        await handleSaveNoteField(currentField); // saves all fields (your existing behavior)
-        // if (shouldSave) {
-        // } else {
-        //     handleCancelNoteEdit(currentField);
-        // }
-
-        // After save/cancel: open next editor OR just close
-        if (nextField) {
-            setEditingNoteField(nextField);
-        } else {
-            setEditingNoteField(null);
-        }
-    };
-
-    const requestCloseOrSwitchEditor = (nextField = null, reason = "outside") => {
-        if (!editingNoteField) {
-            if (nextField) setEditingNoteField(nextField);
-            return;
-        }
-
-        // If no changes -> no dialog, just switch/close
-        if (!isNoteFieldDirty(editingNoteField)) {
-            if (nextField) setEditingNoteField(nextField);
-            else setEditingNoteField(null);
-            return;
-        }
-
-        // show confirm dialog
-        openNoteConfirm({ nextField, reason });
-    };
-
-    const handleCancelNoteEdit = (field) => {
-        if (field === "purpose") setPurposeState(htmlToEditorState(purposeHTML));
-        if (field === "background") setBackgroundState(htmlToEditorState(backgroundHTML));
-        if (field === "agenda") setAgendaState(htmlToEditorState(agendaHTML));
-        if (field === "alignment") setAlignmentState(htmlToEditorState(alignmentHTML));
-        setEditingNoteField(null);
-    };
-
-    const handleSaveNoteField = async (field) => {
-        if (!selectedMeeting) return;
-
-        const purpose = editorStateToHtml(purposeState);
-        const background = editorStateToHtml(backgroundState);
-        const agenda = editorStateToHtml(agendaState);
-        const alignment = editorStateToHtml(alignmentState);
-
-        const payload = {
-            id: watch("noteId") || null,
-            meetingId: selectedMeeting,
-            purpose,
-            background,
-            agenda,
-            alignment,
+    const handleSavePricing = async (draft) => {
+        const currentValues = getValues();
+        const toCleanNum = (val) => {
+            if (!val) return null;
+            const n = Number(String(val).replace(/,/g, ""));
+            return isNaN(n) ? null : n;
         };
 
-        const res = payload.id ? await updateNote(watch("noteId"), payload) : await saveNote(payload);
+        const payload = {
+            ...currentValues,
+            listPrice: toCleanNum(draft.listPrice),
+            discountPercentage: toCleanNum(draft.discountPercentage),
+            dealAmount: toCleanNum(draft.dealAmount),
+            // Include your editor states
+            whyDoAnything: editorStateToHtml(whyDoAnythingState),
+            businessValue: editorStateToHtml(businessValueState),
+            currentEnvironment: editorStateToHtml(currentEnvironmentState),
+        };
 
+        // SINGLE API CALL
+        const res = await updateOpportunity(opportunityId, payload);
+
+        if (res?.status === 200) {
+            // Update Hook Form state
+            setValue("listPrice", payload.listPrice);
+            setValue("discountPercentage", payload.discountPercentage);
+            setValue("dealAmount", payload.dealAmount);
+        }
+    };
+
+    useClickOutside(pricingBoxRef, async () => {
+        if (!showPricingBox) return;
+
+        // Call one function with the entire draft object
+        await handleSavePricing(pricingDraft);
+
+        setShowPricingBox(false);
+    }, showPricingBox);
+
+    // ----------------------------
+    // Logic: Meetings & Notes
+    // ----------------------------
+    const handleSelectMeeting = async (mid) => {
+        setSelectedMeeting(mid);
+        const resAttendees = await getAllMeetingsAttendeesByMeetingId(mid);
+        setMeetingAttendees(resAttendees?.result || []);
+
+        const resNote = await getByMeetingId(mid);
+        if (resNote?.status === 200) {
+            const n = resNote.result || {};
+            setValue("noteId", n.id);
+            setPurposeHTML(n.purpose || ""); setPurposeState(htmlToEditorState(n.purpose));
+            setBackgroundHTML(n.background || ""); setBackgroundState(htmlToEditorState(n.background));
+            setAgendaHTML(n.agenda || ""); setAgendaState(htmlToEditorState(n.agenda));
+            setAlignmentHTML(n.alignment || ""); setAlignmentState(htmlToEditorState(n.alignment));
+        }
+    };
+
+    const saveMeetingNote = async (key) => {
+        let html = "";
+        if (key === "purpose") html = editorStateToHtml(purposeState);
+        if (key === "background") html = editorStateToHtml(backgroundState);
+        if (key === "agenda") html = editorStateToHtml(agendaState);
+        if (key === "alignment") html = editorStateToHtml(alignmentState);
+
+        const payload = {
+            id: watch("noteId"),
+            meetingId: selectedMeeting,
+            purpose: key === "purpose" ? html : editorStateToHtml(purposeState),
+            background: key === "background" ? html : editorStateToHtml(backgroundState),
+            agenda: key === "agenda" ? html : editorStateToHtml(agendaState),
+            alignment: key === "alignment" ? html : editorStateToHtml(alignmentState),
+        };
+
+        const res = payload.id ? await updateNote(payload.id, payload) : await saveNote(payload);
         if (res?.status === 200 || res?.status === 201) {
-            // refresh noteId (in case of create)
-            setValue("noteId", res?.result?.id || payload.id || null);
-
-            // update snapshots
-            setPurposeHTML(purpose);
-            setBackgroundHTML(background);
-            setAgendaHTML(agenda);
-            setAlignmentHTML(alignment);
-
-            setEditingNoteField(null);
-        } else {
-            setAlert({
-                open: true,
-                message: res?.message || "Failed to save or update note",
-                type: "error",
-            });
+            if (!payload.id) setValue("noteId", res.result.id);
+            if (key === "purpose") setPurposeHTML(html);
+            if (key === "background") setBackgroundHTML(html);
+            if (key === "agenda") setAgendaHTML(html);
+            if (key === "alignment") setAlignmentHTML(html);
         }
     };
 
     useEffect(() => {
         if (!editingNoteField) return;
-
         const onMouseDown = (e) => {
-            const el = activeNoteEditorRef.current;
-            if (!el) return;
-
-            // If click is inside editor wrapper, ignore
-            if (el.contains(e.target)) return;
-
-            // Clicked outside -> ask confirm
-            requestCloseOrSwitchEditor(null, "outside");
+            if (activeNoteEditorRef.current?.contains(e.target)) return;
+            saveMeetingNote(editingNoteField);
+            setEditingNoteField(null);
         };
-
         document.addEventListener("mousedown", onMouseDown, true);
         return () => document.removeEventListener("mousedown", onMouseDown, true);
     }, [editingNoteField, purposeState, backgroundState, agendaState, alignmentState]);
 
-    useEffect(() => {
-        handleGetMeeetingBySelectedDate()
-    }, [watch("meetingDate")])
+    // ----------------------------
+    // Sub-Components
+    // ----------------------------
 
-    useEffect(() => {
-        handleGetMeeetingByOppId()
-        if (selectedTab !== 3) {
-            setOpenDrawer(true)
-            setSelectedMeeting(null)
-            setFilteredMeetings([])
-            setMeetingAttendees([])
-            setValue("meetingDate", null)
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        // 1. Clean formatting
+        let cleaned = value.replace(/,/g, "").replace(/[^\d.]/g, "");
+        const parts = cleaned.split(".");
+        if (parts.length > 2) cleaned = parts[0] + "." + parts.slice(1).join("");
+
+        const [intPart, decimalPartRaw] = cleaned.split(".");
+        let formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        if (decimalPartRaw !== undefined) {
+            formatted = `${formatted}.${decimalPartRaw.slice(0, 2)}`;
         }
-    }, [selectedTab])
 
-    useEffect(() => {
-        handleGetOppProduct()
-        handleGetAllOpportunitiesPartner()
-        handleGetAllAccounts()
-        handleGetOppContacts()
-        handleGetOpportunityDetails()
-        handleGetAllSalesProcess()
-    }, [])
+        // 2. Prepare values for calculation
+        const toNum = (val) => parseFloat(String(val).replace(/,/g, "")) || 0;
 
-    const getDisplayName = (id, options) => {
-        const option = options.find(opt => opt.id === id);
-        return option ? option.title : '—';
-    };
+        // Use the new value for the field being changed, and existing draft values for the others
+        let lp = name === "listPrice" ? toNum(formatted) : toNum(pricingDraft.listPrice);
+        let dp = name === "discountPercentage" ? toNum(formatted) : toNum(pricingDraft.discountPercentage);
+        let da = name === "dealAmount" ? toNum(formatted) : toNum(pricingDraft.dealAmount);
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '—';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
+        let updatedDraft = { ...pricingDraft, [name]: formatted };
 
-    const handleSaveField = async (fieldName, newValue) => {
-        const toNumber2 = (val) => {
-            if (val === null || val === undefined || val === "") return null;
-            const num = typeof val === "number" ? val : parseFloat(val);
-            if (Number.isNaN(num)) return null;
-            return Number(num.toFixed(2));
-        };
-
-        const cleanNumber = (val) => {
-            if (val === null || val === undefined || val === "") return "";
-            // IMPORTANT: remove commas so parseFloat("1,000") won't become 1
-            return val.toString().replace(/,/g, "").replace(/[^\d.]/g, "");
-        };
-
-        try {
-            const opportunityId = watch("id");
-            if (!opportunityId) return;
-
-            const currentValues = getValues();
-            const whyDoAnythingHtmlData = whyDoAnythingState
-                ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
-                : null;
-
-            const businessValueHtmlData = businessValueState
-                ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
-                : null;
-
-            const currentEnvironmentHtmlData = currentEnvironmentState
-                ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
-                : null;
-
-            let payload = {
-                ...currentValues,
-                whyDoAnything: whyDoAnythingHtmlData,
-                businessValue: businessValueHtmlData,
-                currentEnvironment: currentEnvironmentHtmlData,
-            };
-
-            // 🔢 Normalize numeric values with comma cleaning
-            let listPrice = toNumber2(
-                fieldName === "listPrice"
-                    ? cleanNumber(newValue)
-                    : cleanNumber(currentValues.listPrice)
-            );
-            let discountPercentage = toNumber2(
-                fieldName === "discountPercentage"
-                    ? cleanNumber(newValue)
-                    : cleanNumber(currentValues.discountPercentage)
-            );
-            let dealAmount = toNumber2(
-                fieldName === "dealAmount"
-                    ? cleanNumber(newValue)
-                    : cleanNumber(currentValues.dealAmount)
-            );
-
-            // 🧮 Keep relationship between ListPrice, Discount%, DealAmount
-            if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
-                // 1) User edited LIST PRICE (base)
-                if (fieldName === "listPrice") {
-                    if (listPrice === null) {
-                        // no base: clear both
-                        discountPercentage = null;
-                        dealAmount = null;
-                    } else {
-                        if (discountPercentage !== null) {
-                            // Forward: listPrice + discount% → dealAmount
-                            const discountValue = (listPrice * discountPercentage) / 100;
-                            dealAmount = toNumber2(listPrice - discountValue);
-                        } else if (dealAmount !== null) {
-                            // Have listPrice and dealAmount, recompute discount%
-                            let pct = ((listPrice - dealAmount) / listPrice) * 100;
-                            if (pct < 0) pct = 0;
-                            if (pct > 100) pct = 100;
-                            discountPercentage = toNumber2(pct);
-                        } else {
-                            // default: no discount
-                            dealAmount = listPrice;
-                        }
-                    }
-                }
-
-                // 2) User edited DISCOUNT %
-                else if (fieldName === "discountPercentage") {
-                    if (listPrice === null) {
-                        // cannot compute without base
-                        discountPercentage = null;
-                        dealAmount = null;
-                    } else if (discountPercentage === null) {
-                        // discount cleared → final price = list price
-                        dealAmount = listPrice;
-                    } else {
-                        const discountValue = (listPrice * discountPercentage) / 100;
-                        dealAmount = toNumber2(listPrice - discountValue);
-                    }
-                }
-
-                // 3) User edited DEAL AMOUNT (final amount after discount)
-                else if (fieldName === "dealAmount") {
-                    if (dealAmount === null || listPrice === null) {
-                        discountPercentage = null;
-                    } else {
-                        let pct = ((listPrice - dealAmount) / listPrice) * 100;
-                        if (pct < 0) pct = 0;
-                        if (pct > 100) pct = 100;
-                        discountPercentage = toNumber2(pct);
-                    }
-                }
-
-                payload.listPrice = listPrice;
-                payload.discountPercentage = discountPercentage;
-                payload.dealAmount = dealAmount;
-            } else {
-                // non-numeric fields: keep old logic
-                payload[fieldName] = newValue;
+        // 3. Calculation Logic
+        if (name === "listPrice" || name === "discountPercentage") {
+            // Calculate Deal Amount: LP - (LP * DP / 100)
+            const newDeal = lp - (lp * dp / 100);
+            updatedDraft.dealAmount = newDeal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        } else if (name === "dealAmount") {
+            // Calculate Discount %: ((LP - DA) / LP) * 100
+            if (lp > 0) {
+                const newDiscount = ((lp - da) / lp) * 100;
+                updatedDraft.discountPercentage = newDiscount.toFixed(2);
             }
-
-            const res = await updateOpportunity(opportunityId, payload);
-            if (res?.status === 200) {
-                // keep form in sync
-                setValue("listPrice", listPrice);
-                setValue("discountPercentage", discountPercentage);
-                setValue("dealAmount", dealAmount);
-
-                // refresh others if needed
-                handleGetOpportunityDetails();
-            } else {
-                setAlert({
-                    open: true,
-                    message: "Failed to update opportunity",
-                    type: "error",
-                });
-            }
-        } catch (error) {
-            setAlert({
-                open: true,
-                message: error || "Failed to update opportunity",
-                type: "error",
-            });
         }
+
+        setPricingDraft(updatedDraft);
     };
 
-    const OpportunityField = ({ label, value, type = 'text', options = [], onSave, className = '', required = false, multiline = false, disabled = false }) => {
+    const OpportunityField = ({
+        label,
+        value,
+        type = 'text',
+        options = [],
+        onSave,
+        className = '',
+        required = false,
+        multiline = false,
+        disabled = false
+    }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editValue, setEditValue] = useState(value);
+        const containerRef = useRef(null);
+
+        // Sync local state if external value changes
+        useEffect(() => {
+            if (!isEditing) setEditValue(value);
+        }, [value, isEditing]);
+
+        // Advanced Click Outside Logic
+        useEffect(() => {
+            const handleClickOutside = (event) => {
+                if (!isEditing) return;
+
+                // 1. Check if target still exists in DOM (prevents 'ghost target' issues when MUI re-renders)
+                if (!document.body.contains(event.target)) return;
+
+                // 2. Check if click is inside the component container
+                if (containerRef.current && containerRef.current.contains(event.target)) {
+                    return;
+                }
+
+                // 3. Robust check for ALL MUI overlays
+                const isInsideMuiOverlay =
+                    event.target.closest(".MuiPopover-root") ||
+                    event.target.closest(".MuiAutocomplete-popper") ||
+                    event.target.closest(".MuiMenu-root") ||
+                    event.target.closest(".MuiDialog-root") ||
+                    event.target.closest(".MuiPickersPopper-root") || // Specific to DatePicker
+                    event.target.closest(".MuiYearCalendar-root") ||
+                    event.target.closest(".MuiMonthCalendar-root");
+
+                if (isInsideMuiOverlay) return;
+
+                handleSave();
+            };
+
+            // Use capture phase (true) to catch events before MUI's internal 'stopPropagations'
+            document.addEventListener("mousedown", handleClickOutside, true);
+            return () => document.removeEventListener("mousedown", handleClickOutside, true);
+        }, [isEditing, editValue, value]);
 
         const formatNumberWithCommas = (val) => {
             if (!val && val !== 0) return "";
             const [intPartRaw, decimalRaw] = val.toString().split(".");
-            const intPart = intPartRaw.replace(/\D/g, ""); // only digits
+            const intPart = intPartRaw.replace(/\D/g, "");
             const intWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            if (decimalRaw !== undefined) {
-                return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
-            }
-            return intWithCommas;
+            return decimalRaw !== undefined ? `${intWithCommas}.${decimalRaw.slice(0, 2)}` : intWithCommas;
         };
 
         const parseDealAmountToFloat = (val) => {
@@ -1011,25 +852,15 @@ const ViewOpportunity = ({ setAlert }) => {
             const cleaned = val.toString().replace(/,/g, "");
             if (cleaned === "") return null;
             const num = parseFloat(cleaned);
-            if (Number.isNaN(num)) return null;
-            return parseFloat(num.toFixed(2));
+            return Number.isNaN(num) ? null : parseFloat(num.toFixed(2));
         };
 
         const handleDoubleClick = () => {
             if (!disabled) {
                 setIsEditing(true);
-
                 if (label === "Deal Amount" || label === "List Amount") {
-                    // value might be like "$20,000" or "20000" or 20000
-                    const raw =
-                        value !== undefined && value !== null
-                            ? value.toString().replace(/[$,]/g, "")
-                            : "";
-                    if (raw === "") {
-                        setEditValue("");
-                    } else {
-                        setEditValue(formatNumberWithCommas(raw));
-                    }
+                    const raw = value?.toString().replace(/[$,]/g, "") || "";
+                    setEditValue(raw === "" ? "" : formatNumberWithCommas(raw));
                 } else {
                     setEditValue(value);
                 }
@@ -1043,93 +874,56 @@ const ViewOpportunity = ({ setAlert }) => {
             }
 
             let finalValue;
-
             if (type === 'select') {
-                finalValue =
-                    label === "Account"
-                        ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id
-                        : options?.find((row) => (row.title === editValue || row.id === editValue))?.title;
+                finalValue = label === "Account"
+                    ? options?.find((row) => (row.title === editValue || row.id === editValue))?.id
+                    : options?.find((row) => (row.title === editValue || row.id === editValue))?.title;
             } else if (label === "Deal Amount" || label === "List Amount") {
-                // convert "2,003.43" -> 2003.43
                 finalValue = parseDealAmountToFloat(editValue);
             } else {
                 finalValue = editValue;
             }
 
-            // Avoid unnecessary save if value didn't actually change
-            const original =
-                (label === "Deal Amount" || label === "List Amount")
-                    ? parseDealAmountToFloat(value?.toString().replace(/[$,]/g, ''))
-                    : value;
+            const original = (label === "Deal Amount" || label === "List Amount")
+                ? parseDealAmountToFloat(value?.toString().replace(/[$,]/g, ''))
+                : value;
 
             if (finalValue !== original) {
                 await onSave(finalValue);
             }
-
-            setIsEditing(false);
-        };
-
-        const handleCancel = () => {
-            setEditValue(value);
             setIsEditing(false);
         };
 
         const handleChange = (e) => {
             const val = e.target.value;
-
             if (label === "Deal Amount" || label === "List Amount") {
-                // Allow only digits and dot
                 let cleaned = val.replace(/,/g, "").replace(/[^\d.]/g, "");
-
-                // Keep only first dot
                 const parts = cleaned.split(".");
-                if (parts.length > 2) {
-                    cleaned = parts[0] + "." + parts.slice(1).join("");
-                }
-
+                if (parts.length > 2) cleaned = parts[0] + "." + parts.slice(1).join("");
                 const [intPart, decimalPartRaw] = cleaned.split(".");
-                const safeInt = intPart || "0";
-
-                let formatted = safeInt.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
+                let formatted = (intPart || "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 if (decimalPartRaw !== undefined) {
-                    const decimals = decimalPartRaw.slice(0, 2); // max 2 digits
-                    formatted = `${formatted}.${decimals}`;
+                    formatted = `${formatted}.${decimalPartRaw.slice(0, 2)}`;
                 }
-
-                if (val.trim() === "") {
-                    setEditValue("");
-                } else {
-                    setEditValue(formatted);
-                }
+                setEditValue(val.trim() === "" ? "" : formatted);
             } else {
                 setEditValue(val);
             }
-
-        };
-
-        const handleSelectChange = (selectedOption) => {
-            setEditValue(selectedOption ? selectedOption.id : null);
-        };
-
-        const handleDateChange = (date) => {
-            setEditValue(date ? dayjs(date).format("MM/DD/YYYY") : null);
         };
 
         const displayValue = value || '—';
 
         return (
-            <div className={`flex justify-start items-center text-sm py-1 ${className}`}>
-                <span className="font-medium text-gray-500 tracking-wider text-sm w-52">{label}</span>
-                <div className="text-gray-900 font-semibold text-base max-w-[60%] break-words">
+            <div ref={containerRef} className={`flex justify-start items-center text-sm py-1 ${className} w-full`}>
+                <div className="text-gray-900 font-semibold text-base w-full break-words">
                     {isEditing ? (
                         <div className="flex items-center gap-2 w-full">
                             {type === 'select' ? (
-                                <div className='w-80'>
+                                <div className="w-full max-w-52">
                                     <Select
                                         value={options?.find((row) => (row.title === editValue || row.id === editValue))?.id || null}
                                         options={options}
-                                        onChange={(_, newValue) => handleSelectChange(newValue ? newValue : null)}
+                                        onChange={(_, newValue) => setEditValue(newValue ? newValue.id : null)}
                                         className="flex-1"
                                         autoFocus
                                         error={(!editValue || editValue === "") && required}
@@ -1140,35 +934,58 @@ const ViewOpportunity = ({ setAlert }) => {
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
                                         value={editValue ? dayjs(editValue) : null}
-                                        onChange={handleDateChange}
+                                        onChange={(date) => setEditValue(date ? dayjs(date).format("MM/DD/YYYY") : null)}
                                         format="MM/DD/YYYY"
                                         disabled={disabled}
+                                        minDate={dayjs(new Date())}
                                         slotProps={{
                                             textField: {
                                                 fullWidth: true,
                                                 variant: "outlined",
+                                                autoFocus: true,
                                                 sx: {
                                                     '& .MuiOutlinedInput-root': {
                                                         borderRadius: '4px',
+                                                        transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
                                                         '& fieldset': {
-                                                            borderColor: '#d1d5db',
+                                                            borderColor: theme.palette.secondary.main,
                                                         },
                                                         '&:hover fieldset': {
-                                                            borderColor: '#9ca3af',
+                                                            borderColor: theme.palette.secondary.main,
                                                         },
                                                         '&.Mui-focused fieldset': {
-                                                            borderColor: '#3b82f6',
+                                                            borderColor: theme.palette.secondary.main,
                                                         },
                                                     },
-                                                    '& .MuiInputBase-input': {
-                                                        height: 7,
-                                                        fontSize: '14px',
+                                                    '& .MuiInputLabel-root': {
+                                                        color: theme.palette.text.primary,
                                                     },
+                                                    '& .MuiInputLabel-root.Mui-focused': {
+                                                        color: theme.palette.text.primary,
+                                                    },
+                                                    '& .MuiInputBase-input': {
+                                                        color: theme.palette.text.primary,
+                                                        height: 7,
+                                                    },
+                                                    '& .MuiInputLabel-root.Mui-disabled': {
+                                                        color: theme.palette.text.primary,
+                                                    },
+
+                                                    // ✅ disabled input text color (important one)
+                                                    '& .MuiInputBase-input.Mui-disabled': {
+                                                        color: theme.palette.text.primary,
+                                                        WebkitTextFillColor: theme.palette.text.primary,
+                                                    },
+                                                    '& .MuiFormHelperText-root': {
+                                                        color: theme.palette.error.main,
+                                                        fontSize: '14px',
+                                                        fontWeight: '500',
+                                                        marginX: 0.5,
+                                                    },
+                                                    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;',
                                                 },
                                             },
                                         }}
-                                        className="flex-1"
-                                        error={(!editValue || editValue === "") && required}
                                     />
                                 </LocalizationProvider>
                             ) : (
@@ -1178,27 +995,10 @@ const ViewOpportunity = ({ setAlert }) => {
                                     autoFocus
                                     error={(!editValue || editValue === "") && required}
                                     multiline={multiline}
-                                    rows={3}
+                                    rows={multiline ? 3 : 1}
                                     disabled={disabled}
                                 />
                             )}
-                            <div className='flex items-center gap-3'>
-                                <Tooltip title="Save" arrow>
-                                    <div className={`${(editValue === null || editValue === "") ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 cursor-pointer"} h-6 w-6 flex justify-center items-center rounded-full text-white`}>
-                                        <Components.IconButton onClick={handleSave} disabled={editValue === null || editValue === ""}>
-                                            <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-
-                                <Tooltip title="Cancel" arrow>
-                                    <div className='bg-gray-800 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                        <Components.IconButton onClick={handleCancel}>
-                                            <CustomIcons iconName={'fa-solid fa-close'} css='cursor-pointer text-white h-3 w-3' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            </div>
                         </div>
                     ) : (
                         <PermissionWrapper
@@ -1206,19 +1006,12 @@ const ViewOpportunity = ({ setAlert }) => {
                             moduleName="Opportunities"
                             actionId={2}
                             component={
-                                <span
-                                    onClick={handleDoubleClick}
-                                    className="cursor-pointer hover:bg-gray-100 px-1 rounded"
-                                >
+                                <span onClick={handleDoubleClick} className="cursor-pointer px-1 rounded block">
                                     {displayValue}
                                 </span>
                             }
                             fallbackComponent={
-                                <span
-                                    className="cursor-pointer hover:bg-gray-100 px-1 rounded"
-                                >
-                                    {displayValue}
-                                </span>
+                                <span className="px-1 rounded block">{displayValue}</span>
                             }
                         />
                     )}
@@ -1228,800 +1021,63 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     const StageTimeline = ({ stages, currentStageId }) => {
-        const [confirmDialog, setConfirmDialog] = useState({
-            open: false,
-            stage: null
-        });
-
-        const handleStageClick = (stage) => {
-            if (stage.id === currentStageId) return; // Don't show dialog if same stage
-
-            setConfirmDialog({
-                open: true,
-                stage: stage
-            });
-        };
-
-        const handleConfirmStageChange = async () => {
-            try {
-                const { stage } = confirmDialog;
-                const opportunityId = watch("id");
-                if (!opportunityId) return;
-
-                // Update the stage
-                setValue("salesStage", stage.title);
-
-                const currentValues = getValues();
-                const updateData = {
-                    ...currentValues,
-                    salesStage: stage.title
-                };
-
-                const res = await updateOpportunity(opportunityId, updateData);
-                if (res?.status === 200) {
-                    setAlert({
-                        open: true,
-                        message: `Stage updated successfully`,
-                        type: "success"
-                    });
-                } else {
-                    // Revert if failed
-                    const currentStage = stages.find(s => s.id === currentStageId);
-                    setValue("salesStage", currentStage?.title);
-                    setAlert({
-                        open: true,
-                        message: "Failed to update stage",
-                        type: "error"
-                    });
-                }
-            } catch (error) {
-                setAlert({
-                    open: true,
-                    message: "Failed to update stage",
-                    type: "error"
-                });
-            } finally {
-                setConfirmDialog({ open: false, stage: null });
-            }
-        };
-
-        const handleCancelStageChange = () => {
-            setConfirmDialog({ open: false, stage: null });
-        };
-
         return (
-            <>
-                <div className="px-3 py-4 mb-0">
-                    <div className="flex flex-wrap xl:justify-evenly gap-3 md:gap-2 overflow-x-auto pb-1">
-                        {stages?.map((stage) => {
-                            const isActive = stage.id === currentStageId;
-                            const isCompleted = currentStageId !== null && stage.id < currentStageId;
-
-                            let pillClasses = "";
-
-                            if (isActive) {
-                                pillClasses = "bg-[#1072E0] text-white border-[#1072E0] cursor-default";
-                            } else if (isCompleted) {
-                                pillClasses = "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF] cursor-pointer";
-                            } else {
-                                pillClasses = "bg-white text-gray-700 border-gray-300 cursor-pointer";
-                            }
-
-                            return (
-                                <div key={stage.id}>
-                                    <PermissionWrapper
-                                        functionalityName="Opportunities"
-                                        moduleName="Opportunities"
-                                        actionId={2}
-                                        component={
-                                            <div
-                                                onClick={() => handleStageClick(stage)}
-                                                className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
-                                            >
-                                                <span className="truncate">
-                                                    {stage.title}
-                                                </span>
-
-                                                {isCompleted && (
-                                                    <CustomIcons
-                                                        iconName="fa-solid fa-check"
-                                                        css="h-3 w-3 inline-block ml-2"
-                                                    />
-                                                )}
-                                            </div>
-                                        }
-                                        fallbackComponent={
-                                            <div
-                                                className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}
-                                            >
-                                                <span className="truncate">
-                                                    {stage.title}
-                                                </span>
-
-                                                {isCompleted && (
-                                                    <CustomIcons
-                                                        iconName="fa-solid fa-check"
-                                                        css="h-3 w-3 inline-block ml-2"
-                                                    />
-                                                )}
-                                            </div>
-                                        }
-                                    />
+            <div className="py-4 mb-0">
+                <div className="flex flex-wrap xl:justify-evenly gap-1 overflow-x-auto pb-1">
+                    {stages?.map((stage) => {
+                        const isActive = stage.id === currentStageId;
+                        const isCompleted = currentStageId !== null && stage.id < currentStageId;
+                        let pillClasses = isActive ? "bg-[#1072E0] text-white border-[#1072E0]" :
+                            isCompleted ? "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF] cursor-pointer" :
+                                "bg-white text-gray-700 border-gray-300 cursor-pointer";
+                        return (
+                            <div key={stage.id} onClick={() => { if (!isActive) handleSaveField("salesStage", stage.title); }}>
+                                <div className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}>
+                                    <span>{stage.title}</span>
+                                    {isCompleted && <CustomIcons iconName="fa-solid fa-check" css="h-3 w-3 inline-block ml-2" />}
                                 </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Confirmation Dialog */}
-                <AlertDialog
-                    open={confirmDialog.open}
-                    title="Change Stage"
-                    message={`Are you sure you want to change the stage to "${confirmDialog.stage?.title}"?`}
-                    actionButtonText="Yes"
-                    handleAction={handleConfirmStageChange}
-                    handleClose={handleCancelStageChange}
-                />
-            </>
-        );
-    };
-
-    // Contact CRUD handlers
-    const handleAddContact = () => {
-        setSelectedContactId(null);
-        setContactModalOpen(true);
-    };
-
-    const handleCloseContactModel = () => {
-        setSelectedContactId(null);
-        setContactModalOpen(false);
-    };
-
-    const handleCloseKeyContactModel = () => {
-        setKeyContactModalOpen(false);
-    };
-
-    const handleOpenDeleteContactDialog = (id) => {
-        setSelectedContactId(id);
-        setDialogContact({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' });
-    }
-
-    const handleCloseDeleteContactDialog = () => {
-        setSelectedContactId(null);
-        setDialogContact({ open: false, title: '', message: '', actionButtonText: '' });
-    }
-
-    const handleDeleteContact = async () => {
-        try {
-            const res = await deleteOpportunitiesContact(selectedContactId);
-            if (res?.status === 200) {
-                handleCloseDeleteContactDialog()
-                handleGetOppContacts();
-            } else {
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to delete contact",
-                    type: "error"
-                });
-            }
-        } catch (error) {
-            setAlert({
-                open: true,
-                message: error.message || "Failed to delete contact",
-                type: "error"
-            });
-        }
-    };
-
-    // ✅ Contact toggle handlers (FIXED)
-    const handleToggleKeyContact = (id, isKey) => {
-        setEditedContacts(prev => {
-            const next = [...prev];
-            const idx = next.findIndex(e => e.id === id);
-
-            if (idx >= 0) {
-                next[idx] = { id, isKey };
-            } else {
-                next.push({ id, isKey });
-            }
-
-            const original = initialIsKey[id] ?? false;
-
-            // If value is same as original, remove from edited list
-            const idxAfter = next.findIndex(e => e.id === id);
-            if (idxAfter >= 0 && next[idxAfter].isKey === original) {
-                next.splice(idxAfter, 1);
-            }
-
-            return next;
-        });
-    };
-
-    const handleSaveKeyContacts = async () => {
-        try {
-            const requestData = editedContacts.map(item => ({
-                id: item.id,
-                isKey: item.isKey
-            }));
-
-            const res = await updateOpportunitiesContact(requestData);
-
-            if (res?.status === 200) {
-                setEditedContacts([]);
-                handleGetOppContacts();
-            } else {
-                setAlert({
-                    open: true,
-                    message: "Failed to update key contacts",
-                    type: "error"
-                });
-            }
-        } catch (error) {
-            setAlert({
-                open: true,
-                message: "Something went wrong while saving",
-                type: "error"
-            });
-        }
-    };
-
-    // Partner CRUD handlers
-    const handleAddPartner = () => {
-        setSelectedPartnerId(null);
-        setPartnerModalOpen(true);
-    };
-
-    const handleClosePartnerModel = () => {
-        setSelectedPartnerId(null);
-        setPartnerModalOpen(false);
-    };
-
-    const handleEditPartner = (partnerId) => {
-        setSelectedPartnerId(partnerId);
-        setPartnerModalOpen(true);
-    };
-
-    const handleOpenDeletePartnerDialog = (id) => {
-        setSelectedPartnerId(id);
-        setDialogPartner({ open: true, title: 'Delete competitor', message: 'Are you sure! Do you want to delete this competitor?', actionButtonText: 'yes' });
-    }
-
-    const handleCloseDeletePartnerDialog = () => {
-        setSelectedPartnerId(null);
-        setDialogPartner({ open: false, title: '', message: '', actionButtonText: '' });
-    }
-
-    const handleDeletePartner = async () => {
-        try {
-            const res = await deleteOpportunitiesPartner(selectedPartnerId);
-            if (res?.status === 200) {
-                handleCloseDeletePartnerDialog()
-                handleGetAllOpportunitiesPartner();
-            } else {
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to delete partner",
-                    type: "error"
-                });
-            }
-        } catch (error) {
-            setAlert({
-                open: true,
-                message: error.message || "Failed to delete partner",
-                type: "error"
-            });
-        }
-    };
-
-    // Product CRUD handlers
-    const handleAddProduct = () => {
-        setSelectedProductId(null);
-        setProductModalOpen(true);
-    };
-
-    const handleCloseProductModel = () => {
-        setSelectedProductId(null);
-        setProductModalOpen(false);
-    };
-
-    const handleEditProduct = (productId) => {
-        setSelectedProductId(productId);
-        setProductModalOpen(true);
-    };
-
-    const handleOpenDeleteProductDialog = (id) => {
-        setSelectedProductId(id);
-        setDialogProduct({ open: true, title: 'Delete Product', message: 'Are you sure! Do you want to delete this product?', actionButtonText: 'yes' });
-    }
-
-    const handleCloseDeleteProductDialog = () => {
-        setSelectedProductId(null);
-        setDialogProduct({ open: false, title: '', message: '', actionButtonText: '' });
-    }
-
-    const handleDeleteProduct = async () => {
-        try {
-            const res = await deleteOpportunitiesProducts(selectedProductId);
-            if (res?.status === 200) {
-                handleCloseDeleteProductDialog()
-                handleGetOppProduct();
-            } else {
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to delete product",
-                    type: "error"
-                });
-            }
-        } catch (error) {
-            setAlert({
-                open: true,
-                message: error.message || "Failed to delete product",
-                type: "error"
-            });
-        }
-    };
-
-    const PartnersSection = ({ list = [] }) => {
-        return (
-            <section className="mt-8">
-                <div className="flex items-center my-4">
-                    <div className="flex-grow border-t border-gray-300"></div>
-                    <span className="mx-4 font-semibold text-gray-700">Partners</span>
-                    <div className="flex-grow border-t border-gray-300"></div>
-                </div>
-
-                <div className='flex justify-end mb-4 gap-2'>
-                    <PermissionWrapper
-                        functionalityName="Opportunities"
-                        moduleName="Opportunities"
-                        actionId={2}
-                        component={
-                            <Tooltip title="Add" arrow>
-                                <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                    <Components.IconButton onClick={() => handleAddPartner()}>
-                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                    </Components.IconButton>
-                                </div>
-                            </Tooltip>
-                        }
-                    />
-                </div>
-                {
-                    list?.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 4k:grid-cols-6 gap-4">
-                            {list.map((row, i) => (
-                                <div
-                                    key={row.id ?? i}
-                                    className="relative bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col hover:shadow-md transition-shadow cursor-pointer"
-                                >
-                                    <div className="absolute right-2 flex items-center justify-end gap-2">
-                                        <PermissionWrapper
-                                            functionalityName="Opportunities"
-                                            moduleName="Opportunities"
-                                            actionId={2}
-                                            component={
-                                                <Tooltip title="Edit" arrow>
-                                                    <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleEditPartner(row.id)}>
-                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            }
-                                        />
-                                        <PermissionWrapper
-                                            functionalityName="Opportunities"
-                                            moduleName="Opportunities"
-                                            actionId={2}
-                                            component={
-                                                <Tooltip title="Delete" arrow>
-                                                    <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton onClick={() => handleOpenDeletePartnerDialog(row.id)}>
-                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            }
-                                        />
-                                    </div>
-                                    <p className="font-semibold text-gray-800 text-lg">
-                                        {row.accountName || "—"}
-                                    </p>
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        {row.role || "—"}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    ) :
-                        <div className="border rounded-lg text-center py-10 font-bold">
-                            No Competitors Found.
-                        </div>
-                }
-            </section>
-        );
-    };
-
-    const ContactsSection = ({ list = [] }) => {
-        // Apply edits to the list
-        const contactsWithEdits = list.map(c => {
-            const edit = editedContacts.find(e => e.id === c.id);
-            return { ...c, isKey: edit ? edit.isKey : c.isKey };
-        });
-
-        // Sort: isKey true first
-        const sortedContacts = contactsWithEdits || [];
-        const currentKeyContactsCount = sortedContacts?.filter(c => c.isKey).length;
-
-        return (
-            <>
-
-                <section className="mt-8">
-                    <div className="mt-4">
-                        <div className="flex items-center">
-                            <div className="flex-grow border-t border-gray-300"></div>
-                            <span className="mx-4 font-semibold text-gray-700">Contacts</span>
-                            <div className="flex-grow border-t border-gray-300"></div>
-                        </div>
-                    </div>
-
-                    <div className='flex justify-end mb-4 gap-2'>
-                        {editedContacts.length > 0 && (
-                            <PermissionWrapper
-                                functionalityName="Opportunities"
-                                moduleName="Opportunities"
-                                actionId={2}
-                                component={
-                                    <Tooltip title="Save" arrow>
-                                        <div className='bg-blue-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                            <Tooltip title="Save" arrow>
-                                                <Components.IconButton onClick={handleSaveKeyContacts} title="Update key contacts">
-                                                    <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                </Components.IconButton>
-                                            </Tooltip>
-                                        </div>
-                                    </Tooltip>
-                                }
-                            />
-
-                        )}
-                        <PermissionWrapper
-                            functionalityName="Opportunities"
-                            moduleName="Opportunities"
-                            actionId={2}
-                            component={
-                                <Tooltip title="Add" arrow>
-                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                        <Components.IconButton onClick={() => handleAddContact()}>
-                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            }
-                        />
-                    </div>
-                    {
-                        list?.length > 0 ? (
-                            <div className="grid md:grid-cols-2 lg:grid-cols-4 4k:grid-cols-6 gap-4">
-                                {sortedContacts.map((row, i) => (
-                                    <div
-                                        key={row.id ?? i}
-                                        className={`
-            relative bg-white border rounded-xl p-4 shadow-sm 
-            hover:shadow-md transition-shadow cursor-pointer
-            ${row.isKey ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
-        `}
-                                    >
-
-                                        {/* ====== Checkbox on Top-Right ====== */}
-                                        <div className="absolute top-2 right-2 flex items-center gap-1">
-                                            <PermissionWrapper
-                                                functionalityName="Opportunities"
-                                                moduleName="Opportunities"
-                                                actionId={2}
-                                                component={
-                                                    <>
-                                                        <Checkbox
-                                                            checked={!!row.isKey}
-                                                            disabled={currentKeyContactsCount >= 4 && !row.isKey}
-                                                            onChange={() => handleToggleKeyContact(row.id, !row.isKey)}
-                                                        />
-                                                        <Tooltip title="Delete" arrow>
-                                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                <Components.IconButton onClick={() => handleOpenDeleteContactDialog(row.id)}>
-                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                </Components.IconButton>
-                                                            </div>
-                                                        </Tooltip>
-                                                    </>
-                                                }
-                                            />
-
-                                        </div>
-
-                                        {/* Avatar & Details */}
-                                        <div className="flex gap-3 pr-8">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold
-                ${row.isKey ? 'bg-blue-600' : 'bg-gray-400'}`}
-                                            >
-                                                {(row.contactName || "—").charAt(0)}
-                                            </div>
-
-                                            <div className="flex-1 overflow-hidden">
-                                                <p className="font-semibold text-gray-800 truncate">
-                                                    {row.contactName || "—"}
-                                                </p>
-
-                                                {row.role && (
-                                                    <p className="text-xs text-gray-500 truncate mt-1">{row.role}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-
                             </div>
-                        ) :
-                            <div className="border rounded-lg text-center py-10 font-bold">
-                                No Contact Found.
-                            </div>
-                    }
-                </section>
-            </>
+                        );
+                    })}
+                </div>
+            </div>
         );
     };
 
-    const ProductsSection = ({ list = [] }) => {
-        const items = Array.isArray(list) ? list : [];
-        const grandTotal = items.reduce((sum, row) => {
-            const qty = parseFloat(row?.qty) || 0;
-            const price = parseFloat(row?.price) || 0;
-            return sum + qty * price;
-        }, 0);
+    const handleOpenDecisionMapModel = async (id = null) => {
+        setSalesProcessId(id)
+        setOpenDecisionMapModel(true)
+    }
 
-        return (
-            <>
-                <section className="mt-8">
-                    <div className="flex items-center my-4">
-                        <div className="flex-grow border-t border-gray-300"></div>
-                        <span className="mx-4 font-semibold text-gray-700">
-                            Products &amp; Services
-                        </span>
-                        <div className="flex-grow border-t border-gray-300"></div>
-                    </div>
-                    <div className='flex justify-end mb-4 gap-2'>
-                        <PermissionWrapper
-                            functionalityName="Opportunities"
-                            moduleName="Opportunities"
-                            actionId={2}
-                            component={
-                                <Tooltip title="Add" arrow>
-                                    <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white p-1'>
-                                        <Components.IconButton onClick={() => handleAddProduct()}>
-                                            <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
-                                        </Components.IconButton>
-                                    </div>
-                                </Tooltip>
-                            }
-                        />
-                    </div>
+    const handleCloseDecisionMapModel = async () => {
+        setSalesProcessId(null)
+        setOpenDecisionMapModel(false)
+    }
 
-                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                        <table className="w-full">
-                            <thead className="hidden sm:table-header-group">
-                                <tr className="text-xs font-semibold text-gray-500 uppercase border-b border-gray-100">
-                                    <th className="px-4 py-3 text-left">Product Name</th>
-                                    <th className="px-4 py-3 text-right">Qty</th>
-                                    <th className="px-4 py-3 text-right">Price</th>
-                                    <th className="px-4 py-3 text-right">Total</th>
-                                    <th className="px-4 py-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            {
-                                items.length > 0 ? (
-                                    <tbody className="divide-y divide-gray-100">
-                                        {items.map((row, i) => {
-                                            const qty = parseFloat(row?.qty) || 0;
-                                            const price = parseFloat(row?.price) || 0;
-                                            const total = parseFloat(qty * price);
+    const handleOpenDecisionMapDelete = async (id) => {
+        setSalesProcessId(id)
+        setDialogDeleteDecisionMap({ open: true, title: 'Delete Decision Map', message: 'Are you sure! Do you want to delete decision map ?', actionButtonText: 'yes' })
+    }
 
-                                            return (
-                                                <tr
-                                                    key={row.id ?? i}
-                                                    className="hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <td className="px-4 py-3">
-                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Product Name:</div>
-                                                        <p className="font-semibold text-gray-800 text-base break-words">
-                                                            {row.name || "—"}
-                                                        </p>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Qty:</div>
-                                                        <span className="font-semibold">{qty || "—"}</span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="sm:hidden text-xs text-gray-500 mb-1">Price:</div>
-                                                        <span className="font-semibold">
-                                                            {price
-                                                                ? `$${price.toLocaleString(undefined, {
-                                                                    minimumFractionDigits: 2,
-                                                                    maximumFractionDigits: 2,
-                                                                })}`
-                                                                : "—"}
-                                                        </span>
-                                                    </td>
+    const handleCloseDecisionMapDelete = async () => {
+        setSalesProcessId(null)
+        setDialogDeleteDecisionMap({ open: false, title: '', message: '', actionButtonText: '' })
+    }
 
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="sm:hidden text-xs text-blue-600 mb-1">Total:</div>
-                                                        <span className="font-bold text-blue-600 text-base">
-                                                            {total
-                                                                ? `$${total.toLocaleString(undefined, {
-                                                                    minimumFractionDigits: 2,
-                                                                    maximumFractionDigits: 2,
-                                                                })}`
-                                                                : "—"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <PermissionWrapper
-                                                                functionalityName="Opportunities"
-                                                                moduleName="Opportunities"
-                                                                actionId={2}
-                                                                component={
-                                                                    <>
-                                                                        <Tooltip title="Edit" arrow>
-                                                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleEditProduct(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                </Components.IconButton>
-                                                                            </div>
-                                                                        </Tooltip>
-                                                                        <Tooltip title="Delete" arrow>
-                                                                            <div className='bg-red-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                                <Components.IconButton onClick={() => handleOpenDeleteProductDialog(row.id)}>
-                                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                </Components.IconButton>
-                                                                            </div>
-                                                                        </Tooltip>
-                                                                    </>
-                                                                }
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                ) :
-                                    <tbody className="divide-y divide-gray-100">
-                                        <tr className="hover:bg-gray-50 transition-colors">
-                                            <td className="py-10 text-center font-bold" colSpan={5}>
-                                                Product & Service Not Found.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                            }
-                        </table>
-                        {
-                            items.length > 0 ? (
-                                <div className="flex justify-between items-center px-4 py-3 border-t border-gray-200 bg-[#F9FAFB] rounded-b-xl">
-                                    <p className="text-base font-bold text-gray-700">
-                                        Total Expected Revenue
-                                    </p>
-                                    <p className="text-lg font-extrabold text-[#1072E0]">
-                                        {grandTotal
-                                            ? `$${grandTotal.toLocaleString()}`
-                                            : "—"}
-                                    </p>
-                                </div>
-                            ) : null
-                        }
-                    </div>
-                </section>
-            </>
-        );
-    };
-
-    const handleCancelEditor = (type) => {
-        if (type === "WhyDoAnything") {
-            if (whyDoAnythingStateHTML) {
-                const blocks = htmlToDraft(whyDoAnythingStateHTML);
-                const contentState = ContentState.createFromBlockArray(
-                    blocks.contentBlocks,
-                    blocks.entityMap
-                );
-                setWhyDoAnythingState(EditorState.createWithContent(contentState));
+    const handleDeteleDecisionMap = async () => {
+        if (salesProcessId) {
+            const res = await deleteSalesProcess(salesProcessId);
+            if (res.status === 200) {
+                handleGetAllSalesProcess()
+                handleCloseDecisionMapDelete()
             } else {
-                setWhyDoAnythingState(EditorState.createEmpty());
+                setAlert({
+                    open: true,
+                    message: res.message,
+                    type: "error"
+                })
             }
-            setIsWhyDoAnythingDirty(false);
         }
-
-        if (type === "CurrentEnvironment") {
-            if (currentEnvironmentHTML) {
-                const blocks = htmlToDraft(currentEnvironmentHTML);
-                const contentState = ContentState.createFromBlockArray(
-                    blocks.contentBlocks,
-                    blocks.entityMap
-                );
-                setCurrentEnvironmentState(EditorState.createWithContent(contentState));
-            } else {
-                setCurrentEnvironmentState(EditorState.createEmpty());
-            }
-            setIsCurrentEnvironmentDirty(false);
-        }
-
-        if (type === "BusinessValue") {
-            if (businessValueStateHTML) {
-                const blocks = htmlToDraft(businessValueStateHTML);
-                const contentState = ContentState.createFromBlockArray(
-                    blocks.contentBlocks,
-                    blocks.entityMap
-                );
-                setBusinessValueState(EditorState.createWithContent(contentState));
-            } else {
-                setBusinessValueState(EditorState.createEmpty());
-            }
-            setIsBusinessValueDirty(false);
-        }
-
-        if (type === "NextSteps") {
-            setIsEditingNextSteps(false)
-        }
-    };
-
-    const handleSubmitEditorData = async (type) => {
-        const currentValues = getValues();
-        const whyDoAnythingHtmlData = whyDoAnythingState
-            ? draftToHtml(convertToRaw(whyDoAnythingState.getCurrentContent()))
-            : null;
-
-        const businessValueHtmlData = businessValueState
-            ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
-            : null;
-
-        const currentEnvironmentHtmlData = currentEnvironmentState
-            ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
-            : null;
-
-
-        let payload = {
-            ...currentValues,
-            whyDoAnything: whyDoAnythingHtmlData,
-            businessValue: businessValueHtmlData,
-            currentEnvironment: currentEnvironmentHtmlData,
-            nextSteps: watch("nextSteps"),
-        };
-        const res = await updateOpportunity(opportunityId, payload);
-        if (res?.status === 200) {
-            // keep HTML snapshots in sync
-            setWhyDoAnythingStateHTML(whyDoAnythingHtmlData || "");
-            setBusinessValueStateHTML(businessValueHtmlData || "");
-            setCurrentEnvironmentHTML(currentEnvironmentHtmlData || "");
-            setIsEditingNextSteps(false)
-
-            // clear only the relevant dirty flag
-            if (type === "BusinessValue") {
-                setIsBusinessValueDirty(false);
-            }
-            if (type === "WhyDoAnything") {
-                setIsWhyDoAnythingDirty(false);
-            }
-            if (type === "CurrentEnvironment") {
-                setIsCurrentEnvironmentDirty(false);
-            }
-
-            handleGetOpportunityDetails();
-        } else {
-            setAlert({
-                open: true,
-                message: "Failed to update opportunity",
-                type: "error",
-            });
-        }
-
     }
 
     const DecisionMapTimeline = ({ items = [] }) => {
@@ -2064,7 +1120,6 @@ const ViewOpportunity = ({ setAlert }) => {
             : null;
         // Extract reason
         const reasonText = lastGoLiveItem?.reason || null;
-
 
 
         return (
@@ -2125,14 +1180,14 @@ const ViewOpportunity = ({ setAlert }) => {
 
                         {goLiveText && (
                             <span>
-                                <span className="font-semibold">Go Live: </span>
+                                <span className="font-bold text-black">Go Live: </span>
                                 {goLiveText}
                             </span>
                         )}
 
                         {reasonText && (
                             <span className="truncate max-w-[50%] text-right" title={reasonText}>
-                                <span className="font-semibold">Reason: </span>
+                                <span className="font-bold text-black">Reason: </span>
                                 {reasonText}
                             </span>
                         )}
@@ -2145,1000 +1200,606 @@ const ViewOpportunity = ({ setAlert }) => {
 
     const MeetingNotesTable = () => {
         const rows = [
-            { placeHolder: "Enter purpose of meeting", key: "purpose", label: "Purpose of meeting (desired outcome)", html: purposeHTML, state: purposeState, setState: setPurposeState },
-            { placeHolder: "Enter background", key: "background", label: "Context and Background", html: backgroundHTML, state: backgroundState, setState: setBackgroundState },
-            { placeHolder: "Enter agenda of meeting", key: "agenda", label: "Agenda", html: agendaHTML, state: agendaState, setState: setAgendaState },
-            { placeHolder: "Enter alignment", key: "alignment", label: "Alignment", html: alignmentHTML, state: alignmentState, setState: setAlignmentState },
+            { key: "purpose", label: "Purpose", html: purposeHTML, state: purposeState, setState: setPurposeState },
+            { key: "background", label: "Background", html: backgroundHTML, state: backgroundState, setState: setBackgroundState },
+            { key: "agenda", label: "Agenda", html: agendaHTML, state: agendaState, setState: setAgendaState },
+            { key: "alignment", label: "Alignment", html: alignmentHTML, state: alignmentState, setState: setAlignmentState },
         ];
-
         return (
             <div className="bg-white border border-gray-300 rounded-md overflow-hidden">
                 <table className="w-full border-collapse">
                     <tbody>
-                        {rows.map((r) => {
-                            const isEditing = editingNoteField === r.key;
-
-                            const handleOpenThisEditor = () => {
-                                // If another editor open, first confirm save/cancel, then open this
-                                if (editingNoteField && editingNoteField !== r.key) {
-                                    requestCloseOrSwitchEditor(r.key, "switch");
-                                    return;
-                                }
-                                setEditingNoteField(r.key);
-                            };
-
-                            return (
-                                <tr key={r.key} className="border-b last:border-b-0">
-                                    <td className="w-[25%] align-top bg-gray-50 border-r border-gray-300 px-4 py-2 font-bold text-gray-900">
-                                        {r.label}
-                                    </td>
-
-                                    <td className="align-top px-4 py-2">
-                                        {!isEditing ? (
-                                            <div
-                                                className="cursor-pointer rounded-md p-2 transition"
-                                                onClick={handleOpenThisEditor}
-                                            >
-                                                {isEmptyHtml(r.html) ? (
-                                                    <span className="text-gray-400 italic">{r.placeHolder}</span>
-                                                ) : (
-                                                    <div
-                                                        className="editor-html max-w-none"
-                                                        dangerouslySetInnerHTML={{ __html: r.html }}
-                                                    />
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div ref={activeNoteEditorRef}>
-                                                <Editor
-                                                    editorState={r.state}
-                                                    wrapperClassName="border border-gray-300 rounded-md"
-                                                    editorClassName="p-2 min-h-[140px] max-h-[240px] overflow-y-auto"
-                                                    toolbarClassName="border-b border-gray-300"
-                                                    onEditorStateChange={(st) => r.setState(st)}
-                                                    toolbar={toolbarProperties}
-                                                />
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                        {rows.map((r) => (
+                            <tr key={r.key} className="border-b last:border-b-0">
+                                <td className="w-[25%] align-top bg-gray-50 border-r border-gray-300 px-4 py-2 font-bold text-gray-900">{r.label}</td>
+                                <td className="align-top px-4 py-2">
+                                    {editingNoteField === r.key ? (
+                                        <div ref={activeNoteEditorRef}>
+                                            <Editor editorState={r.state} onEditorStateChange={r.setState} toolbar={toolbarProperties} editorClassName="p-2 min-h-[140px] max-h-[240px]" />
+                                        </div>
+                                    ) : (
+                                        <div className="cursor-pointer p-2 min-h-[2rem]" onClick={() => setEditingNoteField(r.key)}>
+                                            {isEmptyHtml(r.html) ? <span className="text-gray-400 italic">Enter {r.label}...</span> : <div dangerouslySetInnerHTML={{ __html: r.html }} />}
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
         );
     };
 
+    // ----------------------------
+    // Render
+    // ----------------------------
+    const currentStageId = opportunityStages.find(s => s.title === watch("salesStage"))?.id;
+    const logoUrl = watch("logo");
+
     return (
-        <div className='mx-auto relative p-4 sm:p-6 my-3'>
+        <div className="mx-auto relative p-4 sm:p-6 my-3">
+            {/* Navigation & Hint */}
             <div>
                 <div className='absolute top-1 left-5'>
                     <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center' onClick={() => navigate("/dashboard/opportunities")}>
                         <CustomIcons iconName="fa-solid fa-arrow-left" css="h-5 w-5 text-gray-600" />
                     </div>
                 </div>
-                {
-                    selectedTab === 0 ? (
-                        <div className='absolute top-2 right-5'>
-                            <p className='text-red-600'><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p>
-                        </div>
-                    ) : null
-                }
+                {selectedTab === 0 && <div className="absolute top-2 right-5"><p className="text-red-600 text-lg"><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p></div>}
             </div>
 
-            <div className='my-3'>
-                <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} />
+            <div className="my-3">
+                <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={setSelectedTab} />
             </div>
-            {
-                selectedTab === 0 && (
-                    <>
-                        <StageTimeline
-                            stages={opportunityStages}
-                            currentStageId={opportunityStages.find(stage => stage.title === watch("salesStage"))?.id}
-                        />
 
-                        <div className='grid grid-cols-1 md:grid-cols-5 gap-6 pt-4'>
-                            <div className='flex justify-center md:justify-start items-start md:col-span-1'>
-                                <div className="w-40 h-40">
-                                    {/* <FileInputBox
-                                        onFileSelect={handleImageChange}
-                                        onRemove={handleOpenDeleteLogoDialog}
-                                        value={watch("logo") || watch("newLogo")}
-                                        text="Upload jpg/png of Size 100X100 Px"
-                                        size="100x100"
-                                    /> */}
-                                    <FileInputBox
-                                        type="OppLogo"
-                                        onFileSelect={handleImageChange}
-                                        onRemove={handleOpenDeleteLogoDialog}
-                                        value={watch("logo") || watch("newLogo")}
-                                        text="Upload Opportunity Logo"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className='grid md:grid-cols-2 gap-y-5 w-full md:col-span-4'>
-                                <>
-                                    <OpportunityField
-                                        label="Opportunity Name"
-                                        value={watch("opportunity")}
-                                        type="text"
-                                        onSave={(newValue) => handleSaveField("opportunity", newValue)}
-                                        required={true}
-                                    />
-
-                                    <OpportunityField
-                                        label="Stage"
-                                        value={watch("salesStage")}
-                                        type="select"
-                                        options={opportunityStages}
-                                        onSave={(newValue) => handleSaveField("salesStage", newValue)}
-                                        required={true}
-                                    />
-                                    <OpportunityField
-                                        label="List Amount"
-                                        value={
-                                            watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
-                                                ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
-                                                : "—"
-                                        }
-                                        type="text"
-                                        onSave={(newValue) => handleSaveField("listPrice", newValue)}
-                                        required={true}
-                                    />
-
-                                    <OpportunityField
-                                        label="Discount(%)"
-                                        value={
-                                            watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
-                                                ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
-                                                : "—"
-                                        }
-                                        type="text"
-                                        onSave={(newValue) => handleSaveField("discountPercentage", newValue)}
-                                        required={true}
-                                    />
-
-                                    <OpportunityField
-                                        label="Deal Amount"
-                                        value={
-                                            watch("dealAmount") !== null &&
-                                                watch("dealAmount") !== undefined &&
-                                                watch("dealAmount") !== ""
-                                                ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
-                                                : "—"
-                                        }
-                                        type="text"
-                                        onSave={(newValue) => handleSaveField("dealAmount", newValue)}
-                                        required={false}
-                                    />
-
-
-                                    <OpportunityField
-                                        label="Close Date"
-                                        value={formatDate(watch("closeDate"))}
-                                        type="date"
-                                        onSave={(newValue) => handleSaveField("closeDate", newValue)}
-                                        required={true}
-                                    />
-                                </>
-
-                                <>
-                                    <OpportunityField
-                                        label="Account"
-                                        value={getDisplayName(watch("accountId"), accounts)}
-                                        type="select"
-                                        options={accounts}
-                                        onSave={(newValue) => handleSaveField("accountId", newValue)}
-                                    />
-
-                                    <OpportunityField
-                                        label="Status"
-                                        value={watch("status")}
-                                        type="select"
-                                        options={opportunityStatus}
-                                        onSave={(newValue) => handleSaveField("status", newValue)}
-                                        required={true}
-                                    />
-                                </>
-
-                                <div className='md:col-span-2'>
-                                    <OpportunityField
-                                        label="Next Step"
-                                        value={watch("nextSteps")}
-                                        type="text"
-                                        onSave={(newValue) => handleSaveField("nextSteps", newValue)}
-                                        required={true}
-                                        multiline={true}
-                                    />
-                                </div>
-
-                                <div className="flex items-center md:col-span-2">
-                                    <div className="flex-grow border-t border-gray-300"></div>
-                                    <span className="mx-4 font-semibold text-gray-700">Deal Documents</span>
-                                    <div className="flex-grow border-t border-gray-300"></div>
-                                </div>
+            {selectedTab === 0 && (
+                <>
+                    {/* Header Grid */}
+                    <div className="flex justify-center items-center gap-10">
+                        {/* Logo Section */}
+                        <div className="flex justify-center md:justify-start items-center relative">
+                            <div className="w-24 h-24 border border-gray-200 rounded-full flex items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-50 overflow-hidden"
+                                onClick={() => setIsLogoMenuOpen(!isLogoMenuOpen)}>
+                                {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center"><CustomIcons iconName="fa-solid fa-image" css="mb-3 w-6 h-6" /><p className="text-xs">Logo</p></div>}
                                 {
-                                    files?.length > 0 && (
-                                        <div className='flex justify-end items-center col-span-2'>
-                                            <Tooltip title="Upload" arrow>
-                                                <div className='bg-green-600 h-7 w-7 px-3 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={uploadSelectedFiles} title="Upload docs">
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
+                                    logoUrl && (
+                                        <div className="z-50 absolute -top-1 right-0 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500">
+                                            <button type="button" onClick={handleOpenDeleteLogoDialog}>
+                                                <CustomIcons
+                                                    iconName="fa-solid fa-xmark"
+                                                    css="cursor-pointer text-white"
+                                                />
+                                            </button>
                                         </div>
                                     )
                                 }
-                                <div className='md:col-span-2'>
-                                    <MultipleFileUpload
-                                        files={files}
-                                        setFiles={setFiles}
-                                        setAlert={setAlert}
-                                        setValue={setValue}
-                                        existingImages={existingImages}
-                                        setExistingImages={setExistingImages}
-                                        type="oppDocs"
-                                        multiple={true}
-                                        placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
-                                    // uploadedFiles={uploadedFiles}
-                                    />
-                                </div>
                             </div>
+                            {isLogoMenuOpen && (
+                                <div ref={logoMenuRef} className="absolute z-50 left-0 top-28 w-48 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                    <button className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2" onClick={() => { setIsUploadLogoOpen(true); setIsLogoMenuOpen(false); }}>
+                                        <CustomIcons iconName="fa-solid fa-upload" css="h-4 w-4" /> Upload Logo
+                                    </button>
+                                    <button className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2 border-t" onClick={() => { setIsFetchLogoOpen(true); setIsLogoMenuOpen(false); }}>
+                                        <CustomIcons iconName="fa-solid fa-cloud-arrow-down" css="h-4 w-4" /> Fetch Logo
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* 1. Upload Logo Modal */}
+                            {isUploadLogoOpen && (
+                                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
+                                    <div
+                                        ref={uploadLogoRef}
+                                        className="w-full max-w-md rounded-xl bg-white shadow-2xl border border-gray-200 overflow-hidden"
+                                    >
+                                        {/* Header */}
+                                        <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+                                            <p className="text-sm font-semibold text-gray-900">Upload Logo</p>
+                                            <button
+                                                type="button"
+                                                className="h-8 w-8 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                                onClick={() => setIsUploadLogoOpen(false)}
+                                                title="Close"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+
+                                        {/* Body */}
+                                        <div className="p-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-20 w-20 rounded-full border border-gray-200 overflow-hidden flex items-center justify-center bg-white">
+                                                    {logoUploadDraft.previewUrl ? (
+                                                        <img
+                                                            src={logoUploadDraft.previewUrl}
+                                                            alt="Preview"
+                                                            className="h-20 w-20 object-cover"
+                                                        />
+                                                    ) : (
+                                                        <CustomIcons iconName="fa-solid fa-image" css="h-6 w-6 text-gray-400" />
+                                                    )}
+                                                </div>
+
+                                                <div className="flex-1">
+                                                    <p className="text-xs text-gray-600 mb-1">Choose an image (PNG, JPG, SVG, WEBP)</p>
+
+                                                    <input
+                                                        ref={fileInputRef}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => handlePickLogoFile(e.target.files?.[0])}
+                                                    />
+
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                    >
+                                                        Select File
+                                                    </button>
+
+                                                    {logoUploadDraft.fileName ? (
+                                                        <p className="mt-2 text-xs text-gray-500 truncate" title={logoUploadDraft.fileName}>
+                                                            {logoUploadDraft.fileName}
+                                                        </p>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+
+                                            {/* Footer buttons */}
+                                            <div className="flex justify-end gap-2 mt-5">
+                                                <button
+                                                    type="button"
+                                                    className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+                                                    onClick={() => setIsUploadLogoOpen(false)}
+                                                >
+                                                    Cancel
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className={`px-4 py-2 text-sm rounded-md text-white ${logoUploadDraft.previewUrl ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"
+                                                        }`}
+                                                    disabled={!logoUploadDraft.previewUrl}
+                                                    onClick={saveUploadedLogo}
+                                                >
+                                                    Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                // <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
+                                //     <div ref={uploadLogoRef} className="w-full max-w-md rounded-xl bg-white shadow-2xl border p-4">
+                                //         <h3 className="font-semibold text-lg mb-4">Upload Logo</h3>
+                                //         <div className="flex items-center gap-4 mb-4">
+                                //             <div className="h-20 w-20 rounded-full border flex items-center justify-center overflow-hidden bg-gray-50">
+                                //                 {logoUploadDraft.previewUrl ? <img src={logoUploadDraft.previewUrl} className="h-full w-full object-cover" /> : <CustomIcons iconName="fa-solid fa-image" css="h-6 w-6 text-gray-400" />}
+                                //             </div>
+                                //             <div>
+                                //                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePickLogoFile(e.target.files[0])} />
+                                //                 <button className="px-4 py-2 text-sm border rounded hover:bg-gray-50 mb-1" onClick={() => fileInputRef.current?.click()}>Select File</button>
+                                //                 {logoUploadDraft.fileName && <p className="text-xs text-gray-500 truncate max-w-[200px]">{logoUploadDraft.fileName}</p>}
+                                //             </div>
+                                //         </div>
+                                //         <div className="flex justify-end gap-2">
+                                //             <button className="px-4 py-2 text-sm border rounded" onClick={() => setIsUploadLogoOpen(false)}>Cancel</button>
+                                //             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded" onClick={saveUploadedLogo}>Save</button>
+                                //         </div>
+                                //     </div>
+                                // </div>
+                            )}
+
+                            {/* 2. Fetch Logo Modal */}
+                            {isFetchLogoOpen && (
+                                <div
+                                    ref={fetchLogoRef}
+                                    className="absolute z-50 left-0 top-28 w-80 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden"
+                                >
+                                    <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+                                        <p className="text-sm font-semibold text-gray-900">Fetch Logo</p>
+                                        <button
+                                            type="button"
+                                            className="h-8 w-8 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                            onClick={() => {
+                                                setIsFetchLogoOpen(false);
+                                                setDomainDraft("");
+                                            }}
+                                            title="Close"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1">Domain</label>
+                                        <input
+                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="e.g. google.com"
+                                            value={domainDraft}
+                                            onChange={(e) => setDomainDraft(e.target.value)}
+                                        />
+
+                                        <div className="flex justify-end gap-2 mt-4">
+                                            <button
+                                                type="button"
+                                                className="px-4 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50"
+                                                onClick={() => {
+                                                    setIsFetchLogoOpen(false);
+                                                    setDomainDraft("");
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className={`px-4 py-2 text-sm rounded-md text-white ${normalizeDomain(domainDraft) ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"
+                                                    }`}
+                                                disabled={!normalizeDomain(domainDraft)}
+                                                onClick={handleSaveFetchedLogo}
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <ContactsSection list={opportunitiesContacts} />
-                        <PartnersSection list={opportunitiesPartner} />
-                        <ProductsSection list={opportunitiesProducts} />
-                    </>
-                )
-            }
-            {
-                selectedTab === 1 && (
-                    <>
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-3">
-                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                <div className='flex justify-between items-center mb-4'>
-                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                        Why Do Anything
-                                    </p>
+                        {/* Details Grid */}
+                        <div className="flex justify-center items-center w-full">
+                            <OpportunityField
+                                label="Account"
+                                value={getDisplayName(watch("accountId"), accounts)}
+                                type="select"
+                                options={accounts}
+                                onSave={(newValue) => handleSaveField("accountId", newValue)}
+                            />
 
-                                    {isWhyDoAnythingDirty && (
-                                        <div className='flex justify-end items-center gap-3'>
-                                            <Tooltip title="Save" arrow>
-                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleSubmitEditorData("WhyDoAnything")}>
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title="Cancel" arrow>
-                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleCancelEditor("WhyDoAnything")}>
-                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
+                            {/* Pricing Popover Trigger */}
+                            <div className="relative cursor-pointer w-full">
+                                <p className="font-semibold text-black" onClick={openPricingBox}>
+                                    {watch("dealAmount") ? `$${Number(watch("dealAmount")).toLocaleString()}` : "—"}
+                                </p>
+                                {showPricingBox && (
+                                    <div ref={pricingBoxRef} className="absolute z-50 right-0 top-10 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
+                                        <div>
+                                            <label className="text-xs font-semibold">List Amount</label>
+                                            <Input
+                                                name="listPrice"
+                                                placeholder="0.00"
+                                                value={pricingDraft.listPrice || ""}
+                                                onChange={handleChange}
+                                                error={pricingDraft.listPrice === ""}
+                                            />
                                         </div>
-                                    )}
-                                </div>
-                                <div className='relative h-60 '>
-                                    <div className='h-full overflow-y-auto relative'>
+
+                                        <div>
+                                            <label className="text-xs font-semibold">Discount (%)</label>
+                                            <Input
+                                                name="discountPercentage"
+                                                placeholder="0"
+                                                value={pricingDraft.discountPercentage || ""}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-semibold">Deal Amount</label>
+                                            <Input
+                                                name="dealAmount"
+                                                placeholder="0.00"
+                                                value={pricingDraft.dealAmount || ""}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+
+                                    </div>
+                                )}
+                            </div>
+
+                            <OpportunityField
+                                label="Opportunity Name"
+                                value={watch("opportunity")}
+                                type="text"
+                                onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                required={true}
+                            />
+                            <OpportunityField
+                                label="Close Date"
+                                value={formatDate(watch("closeDate"))}
+                                type="date"
+                                onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                required={true}
+                            />
+                            <OpportunityField
+                                label="Status"
+                                value={watch("status")}
+                                type="select"
+                                options={opportunityStatus}
+                                onSave={(newValue) => handleSaveField("status", newValue)}
+                                required={true}
+                            />
+                        </div>
+                    </div>
+
+                    <StageTimeline stages={opportunityStages} currentStageId={currentStageId} />
+
+                    {/* 3-Column Layout: Why, Value, Contacts */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                        {/* Why Do Anything */}
+                        <div ref={whyCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                Why Do Anything
+                            </p>
+
+                            <div
+                                className={`flex-1 ${!isEditingWhy ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                onClick={() => !isEditingWhy && setIsEditingWhy(true)}
+                            >
+                                {isEditingWhy ? (
+                                    <div className="editor-container-integrated">
                                         <Editor
                                             editorState={whyDoAnythingState}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                            onEditorStateChange={(state) => {
-                                                setWhyDoAnythingState(state);
-                                                const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                                setIsWhyDoAnythingDirty(html !== (whyDoAnythingStateHTML || ""));
-                                            }}
+                                            wrapperClassName="editor-wrapper-custom"
+                                            editorClassName="editor-main-custom"
+                                            toolbarClassName="editor-toolbar-custom"
+                                            onEditorStateChange={setWhyDoAnythingState}
                                             toolbar={toolbarProperties}
                                             onFocus={() => setActiveEditorHint("WhyDoAnything")}
-                                            onBlur={() => { setIsWhyDoAnythingDirty(false); setActiveEditorHint(null) }} />
+                                            onBlur={() => setActiveEditorHint(null)}
+                                            autoFocus
+                                        />
+                                        {activeEditorHint === "WhyDoAnything" && (
+                                            <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
+                            before:content-[''] before:absolute before:top-10 before:left-[-8px] 
+                            before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                <img
+                                                    src="/images/WhyDoAnything2.png"
+                                                    alt="WhyDoAnything Hint"
+                                                    className="max-w-[200px] rounded-lg object-contain relative z-10"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-
-                                    {activeEditorHint === "WhyDoAnything" && (
-                                        <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
-                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
-                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
-                                            <img
-                                                src="/images/WhyDoAnything2.png"
-                                                alt="WhyDoAnything"
-                                                className="max-w-xs max-h-48 object-contain relative z-10"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-
-                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                <div className='flex justify-between items-center mb-4'>
-                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                        Current Environment
-                                    </p>
-
-                                    {isCurrentEnvironmentDirty && (
-                                        <div className='flex justify-end items-center gap-3'>
-                                            <Tooltip title="Save" arrow>
-                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title="Cancel" arrow>
-                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleCancelEditor("CurrentEnvironment")}>
-                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className='h-60 overflow-y-auto'>
-                                    <Editor
-                                        editorState={currentEnvironmentState}
-                                        wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                        editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                        toolbarClassName="toolbar-class border-b border-gray-300"
-                                        onEditorStateChange={(state) => {
-                                            setCurrentEnvironmentState(state);
-                                            const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                            setIsCurrentEnvironmentDirty(html !== (currentEnvironmentHTML || ""));
+                                ) : (
+                                    <div
+                                        className="prose prose-sm max-w-none text-gray-800"
+                                        dangerouslySetInnerHTML={{
+                                            __html: whyDoAnythingStateHTML || ""
                                         }}
-                                        toolbar={toolbarProperties}
                                     />
-                                </div>
+                                )}
                             </div>
-
                         </div>
 
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                <div className='flex justify-between items-center mb-4'>
-                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                        Value
-                                    </p>
+                        {/* Value */}
+                        <div ref={valueCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">Value</p>
 
-                                    {isBusinessValueDirty && (
-                                        <div className='flex justify-end items-center gap-3'>
-                                            <Tooltip title="Save" arrow>
-                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleSubmitEditorData("BusinessValue")}>
-                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title="Cancel" arrow>
-                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleCancelEditor("BusinessValue")}>
-                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </Tooltip>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="relative h-60">
-                                    {/* scroll only the editor, not the whole relative container */}
-                                    <div className="h-full overflow-y-auto relative">
+                            <div
+                                className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                onClick={() => !isEditingValue && setIsEditingValue(true)}
+                            >
+                                {isEditingValue ? (
+                                    <div className="editor-container-integrated">
                                         <Editor
                                             editorState={businessValueState}
-                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                            onEditorStateChange={(state) => {
-                                                setBusinessValueState(state);
-                                                const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                                setIsBusinessValueDirty(html !== (businessValueStateHTML || ""));
-                                            }}
+                                            wrapperClassName="editor-wrapper-custom"
+                                            editorClassName="editor-main-custom"
+                                            toolbarClassName="editor-toolbar-custom"
+                                            onEditorStateChange={setBusinessValueState}
                                             toolbar={toolbarProperties}
                                             onFocus={() => setActiveEditorHint("BusinessValue")}
-                                            onBlur={() => { setIsBusinessValueDirty(false); setActiveEditorHint(null) }}
+                                            onBlur={() => setActiveEditorHint(null)}
+                                            autoFocus
                                         />
                                     </div>
+                                ) : (
+                                    <div
+                                        className="prose prose-sm max-w-none text-gray-800"
+                                        dangerouslySetInnerHTML={{
+                                            __html: businessValueStateHTML || ""
+                                        }}
+                                    />
+                                )}
 
-                                    {activeEditorHint === "BusinessValue" && (
-                                        <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
-                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
-                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
-                                            <img
-                                                src="/images/BusinessValue2.png"
-                                                alt="Business value guidance"
-                                                className="max-w-xs max-h-48 object-contain relative z-10"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                            </div>
-
-                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                <div className='flex justify-between items-center mb-4'>
-                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                        Decision Map
-                                    </p>
-                                    <div className='flex justify-end gap-3'>
-                                        <p className='text-red-600'><strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.</p>
-                                        <Tooltip title="Add" arrow>
-                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                <Components.IconButton onClick={() => handleOpenDecisionMapModel()}>
-                                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
-                                                </Components.IconButton>
-                                            </div>
-                                        </Tooltip>
+                                {/* Floating Hint Image */}
+                                {activeEditorHint === "BusinessValue" && (
+                                    <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
+                            before:content-[''] before:absolute before:top-10 before:left-[-8px] 
+                            before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                        <img
+                                            src="/images/BusinessValue2.png"
+                                            alt="Business value guidance"
+                                            className="max-w-[200px] rounded-lg object-contain relative z-10"
+                                        />
                                     </div>
-                                </div>
-
-                                <div className="h-60 w-full">
-                                    <DecisionMapTimeline items={salesProcess} />
-                                </div>
-
+                                )}
                             </div>
                         </div>
-                    </>
-                )
-            }
-            {
-                selectedTab === 2 && (
-                    <>
-                        <Calendar />
-                    </>
-                )
-            }
-            {
-                selectedTab === 3 && (
-                    <div className='flex justify-start items-start gap-4'>
-                        <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
-                            <DatePickerComponent
-                                name="meetingDate"
-                                label="Meeting Date"
-                                control={control}
-                                setValue={setValue}
-                                showDates={showDates}
-                            />
-                            {
-                                filteredMeetings?.length > 0 && (
-                                    <div class="rounded-md border border-gray-200 bg-white py-4 px-2 mt-3">
-                                        <div class="flex h-[400px] w-full flex-col overflow-y-scroll">
-                                            {
-                                                filteredMeetings?.map((row, index) => (
-                                                    <button key={index} onClick={() => handleSelectMeeting(row.id)} class={`mb-2 group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 ${selectedMeeting === row.id ? "bg-blue-500" : "hover:bg-gray-100 "} `}>
-                                                        <div class={`flex flex-col items-start justify-between font-light ${selectedMeeting === row.id ? "text-white" : "text-gray-600"} `}>
-                                                            <p class="text-[15px] font-semibold">{row.title}</p>
-                                                            {/* <div
-                                                                className="space-y-1 group-hover:bg-gray-100"
-                                                                dangerouslySetInnerHTML={{
-                                                                    __html:
-                                                                        row?.description ||
-                                                                        "<span class='text-xs font-light group-hover:bg-gray-100 text-gray-400 italic'>-</span>",
-                                                                }}
-                                                            /> */}
-                                                        </div>
-                                                    </button>
-                                                ))
-                                            }
+
+                        {/* Key Contacts */}
+                        <div className="border-2 border-black p-3 rounded-3xl flex flex-col relative h-60">
+                            <div className="flex justify-start items-center mb-4">
+                                <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
+                                <div className="flex items-center gap-2">
+                                    <Tooltip title="Select">
+                                        <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                    </Tooltip>
+                                    <Tooltip title="Add New">
+                                        <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
+                                            <Components.IconButton onClick={() => setContactModalOpen(true)}>
+                                                <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
+                                            </Components.IconButton>
                                         </div>
-                                    </div>
-                                )
-                            }
-                        </div>
-
-                        <div className='w-full'>
-                            {
-                                selectedMeeting && (
-                                    <div>
-                                        <div className="min-h-40 overflow-y-auto border rounded-md overflow-hidden">
-                                            <table className="min-w-full border-collapse">
-                                                <thead className="sticky top-0 z-10">
-                                                    <tr>
-                                                        <th colSpan={1}>
-                                                            <div className='flex justify-start items-center pl-5'>
-                                                                {
-                                                                    !openDrawer ? (
-                                                                        <Components.IconButton onClick={() => setOpenDrawer(true)}>
-                                                                            <CustomIcons iconName={`fa-solid fa-bars`} css={"text-black text-lg"} />
-                                                                        </Components.IconButton>
-                                                                    ) :
-                                                                        <Components.IconButton onClick={() => setOpenDrawer(false)}>
-                                                                            <CustomIcons iconName={`fa-solid fa-angle-left`} css={"text-black text-lg"} />
-                                                                        </Components.IconButton>
-                                                                }
-                                                            </div>
-                                                        </th>
-                                                        <th colSpan={3} className="px-4 py-3 text-center text-lg font-bold text-black">Attendees</th>
-                                                        <th className="px-4 py-3 text-sm font-semibold flex justify-end">
-                                                            <Tooltip title="Add Attendees" arrow>
-                                                                <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenAttendeesModel()}>
-                                                                        <CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4 text-white" />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                        </th>
-                                                    </tr>
-                                                    <tr className="bg-gray-200 text-black">
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Title</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
-                                                    </tr>
-                                                </thead>
-
-                                                <tbody>
-                                                    {meetingAttendees?.length > 0 ? (
-                                                        meetingAttendees.map((row, i) => (
-                                                            <tr key={row.contactId ?? i} className={`bg-white border-b-1 border-t-0 border-l-0 border-r-0 ${i !== meetingAttendees?.length - 1 ? "border" : ""}`}>
-                                                                <td className="px-4 py-3 text-sm">
-                                                                    {row.contactName || '—'}
-                                                                </td>
-                                                                <td className="px-4 py-3 text-sm">
-                                                                    {row.title || '—'}
-                                                                </td>
-                                                                <td className="px-4 py-3 text-sm">
-                                                                    {row.role || '—'}
-                                                                </td>
-                                                                <td className="white-space-pre-line px-4 py-3 text-sm">
-                                                                    {row.note || '—'}
-                                                                </td>
-                                                                <td className="px-4 py-3 flex justify-end items-center gap-3">
-                                                                    <Tooltip title="Edit" arrow>
-                                                                        <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={() => handleOpenAttendeesModel(row.id)}>
-                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                                            </Components.IconButton>
-                                                                        </div>
-                                                                    </Tooltip>
-                                                                    <Tooltip title="Delete" arrow>
-                                                                        <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                            <Components.IconButton onClick={() => handleOpenDeleteAttendees(row.id)}>
-                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                            </Components.IconButton>
-                                                                        </div>
-                                                                    </Tooltip>
-                                                                </td>
-                                                            </tr>
-                                                        ))
-                                                    ) : (
-                                                        <tr>
-                                                            <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
-                                                                No records
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
+                                    </Tooltip>
+                                </div>
+                            </div>
+                            {isSelectContactsOpen && (
+                                <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
+                                    {allContactsWithEdits.map(c => (
+                                        <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
+                                            <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
+                                            <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
+                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(c.id)}>
+                                                <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer h-4 w-4" />
+                                            </Components.IconButton>
                                         </div>
-
-                                        <div className="my-4">
-                                            <MeetingNotesTable />
-                                        </div>
-
-                                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-3">
-                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                                <div className='flex justify-between items-center mb-4'>
-                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                                        Why Do Anything
-                                                    </p>
-
-                                                    {isWhyDoAnythingDirty && (
-                                                        <div className='flex justify-end items-center gap-3'>
-                                                            <Tooltip title="Save" arrow>
-                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("WhyDoAnything")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                            <Tooltip title="Cancel" arrow>
-                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleCancelEditor("WhyDoAnything")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className='relative h-60 '>
-                                                    <div className='h-full overflow-y-auto relative'>
-                                                        <Editor
-                                                            editorState={whyDoAnythingState}
-                                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                                            onEditorStateChange={(state) => {
-                                                                setWhyDoAnythingState(state);
-                                                                const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                                                setIsWhyDoAnythingDirty(html !== (whyDoAnythingStateHTML || ""));
-                                                            }}
-                                                            toolbar={toolbarProperties}
-                                                            onFocus={() => setActiveEditorHint("WhyDoAnything")}
-                                                            onBlur={() => { setIsWhyDoAnythingDirty(false); setActiveEditorHint(null) }} />
-                                                    </div>
-
-                                                    {activeEditorHint === "WhyDoAnything" && (
-                                                        <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
-                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
-                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
-                                                            <img
-                                                                src="/images/WhyDoAnything2.png"
-                                                                alt="WhyDoAnything"
-                                                                className="max-w-xs max-h-48 object-contain relative z-10"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                                <div className='flex justify-between items-center mb-4'>
-                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                                        Value
-                                                    </p>
-
-                                                    {isBusinessValueDirty && (
-                                                        <div className='flex justify-end items-center gap-3'>
-                                                            <Tooltip title="Save" arrow>
-                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("BusinessValue")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                            <Tooltip title="Cancel" arrow>
-                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleCancelEditor("BusinessValue")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="relative h-60">
-                                                    {/* scroll only the editor, not the whole relative container */}
-                                                    <div className="h-full overflow-y-auto relative">
-                                                        <Editor
-                                                            editorState={businessValueState}
-                                                            wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                                            editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                                            toolbarClassName="toolbar-class border-b border-gray-300"
-                                                            onEditorStateChange={(state) => {
-                                                                setBusinessValueState(state);
-                                                                const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                                                setIsBusinessValueDirty(html !== (businessValueStateHTML || ""));
-                                                            }}
-                                                            toolbar={toolbarProperties}
-                                                            onFocus={() => setActiveEditorHint("BusinessValue")}
-                                                            onBlur={() => { setIsBusinessValueDirty(false); setActiveEditorHint(null) }}
-                                                        />
-                                                    </div>
-
-                                                    {activeEditorHint === "BusinessValue" && (
-                                                        <div className="absolute top-1/2 -translate-y-1/2 right-[-216px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-2
-                        before:content-[''] before:absolute before:top-1/2 before:-translate-y-1/2 before:left-[-8px] 
-                        before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
-                                                            <img
-                                                                src="/images/BusinessValue2.png"
-                                                                alt="Business value guidance"
-                                                                className="max-w-xs max-h-48 object-contain relative z-10"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                className={`border border-gray-200 p-3 rounded-md flex flex-col cursor-pointer`}
-                                            >
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <h3 className="text-base font-semibold text-gray-800">
-                                                        Key Contacts
-                                                    </h3>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-2">
-                                                            {editedContacts.length > 0 && (
-                                                                <Tooltip
-                                                                    title="Save key contacts"
-                                                                    arrow
-                                                                >
-                                                                    <div className="bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
-                                                                        <Components.IconButton
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleSaveKeyContacts();
-                                                                            }}
-                                                                        >
-                                                                            <CustomIcons
-                                                                                iconName="fa-solid fa-floppy-disk"
-                                                                                css="cursor-pointer text-white h-3 w-3"
-                                                                            />
-                                                                        </Components.IconButton>
-                                                                    </div>
-                                                                </Tooltip>
-                                                            )}
-                                                        </div>
-                                                        <PermissionWrapper
-                                                            functionalityName="Opportunities"
-                                                            moduleName="Opportunities"
-                                                            actionId={2}
-                                                            component={
-                                                                <Tooltip
-                                                                    title="Add contact"
-                                                                    arrow
-                                                                >
-                                                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
-                                                                        <Components.IconButton
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                setKeyContactModalOpen(true)
-                                                                            }}
-                                                                        >
-                                                                            <CustomIcons
-                                                                                iconName="fa-solid fa-plus"
-                                                                                css="cursor-pointer text-white h-3 w-3"
-                                                                            />
-                                                                        </Components.IconButton>
-                                                                    </div>
-                                                                </Tooltip>
-                                                            }
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-2 max-h-80 overflow-y-auto">
-                                                    {keyContactsWithEdits.length > 0 ? (
-                                                        keyContactsWithEdits.map((c) => (
-                                                            <div
-                                                                key={c.id}
-                                                                className={`flex items-center justify-between rounded-md px-2 py-1 border text-sm ${c.isKey
-                                                                    ? "border-blue-500 bg-blue-50"
-                                                                    : "border-gray-200"
-                                                                    }`}
-                                                            >
-                                                                <div className="flex items-center gap-2">
-                                                                    <PermissionWrapper
-                                                                        functionalityName="Opportunities"
-                                                                        moduleName="Opportunities"
-                                                                        actionId={2}
-                                                                        component={
-                                                                            <Checkbox
-                                                                                checked={
-                                                                                    !!c.isKey
-                                                                                }
-                                                                                disabled={currentKeyContactsCount >= 4 && !c.isKey}
-                                                                                onChange={(
-                                                                                    e
-                                                                                ) => {
-                                                                                    e.stopPropagation();
-                                                                                    handleToggleKeyContact(
-                                                                                        c.id,
-                                                                                        !c.isKey
-                                                                                    );
-                                                                                }}
-                                                                            />
-                                                                        }
-                                                                    />
-                                                                    <div>
-                                                                        <p className="font-semibold text-gray-800">
-                                                                            {
-                                                                                c.contactName
-                                                                            }
-                                                                        </p>
-                                                                        {c.role && (
-                                                                            <p className="text-xs text-gray-500">
-                                                                                {c.role}
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))
-                                                    ) : (
-                                                        <p className="text-sm text-gray-400 italic">
-                                                            No contacts linked to this
-                                                            opportunity.
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                                <div className='flex justify-between items-center mb-4'>
-                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                                        Decision Map
-                                                    </p>
-                                                    <div className='flex justify-end gap-3'>
-                                                        <p className='text-red-600 text-sm'><strong>Note:&nbsp;</strong>Hover on <strong>Step Name</strong> to read the step notes.</p>
-                                                        <Tooltip title="Add" arrow>
-                                                            <div className='bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                <Components.IconButton onClick={() => handleOpenDecisionMapModel()}>
-                                                                    <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-3 w-3' />
-                                                                </Components.IconButton>
-                                                            </div>
-                                                        </Tooltip>
-                                                    </div>
-                                                </div>
-
-                                                <div className="h-60 w-full">
-                                                    <DecisionMapTimeline items={salesProcess} />
-                                                </div>
-                                            </div>
-
-                                            <div className='w-full rounded-2xl shadow-sm border border-gray-200 px-5 py-4'>
-                                                <div className='flex justify-between items-center mb-4'>
-                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                                        Current Environment
-                                                    </p>
-
-                                                    {isCurrentEnvironmentDirty && (
-                                                        <div className='flex justify-end items-center gap-3'>
-                                                            <Tooltip title="Save" arrow>
-                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("CurrentEnvironment")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                            <Tooltip title="Cancel" arrow>
-                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleCancelEditor("CurrentEnvironment")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className='h-60 overflow-y-auto'>
-                                                    <Editor
-                                                        editorState={currentEnvironmentState}
-                                                        wrapperClassName="wrapper-class border border-gray-300 rounded-md"
-                                                        editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                                        toolbarClassName="toolbar-class border-b border-gray-300"
-                                                        onEditorStateChange={(state) => {
-                                                            setCurrentEnvironmentState(state);
-                                                            const html = draftToHtml(convertToRaw(state.getCurrentContent()));
-                                                            setIsCurrentEnvironmentDirty(html !== (currentEnvironmentHTML || ""));
-                                                        }}
-                                                        toolbar={toolbarProperties}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                className={'border border-gray-200 p-3 rounded-md flex flex-col cursor-pointer relative'}
-                                                onClick={() => setIsEditingNextSteps(true)}
-                                            >
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <p className='font-medium text-gray-500 tracking-wider text-sm'>
-                                                        Next Steps
-                                                    </p>
-
-                                                    {isEditingNextSteps && (
-                                                        <div className='flex justify-end items-center gap-3'>
-                                                            <Tooltip title="Save" arrow>
-                                                                <div className='bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleSubmitEditorData("NextSteps")}>
-                                                                        <CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                            <Tooltip title="Cancel" arrow>
-                                                                <div className='bg-black h-6 w-6 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => setIsEditingNextSteps(false)}>
-                                                                        <CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer text-white h-3 w-3' />
-                                                                    </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {isEditingNextSteps ? (
-                                                    <Input
-                                                        multiline
-                                                        rows={9}
-                                                        value={watch("nextSteps")}
-                                                        onChange={(e) =>
-                                                            setValue("nextSteps", e.target.value)
-                                                        }
-                                                    />
-                                                ) : watch("nextSteps") ? (
-                                                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                                                        {watch("nextSteps")}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-sm text-gray-400 italic">
-                                                        No next steps defined.
-                                                    </p>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="overflow-y-auto">
+                                <ul className="pl-3 text-base">
+                                    {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
+                                        <li key={c.id}>
+                                            <span className="font-medium text-indigo-600 text-base">
+                                                {c.contactName}
+                                                {c.title && (
+                                                    <span className="text-base text-gray-500">
+                                                        <span className="mx-1">–</span>
+                                                        {c.title}
+                                                    </span>
                                                 )}
-                                            </div>
-                                        </div>
+                                            </span>
+                                            {c.role && (
+                                                <>
+                                                    <span className="mx-1">–</span>
+                                                    <span className="text-indigo-600 text-base">{c.role}</span>
+                                                </>
+                                            )}
+                                        </li>
+                                    )) : <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 3-Column Layout: Decision, Env, Next Steps */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                        {/* Decision Map */}
+                        <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 flex flex-col">
+                            <div className="flex justify-between mb-4 flex-none">
+                                <p className="font-medium text-black tracking-wider text-2xl">Decision Map</p>
+                                <div
+                                    className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
+                                    onClick={() => setOpenDecisionMapModel(true)}
+                                >
+                                    <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3" />
+                                </div>
+                            </div>
+
+                            {/* Component: Now 'h-full' will mean '100% of the REMAINING space' */}
+                            <DecisionMapTimeline items={salesProcess} />
+                        </div>
+
+                        {/* Current Environment */}
+                        <div ref={envCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                Current Environment
+                            </p>
+
+                            <div
+                                className={`flex-1 ${!isEditingEnv ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                onClick={() => !isEditingEnv && setIsEditingEnv(true)}
+                            >
+                                {isEditingEnv ? (
+                                    <div className="editor-container-integrated">
+                                        <Editor
+                                            editorState={currentEnvironmentState}
+                                            wrapperClassName="editor-wrapper-custom"
+                                            editorClassName="editor-main-custom"
+                                            toolbarClassName="editor-toolbar-custom"
+                                            onEditorStateChange={setCurrentEnvironmentState}
+                                            toolbar={toolbarProperties}
+                                        />
                                     </div>
-                                )
+                                ) : (
+                                    <div
+                                        className="prose prose-sm max-w-none text-gray-800"
+                                        dangerouslySetInnerHTML={{
+                                            __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>Click to describe current environment...</span>"
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Next Steps */}
+                        <div ref={nextStepsRef} className="border-2 border-black p-3 rounded-3xl flex flex-col h-60 cursor-pointer" onClick={() => setIsEditingNextSteps(true)}>
+                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-2">Next Steps</p>
+                            {isEditingNextSteps ?
+                                <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
+                                <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
                             }
                         </div>
                     </div>
-                )
-            }
-            {/* Contact Modal */}
-            <OpportunityContactModel
-                open={contactModalOpen}
-                handleClose={handleCloseContactModel}
-                opportunityId={opportunityId}
-                handleGetAllOppContact={handleGetOppContacts}
-                oppName={watch("opportunity")}
-            />
-            <AlertDialog
-                open={dialogContact.open}
-                title={dialogContact.title}
-                message={dialogContact.message}
-                actionButtonText={dialogContact.actionButtonText}
-                handleAction={() => handleDeleteContact()}
-                handleClose={() => handleCloseDeleteContactDialog()}
-            />
+                </>
+            )}
 
-            {/* Partner Modal */}
-            <OpportunitiesPartnersModel
-                open={partnerModalOpen}
-                handleClose={handleClosePartnerModel}
-                opportunityId={opportunityId}
-                id={selectedPartnerId}
-                handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner}
-                oppName={watch("opportunity")}
-            />
-            <AlertDialog
-                open={dialogPartner.open}
-                title={dialogPartner.title}
-                message={dialogPartner.message}
-                actionButtonText={dialogPartner.actionButtonText}
-                handleAction={() => handleDeletePartner()}
-                handleClose={() => handleCloseDeletePartnerDialog()}
-            />
+            {/* Notes Tab */}
+            {selectedTab === 1 && (
+                <div className="flex justify-start items-start gap-4">
+                    <div className={`${openDrawer ? "w-56 md:w-80" : "w-0"} transition-all duration-300 overflow-hidden`}>
+                        <DatePickerComponent name="meetingDate" label="Meeting Date" control={control} setValue={setValue} showDates={showDates} />
+                        {filteredMeetings.length > 0 && (
+                            <div className="rounded-md border bg-white py-4 px-2 mt-3 h-[400px] overflow-y-scroll">
+                                {filteredMeetings.map((m) => (
+                                    <button key={m.id} onClick={() => handleSelectMeeting(m.id)} className={`mb-2 w-full text-left p-2 rounded ${selectedMeeting === m.id ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`}>
+                                        <p className="font-semibold">{m.title}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-            {/* Product Modal */}
-            <OpportunitiesProductsModel
-                open={productModalOpen}
-                handleClose={handleCloseProductModel}
-                opportunityId={opportunityId}
-                id={selectedProductId}
-                handleGetAllOpportunitiesProducts={handleGetOppProduct}
-                oppName={watch("opportunity")}
-            />
-            <AlertDialog
-                open={dialogProduct.open}
-                title={dialogProduct.title}
-                message={dialogProduct.message}
-                actionButtonText={dialogProduct.actionButtonText}
-                handleAction={() => handleDeleteProduct()}
-                handleClose={() => handleCloseDeleteProductDialog()}
-            />
+                    <div className="w-full">
+                        {selectedMeeting ? (
+                            <div>
+                                <div className="min-h-40 overflow-y-auto border rounded-md mb-4">
+                                    <table className="min-w-full border-collapse">
+                                        <thead className="bg-gray-200">
+                                            <tr>
+                                                <th className="p-3 text-left"><Components.IconButton onClick={() => setOpenDrawer(!openDrawer)}><CustomIcons iconName={openDrawer ? "fa-solid fa-angle-left" : "fa-solid fa-bars"} /></Components.IconButton></th>
+                                                <th colSpan={3} className="text-center font-bold">Attendees</th>
+                                                <th className="text-right p-3"><div className="bg-blue-600 h-8 w-8 inline-flex justify-center items-center rounded-full text-white cursor-pointer" onClick={() => setAttendeesModelOpen(true)}><CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4" /></div></th>
+                                            </tr>
+                                            <tr><th className="px-4 py-2">Name</th><th className="px-4 py-2">Title</th><th className="px-4 py-2">Role</th><th className="px-4 py-2">Note</th><th className="px-4 py-2">Action</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            {meetingAttendees.map(a => (
+                                                <tr key={a.id} className="border-t">
+                                                    <td className="px-4 py-2">{a.contactName}</td><td className="px-4 py-2">{a.title}</td><td className="px-4 py-2">{a.role}</td><td className="px-4 py-2">{a.note}</td>
+                                                    <td className="px-4 py-2 text-right">
+                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer" onClick={() => { setSelectedMeetingAttendeesId(a.id); setDeleteAttendees({ open: true, title: "Delete?", message: "Confirm?", actionButtonText: "Yes" }); }} />
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {meetingAttendees.length === 0 && <tr><td colSpan={5} className="text-center p-4 italic">No attendees</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <MeetingNotesTable />
+                            </div>
+                        ) : (
+                            <div className="border border-gray-200 rounded-md p-6 text-gray-500 italic">Select a meeting from the left panel to view details.</div>
+                        )}
+                    </div>
+                </div>
+            )}
 
+            {selectedTab === 2 && <Calendar />}
+
+            {/* Modals & Dialogs */}
+            <OpportunityContactModel open={contactModalOpen} handleClose={() => setContactModalOpen(false)} opportunityId={opportunityId} handleGetAllOppContact={handleGetOppContacts} oppName={watch("opportunity")} />
+            <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
+            <MeetingAttendeesModel open={attendeesModelOpen} handleClose={() => setAttendeesModelOpen(false)} opportunityId={opportunityId} handleGetAllMeetingAttendees={() => handleSelectMeeting(selectedMeeting)} meetingid={selectedMeeting} id={selectedMeetingAttendeesId} />
+
+            <AlertDialog open={dialogContact.open} title={dialogContact.title} message={dialogContact.message} actionButtonText={dialogContact.actionButtonText} handleAction={handleDeleteContact} handleClose={handleCloseDeleteDialog} />
+            <AlertDialog open={deleteAttendees.open} title={deleteAttendees.title} message={deleteAttendees.message} actionButtonText={deleteAttendees.actionButtonText} handleAction={async () => { await deleteMeetingAttendees(selectedMeetingAttendeesId); handleSelectMeeting(selectedMeeting); setDeleteAttendees({ open: false }); }} handleClose={() => setDeleteAttendees({ open: false })} />
             <AlertDialog
                 open={dialogLogo.open}
                 title={dialogLogo.title}
@@ -3147,7 +1808,6 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeleteOppLogo()}
                 handleClose={() => handleCloseDeleteLogoDialog()}
             />
-
             <AlertDialog
                 open={dialogDeleteDecisionMap.open}
                 title={dialogDeleteDecisionMap.title}
@@ -3156,40 +1816,9 @@ const ViewOpportunity = ({ setAlert }) => {
                 handleAction={() => handleDeteleDecisionMap()}
                 handleClose={() => handleCloseDecisionMapDelete()}
             />
-
-            <AlertDialog
-                open={deleteAttendees.open}
-                title={deleteAttendees.title}
-                message={deleteAttendees.message}
-                actionButtonText={deleteAttendees.actionButtonText}
-                handleAction={() => handleDeleteAttendees()}
-                handleClose={() => handleCloseDeleteAttendees()}
-            />
-            {/* <AlertDialog
-                open={noteConfirm.open}
-                title="Save changes?"
-                message="You have unsaved changes. Do you want to save before leaving this note?"
-                actionButtonText="Yes"
-                handleAction={() => proceedAfterConfirm(true)}
-                handleClose={() => proceedAfterConfirm(false)}
-            /> */}
-            <OpportunityKeyContactModel
-                open={keyContactModalOpen}
-                handleClose={handleCloseKeyContactModel}
-                opportunityId={opportunityId}
-                handleGetAllOppContact={handleGetOppContacts}
-                oppName={watch("opportunity")}
-            />
-
-            <MeetingAttendeesModel open={attendeesModelOpen} handleClose={handleCloseAttendeesModel} opportunityId={opportunityId} handleGetAllMeetingAttendees={handleGetAllMeetingAttendees} meetingid={selectedMeeting} id={selectedMeetingAttendeesId} />
-            <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
         </div>
-    )
-}
-
-const mapDispatchToProps = {
-    setAlert,
-    setSyncingPushStatus
+    );
 };
 
-export default connect(null, mapDispatchToProps)(ViewOpportunity)
+const mapDispatchToProps = { setAlert, setSyncingPushStatus };
+export default connect(null, mapDispatchToProps)(ViewOpportunity);

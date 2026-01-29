@@ -782,20 +782,52 @@ body {
 
 /* Editor css */
 
-.wrapper-class {
-  padding: 1rem;
+/* .editor-wrapper-custom {
   border: 1px solid #ccc;
 }
 
 .editor-class {
-  padding: 1rem;
-  border: 1px solid #ccc;
+  padding: 0.5rem;
+  background-color: white;
 }
 
 .toolbar-class {
-  border: 1px solid #ccc;
+  border: 2px solid #ccc;
+  background-color: white;
+} */
+
+
+
+/* Custom styling for integrated look */
+.editor-wrapper-custom {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
 }
 
+.editor-toolbar-custom {
+    margin-bottom: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 6px !important;
+    background: #f9fafb !important;
+}
+
+.editor-main-custom {
+    height: 120px !important; /* Fixed height for the text area */
+    padding: 10px !important;
+    overflow-y: auto !important;
+}
+
+/* Make toolbar icons smaller */
+.rdw-option-wrapper {
+    min-width: 24px !important;
+    height: 24px !important;
+    padding: 2px !important;
+}
 
 /* Organization Chart Custom Styles */
 .organization-chart .react-flow__node {

@@ -135,7 +135,6 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
             process: salesProcessName?.find(stage => stage.id === parseInt(data.process))?.title || null,
             oppId: oppId
         };
-
         if (id) {
             // UPDATE
             const res = await updateSalesProcess(id, newData);

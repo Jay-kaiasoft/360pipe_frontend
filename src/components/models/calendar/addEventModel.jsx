@@ -797,7 +797,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                             <div>
                                 <Editor
                                     editorState={editorState}
-                                    wrapperClassName="wrapper-class d-inline-block"
+                                    wrapperClassName="editor-wrapper-custom d-inline-block"
                                     editorClassName="editor-class"
                                     toolbarClassName="toolbar-class"
                                     onEditorStateChange={(state) => setEditorState(state)}
