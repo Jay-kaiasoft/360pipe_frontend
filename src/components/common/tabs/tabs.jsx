@@ -13,7 +13,7 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default" }) 
         ? theme.palette.text.primary
         : theme.palette.text.primary,
       fontWeight: isSelected ? 600 : 400,
-      fontSize: "16px",
+      fontSize: "20px",
       textTransform: "none",
       padding: "8px 16px",
       cursor: "pointer",

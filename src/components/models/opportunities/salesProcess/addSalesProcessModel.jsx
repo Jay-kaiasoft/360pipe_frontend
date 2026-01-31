@@ -15,7 +15,6 @@ import CustomIcons from '../../../../components/common/icons/CustomIcons';
 import DatePickerComponent from '../../../common/datePickerComponent/datePickerComponent';
 
 import { getAllProcessNameByCustomer } from '../../../../service/processName/processNameService';
-import { getAllContacts } from '../../../../service/contact/contactService';
 import { createSalesProcess, getSalesProcess, updateSalesProcess } from '../../../../service/salesProcess/salesProcessService';
 import { getAllOpportunitiesContact } from '../../../../service/opportunities/opportunitiesContactService';
 

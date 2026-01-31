@@ -53,11 +53,13 @@ import { getAllMeetingsByOppId } from '../../../service/meetings/meetingsService
 import { deleteMeetingAttendees, getAllMeetingsAttendeesByMeetingId } from '../../../service/meetingAttendees/meetingAttendeesService';
 import { getByMeetingId, saveNote, updateNote } from '../../../service/notes/notesService';
 import {
+    opportunityContactRoles,
     opportunityStages,
     opportunityStatus,
     uploadFiles,
     userTimeZone
 } from '../../../service/common/commonService';
+import { getAllContacts } from "../../../service/contact/contactService";
 
 // ----------------------------
 // Constants / Helpers
@@ -192,6 +194,7 @@ const ViewOpportunity = ({ setAlert }) => {
     });
 
     const [accounts, setAccounts] = useState([]);
+    const [allContacts, setAllContacts] = useState([]);
 
     // --- Rich Text Editor States ---
     const [activeEditorHint, setActiveEditorHint] = useState(null);
@@ -219,6 +222,18 @@ const ViewOpportunity = ({ setAlert }) => {
     const [editedContacts, setEditedContacts] = useState([]);
     const [initialIsKey, setInitialIsKey] = useState({});
     const [isSelectContactsOpen, setIsSelectContactsOpen] = useState(false);
+    const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+    const emptyContactRow = () => ({
+        tempId: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        nameId: "",
+        roleId: "",
+        title: "",
+        isKeyContact: false,
+        firstName: "",
+        lastName: "",
+        email: "",
+    });
+    const [contactRows, setContactRows] = useState([emptyContactRow()]);
     const selectContactsRef = useRef(null);
 
     // Modals
@@ -358,7 +373,33 @@ const ViewOpportunity = ({ setAlert }) => {
             setMeetings(data);
             const dates = new Set(data.map(m => m.displayStart?.split(" ")[0]));
             setShowDates(dates);
+            const hasData = data?.filter(m => m.displayStart?.split(" ")[0] === dayjs().format("MM/DD/YYYY"))?.length > 0
+            if (hasData) {
+                setFilteredMeetings(data?.filter(m => m.displayStart?.split(" ")[0] === dayjs().format("MM/DD/YYYY")))
+                setSelectedMeeting(null);
+                setMeetingAttendees([]);
+            } else {
+                setFilteredMeetings([]);
+            }
         }
+    };
+
+    const handleGetAllContact = async () => {
+        const res = await getAllContacts();
+        const data = res?.result?.map((item) => ({
+            id: item.id,
+            name: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
+            nameId: "",
+            oppId: opportunityId,
+            contactId: item.id,
+            title: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
+            role: null,
+            isKey: false,
+            isAdd: false,
+            salesforceContactId: item?.salesforceContactId,
+            isDeleted: false,
+        })) || [];
+        setAllContacts(data);
     };
 
     useEffect(() => {
@@ -366,20 +407,23 @@ const ViewOpportunity = ({ setAlert }) => {
         handleGetOpportunityDetails();
         handleGetOppContacts();
         handleGetAllSalesProcess();
+        handleGetAllContact()
     }, [opportunityId]);
 
     useEffect(() => {
-        handleGetMeeetingByOppId();
+        handleGetMeeetingByOppId()
         if (selectedTab !== 1) {
-            setSelectedMeeting(null);
-            setFilteredMeetings([]);
-            setMeetingAttendees([]);
+            setOpenDrawer(true)
+            setSelectedMeeting(null)
+            setFilteredMeetings([])
+            setMeetingAttendees([])
+            setValue("meetingDate", null)
         }
-    }, [selectedTab]);
+    }, [selectedTab])
 
     useEffect(() => {
         const date = watch("meetingDate");
-        if (date && meetings.length) {
+        if (date && meetings.length > 0) {
             const filtered = meetings.filter(m => m.displayStart?.split(" ")[0] === date);
             setFilteredMeetings(filtered);
             setSelectedMeeting(null);
@@ -387,7 +431,7 @@ const ViewOpportunity = ({ setAlert }) => {
         } else {
             setFilteredMeetings([]);
         }
-    }, [watch("meetingDate"), meetings]);
+    }, [watch("meetingDate")]);
 
     // ----------------------------
     // Logic: Field Saving
@@ -428,19 +472,19 @@ const ViewOpportunity = ({ setAlert }) => {
             payload.discountPercentage = dp ? parseFloat(dp.toFixed(2)) : null;
             payload.dealAmount = da ? parseFloat(da.toFixed(2)) : null;
         }
-        console.log("payload", payload)
-        // const res = await updateOpportunity(opportunityId, payload);
-        // if (res?.status === 200) {
-        //     setValue(fieldName, newValue);
-        //     if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
-        //         setValue("listPrice", payload.listPrice);
-        //         setValue("discountPercentage", payload.discountPercentage);
-        //         setValue("dealAmount", payload.dealAmount);
-        //     }
-        //     //    setAlert({ open: true, message: "Saved successfully", type: "success" });
-        // } else {
-        //     setAlert({ open: true, message: "Failed to save", type: "error" });
-        // }
+        // console.log("payload", payload)
+        const res = await updateOpportunity(opportunityId, payload);
+        if (res?.status === 200) {
+            setValue(fieldName, newValue);
+            if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
+                setValue("listPrice", payload.listPrice);
+                setValue("discountPercentage", payload.discountPercentage);
+                setValue("dealAmount", payload.dealAmount);
+            }
+            //    setAlert({ open: true, message: "Saved successfully", type: "success" });
+        } else {
+            setAlert({ open: true, message: "Failed to save", type: "error" });
+        }
     };
 
     const handleSaveEditor = async (key) => {
@@ -535,6 +579,26 @@ const ViewOpportunity = ({ setAlert }) => {
         }
         setIsSelectContactsOpen(false);
     }, isSelectContactsOpen);
+
+    const openAddContactModal = () => {
+        setContactRows([emptyContactRow()]);
+        setIsAddContactOpen(true);
+    };
+
+    const closeAddContactModal = () => setIsAddContactOpen(false);
+
+    const addContactRow = () => setContactRows((prev) => [...prev, emptyContactRow()]);
+
+    const removeContactRow = (tempId) =>
+        setContactRows((prev) => (prev.length === 1 ? prev : prev.filter((r) => r.tempId !== tempId)));
+
+    const updateContactRow = (tempId, key, value) =>
+        setContactRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [key]: value } : r)));
+
+    const saveContactsFromModal = () => {
+
+        closeAddContactModal();
+    };
 
     const handleOpenDeleteDialog = async (id) => {
         setSelectedContactId(id)
@@ -1198,6 +1262,13 @@ const ViewOpportunity = ({ setAlert }) => {
         );
     };
 
+    const handleGetAllMeetingAttendees = async (mid = null) => {
+        if (opportunityId && selectedTab === 1 && mid) {
+            const res = await getAllMeetingsAttendeesByMeetingId(mid)
+            setMeetingAttendees(res?.result)
+        }
+    }
+
     const MeetingNotesTable = () => {
         const rows = [
             { key: "purpose", label: "Purpose", html: purposeHTML, state: purposeState, setState: setPurposeState },
@@ -1214,8 +1285,15 @@ const ViewOpportunity = ({ setAlert }) => {
                                 <td className="w-[25%] align-top bg-gray-50 border-r border-gray-300 px-4 py-2 font-bold text-gray-900">{r.label}</td>
                                 <td className="align-top px-4 py-2">
                                     {editingNoteField === r.key ? (
-                                        <div ref={activeNoteEditorRef}>
-                                            <Editor editorState={r.state} onEditorStateChange={r.setState} toolbar={toolbarProperties} editorClassName="p-2 min-h-[140px] max-h-[240px]" />
+                                        <div ref={activeNoteEditorRef} className="editor-container-integrated">
+                                            <Editor
+                                                editorState={r.state}
+                                                onEditorStateChange={r.setState}
+                                                toolbar={toolbarProperties}
+                                                wrapperClassName="editor-wrapper-custom"
+                                                editorClassName="editor-main-custom"
+                                                toolbarClassName="editor-toolbar-custom"
+                                            />
                                         </div>
                                     ) : (
                                         <div className="cursor-pointer p-2 min-h-[2rem]" onClick={() => setEditingNoteField(r.key)}>
@@ -1231,12 +1309,50 @@ const ViewOpportunity = ({ setAlert }) => {
         );
     };
 
+    const handleOpenAttendeesModel = (id = null) => {
+        setSelectedMeetingAttendeesId(id)
+        setAttendeesModelOpen(true)
+    }
+
+    const handleCloseAttendeesModel = () => {
+        setSelectedMeetingAttendeesId(null)
+        setAttendeesModelOpen(false)
+    }
+
+    const handleOpenDeleteAttendees = (id) => {
+        setSelectedMeetingAttendeesId(id)
+        setDeleteAttendees({ open: true, title: 'Delete Attendees', message: 'Are you sure! Do you want to delete this attendees?', actionButtonText: 'Yes' })
+    }
+
+    const handleCloseDeleteAttendees = () => {
+        setSelectedMeetingAttendeesId(null)
+        setDeleteAttendees({ open: false, title: '', message: '', actionButtonText: '' })
+    }
+
+    const handleDeleteAttendees = async () => {
+        const res = await deleteMeetingAttendees(selectedMeetingAttendeesId)
+        if (res.status === 200) {
+            handleGetAllMeetingAttendees(selectedMeeting)
+            handleCloseDeleteAttendees()
+        } else {
+            setAlert({
+                open: true,
+                message: res.message || "Fail to delete attendees",
+                type: "error"
+            })
+        }
+    }
+
     // ----------------------------
     // Render
     // ----------------------------
     const currentStageId = opportunityStages.find(s => s.title === watch("salesStage"))?.id;
     const logoUrl = watch("logo");
 
+    // 1. Define the grid layout in a variable to ensure alignment matches perfectly.
+    // I used minmax(0, Xfr) to prevent inputs from forcing columns to expand.
+    const GRID_LAYOUT =
+        "grid [grid-template-columns:minmax(0,1.6fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,0.4fr)] gap-3 items-center px-4 py-3";
     return (
         <div className="mx-auto relative p-4 sm:p-6 my-3">
             {/* Navigation & Hint */}
@@ -1632,13 +1748,14 @@ const ViewOpportunity = ({ setAlert }) => {
                                     </Tooltip>
                                     <Tooltip title="Add New">
                                         <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
-                                            <Components.IconButton onClick={() => setContactModalOpen(true)}>
+                                            <Components.IconButton onClick={() => openAddContactModal()}>
                                                 <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
                                             </Components.IconButton>
                                         </div>
                                     </Tooltip>
                                 </div>
                             </div>
+
                             {isSelectContactsOpen && (
                                 <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
                                     {allContactsWithEdits.map(c => (
@@ -1650,6 +1767,203 @@ const ViewOpportunity = ({ setAlert }) => {
                                             </Components.IconButton>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+
+                            {/* Add Contact Modal */}
+                            {isAddContactOpen && (
+                                <div className="absolute top-0 -left-[600px] right-20 z-10 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-end px-5 py-1 border-b">
+                                        <button
+                                            onClick={closeAddContactModal}
+                                            className="h-9 w-9 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                            type="button"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    {/* Table */}
+                                    <div className="px-4 py-4">
+                                        {/* HEADER */}
+                                        <div
+                                            className={`
+        rounded-xl bg-[#5B45A6] text-white text-sm font-semibold
+        ${GRID_LAYOUT} 
+      `}
+                                        >
+                                            {/* Name + Add */}
+                                            <div className="flex items-center gap-3">
+                                                <span>Name</span>
+                                            </div>
+
+                                            <div>First Name</div>
+                                            <div>Last Name</div>
+                                            <div>Email</div>
+                                            <div>Title</div>
+                                            <div>Role</div>
+                                            <div className="text-center">Key</div>
+                                            <div className="text-right">
+                                                <button
+                                                    type="button"
+                                                    onClick={addContactRow}
+                                                    className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"
+                                                    title="Add row"
+                                                >
+                                                    <CustomIcons
+                                                        iconName="fa-solid fa-plus"
+                                                        css="text-white text-xs"
+                                                    />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* ROWS */}
+                                        <div className="mt-3 space-y-3">
+                                            {contactRows.map((row) => (
+                                                <div
+                                                    key={row.tempId}
+                                                    className={`
+            rounded-xl border border-gray-200 bg-white
+            ${GRID_LAYOUT}
+          `}
+                                                >
+                                                    {/* Name */}
+                                                    <div className="w-full">
+                                                        <Select
+                                                            options={allContacts}
+                                                            placeholder="Select name"
+                                                            freeSolo={true}
+                                                            value={row.nameId ? Number(row.nameId) : null}
+                                                            onChange={(e, newValue) => {
+                                                                if (typeof newValue === "object" && newValue?.id) {
+                                                                    updateContactRow(
+                                                                        row.tempId,
+                                                                        "nameId",
+                                                                        String(newValue.id)
+                                                                    );
+                                                                    updateContactRow(
+                                                                        row.tempId,
+                                                                        "name",
+                                                                        newValue?.name ?? ""
+                                                                    );
+                                                                }
+                                                            }}
+                                                            onInputChange={(e, inputValue) => {
+                                                                updateContactRow(row.tempId, "name", inputValue);
+                                                                if (inputValue) updateContactRow(row.tempId, "nameId", "");
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    {/* First Name */}
+                                                    <div className="w-full">
+                                                        <Input
+                                                            value={row.firstName || ""}
+                                                            placeholder="First"
+                                                            type="text"
+                                                            onChange={(e) =>
+                                                                updateContactRow(row.tempId, "firstName", e.target.value)
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {/* Last Name */}
+                                                    <div className="w-full">
+                                                        <Input
+                                                            value={row.lastName || ""}
+                                                            placeholder="Last"
+                                                            type="text"
+                                                            onChange={(e) =>
+                                                                updateContactRow(row.tempId, "lastName", e.target.value)
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {/* Email */}
+                                                    <div className="w-full">
+                                                        <Input
+                                                            value={row.email || ""}
+                                                            placeholder="Email"
+                                                            type="email"
+                                                            onChange={(e) =>
+                                                                updateContactRow(row.tempId, "email", e.target.value)
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {/* Title */}
+                                                    <div className="w-full">
+                                                        <Input
+                                                            value={row.title || ""}
+                                                            placeholder="Title"
+                                                            type="text"
+                                                            onChange={(e) =>
+                                                                updateContactRow(row.tempId, "title", e.target.value)
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {/* Role */}
+                                                    <div className="w-full">
+                                                        <Select
+                                                            options={opportunityContactRoles}
+                                                            label={null}
+                                                            placeholder="Role"
+                                                            value={row.roleId ? Number(row.roleId) : null}
+                                                            onChange={(_, newValue) =>
+                                                                updateContactRow(
+                                                                    row.tempId,
+                                                                    "roleId",
+                                                                    newValue?.id ? String(newValue.id) : ""
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {/* Key */}
+                                                    <div className="flex justify-center">
+                                                        <Checkbox
+                                                            checked={!!row.isKeyContact}
+                                                            onChange={(e) =>
+                                                                updateContactRow(
+                                                                    row.tempId,
+                                                                    "isKeyContact",
+                                                                    e.target.checked
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {/* Actions (trash) */}
+                                                    <div className="flex justify-end">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeContactRow(row.tempId)}
+                                                            className="h-9 w-9 rounded-lg hover:bg-red-50 flex items-center justify-center"
+                                                            title="Remove"
+                                                        >
+                                                            <CustomIcons
+                                                                iconName="fa-solid fa-trash"
+                                                                css="text-red-600 text-sm"
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-2 px-5 py-4 border-t">
+                                        <button
+                                            type="button"
+                                            onClick={saveContactsFromModal}
+                                            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                             <div className="overflow-y-auto">
@@ -1743,49 +2057,333 @@ const ViewOpportunity = ({ setAlert }) => {
             {/* Notes Tab */}
             {selectedTab === 1 && (
                 <div className="flex justify-start items-start gap-4">
-                    <div className={`${openDrawer ? "w-56 md:w-80" : "w-0"} transition-all duration-300 overflow-hidden`}>
-                        <DatePickerComponent name="meetingDate" label="Meeting Date" control={control} setValue={setValue} showDates={showDates} />
-                        {filteredMeetings.length > 0 && (
-                            <div className="rounded-md border bg-white py-4 px-2 mt-3 h-[400px] overflow-y-scroll">
-                                {filteredMeetings.map((m) => (
-                                    <button key={m.id} onClick={() => handleSelectMeeting(m.id)} className={`mb-2 w-full text-left p-2 rounded ${selectedMeeting === m.id ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`}>
-                                        <p className="font-semibold">{m.title}</p>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                    <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
+                        <DatePickerComponent
+                            name="meetingDate"
+                            label="Meeting Date"
+                            control={control}
+                            setValue={setValue}
+                            showDates={showDates}
+                        />
+                        {
+                            filteredMeetings?.length > 0 && (
+                                <div class="rounded-md border border-gray-200 bg-white py-4 px-2 mt-3">
+                                    <div class="flex h-[400px] w-full flex-col overflow-y-scroll">
+                                        {
+                                            filteredMeetings?.map((row, index) => (
+                                                <button key={index} onClick={() => handleSelectMeeting(row.id)} class={`mb-2 group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 ${selectedMeeting === row.id ? "bg-blue-500" : "hover:bg-gray-100 "} `}>
+                                                    <div class={`flex flex-col items-start justify-between font-light ${selectedMeeting === row.id ? "text-white" : "text-gray-600"} `}>
+                                                        <p class="text-[15px] font-semibold">{row.title}</p>
+                                                    </div>
+                                                </button>
+                                            ))
+                                        }
+                                    </div>
+                                </div>
+                            )
+                        }
                     </div>
 
                     <div className="w-full">
-                        {selectedMeeting ? (
+                        {selectedMeeting && (
                             <div>
-                                <div className="min-h-40 overflow-y-auto border rounded-md mb-4">
+                                <div className="min-h-40 overflow-y-auto border rounded-md overflow-hidden">
                                     <table className="min-w-full border-collapse">
-                                        <thead className="bg-gray-200">
+                                        <thead className="sticky top-0 z-10">
                                             <tr>
-                                                <th className="p-3 text-left"><Components.IconButton onClick={() => setOpenDrawer(!openDrawer)}><CustomIcons iconName={openDrawer ? "fa-solid fa-angle-left" : "fa-solid fa-bars"} /></Components.IconButton></th>
-                                                <th colSpan={3} className="text-center font-bold">Attendees</th>
-                                                <th className="text-right p-3"><div className="bg-blue-600 h-8 w-8 inline-flex justify-center items-center rounded-full text-white cursor-pointer" onClick={() => setAttendeesModelOpen(true)}><CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4" /></div></th>
+                                                <th colSpan={1}>
+                                                    <div className='flex justify-start items-center pl-5'>
+                                                        {
+                                                            !openDrawer ? (
+                                                                <Components.IconButton onClick={() => setOpenDrawer(true)}>
+                                                                    <CustomIcons iconName={`fa-solid fa-bars`} css={"text-black text-lg"} />
+                                                                </Components.IconButton>
+                                                            ) :
+                                                                <Components.IconButton onClick={() => setOpenDrawer(false)}>
+                                                                    <CustomIcons iconName={`fa-solid fa-angle-left`} css={"text-black text-lg"} />
+                                                                </Components.IconButton>
+                                                        }
+                                                    </div>
+                                                </th>
+                                                <th colSpan={3} className="px-4 py-3 text-center text-lg font-bold text-black">Attendees</th>
+                                                <th className="px-4 py-3 text-sm font-semibold flex justify-end">
+                                                    <Tooltip title="Add Attendees" arrow>
+                                                        <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                            <Components.IconButton onClick={() => handleOpenAttendeesModel()}>
+                                                                <CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4 text-white" />
+                                                            </Components.IconButton>
+                                                        </div>
+                                                    </Tooltip>
+                                                </th>
                                             </tr>
-                                            <tr><th className="px-4 py-2">Name</th><th className="px-4 py-2">Title</th><th className="px-4 py-2">Role</th><th className="px-4 py-2">Note</th><th className="px-4 py-2">Action</th></tr>
+                                            <tr className="bg-gray-200 text-black">
+                                                <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                <th className="px-4 py-3 text-left text-sm font-semibold">Title</th>
+                                                <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
+                                                <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
+                                                <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
+                                            </tr>
                                         </thead>
+
                                         <tbody>
-                                            {meetingAttendees.map(a => (
-                                                <tr key={a.id} className="border-t">
-                                                    <td className="px-4 py-2">{a.contactName}</td><td className="px-4 py-2">{a.title}</td><td className="px-4 py-2">{a.role}</td><td className="px-4 py-2">{a.note}</td>
-                                                    <td className="px-4 py-2 text-right">
-                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer" onClick={() => { setSelectedMeetingAttendeesId(a.id); setDeleteAttendees({ open: true, title: "Delete?", message: "Confirm?", actionButtonText: "Yes" }); }} />
+                                            {meetingAttendees?.length > 0 ? (
+                                                meetingAttendees.map((row, i) => (
+                                                    <tr key={row.contactId ?? i} className={`bg-white border-b-1 border-t-0 border-l-0 border-r-0 ${i !== meetingAttendees?.length - 1 ? "border" : ""}`}>
+                                                        <td className="px-4 py-3 text-sm">
+                                                            {row.contactName || '—'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm">
+                                                            {row.title || '—'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm">
+                                                            {row.role || '—'}
+                                                        </td>
+                                                        <td className="white-space-pre-line px-4 py-3 text-sm">
+                                                            {row.note || '—'}
+                                                        </td>
+                                                        <td className="px-4 py-3 flex justify-end items-center gap-3">
+                                                            <Tooltip title="Edit" arrow>
+                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenAttendeesModel(row.id)}>
+                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                            <Tooltip title="Delete" arrow>
+                                                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                    <Components.IconButton onClick={() => handleOpenDeleteAttendees(row.id)}>
+                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                    </Components.IconButton>
+                                                                </div>
+                                                            </Tooltip>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
+                                                        No records
                                                     </td>
                                                 </tr>
-                                            ))}
-                                            {meetingAttendees.length === 0 && <tr><td colSpan={5} className="text-center p-4 italic">No attendees</td></tr>}
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
-                                <MeetingNotesTable />
+
+                                <div className="my-4">
+                                    <MeetingNotesTable />
+                                </div>
+
+                                {/* 3-Column Layout: Why, Value, Contacts */}
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                                    {/* Why Do Anything */}
+                                    <div ref={whyCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                            Why Do Anything
+                                        </p>
+
+                                        <div
+                                            className={`flex-1 ${!isEditingWhy ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                            onClick={() => !isEditingWhy && setIsEditingWhy(true)}
+                                        >
+                                            {isEditingWhy ? (
+                                                <div className="editor-container-integrated">
+                                                    <Editor
+                                                        editorState={whyDoAnythingState}
+                                                        wrapperClassName="editor-wrapper-custom"
+                                                        editorClassName="editor-main-custom"
+                                                        toolbarClassName="editor-toolbar-custom"
+                                                        onEditorStateChange={setWhyDoAnythingState}
+                                                        toolbar={toolbarProperties}
+                                                        onFocus={() => setActiveEditorHint("WhyDoAnything")}
+                                                        onBlur={() => setActiveEditorHint(null)}
+                                                        autoFocus
+                                                    />
+                                                    {activeEditorHint === "WhyDoAnything" && (
+                                                        <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
+                            before:content-[''] before:absolute before:top-10 before:left-[-8px] 
+                            before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                            <img
+                                                                src="/images/WhyDoAnything2.png"
+                                                                alt="WhyDoAnything Hint"
+                                                                className="max-w-[200px] rounded-lg object-contain relative z-10"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="prose prose-sm max-w-none text-gray-800"
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: whyDoAnythingStateHTML || ""
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Value */}
+                                    <div ref={valueCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">Value</p>
+
+                                        <div
+                                            className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                            onClick={() => !isEditingValue && setIsEditingValue(true)}
+                                        >
+                                            {isEditingValue ? (
+                                                <div className="editor-container-integrated">
+                                                    <Editor
+                                                        editorState={businessValueState}
+                                                        wrapperClassName="editor-wrapper-custom"
+                                                        editorClassName="editor-main-custom"
+                                                        toolbarClassName="editor-toolbar-custom"
+                                                        onEditorStateChange={setBusinessValueState}
+                                                        toolbar={toolbarProperties}
+                                                        onFocus={() => setActiveEditorHint("BusinessValue")}
+                                                        onBlur={() => setActiveEditorHint(null)}
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="prose prose-sm max-w-none text-gray-800"
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: businessValueStateHTML || ""
+                                                    }}
+                                                />
+                                            )}
+
+                                            {/* Floating Hint Image */}
+                                            {activeEditorHint === "BusinessValue" && (
+                                                <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
+                            before:content-[''] before:absolute before:top-10 before:left-[-8px] 
+                            before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                    <img
+                                                        src="/images/BusinessValue2.png"
+                                                        alt="Business value guidance"
+                                                        className="max-w-[200px] rounded-lg object-contain relative z-10"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Key Contacts */}
+                                    <div className="border-2 border-black p-3 rounded-3xl flex flex-col relative h-60">
+                                        <div className="flex justify-start items-center mb-4">
+                                            <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
+                                            <div className="flex items-center gap-2">
+                                                <Tooltip title="Select">
+                                                    <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                                </Tooltip>
+                                                <Tooltip title="Add New">
+                                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
+                                                        <Components.IconButton onClick={() => setContactModalOpen(true)}>
+                                                            <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        </div>
+                                        {isSelectContactsOpen && (
+                                            <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
+                                                {allContactsWithEdits.map(c => (
+                                                    <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
+                                                        <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
+                                                        <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
+                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(c.id)}>
+                                                            <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer h-4 w-4" />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="overflow-y-auto">
+                                            <ul className="pl-3 text-base">
+                                                {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
+                                                    <li key={c.id}>
+                                                        <span className="font-medium text-indigo-600 text-base">
+                                                            {c.contactName}
+                                                            {c.title && (
+                                                                <span className="text-base text-gray-500">
+                                                                    <span className="mx-1">–</span>
+                                                                    {c.title}
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                        {c.role && (
+                                                            <>
+                                                                <span className="mx-1">–</span>
+                                                                <span className="text-indigo-600 text-base">{c.role}</span>
+                                                            </>
+                                                        )}
+                                                    </li>
+                                                )) : <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 3-Column Layout: Decision, Env, Next Steps */}
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                                    {/* Decision Map */}
+                                    <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 flex flex-col">
+                                        <div className="flex justify-between mb-4 flex-none">
+                                            <p className="font-medium text-black tracking-wider text-2xl">Decision Map</p>
+                                            <div
+                                                className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
+                                                onClick={() => setOpenDecisionMapModel(true)}
+                                            >
+                                                <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3" />
+                                            </div>
+                                        </div>
+
+                                        {/* Component: Now 'h-full' will mean '100% of the REMAINING space' */}
+                                        <DecisionMapTimeline items={salesProcess} />
+                                    </div>
+
+                                    {/* Current Environment */}
+                                    <div ref={envCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                            Current Environment
+                                        </p>
+
+                                        <div
+                                            className={`flex-1 ${!isEditingEnv ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                            onClick={() => !isEditingEnv && setIsEditingEnv(true)}
+                                        >
+                                            {isEditingEnv ? (
+                                                <div className="editor-container-integrated">
+                                                    <Editor
+                                                        editorState={currentEnvironmentState}
+                                                        wrapperClassName="editor-wrapper-custom"
+                                                        editorClassName="editor-main-custom"
+                                                        toolbarClassName="editor-toolbar-custom"
+                                                        onEditorStateChange={setCurrentEnvironmentState}
+                                                        toolbar={toolbarProperties}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="prose prose-sm max-w-none text-gray-800"
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>Click to describe current environment...</span>"
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Next Steps */}
+                                    <div ref={nextStepsRef} className="border-2 border-black p-3 rounded-3xl flex flex-col h-60 cursor-pointer" onClick={() => setIsEditingNextSteps(true)}>
+                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-2">Next Steps</p>
+                                        {isEditingNextSteps ?
+                                            <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
+                                            <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
+                                        }
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="border border-gray-200 rounded-md p-6 text-gray-500 italic">Select a meeting from the left panel to view details.</div>
                         )}
                     </div>
                 </div>
@@ -1796,10 +2394,10 @@ const ViewOpportunity = ({ setAlert }) => {
             {/* Modals & Dialogs */}
             <OpportunityContactModel open={contactModalOpen} handleClose={() => setContactModalOpen(false)} opportunityId={opportunityId} handleGetAllOppContact={handleGetOppContacts} oppName={watch("opportunity")} />
             <AddSalesProcessModel open={openDecisionMapModel} handleClose={handleCloseDecisionMapModel} id={salesProcessId} oppId={opportunityId} handleGetAllSalesProcess={handleGetAllSalesProcess} />
-            <MeetingAttendeesModel open={attendeesModelOpen} handleClose={() => setAttendeesModelOpen(false)} opportunityId={opportunityId} handleGetAllMeetingAttendees={() => handleSelectMeeting(selectedMeeting)} meetingid={selectedMeeting} id={selectedMeetingAttendeesId} />
+            <MeetingAttendeesModel open={attendeesModelOpen} handleClose={handleCloseAttendeesModel} opportunityId={opportunityId} handleGetAllMeetingAttendees={handleGetAllMeetingAttendees} meetingid={selectedMeeting} id={selectedMeetingAttendeesId} />
 
             <AlertDialog open={dialogContact.open} title={dialogContact.title} message={dialogContact.message} actionButtonText={dialogContact.actionButtonText} handleAction={handleDeleteContact} handleClose={handleCloseDeleteDialog} />
-            <AlertDialog open={deleteAttendees.open} title={deleteAttendees.title} message={deleteAttendees.message} actionButtonText={deleteAttendees.actionButtonText} handleAction={async () => { await deleteMeetingAttendees(selectedMeetingAttendeesId); handleSelectMeeting(selectedMeeting); setDeleteAttendees({ open: false }); }} handleClose={() => setDeleteAttendees({ open: false })} />
+            <AlertDialog open={deleteAttendees.open} title={deleteAttendees.title} message={deleteAttendees.message} actionButtonText={deleteAttendees.actionButtonText} handleAction={handleDeleteAttendees} />
             <AlertDialog
                 open={dialogLogo.open}
                 title={dialogLogo.title}
