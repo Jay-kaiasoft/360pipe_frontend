@@ -15,7 +15,7 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default" }) 
       fontWeight: isSelected ? 600 : 400,
       fontSize: "20px",
       textTransform: "none",
-      padding: "8px 16px",
+      padding: "8px 8px",
       cursor: "pointer",
       display: "flex",
       alignItems: "center",

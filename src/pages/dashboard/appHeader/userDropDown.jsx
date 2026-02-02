@@ -8,76 +8,87 @@ import AlertDialog from "../../../components/common/alertDialog/alertDialog";
 import PermissionWrapper from "../../../components/common/permissionWrapper/PermissionWrapper";
 
 
-const items = [
-    {
-        label: "Edit Profile",
-        path: "/dashboard/profile",
-        iconName: "fa-solid fa-circle-user",
-    },
-    {
-        label: "My Team",
-        path: "/dashboard/myteam",
-        iconName: "fa-solid fa-users",
-        permission: {
-            functionalityName: "My Team",
-            moduleName: "My Team",
-            actionId: [4],
-        },
-    },
-    {
-        label: "Members",
-        path: "/dashboard/members",
-        iconName: "fa-solid fa-user-plus",
-        permission: {
-            functionalityName: "Members",
-            moduleName: "Members",
-            actionId: [4],
-        },
-    },
-    {
-        label: "Sync History",
-        path: "/dashboard/syncHistory",
-        iconName: "fa-solid fa-clock-rotate-left",
-        permission: {
-            functionalityName: "Sync History",
-            moduleName: "Sync History",
-            actionId: [4],
-        },
-    },
-    {
-        label: "E-Mail Scraper",
-        path: "/dashboard/managemails",
-        iconName: "fa-solid fa-envelope",
-        permission: {
-            functionalityName: "E-Mail Scraper",
-            moduleName: "E-Mail Scraper",
-            actionId: [1, 2, 3, 4],
-        },
-    },
-    {
-        label: "Products & Service",
-        path: "/dashboard/products",
-        iconName: "fa-solid fa-screwdriver-wrench",
-        permission: {
-            functionalityName: "Products & Service",
-            moduleName: "Products & Service",
-            actionId: [4],
-        },
-    },
-    {
-        label: "My Calendar",
-        path: "/dashboard/calendar",
-        iconName: "fa-solid fa-calendar",
-    },
-];
-
-
 export default function UserDropdown() {
 
     const userdata = getUserDetails();
     const navigate = useNavigate();
     const locaiton = useLocation();
     const currentPath = locaiton.pathname;
+
+
+
+    const items = [
+        {
+            label: "Edit Profile",
+            path: "/dashboard/profile",
+            iconName: "fa-solid fa-circle-user",
+        },
+        {
+            label: "My Team",
+            path: "/dashboard/myteam",
+            iconName: "fa-solid fa-users",
+            permission: {
+                functionalityName: "My Team",
+                moduleName: "My Team",
+                actionId: [4],
+            },
+        },
+        {
+            label: "Members",
+            path: "/dashboard/members",
+            iconName: "fa-solid fa-user-plus",
+            permission: {
+                functionalityName: "Members",
+                moduleName: "Members",
+                actionId: [4],
+            },
+        },
+        {
+            label: "Sync History",
+            path: "/dashboard/syncHistory",
+            iconName: "fa-solid fa-clock-rotate-left",
+            permission: {
+                functionalityName: "Sync History",
+                moduleName: "Sync History",
+                actionId: [4],
+            },
+        },
+        {
+            label: "E-Mail Scraper",
+            path: "/dashboard/managemails",
+            iconName: "fa-solid fa-envelope",
+            permission: {
+                functionalityName: "E-Mail Scraper",
+                moduleName: "E-Mail Scraper",
+                actionId: [1, 2, 3, 4],
+            },
+        },
+        {
+            label: "Products & Service",
+            path: "/dashboard/products",
+            iconName: "fa-solid fa-screwdriver-wrench",
+            permission: {
+                functionalityName: "Products & Service",
+                moduleName: "Products & Service",
+                actionId: [4],
+            },
+        },
+        {
+            label: "My Calendar",
+            path: "/dashboard/calendar",
+            iconName: "fa-solid fa-calendar",
+        },
+        ...(((userdata?.roleName === "SALES REPRESENTIVE" || userdata?.roleName === "SALE MANAGER") && !userdata?.subUser)
+            ? [
+                {
+                    label: "My CRM",
+                    path: "/dashboard/mycrm",
+                    iconName: "fa-solid fa-calendar",
+                },
+            ]
+            : [])
+    ];
+
 
     const [logOutDialog, setLogOutDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
@@ -124,8 +135,8 @@ export default function UserDropdown() {
                 onClick={toggleDropdown}
                 className="flex items-center text-gray-700 dropdown-toggle"
             >
-                <span className="mr-3 overflow-hidden rounded-full">
-                    <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-gray-500 group-hover:text-gray-700 h-6 w-6"} />
+                <span className="overflow-hidden rounded-full">
+                    <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-white h-6 w-6"} />
                 </span>
             </button>
 

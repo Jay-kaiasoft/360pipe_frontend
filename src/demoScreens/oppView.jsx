@@ -1294,7 +1294,7 @@ export default function OppView() {
               <div className="relative w-full cursor-pointer">
                 <p className="font-semibold text-black">
                   {opp.dealAmount != null
-                    ? `$${Number(opp.dealAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    ? `$${Number(opp.dealAmount).toLocaleString('en-US')}`
                     : "—"}
                 </p>
 

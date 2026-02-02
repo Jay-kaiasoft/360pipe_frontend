@@ -24,6 +24,7 @@ const initialState = {
 
   filterStartDate: null,
   filterEndDate: null,
+  oppSelectedTabIndex: 0,
 
 };
 
@@ -111,6 +112,9 @@ const commonReducersSlice = createSlice({
     setFilterEndDate(state, action) {
       state.filterEndDate = action.payload;
     },
+    setOppSelectedTabIndex(state, action) {
+      state.oppSelectedTabIndex = action.payload;
+    },
   },
 });
 
@@ -138,7 +142,7 @@ export const {
   toggleSubmenu,
   setIsMobile,
   setOpenSubmenu,
-
+  setOppSelectedTabIndex
 } = commonReducersSlice.actions;
 
 export default commonReducersSlice.reducer;

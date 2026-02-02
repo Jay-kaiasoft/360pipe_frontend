@@ -9,6 +9,7 @@ import { setFilterEndDate, setFilterStartDate, setHeaderTitle, setLoading } from
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import { headerTitles, matchRoute } from '../../../service/common/commonService';
+import UserDropdown from './userDropDown';
 
 const RANGE_TYPES = [
     { id: "week", label: "Week" },
@@ -164,7 +165,8 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
         const onKey = (e) => {
             if (e.key === "Escape") {
                 setIsOpen(false);
-                triggerRef.current?.focus?.();
+                // focus the icon button (first focusable inside trigger)
+                triggerRef.current?.querySelector?.("button")?.focus?.();
             }
         };
 
@@ -226,31 +228,43 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                         </NavLink>
                     </div>
                 </div>
+
                 <div>
                     <p className='text-white text-2xl font-semibold lg:mr-28'>
                         {headerTitle}
                     </p>
                 </div>
+
                 {/* Date Range Dropdown (new UI) */}
                 <div className="relative inline-block">
-                    {/* Clickable label (NO button) */}
-                    <span
-                        ref={triggerRef}
-                        role="button"
-                        tabIndex={0}
-                        aria-haspopup="menu"
-                        aria-expanded={isOpen ? "true" : "false"}
-                        className="cursor-pointer select-none text-white text-2xl font-semibold"
-                        onClick={() => setIsOpen((s) => !s)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault()
-                                setIsOpen((s) => !s)
-                            }
-                        }}
-                    >
-                        {rangeLabel}
-                    </span>
+                    {/* Label + Filter Icon (OPEN ONLY on icon click) */}
+                    <div ref={triggerRef} className="flex items-center gap-4">
+                        <span className="select-none text-white text-2xl font-semibold">
+                            {rangeLabel}
+                        </span>
+
+                        <button
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded={isOpen ? "true" : "false"}
+                            aria-label="Open date range filters"
+                            title="Filter"
+                            className="h-9 w-9 rounded-md bg-white/15 hover:bg-white/25 active:bg-white/30 flex items-center justify-center"
+                            onClick={() => setIsOpen((s) => !s)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault()
+                                    setIsOpen((s) => !s)
+                                }
+                            }}
+                        >
+                            <CustomIcons iconName={"fa-solid fa-filter"} css={"text-white text-sm"} />
+                        </button>
+
+                        <div className="z-30">
+                            <UserDropdown />
+                        </div>
+                    </div>
 
                     {isOpen && (
                         <div
@@ -330,11 +344,11 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                         </div>
                     )}
                 </div>
-
             </div>
         </header>
     )
 }
+
 const mapStateToProps = (state) => ({
     loading: state.common.loading,
     headerTitle: state.common.headerTitle,

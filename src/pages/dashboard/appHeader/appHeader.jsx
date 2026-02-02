@@ -10,6 +10,7 @@ import {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
+  setOppSelectedTabIndex,
 } from "../../../redux/commonReducers/commonReducers"
 
 import UserDropdown from "./userDropDown"
@@ -23,6 +24,8 @@ import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUser
 import { Tabs } from "../../../components/common/tabs/tabs"
 import { useTheme } from "@mui/material"
 
+const oppTableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Calendar" }];
+
 const AppHeader = ({
   setAlert,
   setLoadingMessage,
@@ -32,6 +35,8 @@ const AppHeader = ({
   setSyncingPullStatus,
   syncCount,
   syncingPushStatus,
+  oppSelectedTabIndex,
+  setOppSelectedTabIndex
 }) => {
   const theme = useTheme()
 
@@ -45,22 +50,33 @@ const AppHeader = ({
   const inputRef = useRef(null)
 
   const [tabsData, setTabsData] = useState([])
+  const [tabsData2, setTabsData2] = useState([{
+    label: "Dashboard",
+    path: "/dashboard",
+  }])
   const [selectedTab, setSelectedTab] = useState(null)
+  const [selectedTab2, setSelectedTab2] = useState(null)
 
   const handleChangeTab = (value) => {
     const selectedPath = tabsData[value]?.path
     if (selectedPath) {
       navigate(selectedPath)
       setSelectedTab(value)
+      setSelectedTab2(null)
+    }
+  }
+
+  const handleChangeTab2 = (value) => {
+    const selectedPath = tabsData2[value]?.path
+    if (selectedPath) {
+      navigate(selectedPath)
+      setSelectedTab(null)
+      setSelectedTab2(value)
     }
   }
 
   const handleSetNavItems = () => {
     const tabItems = [
-      {
-        label: "Dashboard",
-        path: "/dashboard",
-      },
       {
         label: "Summary",
         path: "/dashboard/opportunities",
@@ -86,14 +102,14 @@ const AppHeader = ({
         label: "To-Do",
         path: "/dashboard/todos",
       },
-      ...((userDetails?.roleName === "SALES REPRESENTIVE" && !userDetails?.subUser)
-        ? [
-          {
-            label: "My CRM",
-            path: "/dashboard/mycrm",
-          },
-        ]
-        : []),
+      // ...(((userDetails?.roleName === "SALES REPRESENTIVE" || userDetails?.roleName === "SALE MANAGER") && !userDetails?.subUser)
+      //   ? [
+      //     {
+      //       label: "My CRM",
+      //       path: "/dashboard/mycrm",
+      //     },
+      //   ]
+      //   : []),
     ]
 
     setTabsData(tabItems)
@@ -126,7 +142,7 @@ const AppHeader = ({
     }
   }
 
-  useEffect(() => {
+  useEffect(() => {   
     handleGetAllSyncRecords()
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -218,16 +234,40 @@ const AppHeader = ({
     if (syncingPushStatus) handleGetAllSyncRecords()
   }, [syncingPushStatus])
 
-
   return (
     <header className="w-full bg-white border-b-2 z-50" style={{ borderColor: theme.palette.secondary.main }}>
-      <div className="flex justify-between items-center gap-4 lg:px-6">
-        <div className="hidden xl:block">
-          <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" />
+      <div className="lg:px-6">
+        <div className="hidden lg:flex justify-between py-2">
+          <div>
+            <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" />
+          </div>
+          {
+            locaiton?.pathname.includes("opportunity-view") && (
+              <div className="w-full ml-32">
+                <Tabs tabsData={oppTableData} selectedTab={oppSelectedTabIndex} handleChange={setOppSelectedTabIndex} type="header" />
+              </div>
+            )
+          }
+          <div className="flex items-center gap-4">
+            <Tabs tabsData={tabsData2} selectedTab={selectedTab2} handleChange={handleChangeTab2} type="header" />
+            <div className="flex items-center justify-end gap-6">
+              {(userDetails?.userId === salesforceUserDetails?.userId &&
+                localStorage.getItem("accessToken_salesforce") &&
+                localStorage.getItem("instanceUrl_salesforce")) && (
+                  <>
+                    <div>
+                      <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
+                        <Button onClick={() => handlePushData()} text={"SYNC"} useFor="success" />
+                      </Components.Badge>
+                    </div>
+                  </>
+                )}
+            </div>
+          </div>
         </div>
 
-        <div className="w-full flex items-center justify-between gap-2 px-3 py-3 border-b border-gray-200 sm:gap-4 lg:justify-end lg:border-b-0 lg:px-0 lg:py-4">
-          <div className="grow xl:hidden">
+        <div className="px-3 py-3 border-b border-gray-200 sm:gap-4 lg:border-b-0 lg:px-0 lg:py-4 lg:hidden">
+          <div>
             <button
               className="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11"
               onClick={handleToggle}
@@ -255,24 +295,6 @@ const AppHeader = ({
                 </svg>
               )}
             </button>
-          </div>       
-
-          <div className="flex items-center justify-end gap-6">
-            {(userDetails?.userId === salesforceUserDetails?.userId &&
-              localStorage.getItem("accessToken_salesforce") &&
-              localStorage.getItem("instanceUrl_salesforce")) && (
-                <>
-                  <div>
-                    <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                      <Button onClick={() => handlePushData()} text={"SYNC"} useFor="success" />
-                    </Components.Badge>
-                  </div>
-                </>
-              )}
-
-            <div className="z-30">
-              <UserDropdown />
-            </div>
           </div>
         </div>
       </div>
@@ -285,6 +307,7 @@ const mapStateToProps = (state) => ({
   syncCount: state.common.syncCount,
   syncingPullStatus: state.common.syncingPullStatus,
   syncingPushStatus: state.common.syncingPushStatus,
+  oppSelectedTabIndex: state.common.oppSelectedTabIndex
 })
 
 const mapDispatchToProps = {
@@ -294,6 +317,7 @@ const mapDispatchToProps = {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
+  setOppSelectedTabIndex
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

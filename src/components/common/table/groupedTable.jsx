@@ -118,27 +118,31 @@ export default function GroupedDataTable({
                                     backgroundColor: "#ECECEC"
                                 }}
                             >
-                                <div className="flex w-full items-center justify-center">
-                                    <div className='flex items-center justify-start gap-5'>
-                                        <Chip
-                                            label={statusname}
-                                            size="small"
-                                            sx={{
-                                                backgroundColor: color,
-                                                color: "#fff",
-                                                fontWeight: 600,
-                                                borderRadius: "20px",
-                                                px: 1.5,
-                                            }}
-                                        />
-                                        <h1 className="font-bold mr-5">
+                                <div className="flex w-full justify-center">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-[110px] flex justify-center">
+                                            <Chip
+                                                label={statusname}
+                                                size="small"
+                                                sx={{
+                                                    backgroundColor: color,
+                                                    color: "#fff",
+                                                    fontWeight: 600,
+                                                    borderRadius: "20px",
+                                                    width: "100px",
+                                                    justifyContent: "center",
+                                                }}
+                                            />
+                                        </div>
+
+                                        <h1 className="font-bold text-left min-w-[140px]">
                                             ${parseFloat(group?.total)?.toLocaleString(
                                                 undefined,
-                                                { minimumFractionDigits: 2, maximumFractionDigits: 2 }
                                             )}
                                         </h1>
                                     </div>
                                 </div>
+
                             </AccordionSummary>
 
                             <AccordionDetails>

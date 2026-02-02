@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 
-import { Chip, styled, Tooltip, tooltipClasses } from '@mui/material';
+import { styled, Tooltip, tooltipClasses } from '@mui/material';
 import Input from '../../../components/common/input/input';
 import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
@@ -15,12 +15,11 @@ import CheckBoxSelect from '../../../components/common/select/checkBoxSelect';
 import GroupedDataTable from '../../../components/common/table/groupedTable';
 
 import { getAllOpportunitiesGroupedByStage, getOpportunityOptions, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
-import { opportunityStatus, stageColors, opportunityStages } from '../../../service/common/commonService';
+import { opportunityStatus, opportunityStages } from '../../../service/common/commonService';
 import { getAllAccounts } from '../../../service/account/accountService';
 import Select from '../../../components/common/select/select';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import { useForm } from 'react-hook-form';
-import { Tabs } from '../../../components/common/tabs/tabs';
 import KeyContactModel from '../../../components/models/closePlan/keyContactModel';
 import ClosePlanCommentModel from '../../../components/models/closePlan/closePlanCommentModel';
 import OpportunityInfoModel from '../../../components/models/opportunities/opportunityInfoModel';
@@ -145,10 +144,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setSelectedOpportunityId(null);
         setOpenContactModel(false);
         setInfoRowId(null);
-    }
-
-    const handleSetActiveFilterTab = (id) => {
-        setActiveFilterTab(id);
     }
 
     const handleGetOpportunityOptions = async () => {
@@ -538,35 +533,14 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             renderCell: (params) => {
                 const val = params.value;
                 if (val === null || val === undefined || val === '') {
-                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}`, params, <span>-</span>);
+                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString('en-US')}`, params, <span>-</span>);
                 }
                 const num = parseFloat(val);
                 if (Number.isNaN(num)) {
-                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}`, params, <span>-</span>);
+                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString('en-US')}`, params, <span>-</span>);
                 }
-                const formatted = `$${num.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                })}`;
-                return withEditTooltip(`$${params.row.listPrice?.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                })}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                })}`, params, <span>{formatted}</span>);
+                const formatted = `$${num.toLocaleString('en-US')}`;
+                return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString('en-US')}`, params, <span>{formatted}</span>);
             },
             renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
@@ -577,23 +551,11 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             maxWidth: 200,
             headerClassName: 'uppercase',
             editable: canEditOpps,
-            renderCell: (params) => {
-                const stage = params.value;
-                const bg = stageColors[stage] || "#e0e0e0";
-                return withEditTooltip(
+            renderCell: (params) => {                               
+                withEditTooltip(
                     "Click To Edit",
                     params,
-                    <Chip
-                        label={stage}
-                        size="small"
-                        sx={{
-                            backgroundColor: bg,
-                            color: "#fff",
-                            fontWeight: 600,
-                            borderRadius: "20px",
-                            px: 1.5,
-                        }}
-                    />
+                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap">{params.value || '-'}</span>
                 );
             },
             renderEditCell: (params) => <SalesStageEditCell {...params} />,

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 
 // Rich Text Editor
@@ -22,7 +22,6 @@ import CustomIcons from "../../../components/common/icons/CustomIcons";
 import Input from "../../../components/common/input/input";
 import Select from "../../../components/common/select/select";
 import Checkbox from "../../../components/common/checkBox/checkbox";
-import { Tabs } from "../../../components/common/tabs/tabs";
 import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
 import Calendar from '../calendar/Calendar';
@@ -34,7 +33,7 @@ import MeetingAttendeesModel from '../../../components/models/meeting/meetingAtt
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 
 // Services & Actions
-import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setOppSelectedTabIndex, setoppSelectedTabIndex, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import { getUserDetails } from '../../../utils/getUserDetails';
 import {
     deleteOpportunityLogo,
@@ -69,8 +68,6 @@ const toolbarProperties = {
     inline: { options: ["bold", "italic", "underline", "strikethrough"] },
     list: { options: ["unordered", "ordered"] },
 };
-
-const tableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Calendar" }];
 
 const isEmptyHtml = (h) => {
     const x = (h || "").trim();
@@ -164,14 +161,14 @@ const formatDate = (dateString) => {
 // ----------------------------
 // Main Component
 // ----------------------------
-const ViewOpportunity = ({ setAlert }) => {
+const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex }) => {
     const { opportunityId } = useParams();
     const navigate = useNavigate();
+    const locaiton = useLocation()
     const userdata = getUserDetails();
     const theme = useTheme();
 
     // --- Layout State ---
-    const [selectedTab, setSelectedTab] = useState(0);
     const [openDrawer, setOpenDrawer] = useState(true);
 
     // --- Form & Data State ---
@@ -225,13 +222,11 @@ const ViewOpportunity = ({ setAlert }) => {
     const [isAddContactOpen, setIsAddContactOpen] = useState(false);
     const emptyContactRow = () => ({
         tempId: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-        nameId: "",
         roleId: "",
         title: "",
         isKeyContact: false,
         firstName: "",
         lastName: "",
-        email: "",
     });
     const [contactRows, setContactRows] = useState([emptyContactRow()]);
     const selectContactsRef = useRef(null);
@@ -361,7 +356,7 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     const handleGetMeeetingByOppId = async () => {
-        if (!opportunityId || selectedTab !== 1) return;
+        if (!opportunityId || oppSelectedTabIndex !== 1) return;
         const res = await getAllMeetingsByOppId(opportunityId, userTimeZone);
         if (res?.status === 200) {
             const data = res.result.map(row => ({
@@ -389,7 +384,6 @@ const ViewOpportunity = ({ setAlert }) => {
         const data = res?.result?.map((item) => ({
             id: item.id,
             name: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
-            nameId: "",
             oppId: opportunityId,
             contactId: item.id,
             title: `${item?.firstName || ''} ${item?.lastName || ''}`.trim(),
@@ -403,6 +397,9 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     useEffect(() => {
+        if (locaiton?.pathname.includes("opportunity-view")) {
+            setOppSelectedTabIndex(0)
+        }
         handleGetAllAccounts();
         handleGetOpportunityDetails();
         handleGetOppContacts();
@@ -412,14 +409,14 @@ const ViewOpportunity = ({ setAlert }) => {
 
     useEffect(() => {
         handleGetMeeetingByOppId()
-        if (selectedTab !== 1) {
+        if (oppSelectedTabIndex !== 1) {
             setOpenDrawer(true)
             setSelectedMeeting(null)
             setFilteredMeetings([])
             setMeetingAttendees([])
             setValue("meetingDate", null)
         }
-    }, [selectedTab])
+    }, [oppSelectedTabIndex])
 
     useEffect(() => {
         const date = watch("meetingDate");
@@ -596,7 +593,7 @@ const ViewOpportunity = ({ setAlert }) => {
         setContactRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [key]: value } : r)));
 
     const saveContactsFromModal = () => {
-
+        console.log("setContactRows", contactRows)
         closeAddContactModal();
     };
 
@@ -838,7 +835,7 @@ const ViewOpportunity = ({ setAlert }) => {
         if (name === "listPrice" || name === "discountPercentage") {
             // Calculate Deal Amount: LP - (LP * DP / 100)
             const newDeal = lp - (lp * dp / 100);
-            updatedDraft.dealAmount = newDeal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            updatedDraft.dealAmount = newDeal.toLocaleString('en-US');
         } else if (name === "dealAmount") {
             // Calculate Discount %: ((LP - DA) / LP) * 100
             if (lp > 0) {
@@ -1263,7 +1260,7 @@ const ViewOpportunity = ({ setAlert }) => {
     };
 
     const handleGetAllMeetingAttendees = async (mid = null) => {
-        if (opportunityId && selectedTab === 1 && mid) {
+        if (opportunityId && oppSelectedTabIndex === 1 && mid) {
             const res = await getAllMeetingsAttendeesByMeetingId(mid)
             setMeetingAttendees(res?.result)
         }
@@ -1349,27 +1346,19 @@ const ViewOpportunity = ({ setAlert }) => {
     const currentStageId = opportunityStages.find(s => s.title === watch("salesStage"))?.id;
     const logoUrl = watch("logo");
 
-    // 1. Define the grid layout in a variable to ensure alignment matches perfectly.
-    // I used minmax(0, Xfr) to prevent inputs from forcing columns to expand.
-    const GRID_LAYOUT =
-        "grid [grid-template-columns:minmax(0,1.6fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,0.4fr)] gap-3 items-center px-4 py-3";
     return (
-        <div className="mx-auto relative p-4 sm:p-6 my-3">
+        <div className="mx-auto px-4 mb-2">
             {/* Navigation & Hint */}
-            <div>
-                <div className='absolute top-1 left-5'>
-                    <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center' onClick={() => navigate("/dashboard/opportunities")}>
+            <div className="flex justify-between gap-3 items-center mb-2">
+                <Tooltip title="Back" arrow>
+                    <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center border rounded-full' onClick={() => navigate("/dashboard/opportunities")}>
                         <CustomIcons iconName="fa-solid fa-arrow-left" css="h-5 w-5 text-gray-600" />
                     </div>
-                </div>
-                {selectedTab === 0 && <div className="absolute top-2 right-5"><p className="text-red-600 text-lg"><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p></div>}
+                </Tooltip>
+                {oppSelectedTabIndex === 0 && <div><p className="text-red-600 text-lg"><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p></div>}
             </div>
 
-            <div className="my-3">
-                <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={setSelectedTab} />
-            </div>
-
-            {selectedTab === 0 && (
+            {oppSelectedTabIndex === 0 && (
                 <>
                     {/* Header Grid */}
                     <div className="flex justify-center items-center gap-10">
@@ -1743,10 +1732,10 @@ const ViewOpportunity = ({ setAlert }) => {
                             <div className="flex justify-start items-center mb-4">
                                 <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
                                 <div className="flex items-center gap-2">
-                                    <Tooltip title="Select">
+                                    <Tooltip title="Select" arrow>
                                         <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
                                     </Tooltip>
-                                    <Tooltip title="Add New">
+                                    <Tooltip title="Add New" arrow>
                                         <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
                                             <Components.IconButton onClick={() => openAddContactModal()}>
                                                 <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
@@ -1772,7 +1761,7 @@ const ViewOpportunity = ({ setAlert }) => {
 
                             {/* Add Contact Modal */}
                             {isAddContactOpen && (
-                                <div className="absolute top-0 -left-[600px] right-20 z-10 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                <div className="absolute top-0 -left-[700px] right-20 z-10 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
                                     {/* Header */}
                                     <div className="flex items-center justify-end px-5 py-1 border-b">
                                         <button
@@ -1786,176 +1775,125 @@ const ViewOpportunity = ({ setAlert }) => {
 
                                     {/* Table */}
                                     <div className="px-4 py-4">
-                                        {/* HEADER */}
-                                        <div
-                                            className={`
-        rounded-xl bg-[#5B45A6] text-white text-sm font-semibold
-        ${GRID_LAYOUT} 
-      `}
-                                        >
-                                            {/* Name + Add */}
-                                            <div className="flex items-center gap-3">
-                                                <span>Name</span>
-                                            </div>
+                                        {/* makes table scrollable on smaller widths */}
+                                        <div className="w-full overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="bg-[#5B45A6] text-white text-sm font-semibold">
+                                                        <th className="py-1 px-2 text-left">Name</th>
+                                                        <th className="py-1 px-2 text-left">First Name</th>
+                                                        <th className="py-1 px-2 text-left">Last Name</th>
+                                                        <th className="py-1 px-2 text-left">Title</th>
+                                                        <th className="py-1 px-2 text-left">Role</th>
+                                                        <th className="py-1 px-2 text-right">Key</th>
+                                                        <th className="py-1 px-2 text-right">
+                                                            <button
+                                                                type="button"
+                                                                onClick={addContactRow}
+                                                                className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
+                                                                title="Add row"
+                                                            >
+                                                                <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
+                                                            </button>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
 
-                                            <div>First Name</div>
-                                            <div>Last Name</div>
-                                            <div>Email</div>
-                                            <div>Title</div>
-                                            <div>Role</div>
-                                            <div className="text-center">Key</div>
-                                            <div className="text-right">
-                                                <button
-                                                    type="button"
-                                                    onClick={addContactRow}
-                                                    className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"
-                                                    title="Add row"
-                                                >
-                                                    <CustomIcons
-                                                        iconName="fa-solid fa-plus"
-                                                        css="text-white text-xs"
-                                                    />
-                                                </button>
-                                            </div>
-                                        </div>
+                                                <tbody>
+                                                    {contactRows.map((row) => (
+                                                        <tr key={row.tempId} className="bg-white">
+                                                            {/* Name */}
+                                                            <td className="px-1 py-1 align-middle w-48">
+                                                                <Select
+                                                                    options={allContacts}
+                                                                    placeholder="Select name"
+                                                                    freeSolo={true}
+                                                                    value={row.id ? Number(row.id) : null}
+                                                                    onChange={(e, newValue) => {
+                                                                        if (typeof newValue === "object" && newValue?.id) {
+                                                                            updateContactRow(row.tempId, "id", String(newValue.id));
+                                                                            updateContactRow(row.tempId, "name", newValue?.name ?? "");
+                                                                        }
+                                                                    }}
+                                                                    onInputChange={(e, inputValue) => {
+                                                                        updateContactRow(row.tempId, "name", inputValue);
+                                                                        if (inputValue) updateContactRow(row.tempId, "id", "");
+                                                                    }}
+                                                                />
+                                                            </td>
 
-                                        {/* ROWS */}
-                                        <div className="mt-3 space-y-3">
-                                            {contactRows.map((row) => (
-                                                <div
-                                                    key={row.tempId}
-                                                    className={`
-            rounded-xl border border-gray-200 bg-white
-            ${GRID_LAYOUT}
-          `}
-                                                >
-                                                    {/* Name */}
-                                                    <div className="w-full">
-                                                        <Select
-                                                            options={allContacts}
-                                                            placeholder="Select name"
-                                                            freeSolo={true}
-                                                            value={row.nameId ? Number(row.nameId) : null}
-                                                            onChange={(e, newValue) => {
-                                                                if (typeof newValue === "object" && newValue?.id) {
-                                                                    updateContactRow(
-                                                                        row.tempId,
-                                                                        "nameId",
-                                                                        String(newValue.id)
-                                                                    );
-                                                                    updateContactRow(
-                                                                        row.tempId,
-                                                                        "name",
-                                                                        newValue?.name ?? ""
-                                                                    );
-                                                                }
-                                                            }}
-                                                            onInputChange={(e, inputValue) => {
-                                                                updateContactRow(row.tempId, "name", inputValue);
-                                                                if (inputValue) updateContactRow(row.tempId, "nameId", "");
-                                                            }}
-                                                        />
-                                                    </div>
+                                                            {/* First Name */}
+                                                            <td className="px-1 py-1 align-middle w-40">
+                                                                <Input
+                                                                    value={row.firstName || ""}
+                                                                    placeholder="First name"
+                                                                    type="text"
+                                                                    onChange={(e) => updateContactRow(row.tempId, "firstName", e.target.value)}
+                                                                />
+                                                            </td>
 
-                                                    {/* First Name */}
-                                                    <div className="w-full">
-                                                        <Input
-                                                            value={row.firstName || ""}
-                                                            placeholder="First"
-                                                            type="text"
-                                                            onChange={(e) =>
-                                                                updateContactRow(row.tempId, "firstName", e.target.value)
-                                                            }
-                                                        />
-                                                    </div>
+                                                            {/* Last Name */}
+                                                            <td className="px-1 py-1 align-middle w-40">
+                                                                <Input
+                                                                    value={row.lastName || ""}
+                                                                    placeholder="Last name"
+                                                                    type="text"
+                                                                    onChange={(e) => updateContactRow(row.tempId, "lastName", e.target.value)}
+                                                                />
+                                                            </td>
 
-                                                    {/* Last Name */}
-                                                    <div className="w-full">
-                                                        <Input
-                                                            value={row.lastName || ""}
-                                                            placeholder="Last"
-                                                            type="text"
-                                                            onChange={(e) =>
-                                                                updateContactRow(row.tempId, "lastName", e.target.value)
-                                                            }
-                                                        />
-                                                    </div>
+                                                            {/* Title */}
+                                                            <td className="px-1 py-1 align-middle w-40">
+                                                                <Input
+                                                                    value={row.title || ""}
+                                                                    placeholder="Title"
+                                                                    type="text"
+                                                                    onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                                                />
+                                                            </td>
 
-                                                    {/* Email */}
-                                                    <div className="w-full">
-                                                        <Input
-                                                            value={row.email || ""}
-                                                            placeholder="Email"
-                                                            type="email"
-                                                            onChange={(e) =>
-                                                                updateContactRow(row.tempId, "email", e.target.value)
-                                                            }
-                                                        />
-                                                    </div>
+                                                            {/* Role */}
+                                                            <td className="px-1 py-1 align-middle w-48">
+                                                                <Select
+                                                                    options={opportunityContactRoles}
+                                                                    label={null}
+                                                                    placeholder="Role"
+                                                                    value={row.roleId ? Number(row.roleId) : null}
+                                                                    onChange={(_, newValue) =>
+                                                                        updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
+                                                                    }
+                                                                />
+                                                            </td>
 
-                                                    {/* Title */}
-                                                    <div className="w-full">
-                                                        <Input
-                                                            value={row.title || ""}
-                                                            placeholder="Title"
-                                                            type="text"
-                                                            onChange={(e) =>
-                                                                updateContactRow(row.tempId, "title", e.target.value)
-                                                            }
-                                                        />
-                                                    </div>
+                                                            {/* Key */}
+                                                            <td className="px-1 py-1 align-middle w-20">
+                                                                <div className="flex justify-end items-center">
+                                                                    <Checkbox
+                                                                        checked={!!row.isKeyContact}
+                                                                        onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                    />
+                                                                </div>
+                                                            </td>
 
-                                                    {/* Role */}
-                                                    <div className="w-full">
-                                                        <Select
-                                                            options={opportunityContactRoles}
-                                                            label={null}
-                                                            placeholder="Role"
-                                                            value={row.roleId ? Number(row.roleId) : null}
-                                                            onChange={(_, newValue) =>
-                                                                updateContactRow(
-                                                                    row.tempId,
-                                                                    "roleId",
-                                                                    newValue?.id ? String(newValue.id) : ""
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    {/* Key */}
-                                                    <div className="flex justify-center">
-                                                        <Checkbox
-                                                            checked={!!row.isKeyContact}
-                                                            onChange={(e) =>
-                                                                updateContactRow(
-                                                                    row.tempId,
-                                                                    "isKeyContact",
-                                                                    e.target.checked
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    {/* Actions (trash) */}
-                                                    <div className="flex justify-end">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeContactRow(row.tempId)}
-                                                            className="h-9 w-9 rounded-lg hover:bg-red-50 flex items-center justify-center"
-                                                            title="Remove"
-                                                        >
-                                                            <CustomIcons
-                                                                iconName="fa-solid fa-trash"
-                                                                css="text-red-600 text-sm"
-                                                            />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                            {/* Actions */}
+                                                            <td className="px-1 py-1 align-middle text-right">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeContactRow(row.tempId)}
+                                                                    className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                                                                    title="Remove"
+                                                                >
+                                                                    <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-end gap-2 px-5 py-4 border-t">
+                                    <div className="flex justify-end gap-2 px-5 py-2 border-t">
                                         <button
                                             type="button"
                                             onClick={saveContactsFromModal}
@@ -1966,23 +1904,27 @@ const ViewOpportunity = ({ setAlert }) => {
                                     </div>
                                 </div>
                             )}
+
                             <div className="overflow-y-auto">
-                                <ul className="pl-3 text-base">
+                                <ul className="pl-3 text-sm">
                                     {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
                                         <li key={c.id}>
-                                            <span className="font-medium text-indigo-600 text-base">
+                                            <span className="font-medium text-indigo-600">
                                                 {c.contactName}
                                                 {c.title && (
-                                                    <span className="text-base text-gray-500">
+                                                    <span className="text-gray-500">
                                                         <span className="mx-1">–</span>
-                                                        {c.title}
+                                                        {c.title.length > 50
+                                                            ? `${c.title.slice(0, 50)}...`
+                                                            : c.title}
                                                     </span>
+
                                                 )}
                                             </span>
                                             {c.role && (
                                                 <>
                                                     <span className="mx-1">–</span>
-                                                    <span className="text-indigo-600 text-base">{c.role}</span>
+                                                    <span className="text-indigo-600">{c.role}</span>
                                                 </>
                                             )}
                                         </li>
@@ -2055,7 +1997,7 @@ const ViewOpportunity = ({ setAlert }) => {
             )}
 
             {/* Notes Tab */}
-            {selectedTab === 1 && (
+            {oppSelectedTabIndex === 1 && (
                 <div className="flex justify-start items-start gap-4">
                     <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
                         <DatePickerComponent
@@ -2273,10 +2215,10 @@ const ViewOpportunity = ({ setAlert }) => {
                                         <div className="flex justify-start items-center mb-4">
                                             <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
                                             <div className="flex items-center gap-2">
-                                                <Tooltip title="Select">
+                                                <Tooltip title="Select" arrow>
                                                     <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
                                                 </Tooltip>
-                                                <Tooltip title="Add New">
+                                                <Tooltip title="Add New" arrow>
                                                     <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
                                                         <Components.IconButton onClick={() => setContactModalOpen(true)}>
                                                             <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
@@ -2389,7 +2331,7 @@ const ViewOpportunity = ({ setAlert }) => {
                 </div>
             )}
 
-            {selectedTab === 2 && <Calendar />}
+            {oppSelectedTabIndex === 2 && <Calendar />}
 
             {/* Modals & Dialogs */}
             <OpportunityContactModel open={contactModalOpen} handleClose={() => setContactModalOpen(false)} opportunityId={opportunityId} handleGetAllOppContact={handleGetOppContacts} oppName={watch("opportunity")} />
@@ -2418,5 +2360,6 @@ const ViewOpportunity = ({ setAlert }) => {
     );
 };
 
-const mapDispatchToProps = { setAlert, setSyncingPushStatus };
-export default connect(null, mapDispatchToProps)(ViewOpportunity);
+const mapStateToProps = (state) => ({ oppSelectedTabIndex: state.common.oppSelectedTabIndex })
+const mapDispatchToProps = { setAlert, setSyncingPushStatus, setOppSelectedTabIndex };
+export default connect(mapStateToProps, mapDispatchToProps)(ViewOpportunity);

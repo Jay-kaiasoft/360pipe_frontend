@@ -115,7 +115,7 @@ const Quota = ({ setAlert }) => {
                                     <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
                                         <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
                                         <td className="px-4 py-3 text-sm">{row.term || '—'}</td>
-                                        <td className="px-4 py-3 text-right text-sm">${row.quota?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '—'}</td>
+                                        <td className="px-4 py-3 text-right text-sm">${row.quota?.toLocaleString('en-US') || '—'}</td>
                                         <td className="px-4 py-3">
                                             <div className='flex items-center gap-2 justify-end h-full'>
                                                 <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>

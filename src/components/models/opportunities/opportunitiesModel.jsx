@@ -1205,18 +1205,12 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                     <td className="px-4 py-3 text-sm text-right">{qty || "—"}</td>
                                                                     <td className="px-4 py-3 text-sm text-right">
                                                                         {price
-                                                                            ? `$${price.toLocaleString(undefined, {
-                                                                                minimumFractionDigits: 2,
-                                                                                maximumFractionDigits: 2,
-                                                                            })}`
+                                                                            ? `$${price.toLocaleString('en-US')}`
                                                                             : "—"}
                                                                     </td>
                                                                     <td className="px-4 py-3 text-sm text-right">
                                                                         {total
-                                                                            ? `$${total.toLocaleString(undefined, {
-                                                                                minimumFractionDigits: 2,
-                                                                                maximumFractionDigits: 2,
-                                                                            })}`
+                                                                            ? `$${total.toLocaleString('en-US')}`
                                                                             : "—"}
                                                                     </td>
 

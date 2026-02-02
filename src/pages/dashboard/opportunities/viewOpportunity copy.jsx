@@ -1844,10 +1844,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                                         <div className="sm:hidden text-xs text-gray-500 mb-1">Price:</div>
                                                         <span className="font-semibold">
                                                             {price
-                                                                ? `$${price.toLocaleString(undefined, {
-                                                                    minimumFractionDigits: 2,
-                                                                    maximumFractionDigits: 2,
-                                                                })}`
+                                                                ? `$${price.toLocaleString('en-US')}`
                                                                 : "—"}
                                                         </span>
                                                     </td>
@@ -1856,10 +1853,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                                         <div className="sm:hidden text-xs text-blue-600 mb-1">Total:</div>
                                                         <span className="font-bold text-blue-600 text-base">
                                                             {total
-                                                                ? `$${total.toLocaleString(undefined, {
-                                                                    minimumFractionDigits: 2,
-                                                                    maximumFractionDigits: 2,
-                                                                })}`
+                                                                ? `$${total.toLocaleString('en-US')}`
                                                                 : "—"}
                                                         </span>
                                                     </td>
@@ -2280,10 +2274,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         label="List Amount"
                                         value={
                                             watch("listPrice") !== null && watch("listPrice") !== undefined && watch("listPrice") !== ""
-                                                ? `$${Number(watch("listPrice")).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
+                                                ? `$${Number(watch("listPrice")).toLocaleString('en-US')}`
                                                 : "—"
                                         }
                                         type="text"
@@ -2295,10 +2286,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                         label="Discount(%)"
                                         value={
                                             watch("discountPercentage") !== null && watch("discountPercentage") !== undefined && watch("discountPercentage") !== ""
-                                                ? `${Number(watch("discountPercentage")).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
+                                                ? `${Number(watch("discountPercentage")).toLocaleString('en-US')}`
                                                 : "—"
                                         }
                                         type="text"
@@ -2312,10 +2300,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                             watch("dealAmount") !== null &&
                                                 watch("dealAmount") !== undefined &&
                                                 watch("dealAmount") !== ""
-                                                ? `$${Number(watch("dealAmount")).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
+                                                ? `$${Number(watch("dealAmount")).toLocaleString('en-US')}`
                                                 : "—"
                                         }
                                         type="text"
