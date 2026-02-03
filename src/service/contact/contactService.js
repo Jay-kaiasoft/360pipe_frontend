@@ -87,3 +87,13 @@ export const getReportHierarch = async (contactId) => {
         throw error;
     }
 };
+
+export const addMultipleContacts = async (contactData) => {
+    try {
+        const response = await axiosInterceptor().post(`${contactURL}/addMultipleContacts`, contactData);
+        return response.data;
+    } catch (error) {
+        console.error("Error creating contact:", error);
+        throw error;
+    }
+};

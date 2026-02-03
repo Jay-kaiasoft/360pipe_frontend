@@ -18,6 +18,7 @@ import Checkbox from "../components/common/checkBox/checkbox";
 import { Tabs } from "../components/common/tabs/tabs";
 import DatePickerComponent from "../components/common/datePickerComponent/datePickerComponent";
 import { opportunityContactRoles } from "../service/common/commonService";
+import EnvTable from "./envTable";
 
 // ----------------------------
 // Demo constants / helpers
@@ -171,7 +172,7 @@ export default function OppView() {
   const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
   const [isEditingWhy, setIsEditingWhy] = useState(false);
   const [isEditingValue, setIsEditingValue] = useState(false);
-  const [isEditingEnv, setIsEditingEnv] = useState(false);
+  const [isEditingEnv, setIsEditingEnv] = useState(false); 
 
   const whyCardRef = useRef(null);
   const valueCardRef = useRef(null);
@@ -414,8 +415,6 @@ export default function OppView() {
   const logoMenuRef = useRef(null);
   const fetchLogoRef = useRef(null);
 
-
-
   // open upload modal
   const openUploadLogoModal = () => {
     setIsLogoMenuOpen(false);
@@ -494,7 +493,6 @@ export default function OppView() {
 
     setIsUploadLogoOpen(false);
   };
-
 
   const openLogoMenu = () => {
     setIsLogoMenuOpen((p) => !p);
@@ -1696,35 +1694,15 @@ export default function OppView() {
             </div>
 
             {/* Current Env */}
-            <div ref={envCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60">
+            <div ref={envCardRef} onClick={() => setIsEditingEnv(true)} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 relative">
               <div className="mb-4">
                 <p className="font-medium text-black tracking-wider text-2xl text-center">Current Environment</p>
               </div>
-
-              <div className="relative h-full">
-                {!isEditingEnv ? (
-                  <div className="h-full overflow-y-auto cursor-pointer rounded-md p-2 transition" onClick={() => setIsEditingEnv(true)}>
-                    <div
-                      className="editor-html space-y-1"
-                      dangerouslySetInnerHTML={{
-                        __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>-</span>",
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="h-full overflow-y-auto">
-                    <Editor
-                      editorState={currentEnvironmentState}
-                      wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
-                      editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                      toolbarClassName="toolbar-class border-b border-gray-300"
-                      onEditorStateChange={(state) => setCurrentEnvironmentState(state)}
-                      toolbar={toolbarProperties}
-                      autoFocus
-                    />
-                  </div>
-                )}
-              </div>
+              {
+                isEditingEnv && (
+                 <EnvTable/>
+                )
+              }
             </div>
 
             {/* Next Steps */}
