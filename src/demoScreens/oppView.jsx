@@ -19,6 +19,7 @@ import { Tabs } from "../components/common/tabs/tabs";
 import DatePickerComponent from "../components/common/datePickerComponent/datePickerComponent";
 import { opportunityContactRoles } from "../service/common/commonService";
 import EnvTable from "./envTable";
+import DealDocs from "./dealDocs";
 
 // ----------------------------
 // Demo constants / helpers
@@ -29,7 +30,7 @@ const toolbarProperties = {
   list: { options: ["unordered", "ordered"] },
 };
 
-const tableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Calendar" }];
+const tableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Deal Docs" }, { label: "Calendar" }];
 
 const DEMO_STAGES = [
   { id: 1, title: "Prospecting" },
@@ -172,7 +173,7 @@ export default function OppView() {
   const [isEditingNextSteps, setIsEditingNextSteps] = useState(false);
   const [isEditingWhy, setIsEditingWhy] = useState(false);
   const [isEditingValue, setIsEditingValue] = useState(false);
-  const [isEditingEnv, setIsEditingEnv] = useState(false); 
+  const [isEditingEnv, setIsEditingEnv] = useState(false);
 
   const whyCardRef = useRef(null);
   const valueCardRef = useRef(null);
@@ -1700,7 +1701,7 @@ export default function OppView() {
               </div>
               {
                 isEditingEnv && (
-                 <EnvTable/>
+                  <EnvTable />
                 )
               }
             </div>
@@ -1864,8 +1865,15 @@ export default function OppView() {
         </div>
       )}
 
-      {/* -------------------- TAB 2: CALENDAR (DEMO) -------------------- */}
+      {/* -------------------- TAB 2: Deal Docs (DEMO) -------------------- */}
       {selectedTab === 2 && (
+        // <div className="border border-gray-200 rounded-md p-6">
+          <DealDocs />
+        // </div>
+      )}
+
+      {/* -------------------- TAB 3: CALENDAR (DEMO) -------------------- */}
+      {selectedTab === 3 && (
         <div className="border border-gray-200 rounded-md p-6">
           <p className="text-gray-700 font-semibold">Calendar (Demo)</p>
           {/* <img src="https://cdn.brandfetch.io/domain/webapp.salesandmarketing.ai?c=1id2vhiypCcqm7fpTjx" alt="Logo by Brandfetch" /> */}

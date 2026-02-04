@@ -104,12 +104,12 @@ export default function EnvTable() {
     };
 
     return (
-        <div className="absolute -top-40 -right-40 z-10 rounded-md bg-white shadow-xl border-4 border-[#9E9E9E] overflow-hidden">
-            <div className="min-w-96 overflow-x-auto">
+        <div className="absolute -top-32 lg:-right-96 z-10 rounded-md bg-white shadow-xl border-4 border-[#9E9E9E] overflow-hidden">
+            <div className="w-[30rem] overflow-x-auto">
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="bg-[#D9D9D9] text-black text-base font-bold">
-                            <th className="border-4 border-[#9E9E9E] px-4 py-2 text-left w-10">
+                            <th className="border-4 border-[#9E9E9E] px-4 py-2 text-left w-52">
                                 <div className="flex items-center gap-3">
                                     <span className="grow">Solution</span>
 
@@ -122,7 +122,6 @@ export default function EnvTable() {
                                     </Tooltip>
                                 </div>
                             </th>
-
                             <th className="border-4 border-[#9E9E9E] px-4 py-2 text-left">Vendor(s)</th>
                         </tr>
                     </thead>
@@ -133,7 +132,7 @@ export default function EnvTable() {
                                 {/* Solution column */}
                                 <td className="border-4 border-[#9E9E9E] px-4 py-3 font-semibold align-top">
                                     {editingSolutionRow === rowIndex ? (
-                                        <div>
+                                        <div className="flex items-center gap-2">
                                             <input
                                                 className="border border-gray-300 rounded px-2 py-1 w-full"
                                                 value={solutionDraft}
@@ -215,12 +214,13 @@ export default function EnvTable() {
                                                             value={vendorDraft}
                                                             onChange={(e) => setVendorDraft(e.target.value)}
                                                         />
-                                                        <button
-                                                            className="bg-blue-600 text-white px-3 py-1 rounded"
-                                                            onClick={handleSaveVendorEdit}
-                                                        >
-                                                            Save
-                                                        </button>
+                                                        <Tooltip title="Save" arrow>
+                                                            <div className="bg-green-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
+                                                                <Components.IconButton onClick={() => handleSaveVendorEdit()}>
+                                                                    <CustomIcons iconName="fa-solid fa-floppy-disk" css="cursor-pointer text-white h-3 w-3" />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
                                                     </div>
                                                 ) : (
                                                     <span

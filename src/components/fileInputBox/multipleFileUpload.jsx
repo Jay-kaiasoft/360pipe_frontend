@@ -23,7 +23,8 @@ function MultipleFileUpload({
   uploadedFiles,
   setDeleteLogo,
   isFileUpload = true,
-  removableExistingAttachments = true
+  removableExistingAttachments = true,
+  flexView = false
 }) {
   const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
   const [selectedImageId, setSelectedImageId] = useState(null);
@@ -322,27 +323,28 @@ function MultipleFileUpload({
 
   return (
     <div className="py-4 relative">
-      {
-        isFileUpload && (
-          <div
-            {...getRootProps({
-              className:
-                "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
-            })}
-          >
-            <input {...getInputProps()} />
-            <p className="text-gray-700 text-center text-sm">
-              {placeHolder
-                ? placeHolder
-                : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
-            </p>
-          </div>
-        )
-      }
+      <div className={`${flexView ? "flex items-start" : ""}`}>
+        {
+          isFileUpload && (
+            <div
+              {...getRootProps({
+                className:
+                  "flex justify-center items-center w-full h-20 px-[20px] border-2 border-dashed border-blue-400 rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
+              })}
+            >
+              <input {...getInputProps()} />
+              <p className="text-gray-700 text-center text-sm">
+                {placeHolder
+                  ? placeHolder
+                  : "Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"}
+              </p>
+            </div>
+          )
+        }
 
-      <aside className="flex flex-wrap mt-4 justify-start">
-        {/* Existing (server) files */}
-        {existingImages?.map((item, idx) => {
+        <aside className={`flex flex-wrap ${flexView ? "mt-0" : "mt-4"} justify-start`}>
+          {/* Existing (server) files */}
+          {/* {existingImages?.map((item, idx) => {
           const ext = getExt(item.imageName || item.imageURL || "");
           const url = item.imageURL;
           const name = item.imageName || `file-${idx}.${ext || "bin"}`;
@@ -353,55 +355,84 @@ function MultipleFileUpload({
                 name,
                 ext,
                 removable: removableExistingAttachments,
-                onRemove: () => handleOpenDeleteDialog(item.imageId),
+                // onRemove: () => handleOpenDeleteDialog(item.imageId),
                 isInternal: !!item.isInternal,
                 onCheckboxChange: (checked) =>
                   handleCheckboxChange(item.imageId, "existing", idx, checked)
               })}
             </div>
           );
-        })}
-
-        {/* Newly added (client) files */}
-        {files?.map((file, index) => {
-          const ext = getExt(file.name, file.type);
-          const url = file.preview;
-          const name = file.name;
-          return renderFileTile({
-            url,
-            name,
-            ext,
-            removable: true,
-            onRemove: () => removeFile(file.name),
-            isInternal: !!file.isInternal,
-            onCheckboxChange: (checked) =>
-              handleCheckboxChange(null, "files", index, checked)
-          });
-        })}
-
-        {/* Previously uploadedFiles (fallback list, read-only) */}
-        {!files?.length &&
-          uploadedFiles?.map((item, idx) => {
+        })} */}
+          {existingImages?.map((item, idx) => {
             const ext = getExt(item.imageName || item.imageURL || "");
-            const url = item.imageURL;
+            const url = item.imageURL; // already preview blob
             const name = item.imageName || `file-${idx}.${ext || "bin"}`;
+
+            return (
+              <div key={`existing-${idx}`} className="relative">
+                {renderFileTile({
+                  url,
+                  name,
+                  ext,
+                  removable: removableExistingAttachments,
+                  onRemove: () => {
+                    if (item.__local) {
+                      setExistingImages((prev) => prev.filter((_, i) => i !== idx));
+                      return;
+                    }
+                    handleOpenDeleteDialog(item.imageId);
+                  },
+                  isInternal: !!item.isInternal,
+                  onCheckboxChange: (checked) =>
+                    handleCheckboxChange(item.imageId, "existing", idx, checked),
+                })}
+              </div>
+            );
+          })}
+
+
+          {/* Newly added (client) files */}
+          {files?.map((file, index) => {
+            const ext = getExt(file.name, file.type);
+            const url = file.preview;
+            const name = file.name;
             return renderFileTile({
               url,
               name,
               ext,
-              removable: false,
-              isInternal: !!item.isInternal
+              removable: true,
+              onRemove: () => removeFile(file.name),
+              isInternal: !!file.isInternal,
+              onCheckboxChange: (checked) =>
+                handleCheckboxChange(null, "files", index, checked)
             });
           })}
-      </aside>
-      
+
+          {/* Previously uploadedFiles (fallback list, read-only) */}
+          {!files?.length &&
+            uploadedFiles?.map((item, idx) => {
+              const ext = getExt(item.imageName || item.imageURL || "");
+              const url = item.imageURL;
+              const name = item.imageName || `file-${idx}.${ext || "bin"}`;
+              return renderFileTile({
+                url,
+                name,
+                ext,
+                removable: false,
+                isInternal: !!item.isInternal
+              });
+            })}
+        </aside>
+
+      </div>
+
       {/* Simple Image Preview Modal */}
       {imagePreviewModal.open && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50 p-4"
           onClick={handleCloseImagePreview}
         >
-          <div 
+          <div
             className="relative bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
