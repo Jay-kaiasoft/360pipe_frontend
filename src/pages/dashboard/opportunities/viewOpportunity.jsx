@@ -1486,7 +1486,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     return (
         <div className="mx-auto px-4 mb-2">
-            {/* Navigation & Hint */}
+            {/* Navigation & Hint
             <div className="flex justify-between gap-3 items-center mb-2">
                 <Tooltip title="Back" arrow>
                     <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center border rounded-full' onClick={() => navigate("/dashboard/opportunities")}>
@@ -1494,7 +1494,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                     </div>
                 </Tooltip>
                 {oppSelectedTabIndex === 0 && <div><p className="text-red-600 text-lg"><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p></div>}
-            </div>
+            </div> */}
 
             {oppSelectedTabIndex === 0 && (
                 <>
@@ -1614,25 +1614,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         </div>
                                     </div>
                                 </div>
-                                // <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
-                                //     <div ref={uploadLogoRef} className="w-full max-w-md rounded-xl bg-white shadow-2xl border p-4">
-                                //         <h3 className="font-semibold text-lg mb-4">Upload Logo</h3>
-                                //         <div className="flex items-center gap-4 mb-4">
-                                //             <div className="h-20 w-20 rounded-full border flex items-center justify-center overflow-hidden bg-gray-50">
-                                //                 {logoUploadDraft.previewUrl ? <img src={logoUploadDraft.previewUrl} className="h-full w-full object-cover" /> : <CustomIcons iconName="fa-solid fa-image" css="h-6 w-6 text-gray-400" />}
-                                //             </div>
-                                //             <div>
-                                //                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePickLogoFile(e.target.files[0])} />
-                                //                 <button className="px-4 py-2 text-sm border rounded hover:bg-gray-50 mb-1" onClick={() => fileInputRef.current?.click()}>Select File</button>
-                                //                 {logoUploadDraft.fileName && <p className="text-xs text-gray-500 truncate max-w-[200px]">{logoUploadDraft.fileName}</p>}
-                                //             </div>
-                                //         </div>
-                                //         <div className="flex justify-end gap-2">
-                                //             <button className="px-4 py-2 text-sm border rounded" onClick={() => setIsUploadLogoOpen(false)}>Cancel</button>
-                                //             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded" onClick={saveUploadedLogo}>Save</button>
-                                //         </div>
-                                //     </div>
-                                // </div>
                             )}
 
                             {/* 2. Fetch Logo Modal */}
@@ -1810,7 +1791,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
                                 ) : (
                                     <div
-                                        className="prose prose-sm max-w-none text-gray-800"
+                                        className="prose prose-sm max-w-none"
                                         dangerouslySetInnerHTML={{
                                             __html: whyDoAnythingStateHTML || ""
                                         }}
@@ -1843,7 +1824,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
                                 ) : (
                                     <div
-                                        className="prose prose-sm max-w-none text-gray-800"
+                                        className="prose prose-sm max-w-none"
                                         dangerouslySetInnerHTML={{
                                             __html: businessValueStateHTML || ""
                                         }}
@@ -1869,18 +1850,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         <div className="border-2 border-black p-3 rounded-3xl flex flex-col relative h-60">
                             <div className="flex justify-start items-center mb-4">
                                 <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
-                                <div className="flex items-center gap-2">
-                                    <Tooltip title="Select" arrow>
-                                        <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
-                                    </Tooltip>
-                                    <Tooltip title="Add New" arrow>
-                                        <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
-                                            <Components.IconButton onClick={() => openAddContactModal()}>
-                                                <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
-                                            </Components.IconButton>
-                                        </div>
-                                    </Tooltip>
-                                </div>
                             </div>
 
                             {isSelectContactsOpen && (
@@ -1942,8 +1911,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 </thead>
 
                                                 <tbody>
-                                                    {contactRows.map((row) => (
-                                                        <tr key={row.tempId} className="bg-white">
+                                                    {contactRows.map((row, index) => (
+                                                        <tr key={index} className="bg-white">
                                                             {/* Name */}
                                                             <td className="px-1 py-1 align-middle w-48">
                                                                 <Select
@@ -2032,13 +2001,13 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 <ul className="pl-3 text-sm">
                                     {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
                                         <li key={c.id}>
-                                            <span className="font-medium text-indigo-600">
+                                            <span className="font-medium text-indigo-600 text-base">
                                                 {c.contactName}
                                                 {c.title && (
-                                                    <span className="text-gray-500">
+                                                    <span className="ttext-base text-gray-500">
                                                         <span className="mx-1">–</span>
-                                                        {c.title.length > 50
-                                                            ? `${c.title.slice(0, 50)}...`
+                                                        {c.title.length > 20
+                                                            ? `${c.title.slice(0, 20)}...`
                                                             : c.title}
                                                     </span>
 
@@ -2047,12 +2016,25 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             {c.role && (
                                                 <>
                                                     <span className="mx-1">–</span>
-                                                    <span className="text-indigo-600">{c.role}</span>
+                                                    <span className="text-indigo-600 text-base">{c.role}</span>
                                                 </>
                                             )}
                                         </li>
                                     )) : <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>}
                                 </ul>
+                            </div>
+
+                            <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                <Tooltip title="Select" arrow>
+                                    <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                </Tooltip>
+                                <Tooltip title="Add New" arrow>
+                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
+                                        <Components.IconButton onClick={() => openAddContactModal()}>
+                                            <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
+                                        </Components.IconButton>
+                                    </div>
+                                </Tooltip>
                             </div>
                         </div>
                     </div>
@@ -2098,7 +2080,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
                                 ) : (
                                     <div
-                                        className="prose prose-sm max-w-none text-gray-800"
+                                        className="prose prose-sm max-w-none"
                                         dangerouslySetInnerHTML={{
                                             __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>Click to describe current environment...</span>"
                                         }}
@@ -2278,7 +2260,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 </div>
                                             ) : (
                                                 <div
-                                                    className="prose prose-sm max-w-none text-gray-800"
+                                                    className="prose prose-sm max-w-none"
                                                     dangerouslySetInnerHTML={{
                                                         __html: whyDoAnythingStateHTML || ""
                                                     }}
@@ -2311,7 +2293,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 </div>
                                             ) : (
                                                 <div
-                                                    className="prose prose-sm max-w-none text-gray-800"
+                                                    className="prose prose-sm max-w-none"
                                                     dangerouslySetInnerHTML={{
                                                         __html: businessValueStateHTML || ""
                                                     }}
@@ -2337,7 +2319,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     <div className="border-2 border-black p-3 rounded-3xl flex flex-col relative h-60">
                                         <div className="flex justify-start items-center mb-4">
                                             <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
-                                            <div className="flex items-center gap-2">
+                                            {/* <div className="flex items-center gap-2">
                                                 <Tooltip title="Select" arrow>
                                                     <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
                                                 </Tooltip>
@@ -2348,7 +2330,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         </Components.IconButton>
                                                     </div>
                                                 </Tooltip>
-                                            </div>
+                                            </div> */}
                                         </div>
 
                                         {isSelectContactsOpen && (
@@ -2494,13 +2476,13 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             <ul className="pl-3 text-sm">
                                                 {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
                                                     <li key={c.id}>
-                                                        <span className="font-medium text-indigo-600">
+                                                        <span className="font-medium text-indigo-600 text-base">
                                                             {c.contactName}
                                                             {c.title && (
-                                                                <span className="text-gray-500">
+                                                                <span className="ttext-base text-gray-500">
                                                                     <span className="mx-1">–</span>
-                                                                    {c.title.length > 50
-                                                                        ? `${c.title.slice(0, 50)}...`
+                                                                    {c.title.length > 20
+                                                                        ? `${c.title.slice(0, 20)}...`
                                                                         : c.title}
                                                                 </span>
 
@@ -2509,12 +2491,25 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         {c.role && (
                                                             <>
                                                                 <span className="mx-1">–</span>
-                                                                <span className="text-indigo-600">{c.role}</span>
+                                                                <span className="text-indigo-600 text-base">{c.role}</span>
                                                             </>
                                                         )}
                                                     </li>
                                                 )) : <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>}
                                             </ul>
+                                        </div>
+
+                                        <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                            <Tooltip title="Select" arrow>
+                                                <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                            </Tooltip>
+                                            <Tooltip title="Add New" arrow>
+                                                <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
+                                                    <Components.IconButton onClick={() => openAddContactModal()}>
+                                                        <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </Tooltip>
                                         </div>
                                     </div>
                                 </div>
@@ -2560,7 +2555,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 </div>
                                             ) : (
                                                 <div
-                                                    className="prose prose-sm max-w-none text-gray-800"
+                                                    className="prose prose-sm max-w-none"
                                                     dangerouslySetInnerHTML={{
                                                         __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>Click to describe current environment...</span>"
                                                     }}

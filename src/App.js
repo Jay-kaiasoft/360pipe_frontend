@@ -41,6 +41,7 @@ import Closeplan from "./pages/closeplan/closeplan";
 import Results from "./pages/dashboard/results/results";
 import Activities from "./pages/dashboard/activities/activities";
 import OppView from "./demoScreens/oppView";
+import TodoScreen from "./demoScreens/todo/todoScreen";
 
 library.add(fas, far, fab)
 
@@ -49,6 +50,10 @@ const App = ({ setLoading }) => {
     {
       path: "/demoscreens/opportunityview",
       element: <OppView />,
+    },
+    {
+      path: "/demoscreens/todo",
+      element: <TodoScreen />,
     },
     {
       path: "*",

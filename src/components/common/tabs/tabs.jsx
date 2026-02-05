@@ -1,7 +1,7 @@
 import Components from "../../muiComponents/components";
 import { useTheme } from "@mui/material";
 
-export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default" }) => {
+export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", center = false }) => {
   const theme = useTheme();
 
   const getTabStyle = (index) => {
@@ -54,6 +54,7 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default" }) 
       sx={{
         width: "100%",
         display: "flex",
+        justifyContent: center ? "center" : "start",
         gap: "20px",
         borderBottom: type === "default" ? "1px solid #E0E0E0" : "none",
         overflowX: "auto",

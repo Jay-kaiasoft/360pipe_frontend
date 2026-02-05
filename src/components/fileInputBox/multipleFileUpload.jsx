@@ -72,7 +72,7 @@ function MultipleFileUpload({
   };
 
   const TileFrame = ({ children }) => (
-    <div className="relative flex flex-col justify-start items-center w-28 h-36 border border-gray-300 rounded-lg overflow-hidden m-2 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className={`relative flex flex-col justify-start items-center w-28 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ${type === "OppDemo" ? "mx-2" : "m-2"}`}>
       {children}
     </div>
   );
@@ -323,7 +323,7 @@ function MultipleFileUpload({
 
   return (
     <div className="py-4 relative">
-      <div className={`${flexView ? "flex items-start" : ""}`}>
+      <div className={`${flexView ? "flex items-start " : ""}`}>
         {
           isFileUpload && (
             <div

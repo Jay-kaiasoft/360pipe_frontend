@@ -30,7 +30,7 @@ const toolbarProperties = {
   list: { options: ["unordered", "ordered"] },
 };
 
-const tableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Deal Docs" }, { label: "Calendar" }];
+const tableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Deal Docs" }];
 
 const DEMO_STAGES = [
   { id: 1, title: "Prospecting" },
@@ -1064,19 +1064,9 @@ export default function OppView() {
   const currentStageId = DEMO_STAGES.find((s) => s.title === opp.salesStage)?.id;
 
   return (
-    <div className="mx-auto relative p-4 sm:p-6 my-3">
-      <div>
-        {selectedTab === 0 ? (
-          <div className="absolute top-2 right-5">
-            <p className="text-red-600 text-lg">
-              <strong>Note:&nbsp;</strong>Fields can be edited by clicking.
-            </p>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="my-3">
-        <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} />
+    <div className="mx-auto relative p-4 sm:p-6">
+      <div className="mb-3">
+        <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} center={true} />
       </div>
 
       {/* -------------------- TAB 0: OPP360 -------------------- */}
@@ -1428,26 +1418,6 @@ export default function OppView() {
                 <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
 
                 <div className="flex items-center gap-2">
-                  {/* ✅ NEW: Select button */}
-                  <Tooltip title="Select contacts (toggle key contacts)" arrow>
-                    <button
-                      type="button"
-                      onClick={toggleSelectContactsOpen}
-                      className={`h-6 px-3 rounded-full border text-xs font-semibold transition ${isSelectContactsOpen ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
-                        }`}
-                    >
-                      Select
-                    </button>
-                  </Tooltip>
-
-                  {/* Add contact */}
-                  <Tooltip title="Add contact" arrow>
-                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
-                      <Components.IconButton onClick={openAddContactModal}>
-                        <CustomIcons iconName="fa-solid fa-plus" css="cursor-pointer text-white h-3 w-3" />
-                      </Components.IconButton>
-                    </div>
-                  </Tooltip>
 
                   {/* ✅ Select Contacts Popup */}
                   {isSelectContactsOpen && (
@@ -1455,13 +1425,13 @@ export default function OppView() {
                       ref={selectContactsRef}
                       className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden"
                     >
-                      <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
-                        <div>
+                      <div className="flex items-center justify-end px-4 py-2 border-b bg-gray-50">
+                        {/* <div>
                           <p className="text-sm font-semibold text-gray-900">Select Key Contacts</p>
                           <p className="text-xs text-gray-500">
                             Selected: <span className="font-semibold">{currentKeyContactsCount}</span>/4
                           </p>
-                        </div>
+                        </div> */}
 
                         <button
                           type="button"
@@ -1649,6 +1619,28 @@ export default function OppView() {
                 ) : (
                   <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
                 )}
+              </div>
+
+              <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                {/* ✅ NEW: Select button */}
+                <Tooltip title="Select contacts (toggle key contacts)" arrow>
+                  <button
+                    type="button"
+                    onClick={toggleSelectContactsOpen}
+                    className="h-6 px-3 rounded-full border text-xs text-white bg-black"
+                  >
+                    Select
+                  </button>
+                </Tooltip>
+
+                {/* Add contact */}
+                <Tooltip title="Add contact" arrow>
+                  <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white">
+                    <Components.IconButton onClick={openAddContactModal}>
+                      <CustomIcons iconName="fa-solid fa-plus" css="cursor-pointer text-white h-3 w-3" />
+                    </Components.IconButton>
+                  </div>
+                </Tooltip>
               </div>
             </div>
           </div>
@@ -1868,17 +1860,9 @@ export default function OppView() {
       {/* -------------------- TAB 2: Deal Docs (DEMO) -------------------- */}
       {selectedTab === 2 && (
         // <div className="border border-gray-200 rounded-md p-6">
-          <DealDocs />
+        <DealDocs />
         // </div>
-      )}
-
-      {/* -------------------- TAB 3: CALENDAR (DEMO) -------------------- */}
-      {selectedTab === 3 && (
-        <div className="border border-gray-200 rounded-md p-6">
-          <p className="text-gray-700 font-semibold">Calendar (Demo)</p>
-          {/* <img src="https://cdn.brandfetch.io/domain/webapp.salesandmarketing.ai?c=1id2vhiypCcqm7fpTjx" alt="Logo by Brandfetch" /> */}
-        </div>
-      )}
+      )}     
     </div>
   );
 }

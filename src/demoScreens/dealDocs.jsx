@@ -474,7 +474,7 @@ const DealDocs = () => {
                                                             </td>
 
                                                             {/* Upload */}
-                                                            <td className="px-4 py-4 border-b">
+                                                            <td className="px-4 border-b">
                                                                 <MultipleFileUpload
                                                                     files={row.files}
                                                                     setFiles={(v) => setRowFiles(row.id, v)}
@@ -484,6 +484,7 @@ const DealDocs = () => {
                                                                     isFileUpload={true}
                                                                     removableExistingAttachments={true}
                                                                     flexView={true}
+                                                                    type={"OppDemo"}
                                                                 />
                                                             </td>
 
@@ -518,29 +519,71 @@ const DealDocs = () => {
                                 </>
                             ) : (
                                 /* ✅ EDIT MODE (unchanged) */
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            File name
-                                        </label>
-                                        <input
-                                            value={resourceName}
-                                            onChange={(e) => setResourceName(e.target.value)}
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="Enter file name"
-                                        />
-                                    </div>
+                                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                    <div className="w-full overflow-x-auto">
+                                        <table className="w-full border-collapse">
+                                            <thead>
+                                                <tr className="text-left text-sm font-semibold text-gray-700 bg-white">
+                                                    <th className="px-4 py-3 border-b w-[260px]">File name</th>
+                                                    <th className="px-4 py-3 border-b">File</th>
+                                                    {/* <th className="px-4 py-3 border-b w-[90px] text-center">Action</th> */}
+                                                </tr>
+                                            </thead>
 
-                                    <MultipleFileUpload
-                                        files={modalFiles}
-                                        setFiles={setModalFiles}
-                                        existingImages={existingImages}
-                                        setExistingImages={setExistingImages}
-                                        placeHolder="Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"
-                                        isFileUpload={true}
-                                        removableExistingAttachments={true}
-                                    />
+                                            <tbody>
+                                                <tr className="align-top">
+                                                    {/* File name */}
+                                                    <td className="px-4 py-4 border-b">
+                                                        <input
+                                                            value={resourceName}
+                                                            onChange={(e) => setResourceName(e.target.value)}
+                                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                                                            placeholder="Enter file name"
+                                                        />
+                                                    </td>
+
+                                                    {/* Upload */}
+                                                    <td className="px-4 border-b">
+                                                        <MultipleFileUpload
+                                                            files={modalFiles}
+                                                            setFiles={setModalFiles}
+                                                            existingImages={existingImages}
+                                                            setExistingImages={setExistingImages}
+                                                            placeHolder="Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"
+                                                            isFileUpload={true}
+                                                            removableExistingAttachments={true}
+                                                            flexView={true}
+                                                            type={"OppDemo"}
+                                                        />
+                                                    </td>                                                  
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
+                                // <div className="space-y-4">
+                                //     <div>
+                                //         <label className="block text-sm font-medium text-gray-700 mb-1">
+                                //             File name
+                                //         </label>
+                                //         <input
+                                //             value={resourceName}
+                                //             onChange={(e) => setResourceName(e.target.value)}
+                                //             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                                //             placeholder="Enter file name"
+                                //         />
+                                //     </div>
+
+                                //     <MultipleFileUpload
+                                //         files={modalFiles}
+                                //         setFiles={setModalFiles}
+                                //         existingImages={existingImages}
+                                //         setExistingImages={setExistingImages}
+                                //         placeHolder="Drag & drop files here, or click to select files (png, jpg, jpeg, pdf, doc, docx, xls, xlsx, html)"
+                                //         isFileUpload={true}
+                                //         removableExistingAttachments={true}
+                                //     />
+                                // </div>
                             )}
                         </div>
 
