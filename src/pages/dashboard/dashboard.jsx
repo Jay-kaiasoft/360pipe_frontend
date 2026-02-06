@@ -15,9 +15,9 @@ const StatCard = ({ title, children }) => {
 };
 
 const formatMoneyK = (num) => {
-    const n = Number(num || 0);
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+    const n = parseInt(num || 0);
+    if (n >= 1_000_000) return `${parseInt(n / 1_000_000)}M`;
+    if (n >= 1_000) return `${parseInt(Math.round(n / 1_000))}K`;
     return `${n}`;
 };
 
@@ -47,23 +47,23 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
     }, [filterStartDate, filterEndDate])
 
     const ui = useMemo(() => {
-        const totalContacts = Number(dashboardData?.totalContacts || 0);
-        const totalMeetings = Number(dashboardData?.totalMeetings || 0);
-        const totalPipeLine = Number(dashboardData?.totalPipeLine || 0);
+        const totalContacts = parseInt(dashboardData?.totalContacts || 0);
+        const totalMeetings = parseInt(dashboardData?.totalMeetings || 0);
+        const totalPipeLine = parseInt(dashboardData?.totalPipeLine || 0);
 
         // If later you add these fields from backend, this UI will automatically show them:
-        const netNew = Number(dashboardData?.totalNewMeetings || 0);
-        const existing = Number(dashboardData?.totalOldMeetings || 0);
+        const netNew = parseInt(dashboardData?.totalNewMeetings || 0);
+        const existing = parseInt(dashboardData?.totalOldMeetings || 0);
 
         const totalClosedDealAmount =
-            dashboardData?.totalClosedDealAmount != null ? Number(dashboardData.totalClosedDealAmount) : null;
+            dashboardData?.totalClosedDealAmount != null ? parseInt(dashboardData.totalClosedDealAmount) : null;
 
         const totalDealAmount =
-            dashboardData?.totalDealAmount != null ? Number(dashboardData.totalDealAmount) : null;
+            dashboardData?.totalDealAmount != null ? parseInt(dashboardData.totalDealAmount) : null;
 
         const percentClosedDealAmount =
             totalDealAmount > 0 && totalClosedDealAmount != null
-                ? ((totalClosedDealAmount / totalDealAmount) * 100).toFixed(2)
+                ? parseInt(((totalClosedDealAmount / totalDealAmount) * 100))
                 : null;
 
         const pipeLineData = dashboardData?.pipeLineData || [];

@@ -136,7 +136,7 @@ export default function GroupedDataTable({
                                         </div>
 
                                         <h1 className="font-bold text-left min-w-[140px]">
-                                            ${parseFloat(group?.total)?.toLocaleString(
+                                            ${parseInt(group?.total)?.toLocaleString(
                                                 undefined,
                                             )}
                                         </h1>

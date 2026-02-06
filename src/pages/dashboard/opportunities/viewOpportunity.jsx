@@ -59,6 +59,8 @@ import {
     userTimeZone
 } from '../../../service/common/commonService';
 import { addMultipleContacts, getAllContacts } from "../../../service/contact/contactService";
+import EnvTable from "./envTable";
+import { getOpportunitiesCurrentEnvironmentByOppId } from "../../../service/opportunitiesCurrentEnvironment/opportunitiesCurrentEnvironmentService";
 
 // ----------------------------
 // Constants / Helpers
@@ -83,24 +85,6 @@ const htmlToEditorState = (html) => {
 };
 
 const editorStateToHtml = (state) => (state ? draftToHtml(convertToRaw(state.getCurrentContent())) : "");
-
-// function useClickOutside(ref, handler, when = true) {
-//     useEffect(() => {
-//         if (!when) return;
-//         const listener = (event) => {
-//             const el = ref?.current;
-//             if (!el) return;
-//             if (el.contains(event.target)) return;
-//             handler(event);
-//         };
-//         document.addEventListener("mousedown", listener, true);
-//         document.addEventListener("touchstart", listener, true);
-//         return () => {
-//             document.removeEventListener("mousedown", listener, true);
-//             document.removeEventListener("touchstart", listener, true);
-//         };
-//     }, [ref, handler, when]);
-// }
 
 function useClickOutside(ref, handler, when = true) {
     useEffect(() => {
@@ -158,6 +142,23 @@ const formatDate = (dateString) => {
         day: 'numeric'
     });
 };
+
+const parseVendorsJson = (vendorsStr) => {
+    if (!vendorsStr) return [];
+    try {
+        const arr = JSON.parse(vendorsStr);
+        if (!Array.isArray(arr)) return [];
+        return arr
+            .map((x) => ({
+                isChecked: !!x?.isChecked,
+                value: (x?.value ?? "").toString(),
+            }))
+            .filter((x) => x.value.trim() !== "");
+    } catch {
+        return [];
+    }
+};
+
 // ----------------------------
 // Main Component
 // ----------------------------
@@ -197,11 +198,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     const [activeEditorHint, setActiveEditorHint] = useState(null);
     const [whyDoAnythingStateHTML, setWhyDoAnythingStateHTML] = useState("");
     const [businessValueStateHTML, setBusinessValueStateHTML] = useState("");
-    const [currentEnvironmentHTML, setCurrentEnvironmentHTML] = useState("");
+    const [currentEnvRows, setcurrentEnvRow] = useState([]);
 
     const [whyDoAnythingState, setWhyDoAnythingState] = useState(EditorState.createEmpty());
     const [businessValueState, setBusinessValueState] = useState(EditorState.createEmpty());
-    const [currentEnvironmentState, setCurrentEnvironmentState] = useState(EditorState.createEmpty());
 
     // Click-to-edit toggles
     const [isEditingWhy, setIsEditingWhy] = useState(false);
@@ -323,10 +323,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             const valHtml = (r.businessValue || "").trim();
             setBusinessValueStateHTML(valHtml);
             setBusinessValueState(htmlToEditorState(valHtml));
-
-            const envHtml = (r.currentEnvironment || "").trim();
-            setCurrentEnvironmentHTML(envHtml);
-            setCurrentEnvironmentState(htmlToEditorState(envHtml));
         }
     };
 
@@ -398,10 +394,28 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         setAllContacts(data);
     };
 
+    const handleGetOpportunitiesCurrentEnvironmentByOppId = async () => {
+        try {
+            const res = await getOpportunitiesCurrentEnvironmentByOppId(opportunityId);
+            const rows = res?.result ?? [];
+
+            setcurrentEnvRow(
+                rows.map((r) => ({
+                    id: r?.id ?? null,
+                    solution: r?.solution ?? "",
+                    vendors: parseVendorsJson(r?.vendors),
+                }))
+            );
+        } catch (e) {
+            console.error("Failed to load current environment:", e);
+        }
+    }
+
     useEffect(() => {
         if (locaiton?.pathname.includes("opportunity-view")) {
             setOppSelectedTabIndex(0)
         }
+        handleGetOpportunitiesCurrentEnvironmentByOppId()
         handleGetAllAccounts();
         handleGetOpportunityDetails();
         handleGetOppContacts();
@@ -440,14 +454,12 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
         const whyHtml = editorStateToHtml(whyDoAnythingState);
         const valHtml = editorStateToHtml(businessValueState);
-        const envHtml = editorStateToHtml(currentEnvironmentState);
 
         let payload = {
             ...currentValues,
             [fieldName]: newValue,
             whyDoAnything: whyHtml,
             businessValue: valHtml,
-            currentEnvironment: envHtml,
         };
 
         if (["listPrice", "discountPercentage", "dealAmount"].includes(fieldName)) {
@@ -496,16 +508,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             ? draftToHtml(convertToRaw(businessValueState.getCurrentContent()))
             : null;
 
-        const currentEnvironmentHtmlData = currentEnvironmentState
-            ? draftToHtml(convertToRaw(currentEnvironmentState.getCurrentContent()))
-            : null;
-
 
         let payload = {
             ...currentValues,
             whyDoAnything: whyDoAnythingHtmlData,
             businessValue: businessValueHtmlData,
-            currentEnvironment: currentEnvironmentHtmlData,
             nextSteps: watch("nextSteps"),
         };
 
@@ -514,7 +521,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         if (res?.status === 200) {
             setWhyDoAnythingStateHTML(whyDoAnythingHtmlData);
             setBusinessValueStateHTML(businessValueHtmlData);
-            setCurrentEnvironmentHTML(currentEnvironmentHtmlData);
         }
     };
 
@@ -534,7 +540,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     useClickOutside(envCardRef, () => {
         if (!isEditingEnv) return;
-        handleSaveEditor("currentEnvironment");
+        // handleSaveEditor("currentEnvironment");
         setIsEditingEnv(false);
     }, isEditingEnv);
 
@@ -734,7 +740,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         }
     };
 
-
     const handleOpenDeleteDialog = async (id) => {
         setSelectedContactId(id)
         setDialogContact({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this contact?', actionButtonText: 'yes' })
@@ -850,7 +855,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         const currentValues = getValues();
         const toCleanNum = (val) => {
             if (!val) return null;
-            const n = Number(String(val).replace(/,/g, ""));
+            const n = parseInt(String(val).replace(/,/g, ""));
             return isNaN(n) ? null : n;
         };
 
@@ -862,7 +867,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             // Include your editor states
             whyDoAnything: editorStateToHtml(whyDoAnythingState),
             businessValue: editorStateToHtml(businessValueState),
-            currentEnvironment: editorStateToHtml(currentEnvironmentState),
         };
 
         // SINGLE API CALL
@@ -948,37 +952,41 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // 1. Clean formatting
-        let cleaned = value.replace(/,/g, "").replace(/[^\d.]/g, "");
-        const parts = cleaned.split(".");
-        if (parts.length > 2) cleaned = parts[0] + "." + parts.slice(1).join("");
+        // 1) Integer-only sanitize + format with commas
+        // remove commas, then keep only digits
+        const cleanedDigits = String(value).replace(/,/g, "").replace(/\D/g, ""); // ✅ no dot allowed
+        const formatted = cleanedDigits
+            ? cleanedDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            : "";
 
-        const [intPart, decimalPartRaw] = cleaned.split(".");
-        let formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        if (decimalPartRaw !== undefined) {
-            formatted = `${formatted}.${decimalPartRaw.slice(0, 2)}`;
-        }
-
-        // 2. Prepare values for calculation
-        const toNum = (val) => parseFloat(String(val).replace(/,/g, "")) || 0;
+        // 2) Prepare values for calculation (integer-only)
+        const toInt = (val) => {
+            const digits = String(val ?? "").replace(/,/g, "").replace(/\D/g, "");
+            return digits ? parseInt(digits, 10) : 0;
+        };
 
         // Use the new value for the field being changed, and existing draft values for the others
-        let lp = name === "listPrice" ? toNum(formatted) : toNum(pricingDraft.listPrice);
-        let dp = name === "discountPercentage" ? toNum(formatted) : toNum(pricingDraft.discountPercentage);
-        let da = name === "dealAmount" ? toNum(formatted) : toNum(pricingDraft.dealAmount);
+        let lp = name === "listPrice" ? toInt(formatted) : toInt(pricingDraft.listPrice);
+        let dp = name === "discountPercentage" ? toInt(formatted) : toInt(pricingDraft.discountPercentage);
+        let da = name === "dealAmount" ? toInt(formatted) : toInt(pricingDraft.dealAmount);
 
         let updatedDraft = { ...pricingDraft, [name]: formatted };
 
-        // 3. Calculation Logic
+        // 3) Calculation Logic (same behavior)
         if (name === "listPrice" || name === "discountPercentage") {
-            // Calculate Deal Amount: LP - (LP * DP / 100)
-            const newDeal = lp - (lp * dp / 100);
-            updatedDraft.dealAmount = newDeal.toLocaleString('en-US');
+            // Deal Amount: LP - (LP * DP / 100)
+            const newDeal = Math.round(lp - (lp * dp) / 100); // ✅ integer result
+            updatedDraft.dealAmount = newDeal ? newDeal.toLocaleString("en-US") : "";
         } else if (name === "dealAmount") {
-            // Calculate Discount %: ((LP - DA) / LP) * 100
+            // Discount %: ((LP - DA) / LP) * 100
             if (lp > 0) {
                 const newDiscount = ((lp - da) / lp) * 100;
-                updatedDraft.discountPercentage = newDiscount.toFixed(2);
+                // you can keep 2 decimals for calculated discount (recommended)
+                updatedDraft.discountPercentage = Number.isFinite(newDiscount)
+                    ? newDiscount.toFixed(2)
+                    : "";
+            } else {
+                updatedDraft.discountPercentage = "";
             }
         }
 
@@ -1686,7 +1694,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                             {/* Pricing Popover Trigger */}
                             <div className="relative cursor-pointer w-full">
                                 <p className="font-semibold text-black" onClick={openPricingBox}>
-                                    {watch("dealAmount") ? `$${Number(watch("dealAmount")).toLocaleString()}` : "—"}
+                                    {watch("dealAmount") ? `$${parseInt(watch("dealAmount")).toLocaleString()}` : "—"}
                                 </p>
                                 {showPricingBox && (
                                     <div ref={pricingBoxRef} className="absolute z-50 right-0 top-10 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
@@ -1694,7 +1702,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             <label className="text-xs font-semibold">List Amount</label>
                                             <Input
                                                 name="listPrice"
-                                                placeholder="0.00"
+                                                placeholder="0"
                                                 value={pricingDraft.listPrice || ""}
                                                 onChange={handleChange}
                                                 error={pricingDraft.listPrice === ""}
@@ -1715,7 +1723,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             <label className="text-xs font-semibold">Deal Amount</label>
                                             <Input
                                                 name="dealAmount"
-                                                placeholder="0.00"
+                                                placeholder="0"
                                                 value={pricingDraft.dealAmount || ""}
                                                 onChange={handleChange}
                                             />
@@ -1847,7 +1855,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         </div>
 
                         {/* Key Contacts */}
-                        <div className="border-2 border-black p-3 rounded-3xl flex flex-col relative h-60">
+                        <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
                             <div className="flex justify-start items-center mb-4">
                                 <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
                             </div>
@@ -1997,32 +2005,64 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
                             )}
 
-                            <div className="overflow-y-auto">
-                                <ul className="pl-3 text-sm">
-                                    {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
-                                        <li key={c.id}>
-                                            <span className="font-medium text-indigo-600 text-base">
-                                                {c.contactName}
-                                                {c.title && (
-                                                    <span className="ttext-base text-gray-500">
-                                                        <span className="mx-1">–</span>
-                                                        {c.title.length > 20
-                                                            ? `${c.title.slice(0, 20)}...`
-                                                            : c.title}
+                            <div className="overflow-y-auto px-1">
+                                <ul className="text-sm">
+                                    {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                        allContactsWithEdits
+                                            ?.filter((row) => row.isKey === true)
+                                            .map((c) => (
+                                                <li
+                                                    key={c.id}
+                                                    className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
+                                                >
+                                                    <span className="font-medium text-indigo-600 text-base truncate">
+                                                        {c.contactName}
                                                     </span>
 
-                                                )}
-                                            </span>
-                                            {c.role && (
-                                                <>
-                                                    <span className="mx-1">–</span>
-                                                    <span className="text-indigo-600 text-base">{c.role}</span>
-                                                </>
-                                            )}
-                                        </li>
-                                    )) : <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>}
+                                                    <span className="text-gray-500 text-base truncate">
+                                                        {c.title || ""}
+                                                    </span>
+
+                                                    <span className="text-indigo-600 text-base truncate">
+                                                        {c.role || ""}
+                                                    </span>
+                                                </li>
+                                            ))
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">
+                                            No contacts linked to this opportunity.
+                                        </p>
+                                    )}
                                 </ul>
                             </div>
+
+                            {/* <div className="overflow-y-auto">
+                                {allContactsWithEdits?.filter((row) => row.isKey)?.length > 0 ? (
+                                    <ul className="pl-3 text-sm grid grid-cols-[max-content_minmax(0,1fr)_max-content] gap-x-6 gap-y-2 items-center">
+                                        {allContactsWithEdits
+                                            ?.filter((row) => row.isKey)
+                                            ?.map((c) => (
+                                                <li key={c.id} className="contents">
+                                                    <span className="font-medium text-indigo-600 text-base whitespace-nowrap">
+                                                        {c.contactName}
+                                                    </span>
+
+                                                    <span className="text-gray-500 text-base truncate">
+                                                        {c.title ? `– ${c.title}` : ""}
+                                                    </span>
+
+                                                    <span className="text-indigo-600 text-base whitespace-nowrap">
+                                                        {c.role ? `– ${c.role}` : ""}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic pl-3">
+                                        No contacts linked to this opportunity.
+                                    </p>
+                                )}
+                            </div> */}
 
                             <div className="flex items-end gap-2 absolute bottom-3 right-3">
                                 <Tooltip title="Select" arrow>
@@ -2068,30 +2108,28 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 onClick={() => !isEditingEnv && setIsEditingEnv(true)}
                             >
                                 {isEditingEnv ? (
-                                    <div className="editor-container-integrated">
-                                        <Editor
-                                            editorState={currentEnvironmentState}
-                                            wrapperClassName="editor-wrapper-custom"
-                                            editorClassName="editor-main-custom"
-                                            toolbarClassName="editor-toolbar-custom"
-                                            onEditorStateChange={setCurrentEnvironmentState}
-                                            toolbar={toolbarProperties}
-                                        />
-                                    </div>
+                                    <EnvTable opportunityId={opportunityId} handleGetOpportunitiesCurrentEnvironmentByOppId={handleGetOpportunitiesCurrentEnvironmentByOppId} />
                                 ) : (
-                                    <div
-                                        className="prose prose-sm max-w-none"
-                                        dangerouslySetInnerHTML={{
-                                            __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>Click to describe current environment...</span>"
-                                        }}
-                                    />
+                                    <div>
+                                        <ul>                                           
+                                            {
+                                                currentEnvRows?.map((row) => (
+                                                    row?.vendors?.length > 0 && row?.vendors?.filter((item) => item.isChecked)?.map((r, index) => (
+                                                        <li key={index}>
+                                                            {r.value}
+                                                        </li>
+                                                    ))
+                                                ))
+                                            }
+                                        </ul>
+                                    </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Next Steps */}
-                        <div ref={nextStepsRef} className="border-2 border-black p-3 rounded-3xl flex flex-col h-60 cursor-pointer" onClick={() => setIsEditingNextSteps(true)}>
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-2">Next Steps</p>
+                        <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
+                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4">Next Steps</p>
                             {isEditingNextSteps ?
                                 <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
                                 <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
@@ -2316,21 +2354,9 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
 
                                     {/* Key Contacts */}
-                                    <div className="border-2 border-black p-3 rounded-3xl flex flex-col relative h-60">
+                                    <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
                                         <div className="flex justify-start items-center mb-4">
                                             <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
-                                            {/* <div className="flex items-center gap-2">
-                                                <Tooltip title="Select" arrow>
-                                                    <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
-                                                </Tooltip>
-                                                <Tooltip title="Add New" arrow>
-                                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
-                                                        <Components.IconButton onClick={() => openAddContactModal()}>
-                                                            <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
-                                            </div> */}
                                         </div>
 
                                         {isSelectContactsOpen && (
@@ -2339,6 +2365,12 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                     <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
                                                         <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
                                                         <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
+                                                        <Components.IconButton onClick={() => openEditContactModal(c)}>
+                                                            <CustomIcons
+                                                                iconName="fa-solid fa-pen-to-square"
+                                                                css="text-blue-600 cursor-pointer h-4 w-4"
+                                                            />
+                                                        </Components.IconButton>
                                                         <Components.IconButton onClick={() => handleOpenDeleteDialog(c.id)}>
                                                             <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer h-4 w-4" />
                                                         </Components.IconButton>
@@ -2386,8 +2418,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                             </thead>
 
                                                             <tbody>
-                                                                {contactRows.map((row) => (
-                                                                    <tr key={row.tempId} className="bg-white">
+                                                                {contactRows.map((row, index) => (
+                                                                    <tr key={index} className="bg-white">
                                                                         {/* Name */}
                                                                         <td className="px-1 py-1 align-middle w-48">
                                                                             <Select
@@ -2466,36 +2498,40 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         onClick={saveContactsFromModal}
                                                         className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
                                                     >
-                                                        Add
+                                                        {editingOppContactId ? "Update" : "Add"}
                                                     </button>
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div className="overflow-y-auto">
-                                            <ul className="pl-3 text-sm">
-                                                {allContactsWithEdits?.filter((row) => row.isKey === true)?.length > 0 ? allContactsWithEdits?.filter((row) => row.isKey === true)?.map((c) => (
-                                                    <li key={c.id}>
-                                                        <span className="font-medium text-indigo-600 text-base">
-                                                            {c.contactName}
-                                                            {c.title && (
-                                                                <span className="ttext-base text-gray-500">
-                                                                    <span className="mx-1">–</span>
-                                                                    {c.title.length > 20
-                                                                        ? `${c.title.slice(0, 20)}...`
-                                                                        : c.title}
+                                        <div className="overflow-y-auto px-1">
+                                            <ul className="text-sm">
+                                                {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                                    allContactsWithEdits
+                                                        ?.filter((row) => row.isKey === true)
+                                                        .map((c) => (
+                                                            <li
+                                                                key={c.id}
+                                                                className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
+                                                            >
+                                                                <span className="font-medium text-indigo-600 text-base truncate">
+                                                                    {c.contactName}
                                                                 </span>
 
-                                                            )}
-                                                        </span>
-                                                        {c.role && (
-                                                            <>
-                                                                <span className="mx-1">–</span>
-                                                                <span className="text-indigo-600 text-base">{c.role}</span>
-                                                            </>
-                                                        )}
-                                                    </li>
-                                                )) : <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>}
+                                                                <span className="text-gray-500 text-base truncate">
+                                                                    {c.title || ""}
+                                                                </span>
+
+                                                                <span className="text-indigo-600 text-base truncate">
+                                                                    {c.role || ""}
+                                                                </span>
+                                                            </li>
+                                                        ))
+                                                ) : (
+                                                    <p className="text-sm text-gray-400 italic">
+                                                        No contacts linked to this opportunity.
+                                                    </p>
+                                                )}
                                             </ul>
                                         </div>
 
@@ -2538,34 +2574,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             Current Environment
                                         </p>
 
-                                        <div
-                                            className={`flex-1 ${!isEditingEnv ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
-                                            onClick={() => !isEditingEnv && setIsEditingEnv(true)}
-                                        >
-                                            {isEditingEnv ? (
-                                                <div className="editor-container-integrated">
-                                                    <Editor
-                                                        editorState={currentEnvironmentState}
-                                                        wrapperClassName="editor-wrapper-custom"
-                                                        editorClassName="editor-main-custom"
-                                                        toolbarClassName="editor-toolbar-custom"
-                                                        onEditorStateChange={setCurrentEnvironmentState}
-                                                        toolbar={toolbarProperties}
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div
-                                                    className="prose prose-sm max-w-none"
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: currentEnvironmentHTML || "<span class='text-gray-400 italic'>Click to describe current environment...</span>"
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
+
                                     </div>
 
                                     {/* Next Steps */}
-                                    <div ref={nextStepsRef} className="border-2 border-black p-3 rounded-3xl flex flex-col h-60 cursor-pointer" onClick={() => setIsEditingNextSteps(true)}>
+                                    <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
                                         <p className="font-medium text-black tracking-wider text-2xl text-center mb-2">Next Steps</p>
                                         {isEditingNextSteps ?
                                             <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :

@@ -45,6 +45,8 @@ export const productsUrl = baseURL + '/products'
 export const opportunitiesProductURL = baseURL + '/opportunitiesProduct'
 export const opportunitiesContactURL = baseURL + '/opportunitiesContact'
 export const opportunitiesNotesURL = baseURL + '/opportunitiesComment'
+export const opportunitiesCurrentEnvironmentURL = baseURL + '/opportunitiesCurrentEnvironment'
+
 export const processNameURL = baseURL + '/process-name'
 export const salesProcessURL = baseURL + '/sales-process'
 export const salesStageURL = baseURL + '/salesStage'

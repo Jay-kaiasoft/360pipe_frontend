@@ -33,9 +33,8 @@ const calendarType = [
 
 const terms = [
     { id: 1, title: 'Monthly', kind: 'monthly' },
-    { id: 2, title: 'Quarterly', kind: 'quarterly' },
-    { id: 3, title: 'Semi-Annual', kind: 'semi' },
-    { id: 4, title: 'Annual', kind: 'annual' },
+    { id: 2, title: 'Semi-Annual', kind: 'semi' },
+    { id: 3, title: 'Annual', kind: 'quarterly' },
 ];
 
 const TERM_COUNTS = {
@@ -95,25 +94,6 @@ function buildLabelsForKind(kind, startMonthIndex) {
             return [];
     }
 }
-
-const formatMoney = (val) => {
-    if (!val) return "";
-    const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, "").split(".");
-
-    const intWithCommas = intPartRaw
-        .replace(/\D/g, "")
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-    if (decimalRaw !== undefined) {
-        return `${intWithCommas}.${decimalRaw.slice(0, 2)}`;
-    }
-    return intWithCommas;
-};
-
-const parseMoneyFloat = (val) => {
-    if (!val) return 0;
-    return parseFloat(val.replace(/,/g, "")).toFixed(2);
-};
 
 function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, handleGetAllUsers }) {
     const theme = useTheme()
@@ -386,6 +366,51 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         }
     }, [watch("calendarYearType")]);
 
+    // keep digits only
+    const sanitizeInt = (val) => {
+        if (val === null || val === undefined) return '';
+        return String(val).replace(/\D/g, '');
+    };
+
+    // format integer with commas
+    const formatInt = (val) => {
+        const digits = sanitizeInt(val);
+        if (!digits) return '';
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    // parse integer safely
+    const parseIntSafe = (val) => {
+        const digits = sanitizeInt(String(val ?? '').replace(/,/g, ''));
+        return digits ? parseInt(digits, 10) : 0;
+    };
+
+
+    const handleIntegerChange = (field, e) => {
+        const target = e.target;
+        const raw = target.value;
+        const caret = target.selectionStart ?? raw.length;
+
+        const digitsBeforeCaret = sanitizeInt(raw.slice(0, caret)).length;
+
+        const cleaned = sanitizeInt(raw);
+        const formatted = formatInt(cleaned);
+
+        field.onChange(formatted);
+
+        requestAnimationFrame(() => {
+            try {
+                let pos = 0, seen = 0;
+                while (pos < formatted.length && seen < digitsBeforeCaret) {
+                    if (/\d/.test(formatted[pos])) seen++;
+                    pos++;
+                }
+                target.setSelectionRange(pos, pos);
+            } catch { }
+        });
+    };
+
+
     const formatMoney = (val) => {
         if (!val && val !== 0) return "";
         const [intPartRaw, decimalRaw] = val.toString().replace(/,/g, "").split(".");
@@ -400,35 +425,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
         return intWithCommas;
     };
 
-    const sanitizeMoney = (val) => {
-        if (!val) return "";
-
-        // keep only digits and dot
-        val = val.replace(/[^0-9.]/g, "");
-
-        // allow only a single dot
-        const firstDotIndex = val.indexOf(".");
-        if (firstDotIndex !== -1) {
-            const before = val.slice(0, firstDotIndex + 1);
-            const after = val.slice(firstDotIndex + 1).replace(/\./g, "");
-            val = before + after;
-        }
-
-        let [intPart, decPart] = val.split(".");
-        intPart = intPart || "";
-
-        if (decPart !== undefined) {
-            decPart = decPart.slice(0, 2); // max 2 decimals
-        }
-
-        return decPart !== undefined ? `${intPart}.${decPart}` : intPart;
-    };
-
-    const parseMoneyFloat = (val) => {
-        if (!val) return 0;
-        return parseFloat(val.replace(/,/g, "")).toFixed(2);
-    };
-
     const handleSetQuota = async (id) => {
         if (id) {
             const response = await getQuota(id);
@@ -439,7 +435,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                 setValue('quotaId', r?.id || '');
 
                 // 🟢 show 3,435.54 style in quota input
-                setValue('quota', r?.quota != null ? formatMoney(r.quota) : '');
+                setValue('quota', r?.quota != null ? formatInt(Math.round(r.quota)) : '');
 
                 // Map incoming term title back to our id
                 const termData = terms.find(item => item.title === r?.term);
@@ -515,20 +511,22 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
         const quotaData = {
             id: watch("quotaId"),
-            quota: parseFloat(parseMoneyFloat(watch("quota"))),
-            term: selectedTerm.title, // fix: use our terms array
-            amount1: parseFloat(parseMoneyFloat(watch("amount1"))),
-            amount2: parseFloat(parseMoneyFloat(watch("amount2"))),
-            amount3: parseFloat(parseMoneyFloat(watch("amount3"))),
-            amount4: parseFloat(parseMoneyFloat(watch("amount4"))),
-            amount5: parseFloat(parseMoneyFloat(watch("amount5"))),
-            amount6: parseFloat(parseMoneyFloat(watch("amount6"))),
-            amount7: parseFloat(parseMoneyFloat(watch("amount7"))),
-            amount8: parseFloat(parseMoneyFloat(watch("amount8"))),
-            amount9: parseFloat(parseMoneyFloat(watch("amount9"))),
-            amount10: parseFloat(parseMoneyFloat(watch("amount10"))),
-            amount11: parseFloat(parseMoneyFloat(watch("amount11"))),
-            amount12: parseFloat(parseMoneyFloat(watch("amount12"))),
+            quota: parseIntSafe(watch("quota")),
+            term: selectedTerm.title,
+
+            amount1: parseIntSafe(watch("amount1")),
+            amount2: parseIntSafe(watch("amount2")),
+            amount3: parseIntSafe(watch("amount3")),
+            amount4: parseIntSafe(watch("amount4")),
+            amount5: parseIntSafe(watch("amount5")),
+            amount6: parseIntSafe(watch("amount6")),
+            amount7: parseIntSafe(watch("amount7")),
+            amount8: parseIntSafe(watch("amount8")),
+            amount9: parseIntSafe(watch("amount9")),
+            amount10: parseIntSafe(watch("amount10")),
+            amount11: parseIntSafe(watch("amount11")),
+            amount12: parseIntSafe(watch("amount12")),
+
             customerId: id,
         };
 
@@ -768,33 +766,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                             {...field}
                                                             label="Quota"
                                                             type="text"
-                                                            onChange={(e) => {
-                                                                const target = e.target;
-                                                                const rawInput = target.value;
-                                                                const caretPos = target.selectionStart ?? rawInput.length;
-
-                                                                // 1) Clean & format full string
-                                                                const cleanedFull = sanitizeMoney(rawInput);
-                                                                const formattedFull = formatMoney(cleanedFull);
-
-                                                                // 2) Figure out where the caret SHOULD be after formatting
-                                                                const rawBeforeCaret = rawInput.slice(0, caretPos);
-                                                                const cleanedBeforeCaret = sanitizeMoney(rawBeforeCaret);
-                                                                const formattedBeforeCaret = formatMoney(cleanedBeforeCaret);
-                                                                const newCaretPos = formattedBeforeCaret.length;
-
-                                                                // 3) Update form value with formatted text
-                                                                field.onChange(formattedFull);
-
-                                                                // 4) Restore caret position after React updates the input
-                                                                requestAnimationFrame(() => {
-                                                                    try {
-                                                                        target.setSelectionRange(newCaretPos, newCaretPos);
-                                                                    } catch (err) {
-                                                                        // ignore if input is gone
-                                                                    }
-                                                                });
-                                                            }}
+                                                            onChange={(e) => handleIntegerChange(field, e)}
                                                             startIcon={
                                                                 <CustomIcons
                                                                     iconName={"fa-solid fa-dollar-sign"}
@@ -831,27 +803,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                                                     {...field}
                                                                                     label={labelText}
                                                                                     type="text"
-                                                                                    onChange={(e) => {
-                                                                                        const target = e.target;
-                                                                                        const rawInput = target.value;
-                                                                                        const caretPos = target.selectionStart ?? rawInput.length;
-
-                                                                                        const cleanedFull = sanitizeMoney(rawInput);
-                                                                                        const formattedFull = formatMoney(cleanedFull);
-
-                                                                                        const rawBeforeCaret = rawInput.slice(0, caretPos);
-                                                                                        const cleanedBeforeCaret = sanitizeMoney(rawBeforeCaret);
-                                                                                        const formattedBeforeCaret = formatMoney(cleanedBeforeCaret);
-                                                                                        const newCaretPos = formattedBeforeCaret.length;
-
-                                                                                        field.onChange(formattedFull);
-
-                                                                                        requestAnimationFrame(() => {
-                                                                                            try {
-                                                                                                target.setSelectionRange(newCaretPos, newCaretPos);
-                                                                                            } catch (err) { }
-                                                                                        });
-                                                                                    }}
+                                                                                    onChange={(e) => handleIntegerChange(field, e)}
                                                                                     error={errors?.[fieldName]}
                                                                                     startIcon={
                                                                                         <CustomIcons

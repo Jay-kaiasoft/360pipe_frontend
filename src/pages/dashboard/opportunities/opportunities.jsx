@@ -531,16 +531,16 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             editable: canEditOpps,
             headerClassName: 'uppercase',
             renderCell: (params) => {
-                const val = params.value;
+                const val = parseInt(params.value);
                 if (val === null || val === undefined || val === '') {
-                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString('en-US')}`, params, <span>-</span>);
+                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${parseInt(params.row.discountPercentage)}(%) = $${parseInt(params.row.dealAmount)?.toLocaleString('en-US')}`, params, <span>-</span>);
                 }
-                const num = parseFloat(val);
+                const num = parseInt(val);
                 if (Number.isNaN(num)) {
-                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString('en-US')}`, params, <span>-</span>);
+                    return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${parseInt(params.row.discountPercentage)}(%) = $${parseInt(params.row.dealAmount)?.toLocaleString('en-US')}`, params, <span>-</span>);
                 }
                 const formatted = `$${num.toLocaleString('en-US')}`;
-                return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${params.row.discountPercentage}(%) = $${params.row.dealAmount?.toLocaleString('en-US')}`, params, <span>{formatted}</span>);
+                return withEditTooltip(`$${params.row.listPrice?.toLocaleString('en-US')}-${parseInt(params.row.discountPercentage)}(%) = $${parseInt(params.row.dealAmount)?.toLocaleString('en-US')}`, params, <span>{formatted}</span>);
             },
             renderEditCell: (params) => <DealAmountEditCell {...params} />,
         },
@@ -551,7 +551,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             maxWidth: 200,
             headerClassName: 'uppercase',
             editable: canEditOpps,
-            renderCell: (params) => {                               
+            renderCell: (params) => {
                 withEditTooltip(
                     "Click To Edit",
                     params,
@@ -963,44 +963,24 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         const { id, field, api, value } = params;
 
         const wrapperRef = React.useRef(null);
-
         const inputRef = React.useRef(null);
 
+        // ✅ format ONLY integer digits with commas
         const formatWithCommas = (raw) => {
-            if (!raw) return "";
-            const [intRaw, decRaw] = raw.toString().split(".");
-            const intOnly = intRaw.replace(/\D/g, "");
-            const intWithCommas = intOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            if (decRaw !== undefined) return `${intWithCommas}.${decRaw}`;
-            return intWithCommas;
+            if (raw === null || raw === undefined || raw === "") return "";
+            const intOnly = raw.toString().replace(/\D/g, ""); // digits only
+            if (!intOnly) return "";
+            return intOnly.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         };
 
+        // ✅ sanitize to ONLY integer digits (no dot ever)
         const sanitizeValue = (val) => {
-            if (!val) return "";
-
-            // keep only digits and dots
-            val = val.replace(/[^0-9.]/g, "");
-
-            // allow only one dot
-            const firstDotIndex = val.indexOf(".");
-            if (firstDotIndex !== -1) {
-                const before = val.slice(0, firstDotIndex + 1);
-                const after = val.slice(firstDotIndex + 1).replace(/\./g, "");
-                val = before + after;
-            }
-
-            let [intPart, decPart] = val.split(".");
-            intPart = intPart || "";
-
-            if (decPart !== undefined) {
-                decPart = decPart.slice(0, 2); // max 2 decimals
-            }
-
-            return decPart !== undefined ? `${intPart}.${decPart}` : intPart;
+            if (val === null || val === undefined) return "";
+            return val.toString().replace(/\D/g, ""); // remove everything except digits
         };
 
         const [inputValue, setInputValue] = React.useState(() => {
-            if (!value && value !== 0) return "";
+            if (value === null || value === undefined || value === "") return "";
             return formatWithCommas(value);
         });
 
@@ -1010,24 +990,31 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             const rawInput = event.target.value;
             const caretPos = event.target.selectionStart ?? rawInput.length;
 
-            // sanitize full string
-            const cleanedFull = sanitizeValue(rawInput);
-            const formattedFull = formatWithCommas(cleanedFull);
+            // caret calc: how many digits before caret (ignore commas/other chars)
+            const digitsBeforeCaret = sanitizeValue(rawInput.slice(0, caretPos)).length;
 
-            // now compute where caret should land after formatting
-            const rawBeforeCaret = rawInput.slice(0, caretPos);
-            const cleanedBeforeCaret = sanitizeValue(rawBeforeCaret);
-            const formattedBeforeCaret = formatWithCommas(cleanedBeforeCaret);
-            const newCaretPos = formattedBeforeCaret.length;
+            // sanitize full, then format
+            const cleanedFull = sanitizeValue(rawInput);     // "12345"
+            const formattedFull = formatWithCommas(cleanedFull); // "12,345"
 
             setInputValue(formattedFull);
+
+            // ✅ store only integer digits in grid state
             api.setEditCellValue({ id, field, value: cleanedFull }, event);
 
-            // restore caret position after React re-renders
+            // restore caret after formatting: place caret after same count of digits
             requestAnimationFrame(() => {
-                if (inputRef.current) {
-                    inputRef.current.setSelectionRange(newCaretPos, newCaretPos);
+                if (!inputRef.current) return;
+
+                let pos = 0;
+                let digitCount = 0;
+
+                while (pos < formattedFull.length && digitCount < digitsBeforeCaret) {
+                    if (/\d/.test(formattedFull[pos])) digitCount++;
+                    pos++;
                 }
+
+                inputRef.current.setSelectionRange(pos, pos);
             });
         };
 
@@ -1036,11 +1023,20 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         };
 
         const handleCancel = () => {
-            api.setEditCellValue({ id, field, value: originalValue.current });
+            api.setEditCellValue(
+                {
+                    id,
+                    field,
+                    value:
+                        originalValue.current === null || originalValue.current === undefined
+                            ? ""
+                            : sanitizeValue(originalValue.current),
+                }
+            );
             api.stopCellEditMode({ id, field, ignoreModifications: true });
         };
 
-        // ✅ click outside -> save (commit) and close edit mode
+        // ✅ click outside -> save
         useClickAwayCommit({
             wrapperRef,
             enabled: true,
@@ -1054,18 +1050,22 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         });
 
         return (
-            <div ref={wrapperRef} className="deal-amount-edit-container flex justify-start items-center gap-3 px-3">
+            <div
+                ref={wrapperRef}
+                className="deal-amount-edit-container flex justify-start items-center gap-3 px-3"
+            >
                 <Input
                     ref={inputRef}
                     value={inputValue}
                     onChange={handleChange}
                     autoFocus
+                    inputMode="numeric"
                     onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
+                        if (e.key === "Escape") {
                             e.stopPropagation();
                             handleCancel();
                         }
-                        if (e.key === 'Enter') {
+                        if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
                             if (inputValue === null || inputValue === "") {
@@ -1073,6 +1073,12 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                                 return;
                             }
                             handleSave();
+                        }
+
+                        // ✅ optional: block "." and other non-digit typing at keydown level too
+                        if (e.key === "." || e.key === ",") {
+                            // comma will be auto-added by formatting; user doesn't need to type it
+                            e.preventDefault();
                         }
                     }}
                 />
@@ -1288,7 +1294,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     };
 
     return (
-        <>       
+        <>
             <div className='border rounded-lg bg-white w-full lg:w-full'>
                 <GroupedDataTable
                     groups={opportunities}
@@ -1317,7 +1323,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 handleClose={handleCloseInfoModel}
                 opportunityId={selectedOpportunityId}
             />
-            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities}/>
+            <KeyContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={selectedOpportunityId} handleGetAllOpportunities={handleGetOpportunities} />
             <ClosePlanCommentModel open={openCommentsModel} handleClose={handleCloseCommentModel} opportunityId={selectedOpportunityId} />
         </>
     )
