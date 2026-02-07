@@ -9,6 +9,7 @@ import Components from "../muiComponents/components";
 import { deleteOpportunitiesDocs, updateOpportunitiesDocs } from "../../service/opportunities/opportunitiesService";
 import PermissionWrapper from "../common/permissionWrapper/PermissionWrapper";
 import AlertDialog from "../common/alertDialog/alertDialog";
+import { deleteAttachments, deleteAttachmentsFiles } from "../../service/docsAttachments/docsAttachmentsService";
 
 function MultipleFileUpload({
   files,
@@ -24,7 +25,8 @@ function MultipleFileUpload({
   setDeleteLogo,
   isFileUpload = true,
   removableExistingAttachments = true,
-  flexView = false
+  flexView = false,
+  fallbackFunction = () => {}
 }) {
   const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
   const [selectedImageId, setSelectedImageId] = useState(null);
@@ -72,7 +74,7 @@ function MultipleFileUpload({
   };
 
   const TileFrame = ({ children }) => (
-    <div className={`relative flex flex-col justify-start items-center w-28 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ${type === "OppDemo" ? "mx-2" : "m-2"}`}>
+    <div className={`relative flex flex-col justify-start items-center w-28 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ${type === "docsAttachments" ? "mx-2" : "m-2"}`}>
       {children}
     </div>
   );
@@ -305,6 +307,17 @@ function MultipleFileUpload({
         const data = existingImages?.filter((row) => row.imageId !== selectedImageId);
         setExistingImages(data);
         handleCloseDeleteDialog()
+      } else {
+        setAlert({ open: true, message: response.message, type: "error" });
+      }
+    }
+    if (type === "docsAttachments") {
+      const response = await deleteAttachments(selectedImageId);
+      if (response?.status === 200) {
+        const data = existingImages?.filter((row) => row.imageId !== selectedImageId);
+        setExistingImages(data);
+        fallbackFunction();        
+        handleCloseDeleteDialog();
       } else {
         setAlert({ open: true, message: response.message, type: "error" });
       }

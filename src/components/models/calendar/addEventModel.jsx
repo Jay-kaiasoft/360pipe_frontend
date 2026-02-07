@@ -248,7 +248,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 const end = event.end ? dayjs(event.end, 'MM/DD/YYYY HH:mm:ss') : null;
 
                 // console.log("event.calTimeZone",event.calTimeZone)
-                setContactsIds((event?.contactIds != null || event?.contactIds != "") ? JSON.parse(event?.contactIds) : [])
+                setContactsIds((event?.contactIds !== null || event?.contactIds !== "") ? JSON.parse(event?.contactIds) : [])
                 setValue('id', event.id);
                 setValue('meetingId', event.meetingId);
 

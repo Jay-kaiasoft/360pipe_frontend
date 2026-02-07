@@ -14,7 +14,6 @@ import Checkbox from '../../common/checkBox/checkbox';
 import OpportunityContactModel from './opportunityContactModel';
 import { Tooltip } from '@mui/material';
 import Stapper from '../../common/stapper/stapper';
-import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
@@ -92,10 +91,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [dialogContact, setDialogContact] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [selectedContactId, setSelectedContactId] = useState(null);
     const [dialogLogo, setDialogLogo] = useState({ open: false, title: '', message: '', actionButtonText: '' });
-
-    const [files, setFiles] = useState([]);
-    const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [existingImages, setExistingImages] = useState([]);
 
     const handleBack = () => {
         setActiveStep((prev) => prev - 1)
@@ -294,9 +289,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             newLogo: null,
             opportunityDocs: []
         });
-        setFiles([]);
-        setUploadedFiles([]);
-        setExistingImages([]);
         setActiveStep(0)
         handleClose();
     };
@@ -354,21 +346,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             setEditedContacts([]);
         }
     };
-
-    // const handleGetAllStages = async () => {
-    //     if (open) {
-    //         const res = await getAllSalesStages()
-    //         if (res.result) {
-    //             const data = res.result?.map((row) => {
-    //                 return {
-    //                     id: row.id,
-    //                     title: row.shortName,
-    //                 }
-    //             })
-    //             setOpportunityStages(data)
-    //         }
-    //     }
-    // }
 
     const handleToggleKeyContact = (rowId) => {
         const current = opportunitiesContacts.find(r => r.id === rowId);
@@ -469,57 +446,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         return parseFloat(val.replace(/,/g, "")).toFixed(2);
     };
 
-    // NEW: upload files first, then create/update todo with images[]
-    const uploadSelectedFiles = async () => {
-        const newFiles = [];
-
-        try {
-            for (const file of files) {
-
-                const formData = new FormData();
-                formData.append("files", file);
-                formData.append("folderName", "opportunitiesDocuments");
-
-                const response = await uploadFiles(formData);
-
-                if (response?.data?.status === 200) {
-
-                    const uploadedFile = response.data.result[0];
-
-                    // attach isInternal to API returned object
-                    const fileWithInternal = {
-                        ...uploadedFile,
-                        isInternal: file.isInternal
-                    };
-
-                    // update state
-                    setUploadedFiles(prev => [...prev, fileWithInternal]);
-                    setValue("opportunityDocs", fileWithInternal);
-
-                    // push to final return array
-                    newFiles.push(fileWithInternal);
-
-                } else {
-                    setAlert({ open: true, message: response?.data?.message, type: "error" });
-                    return { ok: false, files: [] };
-                }
-            }
-
-            // clear selected files after success
-            setFiles([]);
-
-            return { ok: true, files: newFiles };
-
-        } catch (error) {
-            setAlert({ open: true, message: "Error uploading files", type: "error" });
-            return { ok: false, files: [] };
-        }
-    };
-
     const submit = async (data) => {
-        // 1) Upload any newly picked files first
-        const { ok, files: uploaded } = await uploadSelectedFiles();
-        if (!ok) { setLoading(false); return; }
+
         const whyDoAnythingHtml = whyDoAnything
             ? draftToHtml(convertToRaw(whyDoAnything.getCurrentContent()))
             : null;
@@ -530,11 +458,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
         const currentEnvironmentHtml = currentEnvironment
             ? draftToHtml(convertToRaw(currentEnvironment.getCurrentContent()))
-            : null;
-
-        // const decisionMapHtml = decisionMap
-        //     ? draftToHtml(convertToRaw(decisionMap.getCurrentContent()))
-        //     : null;
+            : null;        
 
         const newData = {
             ...data,
@@ -542,7 +466,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             businessValue: businessValueHtml,
             // decisionMap: decisionMapHtml,
             currentEnvironment: currentEnvironmentHtml,
-            opportunityDocs: uploaded,
             dealAmount: data.dealAmount ? parseFloat(parseMoneyFloat(data.dealAmount)) : null,
             discountPercentage: data.discountPercentage ? parseFloat(parseMoneyFloat(data.discountPercentage)) : null,
             listPrice: data.listPrice ? parseFloat(parseMoneyFloat(data.listPrice)) : null,
@@ -971,41 +894,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     }}
                                                     toolbar={toolbarProperties}
                                                 />
-                                            </div>
-
-                                            {/* <div className='my-4'>
-                                                <p className='mb-2'>
-                                                    Decision Map
-                                                </p>
-                                                <Editor
-                                                    editorState={decisionMap}
-                                                    wrapperClassName="editor-wrapper-custom border border-gray-300 rounded-md"
-                                                    editorClassName="editor-class p-2 h-40 overflow-y-auto"
-                                                    toolbarClassName="toolbar-class border-b border-gray-300"
-                                                    onEditorStateChange={(state) => {
-                                                        setDecisionMap(state)
-                                                    }}
-                                                    toolbar={toolbarProperties}
-                                                />
-                                            </div> */}
-
-                                            <div>
-                                                <p className='mb-2'>
-                                                    Deal Documents
-                                                </p>
-                                                <MultipleFileUpload
-                                                    files={files}
-                                                    setFiles={setFiles}
-                                                    setAlert={setAlert}
-                                                    setValue={setValue}
-                                                    existingImages={existingImages}
-                                                    setExistingImages={setExistingImages}
-                                                    type="oppDocs"
-                                                    multiple={true}
-                                                    placeHolder="Drag & drop files or click to browse(PNG, JPG, JPEG, PDF, DOC, XLS, HTML)"
-                                                    uploadedFiles={uploadedFiles}
-                                                />
-                                            </div>
+                                            </div>                                                                                   
                                         </div>
                                     </>
                                 )

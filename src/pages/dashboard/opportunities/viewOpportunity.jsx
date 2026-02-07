@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 
 // Rich Text Editor
@@ -24,7 +24,6 @@ import Select from "../../../components/common/select/select";
 import Checkbox from "../../../components/common/checkBox/checkbox";
 import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
 import PermissionWrapper from '../../../components/common/permissionWrapper/PermissionWrapper';
-import Calendar from '../calendar/Calendar';
 
 // Modals
 import OpportunityContactModel from '../../../components/models/opportunities/opportunityContactModel';
@@ -33,7 +32,7 @@ import MeetingAttendeesModel from '../../../components/models/meeting/meetingAtt
 import AlertDialog from '../../../components/common/alertDialog/alertDialog';
 
 // Services & Actions
-import { setAlert, setOppSelectedTabIndex, setoppSelectedTabIndex, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
+import { setAlert, setOppSelectedTabIndex, setSyncingPushStatus } from '../../../redux/commonReducers/commonReducers';
 import { getUserDetails } from '../../../utils/getUserDetails';
 import {
     deleteOpportunityLogo,
@@ -61,6 +60,7 @@ import {
 import { addMultipleContacts, getAllContacts } from "../../../service/contact/contactService";
 import EnvTable from "./envTable";
 import { getOpportunitiesCurrentEnvironmentByOppId } from "../../../service/opportunitiesCurrentEnvironment/opportunitiesCurrentEnvironmentService";
+import DealDocs from "./dealDocs";
 
 // ----------------------------
 // Constants / Helpers
@@ -164,7 +164,6 @@ const parseVendorsJson = (vendorsStr) => {
 // ----------------------------
 const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex }) => {
     const { opportunityId } = useParams();
-    const navigate = useNavigate();
     const locaiton = useLocation()
     const userdata = getUserDetails();
     const theme = useTheme();
@@ -217,7 +216,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     // --- Contacts State ---
     const [contacts, setContacts] = useState([]);
     const [editedContacts, setEditedContacts] = useState([]);
-    const [initialIsKey, setInitialIsKey] = useState({});
     const [isSelectContactsOpen, setIsSelectContactsOpen] = useState(false);
     const [isAddContactOpen, setIsAddContactOpen] = useState(false);
     const emptyContactRow = () => ({
@@ -340,10 +338,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
         const sorted = [...list].sort((a, b) => (a.isKey === b.isKey ? 0 : a.isKey ? -1 : 1));
         setContacts(sorted);
-
-        const map = {};
-        sorted.forEach(c => { map[c.id] = !!c.isKey; });
-        setInitialIsKey(map);
         setEditedContacts([]);
     };
 
@@ -2104,27 +2098,53 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                             </p>
 
                             <div
-                                className={`flex-1 ${!isEditingEnv ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                className={`flex-1 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto`}
                                 onClick={() => !isEditingEnv && setIsEditingEnv(true)}
                             >
-                                {isEditingEnv ? (
-                                    <EnvTable opportunityId={opportunityId} handleGetOpportunitiesCurrentEnvironmentByOppId={handleGetOpportunitiesCurrentEnvironmentByOppId} />
-                                ) : (
-                                    <div>
-                                        <ul>                                           
-                                            {
-                                                currentEnvRows?.map((row) => (
-                                                    row?.vendors?.length > 0 && row?.vendors?.filter((item) => item.isChecked)?.map((r, index) => (
-                                                        <li key={index}>
-                                                            {r.value}
-                                                        </li>
-                                                    ))
-                                                ))
-                                            }
-                                        </ul>
-                                    </div>
-                                )}
+                                <div>
+                                    {/* 1. Render standard solutions as a bulleted list */}
+                                    <ul className="list-disc pl-5 mb-4">
+                                        {currentEnvRows
+                                            ?.filter((row) => row.solution !== "Competitors")
+                                            ?.map((row, rowIndex) => {
+                                                const activeVendors = row.vendors
+                                                    ?.filter((v) => v.isChecked)
+                                                    ?.map((v) => v.value)
+                                                    .join(" / "); // Join vendors of the same solution with " / "
+
+                                                return activeVendors ? (
+                                                    <li key={row.id || rowIndex} className="text-black text-lg mb-1">
+                                                        {activeVendors}
+                                                    </li>
+                                                ) : null;
+                                            })}
+                                    </ul>
+
+                                    {/* 2. Render Competitors separately at the bottom */}
+                                    {currentEnvRows
+                                        ?.filter((row) => row.solution === "Competitors")
+                                        ?.map((row, rowIndex) => {
+                                            const competitorNames = row.vendors
+                                                ?.filter((v) => v.isChecked)
+                                                ?.map((v) => v.value)
+                                                .join(", ");
+
+                                            return competitorNames ? (
+                                                <div key={row.id || rowIndex} className="mt-auto pt-2 border-t border-gray-100">
+                                                    <p className="text-lg">
+                                                        <span className="font-bold text-blue-700">Competition:</span> {competitorNames}
+                                                    </p>
+                                                </div>
+                                            ) : null;
+                                        })}
+                                </div>
                             </div>
+                            {isEditingEnv && (
+                                <EnvTable
+                                    opportunityId={opportunityId}
+                                    handleGetOpportunitiesCurrentEnvironmentByOppId={handleGetOpportunitiesCurrentEnvironmentByOppId}
+                                />
+                            )}
                         </div>
 
                         {/* Next Steps */}
@@ -2592,7 +2612,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                 </div>
             )}
 
-            {oppSelectedTabIndex === 2 && <Calendar />}
+            {/* {oppSelectedTabIndex === 2 && <Calendar />} */}
+            {oppSelectedTabIndex === 2 && <DealDocs opportunityId={opportunityId} userdata={userdata} />}
 
             {/* Modals & Dialogs */}
             <OpportunityContactModel open={contactModalOpen} handleClose={() => setContactModalOpen(false)} opportunityId={opportunityId} handleGetAllOppContact={handleGetOppContacts} oppName={watch("opportunity")} />

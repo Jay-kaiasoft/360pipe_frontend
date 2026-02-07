@@ -40,6 +40,14 @@ const stringifyVendorsJson = (vendorsArr) => {
     return JSON.stringify(safe);
 };
 
+const sortCompetitorsLast = (rows) => {
+    return [...rows].sort((a, b) => {
+        if (a.solution === "Competitors") return 1;
+        if (b.solution === "Competitors") return -1;
+        return 0;
+    });
+};
+
 function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnvironmentByOppId }) {
     const [loading, setLoading] = useState(false);
 
@@ -74,6 +82,32 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
     );
 
     // ------------------ API: LOAD ------------------
+    // useEffect(() => {
+    //     if (!hasOppId) return;
+
+    //     const load = async () => {
+    //         setLoading(true);
+    //         try {
+    //             const res = await getOpportunitiesCurrentEnvironmentByOppId(opportunityId);
+    //             const rows = res?.result ?? [];
+    //             setcurrentEnvRow(
+    //                 rows.map((r) => ({
+    //                     id: r?.id ?? null,
+    //                     solution: r?.solution ?? "",
+    //                     vendors: parseVendorsJson(r?.vendors),
+    //                 }))
+    //             );
+    //         } catch (e) {
+    //             console.error("Failed to load current environment:", e);
+    //             // setcurrentEnvRow([{ id: null, solution: "", vendors: [] }]);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     load();
+    // }, [hasOppId, opportunityId]);
+
     useEffect(() => {
         if (!hasOppId) return;
 
@@ -82,16 +116,16 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
             try {
                 const res = await getOpportunitiesCurrentEnvironmentByOppId(opportunityId);
                 const rows = res?.result ?? [];
-                setcurrentEnvRow(
-                    rows.map((r) => ({
-                        id: r?.id ?? null,
-                        solution: r?.solution ?? "",
-                        vendors: parseVendorsJson(r?.vendors),
-                    }))
-                );
+                const mappedRows = rows.map((r) => ({
+                    id: r?.id ?? null,
+                    solution: r?.solution ?? "",
+                    vendors: parseVendorsJson(r?.vendors),
+                }));
+
+                // ✅ Apply the sort here
+                setcurrentEnvRow(sortCompetitorsLast(mappedRows));
             } catch (e) {
                 console.error("Failed to load current environment:", e);
-                // setcurrentEnvRow([{ id: null, solution: "", vendors: [] }]);
             } finally {
                 setLoading(false);
             }
@@ -169,27 +203,40 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
     };
 
     const handleEditSolution = (rowIndex) => {
+        const row = currentEnvRows[rowIndex];
+        // ✅ Block editing if the solution is "Competitors"
+        if (row?.solution === "Competitors") return;
+
         setEditingSolutionRow(rowIndex);
-        setSolutionDraft(currentEnvRows[rowIndex]?.solution || "");
+        setSolutionDraft(row?.solution || "");
     };
 
     const handleSaveSolution = async (rowIndex) => {
         const val = solutionDraft.trim();
 
-        setcurrentEnvRow((prev) =>
-            prev.map((r, i) => (i === rowIndex ? { ...r, solution: val } : r))
-        );
+        setcurrentEnvRow((prev) => {
+            const updated = prev.map((r, i) => (i === rowIndex ? { ...r, solution: val } : r));
+            return sortCompetitorsLast(updated); // ✅ Re-sort after edit
+        });
 
         setEditingSolutionRow(null);
         setSolutionDraft("");
 
-        // ✅ send latest value directly
         await upsertRowToApi(rowIndex, { solution: val });
     };
 
     const handleDeleteRow = async (rowIndex) => {
         const row = currentEnvRows[rowIndex];
 
+        // ✅ Prevent deletion of Competitors row
+        if (row?.solution === "Competitors") {
+            setAlert({
+                open: true,
+                type: "warning",
+                message: "The Competitors row cannot be deleted."
+            });
+            return;
+        }
         // optimistic UI
         setcurrentEnvRow((prev) => prev.filter((_, i) => i !== rowIndex));
 
@@ -421,9 +468,10 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
                                         ) : (
                                             <div className="flex items-start justify-between gap-2">
                                                 <span
-                                                    className="cursor-pointer"
-                                                    onClick={() => handleEditSolution(rowIndex)}
-                                                    title="Click to edit"
+                                                    // ✅ Add conditional cursor and logic
+                                                    className={row.solution === "Competitors" ? "cursor-default" : "cursor-pointer"}
+                                                    onClick={() => row.solution !== "Competitors" && handleEditSolution(rowIndex)}
+                                                    title={row.solution === "Competitors" ? "" : "Click to edit"}
                                                 >
                                                     {row.solution ? (
                                                         row.solution

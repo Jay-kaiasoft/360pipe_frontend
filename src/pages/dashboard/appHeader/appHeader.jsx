@@ -13,8 +13,6 @@ import {
   setOppSelectedTabIndex,
 } from "../../../redux/commonReducers/commonReducers"
 
-import UserDropdown from "./userDropDown"
-
 import Components from "../../../components/muiComponents/components"
 import { syncToQ4Magic } from "../../../service/salesforce/syncToQ4Magic/syncToQ4MagicService"
 import { syncFromQ4magic } from "../../../service/salesforce/syncFromQ4magic/syncFromQ4magicService"
@@ -24,7 +22,7 @@ import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUser
 import { Tabs } from "../../../components/common/tabs/tabs"
 import { useTheme } from "@mui/material"
 
-const oppTableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Calendar" }];
+const oppTableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Deal Docs" }];
 
 const AppHeader = ({
   setAlert,
