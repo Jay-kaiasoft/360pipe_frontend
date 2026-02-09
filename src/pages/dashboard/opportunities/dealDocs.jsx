@@ -156,7 +156,6 @@ const DealDocs = ({ opportunityId, userdata }) => {
         setOriginalCategoryName("");
     };
 
-
     const startEditCategory = (cat) => {
         const editKey = cat.id ?? cat.tempId;
         setEditingCategoryId(editKey);
@@ -193,8 +192,10 @@ const DealDocs = ({ opportunityId, userdata }) => {
         setLinkUrl("");
     };
 
-    const closeModal = () => {
-        console.log("first")
+    const closeModal = (loadData = false) => {
+        if (loadData) {
+            loadAll()            
+        }
         setIsModalOpen(false);
         resetModalState();
     };
@@ -885,7 +886,7 @@ const DealDocs = ({ opportunityId, userdata }) => {
                                                 <thead>
                                                     <tr className="text-left text-sm font-semibold text-gray-700 bg-white">
                                                         <th className="px-4 py-3 border-b w-[260px]">File name</th>
-                                                        <th className="px-4 py-3 border-b w-[460px]">File</th>
+                                                        <th className="px-4 py-3 border-b w-[560px]">File</th>
                                                         <th className="px-4 py-3 border-b text-right">Action</th>
                                                     </tr>
                                                 </thead>
@@ -911,7 +912,7 @@ const DealDocs = ({ opportunityId, userdata }) => {
                                                                     removableExistingAttachments={true}
                                                                     flexView={true}
                                                                     type={"docsAttachments"}
-                                                                    fallbackFunction={() => closeModal()}
+                                                                    preview={false}
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-4 border-b text-right">
@@ -940,7 +941,7 @@ const DealDocs = ({ opportunityId, userdata }) => {
                                             <thead>
                                                 <tr className="text-left text-sm font-semibold text-gray-700 bg-white">
                                                     <th className="px-4 py-3 border-b w-[260px]">File name</th>
-                                                    <th className="px-4 py-3 border-b  w-[460px]">File</th>
+                                                    <th className="px-4 py-3 border-b w-[560px]">File</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -964,6 +965,8 @@ const DealDocs = ({ opportunityId, userdata }) => {
                                                             removableExistingAttachments={true}
                                                             flexView={true}
                                                             type={"docsAttachments"}
+                                                            preview={false}
+                                                            fallbackFunction={(loadData) => closeModal(loadData)}
                                                         />
                                                     </td>
                                                 </tr>
