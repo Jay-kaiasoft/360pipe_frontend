@@ -50,6 +50,11 @@ const Activities = () => {
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 150,
+            renderCell: (params) => {
+                return (
+                    <span>{params.value ? `${params.value}` : 0}</span>
+                )
+            }
         },
         {
             field: 'old_meetings',
@@ -57,6 +62,11 @@ const Activities = () => {
             headerClassName: 'uppercase',
             flex: 1,
             minWidth: 150,
+            renderCell: (params) => {
+                return (
+                    <span>{params.value ? `${params.value}` : 0}</span>
+                )
+            }
         },
     ];
 
@@ -70,34 +80,9 @@ const Activities = () => {
                     columns={columns}
                     rows={activities}
                     getRowId={getRowId}
-                    height={600}
+                    height={580}
                     hideFooter={true}
-                />
-                {/* <table className="border-collapse w-full">
-                    <thead className="sticky top-0 z-10">
-                        <tr className="bg-[#D9D9D9] text-black">
-                            <th className="px-4 py-1 text-left text-sm font-semibold">Rep</th>
-                            <th className="px-4 py-1 text-left text-sm font-semibold">Pipe</th>
-                            <th className="px-4 py-1 text-left text-sm font-semibold w-40">Rev</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {results?.map((row, i) => (
-                            <tr key={i} className="odd:bg-white even:bg-gray-200">
-                                <td className="px-4 py-1 text-sm">
-                                    {row.rep_name || '—'}
-                                </td>
-                                <td className="px-4 py-1 text-sm">
-                                    {moneyLabel(row.pipelineTotal) || '—'}
-                                </td>
-                                <td className="px-4 py-1 text-sm">
-                                     {moneyLabel(row.rev) || '—'}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table> */}
+                />        
             </div>
         </>
     )

@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 
 const StatCard = ({ title, children }) => {
     return (
-        <div className={`flex flex-col items-center justify-center group ${title === "Pipeline" ? "cursor-pointer" : ""}`}>
+        <div className={`flex flex-col items-center justify-center group ${title === "Pipeline" || "Meetings" ? "cursor-pointer" : ""}`}>
             <p className="mb-2 text-xl font-semibold text-gray-900">{title}</p>
 
             <div className="h-36 w-[250px] rounded-2xl border border-gray-400    px-4 py-2 shadow-sm flex items-center justify-center">
@@ -67,6 +67,8 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                 : null;
 
         const pipeLineData = dashboardData?.pipeLineData || [];
+        const meetingData = dashboardData?.meetingData || [];
+
         return {
             totalContacts,
             totalMeetings,
@@ -76,7 +78,8 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
             totalClosedDealAmount,
             totalDealAmount,
             percentClosedDealAmount,
-            pipeLineData
+            pipeLineData,
+            meetingData
         };
     }, [dashboardData]);
 
@@ -100,6 +103,32 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                             </div>
                         </div>
                     </div>
+                    {
+                        ui?.meetingData?.length > 0 && (
+                            <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-72 left-[300px] shadow-lg">
+
+                                {/* Header */}
+                                <div className="bg-gray-200 w-full py-2 text-center font-bold text-black">
+                                    Accounts
+                                </div>
+
+                                {/* Content */}
+                                <div className="w-full bg-white p-3">
+                                    <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm text-black">
+                                        {ui.meetingData.map((item, index) => (
+                                            <div
+                                                key={index}
+                                                className="truncate cursor-pointer"
+                                            >
+                                                {item.account_name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+
                 </StatCard>
 
                 <StatCard title="Pipeline">
