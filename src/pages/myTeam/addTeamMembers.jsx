@@ -314,7 +314,7 @@ const AddTeamMembers = ({ setAlert }) => {
     return (
         <div>
             <form onSubmit={handleSubmit(handleSave)}>
-                <div className='my-5 md:w-[500px] flex justify-start items-center gap-5'>
+                <div className='mb-3 md:w-[500px] flex justify-start items-center gap-5'>
                     <div className='w-full'>
                         <Controller
                             name="name"
@@ -357,9 +357,9 @@ const AddTeamMembers = ({ setAlert }) => {
                     </div>
                 </div>
                 <div className='border rounded-lg bg-white w-full lg:w-full '>
-                    <DataTable columns={columns} rows={fields} getRowId={getRowId} height={400} showButtons={true} buttons={actionButtons} />
+                    <DataTable columns={columns} rows={fields} getRowId={getRowId} hideFooter={true} height={350} showButtons={true} buttons={actionButtons} />
                 </div>
-                <div className='flex justify-end mt-5 gap-3'>
+                <div className='flex justify-end my-5 gap-3'>
                     <div>
                         <Button type="submit" text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
                     </div>

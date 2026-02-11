@@ -1,16 +1,25 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { changeClosePlanStatus, validateToken } from "../../service/closePlanService/closePlanService";
+import { connect } from "react-redux";
+
 import Button from "../../components/common/buttons/button";
+import { changeClosePlanStatus, validateToken } from "../../service/closePlanService/closePlanService";
 import { getAllClosePlanNotes, saveClosePlanNote } from "../../service/closePlanNotes/closePlanNotesService";
 import { setAlert } from "../../redux/commonReducers/commonReducers";
-import { connect } from "react-redux";
 import CustomIcons from "../../components/common/icons/CustomIcons";
-import Drawer from "@mui/material/Drawer";
 import Components from "../../components/muiComponents/components";
-import { getUserDetails } from "../../utils/getUserDetails";
 
 // ---------- helpers ----------
+
+function normalizeUrl(u) {
+    if (!u) return "";
+    const s = u.trim();
+    if (!s) return "";
+    // If user typed google.com, make it https://google.com
+    if (/^https?:\/\//i.test(s)) return s;
+    return `${s}`;
+}
+
 const getFileNameFromUrl = (url = "") => {
     try {
         const clean = url.split("?")[0];
@@ -100,6 +109,7 @@ const Pill = ({ children }) => (
 // ---------- main ----------
 const Closeplan = ({ setAlert }) => {
     const { token } = useParams();
+    const [copiedIndex, setCopiedIndex] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [closePlan, setClosePlan] = useState(null);
@@ -212,20 +222,66 @@ const Closeplan = ({ setAlert }) => {
     const nextSteps = useMemo(() => splitNextSteps(closePlan?.nextSteps || ""), [closePlan]);
 
     const sharedFiles = useMemo(() => {
-        const docs = closePlan?.opportunitiesDocumentsDto || [];
-        return docs.map((d) => {
-            const name = getFileNameFromUrl(d?.url);
-            const ext = getExt(name);
-            return {
-                id: d?.id,
-                url: d?.url,
-                name,
-                ext,
-                meta: extMeta(ext),
-            };
-        });
+        const docs = closePlan?.docsAttachmentsDtoList || [];
+
+        return docs
+            .map((d) => {
+                const hasFile = !!d?.fileUrl;
+                const hasLink = !!d?.link;
+
+                // If API sometimes sends both, prefer showing file (you can change this rule)
+                if (hasFile) {
+                    const nameFromUrl = getFileNameFromUrl(d.fileUrl);
+                    const ext = getExt(nameFromUrl);
+                    return {
+                        id: d?.id,
+                        type: "file",
+                        url: d?.fileUrl,
+                        name: d?.fileName || nameFromUrl || "Attachment",
+                        ext,
+                        meta: extMeta(ext),
+                    };
+                }
+
+                if (hasLink) {
+                    const url = normalizeUrl(d.link); // ensures http/https
+                    return {
+                        id: d?.id,
+                        type: "link",
+                        url,
+                        name: d?.linkName || d?.link || "Link",
+                        meta: {
+                            icon: "🔗",
+                            label: "Link",
+                        },
+                        raw: d?.link,
+                    };
+                }
+
+                return null;
+            })
+            .filter(Boolean);
     }, [closePlan]);
 
+    const handleCopyUrl = async (url, index) => {
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopiedIndex(index);
+            setAlert({
+                open: true,
+                message: 'URL copied to clipboard!',
+                type: 'success'
+            });
+            setTimeout(() => setCopiedIndex(null), 1500);
+        } catch (e) {
+            console.error("Copy failed:", e);
+            setAlert({
+                open: true,
+                message: 'Failed to copy URL',
+                type: 'error'
+            });
+        }
+    };
     return (
         <div className="min-h-screen bg-gray-50">
             {/* top bar */}
@@ -378,56 +434,70 @@ const Closeplan = ({ setAlert }) => {
 
                                     <Card
                                         title="Shared Files"
-                                    // right={
-                                    //     sharedFiles?.length ? (
-                                    //         <Pill>{sharedFiles.length} files</Pill>
-                                    //     ) : null
-                                    // }
                                     >
                                         {sharedFiles?.length ? (
                                             <div className="space-y-2">
-                                                {sharedFiles.map((f) => (
+                                                {sharedFiles.map((item, index) => (
                                                     <div
-                                                        key={f.id}
+                                                        key={index}
                                                         className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2"
                                                     >
                                                         <div className="flex items-center gap-3 min-w-0">
                                                             <div className="h-9 w-9 rounded-xl bg-[#0478DC]/10 flex items-center justify-center">
-                                                                <span className="text-[#0478DC]">{f.meta.icon}</span>
+                                                                <span className="text-[#0478DC]">{item.meta.icon}</span>
                                                             </div>
+
                                                             <div className="min-w-0">
                                                                 <div className="truncate text-sm font-semibold text-[#242424]">
-                                                                    {f.name}
+                                                                    {item.name}
                                                                 </div>
-                                                                <div className="text-xs text-gray-500">{f.meta.label}</div>
+
+                                                                <div className="text-xs text-gray-500">
+                                                                    {item.type === "file"
+                                                                        ? item.meta.label
+                                                                        : item.url}
+                                                                </div>
                                                             </div>
                                                         </div>
 
+                                                        {/* ACTION AREA */}
                                                         <div className="flex items-center gap-2">
-                                                            {/* <OutlineBtn
-                                                                onClick={async () => {
-                                                                    const ok = await copyToClipboard(f.url);
-                                                                    showToast(ok ? "Copied!" : "Copy failed");
-                                                                }}
-                                                            >
-                                                                Copy
-                                                            </OutlineBtn> */}
-                                                            <a
-                                                                href={f.url}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold bg-[#7413D1] text-white hover:brightness-95 transition"
-                                                                title="Open"
-                                                            >
-                                                                Open
-                                                            </a>
+                                                            {item.type === "file" ? (
+                                                                <a
+                                                                    href={item.url}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold bg-[#7413D1] text-white hover:brightness-95 transition"
+                                                                    title="Open"
+                                                                >
+                                                                    Open
+                                                                </a>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleCopyUrl(item.url, index)}
+                                                                    className={`p-2 rounded-lg transition-all duration-200 ${copiedIndex === index
+                                                                        ? "bg-green-100 text-green-600"
+                                                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
+                                                                        }`}
+                                                                    title={copiedIndex === index ? "Copied!" : "Copy URL"}
+                                                                >
+                                                                    {copiedIndex === index ? (
+                                                                        <CustomIcons iconName={"fa-solid fa-check"} css="w-4 h-4" />
+                                                                    ) : (
+                                                                        <CustomIcons iconName={"fa-regular fa-copy"} css="w-4 h-4" />
+                                                                    )}
+                                                                </button>
+                                                            )}
                                                         </div>
+
                                                     </div>
                                                 ))}
                                             </div>
                                         ) : (
                                             <div className="text-sm text-gray-600">No shared files.</div>
                                         )}
+
+
                                     </Card>
 
                                     <Card title="ROI / TCO">
@@ -510,7 +580,7 @@ const Closeplan = ({ setAlert }) => {
                                                     return (
                                                         <div
                                                             key={c?.id ?? idx}
-                                                            className={`rounded-2xl border ${contactId === createdBy ? "border-blue-600" :"border-gray-200"} bg-white p-3 sm:p-4`}
+                                                            className={`rounded-2xl border ${contactId === createdBy ? "border-blue-600" : "border-gray-200"} bg-white p-3 sm:p-4`}
                                                         >
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

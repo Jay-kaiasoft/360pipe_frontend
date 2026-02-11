@@ -79,26 +79,21 @@ const AppHeader = ({
         label: "Summary",
         path: "/dashboard/opportunities",
       },
-      ...(userDetails?.roleName !== "SALES REPRESENTIVE"
-        ? [
-          {
-            label: "Activities",
-            path: "/dashboard/activities",
-          },
-          {
-            label: "Results",
-            path: "/dashboard/results",
-          },
-        ]
-        : [
-          {
-            label: "Contacts",
-            path: "/dashboard/contacts",
-          },
-        ]),
+      {
+        label: "Activities",
+        path: "/dashboard/activities",
+      },
+      {
+        label: "Results",
+        path: "/dashboard/results",
+      },
       {
         label: "To-Do",
         path: "/dashboard/todos",
+      },
+      {
+        label: "Contacts",
+        path: "/dashboard/contacts",
       },
       // ...(((userDetails?.roleName === "SALES REPRESENTIVE" || userDetails?.roleName === "SALE MANAGER") && !userDetails?.subUser)
       //   ? [
@@ -140,7 +135,7 @@ const AppHeader = ({
     }
   }
 
-  useEffect(() => {   
+  useEffect(() => {
     handleGetAllSyncRecords()
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -319,3 +314,22 @@ const mapDispatchToProps = {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)
+
+
+//  ...(userDetails?.roleName !== "SALES REPRESENTIVE"
+//         ? [
+//           {
+//             label: "Activities",
+//             path: "/dashboard/activities",
+//           },
+//           {
+//             label: "Results",
+//             path: "/dashboard/results",
+//           },
+//         ]
+//         : [
+//           {
+//             label: "Contacts",
+//             path: "/dashboard/contacts",
+//           },
+//         ]),

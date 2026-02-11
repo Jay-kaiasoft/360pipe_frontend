@@ -1167,7 +1167,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             const cleanedAmount =
                 newRow.dealAmount === '' || newRow.dealAmount == null
                     ? null
-                    : parseFloat(newRow.dealAmount).toFixed(2);
+                    : parseInt(newRow.dealAmount);
 
             // 🔹 Build base payload
             const updatedData = {

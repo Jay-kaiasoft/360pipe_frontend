@@ -317,7 +317,7 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 4,
                                 "moduleName": "Contacts",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": [1, 2, 3, 4]
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
                             },
                         ]
                     },
@@ -329,7 +329,7 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 5,
                                 "moduleName": "My Team",
                                 "moduleAssignedActions": [1, 2, 3, 4],
-                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4]
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1, 2, 3, 4] : [4] // Full for Sales Rep, Read-only for others
                             },
                         ]
                     },

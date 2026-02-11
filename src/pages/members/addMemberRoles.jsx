@@ -296,10 +296,10 @@ const AddMemberRoles = () => {
 
                 <div className='flex justify-end my-3 gap-3'>
                     <div>
-                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/members")} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
-                    </div>
-                    <div>
                         <Button type="submit" text={id ? "Update" : "Submit"} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />}/>
+                    </div>
+                     <div>
+                        <Button type="button" text={"Cancel"} variant="contained" useFor='disabled' onClick={() => navigate("/dashboard/members")} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
                     </div>
                 </div>
             </form>

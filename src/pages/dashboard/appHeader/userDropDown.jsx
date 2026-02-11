@@ -15,8 +15,6 @@ export default function UserDropdown() {
     const locaiton = useLocation();
     const currentPath = locaiton.pathname;
 
-
-
     const items = [
         {
             label: "Edit Profile",

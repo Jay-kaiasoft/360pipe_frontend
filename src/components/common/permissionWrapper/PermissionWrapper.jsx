@@ -10,7 +10,7 @@ const checkPermission = ({
     const userData = getUserDetails() || {};
 
     // Allow Admins / full-access users (same logic as your component)
-    if (userData?.rolename === "SALES REPRESENTIVE" || userData?.subUser === false) {
+    if (userData?.rolename === "SALES REPRESENTIVE" || userData?.rolename === "SALE MANAGER" || userData?.subUser === false) {
         return true;
     }
 
