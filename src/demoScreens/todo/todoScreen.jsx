@@ -16,6 +16,10 @@ import { getOpportunityOptions } from "../../service/opportunities/opportunities
 
 // Shared modal for add / edit
 import AddTodo from "../../components/models/todo/addTodo";
+import PermissionWrapper from "../../components/common/permissionWrapper/PermissionWrapper";
+import AlertDialog from "../../components/common/alertDialog/alertDialog";
+import { Tooltip } from "@mui/material";
+import Components from "../../components/muiComponents/components";
 
 // ----------------------------------------------------------------------
 // Date & priority helpers (from real version)
@@ -105,6 +109,9 @@ const TodoScreen = () => {
     // --- Modal state for AddTodo (from real version) ---
     const [addTodoOpen, setAddTodoOpen] = useState(false);
     const [editingTodoId, setEditingTodoId] = useState(null);
+
+    const [todoId, setTodoId] = useState(null);
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     // ------------------------------------------------------------------
     // Mapping helpers (API ⇔ UI)
@@ -216,20 +223,20 @@ const TodoScreen = () => {
     // ------------------------------------------------------------------
     // Initialisation
     // ------------------------------------------------------------------
+    const init = async () => {
+        try {
+            const oppRes = await getOpportunityOptions();
+            const list = oppRes?.result || [];
+            const opts = list?.[0]?.opportunitiesNameOptions?.map((o) => ({
+                value: o?.id ?? null,
+                label: o?.title ?? "",
+            }));
+            setOpportunityOptions(opts || []);
+        } catch (e) {
+            console.error("Error fetching opportunities:", e);
+        }
+    };
     useEffect(() => {
-        const init = async () => {
-            try {
-                const oppRes = await getOpportunityOptions();
-                const list = oppRes?.result || [];
-                const opts = list?.[0]?.opportunitiesNameOptions?.map((o) => ({
-                    value: o?.id ?? null,
-                    label: o?.title ?? "",
-                }));
-                setOpportunityOptions(opts || []);
-            } catch (e) {
-                console.error("Error fetching opportunities:", e);
-            }
-        };
         init();
     }, []);
 
@@ -515,6 +522,34 @@ const TodoScreen = () => {
         </div>
     );
 
+    const handleOpenDeleteDialog = (todoId) => {
+        setTodoId(todoId);
+        setDialog({ open: true, title: 'Delete Todo', message: 'Are you sure! Do you want to delete this todo?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setTodoId(null);
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteTodo = async () => {
+        const res = await deleteTodoApi(todoId);
+        if (res.status === 200) {
+            setAlert({
+                open: true,
+                message: "Todo deleted successfully",
+                type: "success"
+            });
+            refreshTodos(null);
+            handleCloseDeleteDialog();
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to delete todo",
+                type: "error"
+            });
+        }
+    }
     // ------------------------------------------------------------------
     // Render (UI from copy, adapted with real state & handlers)
     // ------------------------------------------------------------------
@@ -523,9 +558,8 @@ const TodoScreen = () => {
             <div className="max-w-7xl mx-auto flex gap-6 h-[95vh]">
                 {/* LEFT PANEL – Task list */}
                 <div
-                    className={`bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col transition-all duration-300 ${
-                        selectedTask ? "w-2/3" : "w-full"
-                    }`}
+                    className={`bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col transition-all duration-300 ${selectedTask ? "w-2/3" : "w-full"
+                        }`}
                 >
                     {/* Header */}
                     <div className="p-4 border-b border-slate-100 flex items-center justify-between rounded-t-xl">
@@ -536,7 +570,7 @@ const TodoScreen = () => {
                             >
                                 <CustomIcons iconName="fa-solid fa-plus" css="text-white h-4 w-4" />
                                 New Task
-                            </button>                        
+                            </button>
                         </div>
                         {(loadingTodos || deletingTodo) && (
                             <div className="text-sm text-slate-500 flex items-center gap-2">
@@ -562,9 +596,10 @@ const TodoScreen = () => {
                         <table className="w-full table-fixed border-collapse">
                             <thead className="sticky top-0 bg-white z-10">
                                 <tr className="border-b border-slate-100 text-sm font-semibold text-slate-500">
-                                    <th className="w-6/12 text-left px-6 py-3">Action Item</th>
-                                    <th className="w-2/12 text-right px-6 py-3">Due</th>
-                                    <th className="w-4/12 text-right px-6 py-3">Status</th>
+                                    <th className="text-left px-6 py-3">Action Item</th>
+                                    <th className="text-right px-6 py-3">Due</th>
+                                    <th className="text-right px-6 py-3">Status</th>
+                                    <th className="text-right px-6 py-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -580,17 +615,15 @@ const TodoScreen = () => {
                                                 setEditingNoteId(null);
                                                 await refreshNotes(task.id, task);
                                             }}
-                                            className={`cursor-pointer transition-colors border-b border-slate-50 ${
-                                                isSelected ? "bg-blue-50" : "hover:bg-slate-50"
-                                            }`}
+                                            className={`cursor-pointer transition-colors border-b border-slate-50 ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
+                                                }`}
                                         >
                                             {/* Action Item: client + title */}
                                             <td className="px-6 py-4 align-middle">
                                                 <div className="flex items-stretch">
                                                     <div
-                                                        className={`mr-3 w-1 rounded-full ${
-                                                            isSelected ? "bg-blue-600" : "bg-transparent"
-                                                        }`}
+                                                        className={`mr-3 w-1 rounded-full ${isSelected ? "bg-blue-600" : "bg-transparent"
+                                                            }`}
                                                     />
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
@@ -622,6 +655,22 @@ const TodoScreen = () => {
                                                         Not Started
                                                     </span>
                                                 )}
+                                            </td>
+                                            <td className="px-6 py-4 align-middle flex justify-end text-sm text-slate-600 font-medium">
+                                                <PermissionWrapper
+                                                    functionalityName="Todo"
+                                                    moduleName="Todo"
+                                                    actionId={3}
+                                                    component={
+                                                        <Tooltip title="Delete" arrow>
+                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton onClick={() => handleOpenDeleteDialog(task.id)}>
+                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    }
+                                                />
                                             </td>
                                         </tr>
                                     );
@@ -664,11 +713,10 @@ const TodoScreen = () => {
                             <div className="flex">
                                 <button
                                     onClick={() => setActiveView("rep")}
-                                    className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition-all ${
-                                        activeView === "rep"
-                                            ? "border-blue-600 text-blue-600"
-                                            : "border-transparent text-slate-500 hover:text-slate-700"
-                                    }`}
+                                    className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition-all ${activeView === "rep"
+                                        ? "border-blue-600 text-blue-600"
+                                        : "border-transparent text-slate-500 hover:text-slate-700"
+                                        }`}
                                 >
                                     <CustomIcons
                                         iconName="fa-solid fa-user"
@@ -678,11 +726,10 @@ const TodoScreen = () => {
                                 </button>
                                 <button
                                     onClick={() => setActiveView("manager")}
-                                    className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition-all ${
-                                        activeView === "manager"
-                                            ? "border-blue-600 text-blue-600"
-                                            : "border-transparent text-slate-500 hover:text-slate-700"
-                                    }`}
+                                    className={`flex-1 px-6 py-3 text-sm font-medium border-b-2 transition-all ${activeView === "manager"
+                                        ? "border-blue-600 text-blue-600"
+                                        : "border-transparent text-slate-500 hover:text-slate-700"
+                                        }`}
                                 >
                                     <CustomIcons
                                         iconName="fa-solid fa-user-tie"
@@ -813,6 +860,14 @@ const TodoScreen = () => {
                 handleClose={handleCloseAddTodo}
                 todoId={editingTodoId}
                 handleGetAllTodos={refreshTodos}
+            />
+            <AlertDialog
+                open={dialog.open}
+                title={dialog.title}
+                message={dialog.message}
+                actionButtonText={dialog.actionButtonText}
+                handleAction={() => handleDeleteTodo()}
+                handleClose={() => handleCloseDeleteDialog()}
             />
         </div>
     );

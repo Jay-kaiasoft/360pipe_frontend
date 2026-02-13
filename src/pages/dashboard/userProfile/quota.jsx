@@ -83,7 +83,7 @@ const Quota = ({ setAlert }) => {
     }, [])
     return (
         <div className='flex justify-center items-center'>
-            <div className="max-h-56 overflow-y-auto w-96 md:w-[600px]">
+            <div className="overflow-y-auto w-96 md:w-[600px]">
                 {/* Title bar */}
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-[22px] font-semibold"></h3>

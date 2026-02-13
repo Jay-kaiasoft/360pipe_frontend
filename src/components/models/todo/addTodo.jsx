@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { styled, useTheme } from '@mui/material/styles';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useFieldArray } from 'react-hook-form';
 
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
@@ -32,22 +32,16 @@ const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogActions-root': { padding: theme.spacing(1) },
 }));
 
-const status = [
-    { id: 1, title: "Not Started" },
-    { id: 2, title: "In Progress" },
-    { id: 3, title: "Completed" },
+const priority = [
+    { id: 1, title: "Normal" },
+    { id: 2, title: "Important" },
+    { id: 3, title: "Urgent" },
 ];
 
 const assignedType = [
     { id: 1, title: "Me" },
     { id: 2, title: "Team" },
     { id: 3, title: "Individual" },
-];
-
-const todoType = [
-    { id: 1, title: "Assigned" },
-    { id: 2, title: "Work" },
-    { id: 3, title: "Personal" },
 ];
 
 // Helper: unique ID for rows
@@ -88,7 +82,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             task: null,
             dueDate: null,
             description: null,
-
+            priority: 1,
             assignedId: null,
             teamId: null,
             assignedType: 1,
@@ -208,8 +202,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             if (res?.status === 200) {
                 reset(res?.result);
                 setValue('createdBy', res?.result?.createdBy || null);
-                setValue('source', todoType?.find((t) => t.title === res?.result?.source)?.id);
-                setValue('status', status?.find((s) => s.title === res?.result?.status)?.id);
+                setValue('priority', priority?.find((s) => s.title === res?.result?.priority)?.id);
 
                 // ---------- Populate file rows from existing attachments ----------
                 const attachments = res?.result?.todoAttachmentsDtos || [];
@@ -250,7 +243,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     setValue('assignedId', assignData?.id);
                     setValue('teamId', assignData?.teamId);
                     if (assignData?.teamId) {
-                        setValue('status', status?.find((s) => s.title === assignData?.status)?.id);
                         setValue('customerIds', assignData?.customerIds != null ? assignData?.customerIds : []);
                         const members = await getAllTeamMembers(assignData?.teamId);
                         const data = members?.result?.map((item) => ({
@@ -443,14 +435,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     ? completedDateVal.format('MM/DD/YYYY')
                     : dayjs().format('MM/DD/YYYY')
                 : null,
+            priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
         };
-        try {
-            // 4) Delete removed attachments (only in edit mode)
-            if (todoId && removedAttachmentIds?.length) {
-                // Assuming you have a service method for this; import as needed.
-                // await Promise.allSettled(removedAttachmentIds.map((id) => deleteImagesById(id)));
-                console.log('Deleting attachment IDs:', removedAttachmentIds);
-            }
+        try {           
 
             if (todoId) {
                 const res = await updateTodo(todoId, newData);
@@ -469,7 +456,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                             todoId: todoId,
                             removeCustomerIds: watch('removeCustomerIds') || [],
                             removeTeam: watch('removeTeam') || null,
-                            status: status?.find((s) => s.id === parseInt(watch('status')))?.title,
                             dueDate: dueDateVal.format('MM/DD/YYYY'),
                             complectedWork: parseInt(watch('complectedWork')) || 0,
                         };
@@ -496,7 +482,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         todoId: res?.result?.id,
                         removeCustomerIds: watch('removeCustomerIds') || [],
                         removeTeam: watch('removeTeam') || null,
-                        status: status?.find((s) => s.id === parseInt(watch('status')))?.title,
                         dueDate: dueDateVal.format('MM/DD/YYYY'),
                         complectedWork: parseInt(watch('complectedWork')) || 0,
                     };
@@ -762,6 +747,30 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     </div>
                                 )}
 
+                                <div>
+                                    <Controller
+                                        name="priority"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={priority}
+                                                label="Priority"
+                                                placeholder="Select priority"
+                                                value={parseInt(watch('priority')) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue('priority', null);
+                                                    }
+                                                }}
+                                                error={errors.priority}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
                                 {/* description */}
                                 <div>
                                     <Controller
@@ -805,7 +814,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 <div key={row.id} className="bg-white rounded-lg border border-slate-200 p-3">
                                                     <div className="grid grid-cols-12 gap-3 items-start">
                                                         <div className="col-span-4">
-                                                            <label className="block text-xs text-slate-500 mb-1">
+                                                            {/* <label className="block text-xs text-slate-500 mb-1">
                                                                 File name
                                                             </label>
                                                             <input
@@ -813,13 +822,15 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                                 onChange={(e) => setRowFileName(row.id, e.target.value)}
                                                                 placeholder="Attachment name"
                                                                 className="w-full border border-slate-200 rounded-lg p-2.5 outline-none"
+                                                            /> */}
+                                                            <Input
+                                                                value={row.fileName}
+                                                                onChange={(e) => setRowFileName(row.id, e.target.value)}
+                                                                label="File name"
                                                             />
                                                         </div>
 
                                                         <div className="col-span-7">
-                                                            <label className="block text-xs text-slate-500 mb-1">
-                                                                File
-                                                            </label>
                                                             <MultipleFileUpload
                                                                 files={row.files}
                                                                 setFiles={(v) => setRowFiles(row.id, v)}
@@ -866,21 +877,19 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
                                     <div className="grid grid-cols-12 gap-3 items-end">
                                         <div className="col-span-4">
-                                            <label className="block text-xs text-slate-500 mb-1">Link Name</label>
-                                            <input
+                                            <Input
                                                 value={linkInput.name}
                                                 onChange={(e) => setLinkInput((p) => ({ ...p, name: e.target.value }))}
                                                 placeholder="e.g., Documentation"
-                                                className="w-full border border-slate-200 rounded-lg p-2.5 outline-none"
+                                                label="Link name"
                                             />
                                         </div>
                                         <div className="col-span-6">
-                                            <label className="block text-xs text-slate-500 mb-1">URL</label>
-                                            <input
+                                            <Input
                                                 value={linkInput.url}
                                                 onChange={(e) => setLinkInput((p) => ({ ...p, url: e.target.value }))}
+                                                label="URL"
                                                 placeholder="https://..."
-                                                className="w-full border border-slate-200 rounded-lg p-2.5 outline-none"
                                             />
                                         </div>
                                         <div className="col-span-2">
@@ -963,6 +972,9 @@ const mapDispatchToProps = {
 };
 
 export default connect(null, mapDispatchToProps)(AddTodo);
+
+
+
 
 // import React, { useEffect, useState } from 'react';
 // import { connect } from 'react-redux';

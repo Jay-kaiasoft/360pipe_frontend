@@ -17,7 +17,6 @@ import { Tabs } from '../../../components/common/tabs/tabs';
 import BorderLinearProgress from '../../../components/common/borderLinearProgress/BorderLinearProgress';
 import { setStatusToCompleted } from '../../../service/todoAssign/todoAssignService';
 import { Tooltip } from '@mui/material';
-import { dateTimeFormatDB } from '../../../service/common/commonService';
 import dayjs from 'dayjs';
 import AttachmentsModel from '../../../components/models/todo/attachmentsModel';
 

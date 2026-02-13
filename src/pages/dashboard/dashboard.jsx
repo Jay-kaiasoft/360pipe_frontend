@@ -108,17 +108,19 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                             <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-72 left-[300px] shadow-lg">
 
                                 {/* Header */}
-                                <div className="bg-gray-200 w-full py-2 text-center font-bold text-black">
-                                    Accounts
+                                <div className="bg-[#0478DC] text-white w-full py-2 text-center font-bold">
+                                    <p>
+                                        Accounts
+                                    </p>
                                 </div>
 
                                 {/* Content */}
                                 <div className="w-full bg-white p-3">
-                                    <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm text-black">
+                                    <div className="text-sm text-black">
                                         {ui.meetingData.map((item, index) => (
                                             <div
                                                 key={index}
-                                                className="truncate cursor-pointer"
+                                                className="truncate cursor-pointer py-1"
                                             >
                                                 {item.account_name}
                                             </div>
@@ -139,22 +141,22 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                                 <table className="border-collapse">
                                     <thead className="sticky top-0 z-10">
                                         <tr className="bg-[#0478DC] text-white">
-                                            <th className="px-4 py-1 text-left text-sm font-semibold">Rep</th>
-                                            <th className="px-4 py-1 text-left text-sm font-semibold">Account</th>
-                                            <th className="px-4 py-1 text-left text-sm font-semibold w-40">Amount</th>
+                                            <th className="px-4 py-1 text-left font-bold">Rep</th>
+                                            <th className="px-4 py-1 text-left font-bold">Account</th>
+                                            <th className="px-4 py-1 text-left font-bold w-40">Amount</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         {ui.pipeLineData?.map((row, i) => (
                                             <tr key={row.contactId ?? i} className="odd:bg-white even:bg-gray-200">
-                                                <td className="px-4 py-1 text-sm">
+                                                <td className="px-4 py-1">
                                                     {row.created_by || '—'}
                                                 </td>
-                                                <td className="px-4 py-1 text-sm">
+                                                <td className="px-4 py-1">
                                                     {row.name || '—'}
                                                 </td>
-                                                <td className="px-4 py-1 text-sm">
+                                                <td className="px-4 py-1">
                                                     {moneyLabel(row.dealAmount) || '—'}
                                                 </td>
                                             </tr>

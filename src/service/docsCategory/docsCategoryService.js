@@ -43,7 +43,7 @@ export const updateCategory = async (id, data) => {
 
 export const deleteCategory = async (id) => {
     try {
-        const response = axiosInterceptor().delete(`${docsCategoryURL}/delete/${id}`)
+        const response = await axiosInterceptor().delete(`${docsCategoryURL}/delete/${id}`)
         return response.data
 
     } catch (error) {

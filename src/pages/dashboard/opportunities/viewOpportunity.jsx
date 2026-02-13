@@ -335,7 +335,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         if (!opportunityId) return;
         const res = await getAllOpportunitiesContact(opportunityId);
         const list = Array.isArray(res?.result) ? res.result : [];
-
         const sorted = [...list].sort((a, b) => (a.isKey === b.isKey ? 0 : a.isKey ? -1 : 1));
         setContacts(sorted);
         setEditedContacts([]);
@@ -1488,16 +1487,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     return (
         <div className="mx-auto px-4 mb-2">
-            {/* Navigation & Hint
-            <div className="flex justify-between gap-3 items-center mb-2">
-                <Tooltip title="Back" arrow>
-                    <div className='w-10 h-10 p-2 cursor-pointer flex items-center justify-center border rounded-full' onClick={() => navigate("/dashboard/opportunities")}>
-                        <CustomIcons iconName="fa-solid fa-arrow-left" css="h-5 w-5 text-gray-600" />
-                    </div>
-                </Tooltip>
-                {oppSelectedTabIndex === 0 && <div><p className="text-red-600 text-lg"><strong>Note:&nbsp;</strong>Fields can be edited by clicking.</p></div>}
-            </div> */}
-
             {oppSelectedTabIndex === 0 && (
                 <>
                     {/* Header Grid */}
@@ -2009,16 +1998,16 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                     key={c.id}
                                                     className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
                                                 >
-                                                    <span className="font-medium text-indigo-600 text-base truncate">
+                                                    <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
                                                         {c.contactName}
                                                     </span>
 
-                                                    <span className="text-gray-500 text-base truncate">
-                                                        {c.title || ""}
+                                                    <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                        {c.title || "-"}
                                                     </span>
 
-                                                    <span className="text-indigo-600 text-base truncate">
-                                                        {c.role || ""}
+                                                    <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                        {c.role || "-"}
                                                     </span>
                                                 </li>
                                             ))
@@ -2029,34 +2018,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     )}
                                 </ul>
                             </div>
-
-                            {/* <div className="overflow-y-auto">
-                                {allContactsWithEdits?.filter((row) => row.isKey)?.length > 0 ? (
-                                    <ul className="pl-3 text-sm grid grid-cols-[max-content_minmax(0,1fr)_max-content] gap-x-6 gap-y-2 items-center">
-                                        {allContactsWithEdits
-                                            ?.filter((row) => row.isKey)
-                                            ?.map((c) => (
-                                                <li key={c.id} className="contents">
-                                                    <span className="font-medium text-indigo-600 text-base whitespace-nowrap">
-                                                        {c.contactName}
-                                                    </span>
-
-                                                    <span className="text-gray-500 text-base truncate">
-                                                        {c.title ? `– ${c.title}` : ""}
-                                                    </span>
-
-                                                    <span className="text-indigo-600 text-base whitespace-nowrap">
-                                                        {c.role ? `– ${c.role}` : ""}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-sm text-gray-400 italic pl-3">
-                                        No contacts linked to this opportunity.
-                                    </p>
-                                )}
-                            </div> */}
 
                             <div className="flex items-end gap-2 absolute bottom-3 right-3">
                                 <Tooltip title="Select" arrow>
@@ -2092,35 +2053,40 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         </div>
 
                         {/* Current Environment */}
-                        <div ref={envCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                        <div
+                            ref={envCardRef}
+                            className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-[15rem] relative flex flex-col"
+                        >
+                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-3 shrink-0">
                                 Current Environment
                             </p>
 
+                            {/* Content area */}
                             <div
-                                className={`flex-1 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto`}
+                                className="flex-1 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-hidden"
                                 onClick={() => !isEditingEnv && setIsEditingEnv(true)}
                             >
-                                <div>
-                                    {/* 1. Render standard solutions as a bulleted list */}
-                                    <ul className="list-disc pl-5 mb-4">
+                                {/* Make this a column layout so competitors can sit at the bottom */}
+                                <div className="h-full flex flex-col">
+                                    {/* Scrollable list */}
+                                    <ul className="list-disc pl-5 flex-1 overflow-y-auto pr-2 space-y-1">
                                         {currentEnvRows
                                             ?.filter((row) => row.solution !== "Competitors")
                                             ?.map((row, rowIndex) => {
                                                 const activeVendors = row.vendors
                                                     ?.filter((v) => v.isChecked)
                                                     ?.map((v) => v.value)
-                                                    .join(" / "); // Join vendors of the same solution with " / "
+                                                    .join(" / ");
 
                                                 return activeVendors ? (
-                                                    <li key={row.id || rowIndex} className="text-black text-lg mb-1">
+                                                    <li key={row.id || rowIndex} className="text-black text-lg">
                                                         {activeVendors}
                                                     </li>
                                                 ) : null;
                                             })}
                                     </ul>
 
-                                    {/* 2. Render Competitors separately at the bottom */}
+                                    {/* Bottom pinned competitors (no absolute) */}
                                     {currentEnvRows
                                         ?.filter((row) => row.solution === "Competitors")
                                         ?.map((row, rowIndex) => {
@@ -2130,22 +2096,30 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 .join(", ");
 
                                             return competitorNames ? (
-                                                <div key={row.id || rowIndex} className="mt-auto pt-2 border-t border-gray-100">
+                                                <div
+                                                    key={row.id || rowIndex}
+                                                    className="shrink-0 pt-2 mt-2"
+                                                >
                                                     <p className="text-lg">
-                                                        <span className="font-bold text-blue-700">Competition:</span> {competitorNames}
+                                                        <span className="font-bold text-blue-700">Competition:</span>{" "}
+                                                        {competitorNames}
                                                     </p>
                                                 </div>
                                             ) : null;
                                         })}
                                 </div>
                             </div>
+
                             {isEditingEnv && (
                                 <EnvTable
                                     opportunityId={opportunityId}
-                                    handleGetOpportunitiesCurrentEnvironmentByOppId={handleGetOpportunitiesCurrentEnvironmentByOppId}
+                                    handleGetOpportunitiesCurrentEnvironmentByOppId={
+                                        handleGetOpportunitiesCurrentEnvironmentByOppId
+                                    }
                                 />
                             )}
                         </div>
+
 
                         {/* Next Steps */}
                         <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
@@ -2534,16 +2508,16 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                 key={c.id}
                                                                 className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
                                                             >
-                                                                <span className="font-medium text-indigo-600 text-base truncate">
+                                                                <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
                                                                     {c.contactName}
                                                                 </span>
 
-                                                                <span className="text-gray-500 text-base truncate">
-                                                                    {c.title || ""}
+                                                                <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                                    {c.title || "-"}
                                                                 </span>
 
-                                                                <span className="text-indigo-600 text-base truncate">
-                                                                    {c.role || ""}
+                                                                <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                                    {c.role || "-"}
                                                                 </span>
                                                             </li>
                                                         ))
@@ -2588,13 +2562,71 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         <DecisionMapTimeline items={salesProcess} />
                                     </div>
 
-                                    {/* Current Environment */}
-                                    <div ref={envCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                    <div
+                                        ref={envCardRef}
+                                        className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-[15rem] relative flex flex-col"
+                                    >
+                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-3 shrink-0">
                                             Current Environment
                                         </p>
 
+                                        {/* Content area */}
+                                        <div
+                                            className="flex-1 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-hidden"
+                                            onClick={() => !isEditingEnv && setIsEditingEnv(true)}
+                                        >
+                                            {/* Make this a column layout so competitors can sit at the bottom */}
+                                            <div className="h-full flex flex-col">
+                                                {/* Scrollable list */}
+                                                <ul className="list-disc pl-5 flex-1 overflow-y-auto pr-2 space-y-1">
+                                                    {currentEnvRows
+                                                        ?.filter((row) => row.solution !== "Competitors")
+                                                        ?.map((row, rowIndex) => {
+                                                            const activeVendors = row.vendors
+                                                                ?.filter((v) => v.isChecked)
+                                                                ?.map((v) => v.value)
+                                                                .join(" / ");
 
+                                                            return activeVendors ? (
+                                                                <li key={row.id || rowIndex} className="text-black text-lg">
+                                                                    {activeVendors}
+                                                                </li>
+                                                            ) : null;
+                                                        })}
+                                                </ul>
+
+                                                {/* Bottom pinned competitors (no absolute) */}
+                                                {currentEnvRows
+                                                    ?.filter((row) => row.solution === "Competitors")
+                                                    ?.map((row, rowIndex) => {
+                                                        const competitorNames = row.vendors
+                                                            ?.filter((v) => v.isChecked)
+                                                            ?.map((v) => v.value)
+                                                            .join(", ");
+
+                                                        return competitorNames ? (
+                                                            <div
+                                                                key={row.id || rowIndex}
+                                                                className="shrink-0 pt-2 mt-2"
+                                                            >
+                                                                <p className="text-lg">
+                                                                    <span className="font-bold text-blue-700">Competition:</span>{" "}
+                                                                    {competitorNames}
+                                                                </p>
+                                                            </div>
+                                                        ) : null;
+                                                    })}
+                                            </div>
+                                        </div>
+
+                                        {isEditingEnv && (
+                                            <EnvTable
+                                                opportunityId={opportunityId}
+                                                handleGetOpportunitiesCurrentEnvironmentByOppId={
+                                                    handleGetOpportunitiesCurrentEnvironmentByOppId
+                                                }
+                                            />
+                                        )}
                                     </div>
 
                                     {/* Next Steps */}

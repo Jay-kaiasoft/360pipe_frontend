@@ -107,30 +107,28 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
 
     //     load();
     // }, [hasOppId, opportunityId]);
+    const load = async () => {
+        setLoading(true);
+        try {
+            const res = await getOpportunitiesCurrentEnvironmentByOppId(opportunityId);
+            const rows = res?.result ?? [];
+            const mappedRows = rows.map((r) => ({
+                id: r?.id ?? null,
+                solution: r?.solution ?? "",
+                vendors: parseVendorsJson(r?.vendors),
+            }));
+
+            // ✅ Apply the sort here
+            setcurrentEnvRow(sortCompetitorsLast(mappedRows));
+        } catch (e) {
+            console.error("Failed to load current environment:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!hasOppId) return;
-
-        const load = async () => {
-            setLoading(true);
-            try {
-                const res = await getOpportunitiesCurrentEnvironmentByOppId(opportunityId);
-                const rows = res?.result ?? [];
-                const mappedRows = rows.map((r) => ({
-                    id: r?.id ?? null,
-                    solution: r?.solution ?? "",
-                    vendors: parseVendorsJson(r?.vendors),
-                }));
-
-                // ✅ Apply the sort here
-                setcurrentEnvRow(sortCompetitorsLast(mappedRows));
-            } catch (e) {
-                console.error("Failed to load current environment:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         load();
     }, [hasOppId, opportunityId]);
 
@@ -147,7 +145,9 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
             // ✅ always use latest values (overrides > state)
             const finalSolution = overrides.solution ?? row.solution ?? "";
             const finalVendorsArr = overrides.vendors ?? row.vendors ?? [];
-
+            if (finalSolution.trim() === "" && finalVendorsArr.length === 0) {
+                return handleDeleteRow(rowIndex);
+            }
             const payload = {
                 id: row.id ?? null,
                 oppId: parseInt(opportunityId),
@@ -159,8 +159,8 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
                 const created = await addOpportunitiesCurrentEnvironment(payload);
                 if (created?.status === 201) {
                     const newId = created?.result?.id ?? null;
-
                     if (newId) {
+                        load()
                         handleGetOpportunitiesCurrentEnvironmentByOppId()
                         setcurrentEnvRow((prev) =>
                             prev.map((r, i) => (i === rowIndex ? { ...r, id: newId } : r))
@@ -185,6 +185,7 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
                     message: res.message
                 })
             } else {
+                load()
                 handleGetOpportunitiesCurrentEnvironmentByOppId()
             }
         } catch (e) {
