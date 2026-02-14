@@ -175,7 +175,7 @@ const Profile = ({ setAlert }) => {
 
     return (
         <div className='4k:flex justify-center items-center w-full'>
-            <form className="md:py-6" onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit)}>
                 <div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div>

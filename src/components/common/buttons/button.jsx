@@ -50,7 +50,7 @@ const Button = ({
         overflow: "hidden",
         boxShadow: 0,
         textTransform: "uppercase",
-        cursor: disabled ? "not-allowed" : "pointer"
+        // cursor: disabled ? "not-allowed" : "pointer"
     };
     const primaryStyles = {
         background: theme.palette.primary.main,
@@ -102,7 +102,8 @@ const Button = ({
             sx={{
                 ...baseStyles,
                 ...(useFor === "primary" ? primaryStyles : normalStyles),
-                textTransform: "capitalize"
+                textTransform: "capitalize",
+                cursor: disabled ? "not-allowed" : "pointer",
             }}
         >
             {useFor === "primary" ? (

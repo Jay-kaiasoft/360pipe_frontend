@@ -230,7 +230,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                 </div>
 
                 <div>
-                    <p className='text-white text-2xl font-semibold lg:mr-28'>
+                    <p className='text-white text-3xl font-semibold lg:mr-28'>
                         {headerTitle}
                     </p>
                 </div>

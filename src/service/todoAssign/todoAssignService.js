@@ -90,3 +90,15 @@ export const setStatusToCompleted = async (id) => {
         throw error;
     }
 }
+
+export const sendTaskReminder = async (userId, todoId, assignId) => {
+    try {
+        const response = await axiosInterceptor().get(`${todoAssignURL}/sendTaskReminder/${userId}/${todoId}/${assignId}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+

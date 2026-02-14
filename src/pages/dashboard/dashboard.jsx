@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 const StatCard = ({ title, children }) => {
     return (
         <div className={`flex flex-col items-center justify-center group ${title === "Pipeline" || "Meetings" ? "cursor-pointer" : ""}`}>
-            <p className="mb-2 text-xl font-semibold text-gray-900">{title}</p>
+            <p className="mb-2 text-2xl font-semibold text-gray-900">{title}</p>
 
             <div className="h-36 w-[250px] rounded-2xl border border-gray-400    px-4 py-2 shadow-sm flex items-center justify-center">
                 {children}
@@ -85,17 +85,17 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
 
     return (
         <div className="w-full">
-            <div className="flex flex-wrap items-center justify-center gap-10 py-6">
+            <div className="flex flex-wrap items-center justify-center gap-10 py-10">
                 <StatCard title="Net New Contacts">
-                    <div className="text-3xl font-extrabold text-gray-900">{ui.totalContacts}</div>
+                    <div className="text-5xl font-extrabold text-gray-900">{ui.totalContacts}</div>
                 </StatCard>
 
                 <StatCard title="Meetings">
                     <div className="flex w-full items-center justify-between">
-                        <div className="text-3xl font-extrabold text-gray-900">{ui.totalMeetings}</div>
+                        <div className="text-5xl font-extrabold text-gray-900">{ui.totalMeetings}</div>
 
                         <div className="text-right text-sm font-semibold leading-5 text-gray-700">
-                            <div>
+                            <div className="text-[#0478DC]">
                                 Net New: <span className="font-extrabold">{ui.netNew}</span>
                             </div>
                             <div>
@@ -105,7 +105,7 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                     </div>
                     {
                         ui?.meetingData?.length > 0 && (
-                            <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-72 left-[300px] shadow-lg">
+                            <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-80 left-[450px] shadow-lg">
 
                                 {/* Header */}
                                 <div className="bg-[#0478DC] text-white w-full py-2 text-center font-bold">
@@ -134,10 +134,10 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                 </StatCard>
 
                 <StatCard title="Pipeline">
-                    <div className="text-3xl font-extrabold text-gray-900">{ui.totalPipeLine ? `${moneyLabel(ui.totalPipeLine)}` : "$0"}</div>
+                    <div className="text-5xl font-extrabold text-gray-900">{ui.totalPipeLine ? `${moneyLabel(ui.totalPipeLine)}` : "$0"}</div>
                     {
                         ui?.pipeLineData?.length > 0 && (
-                            <div className="hidden group-hover:block h-80 w-[33%] overflow-y-auto absolute top-72 left-[480px]">
+                            <div className="hidden group-hover:block h-80 w-[33%] overflow-y-auto absolute top-80 left-[640px]">
                                 <table className="border-collapse">
                                     <thead className="sticky top-0 z-10">
                                         <tr className="bg-[#0478DC] text-white">
@@ -170,7 +170,7 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
 
                 <StatCard title="Attainment">
                     <div className="flex flex-col items-center justify-center leading-tight">
-                        <div className="text-3xl font-extrabold text-gray-900">
+                        <div className="text-5xl font-extrabold text-gray-900">
                             {ui.percentClosedDealAmount == null ? "0%" : `${ui.percentClosedDealAmount}%`}
                         </div>
                         <div className="text-md font-semibold text-gray-700">

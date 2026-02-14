@@ -458,6 +458,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                             removeTeam: watch('removeTeam') || null,
                             dueDate: dueDateVal.format('MM/DD/YYYY'),
                             complectedWork: parseInt(watch('complectedWork')) || 0,
+                            priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
                         };
                         await assignTodo(assignData);
                     }
@@ -484,6 +485,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         removeTeam: watch('removeTeam') || null,
                         dueDate: dueDateVal.format('MM/DD/YYYY'),
                         complectedWork: parseInt(watch('complectedWork')) || 0,
+                        priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
                     };
                     await assignTodo(assignData);
                 } else {

@@ -5,6 +5,7 @@ import CustomIcons from "../../components/common/icons/CustomIcons";
 import {
     getAllTodos,
     deleteTodo as deleteTodoApi,
+    completeTodo,
 } from "../../service/todo/todoService";
 import {
     getAllTodosNotes,
@@ -20,6 +21,10 @@ import PermissionWrapper from "../../components/common/permissionWrapper/Permiss
 import AlertDialog from "../../components/common/alertDialog/alertDialog";
 import { Tooltip } from "@mui/material";
 import Components from "../../components/muiComponents/components";
+import { setAlert } from "../../redux/commonReducers/commonReducers";
+import { connect } from "react-redux";
+import { sendTaskReminder } from "../../service/todoAssign/todoAssignService";
+import Button from "../../components/common/buttons/button";
 
 // ----------------------------------------------------------------------
 // Date & priority helpers (from real version)
@@ -76,7 +81,7 @@ const getCurrentUser = () => {
 // ----------------------------------------------------------------------
 // TodoScreen
 // ----------------------------------------------------------------------
-const TodoScreen = () => {
+const TodoScreen = ({ setAlert }) => {
     // --- Refs for note auto-save (from copy) ---
     const noteInputRef = useRef(null);
     const noteInputWrapRef = useRef(null);
@@ -90,11 +95,6 @@ const TodoScreen = () => {
 
     // --- Opportunity dropdown (for client mapping) ---
     const [opportunityOptions, setOpportunityOptions] = useState([]);
-    const opportunityOptionsMap = useMemo(() => {
-        const map = new Map();
-        (opportunityOptions || []).forEach((o) => map.set(String(o.value), o.label));
-        return map;
-    }, [opportunityOptions]);
 
     // --- Loading states (from real version) ---
     const [loadingTodos, setLoadingTodos] = useState(false);
@@ -142,7 +142,12 @@ const TodoScreen = () => {
         const oppId = t?.oppId ?? "";
         const opportunity = t?.opportunity;
         const due = normalizeIsoDate(t?.dueDate);
-
+        const todoAssignData = t?.todoAssignData || [];
+        const totalAssignees = todoAssignData.length;
+        const completedAssignees = todoAssignData.filter(a => a.complectedWork === 100).length;
+        const completionProgress = todoAssignData?.filter(a => a.complectedWork > 0).length;
+        const completionProgressPercent = totalAssignees > 0 ? Math.round((completedAssignees / totalAssignees) * 100) : 0;
+        const statusColor = completionProgress === 0 ? "#D7D8F4" : (completedAssignees === totalAssignees ? "#2e8500" : "#EED5B9");
         return {
             id: t?.id,
             oppId,
@@ -159,9 +164,14 @@ const TodoScreen = () => {
             assignedBy: t?.assignedByName || t?.assignedBy || "",
             team: t?.team || "",
             createdDate: t?.createdDate || "",
-            completionProgress: t?.completionProgress ?? 0,
             assignees: t?.assignees || [],
-            status: t?.status || { completed: 0, total: 0 },
+            totalAssignees,
+            completedAssignees,
+            statusColor,
+            completionProgressPercent,
+            createdByName: t?.createdByName,
+            teamName: t?.teamName,
+            todoAssignData
         };
     };
 
@@ -174,6 +184,7 @@ const TodoScreen = () => {
             const res = await getAllTodos();
             const list = res?.result || res?.data || res || [];
             const uiTodos = (Array.isArray(list) ? list : []).map(mapApiTodoToUi);
+
             setTasks(uiTodos);
 
             const selId = keepSelectedId ?? selectedTask?.id;
@@ -236,6 +247,7 @@ const TodoScreen = () => {
             console.error("Error fetching opportunities:", e);
         }
     };
+
     useEffect(() => {
         init();
     }, []);
@@ -244,23 +256,6 @@ const TodoScreen = () => {
         refreshTodos(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    // ------------------------------------------------------------------
-    // Task CRUD (delete only – add/edit via AddTodo modal)
-    // ------------------------------------------------------------------
-    const handleDeleteTask = async (taskId) => {
-        if (!taskId) return;
-        setDeletingTodo(true);
-        try {
-            await deleteTodoApi(taskId);
-            if (selectedTask?.id === taskId) setSelectedTask(null);
-            await refreshTodos(null);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setDeletingTodo(false);
-        }
-    };
 
     const openAddModal = () => {
         setEditingTodoId(null);
@@ -385,26 +380,41 @@ const TodoScreen = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editingNoteId, newNoteInput, selectedTask?.id]);
 
-    // ------------------------------------------------------------------
-    // Priority icon & status text
-    // ------------------------------------------------------------------
-    const getPriorityIcon = (priority) => {
-        switch (priority) {
-            case "critical":
-                return <CustomIcons iconName="fa-solid fa-fire" css="text-red-500 text-lg" />;
-            case "high":
-                return <CustomIcons iconName="fa-solid fa-eye" css="text-blue-500 text-lg" />;
-            case "normal":
-                return <CustomIcons iconName="fa-solid fa-cog" css="text-slate-500 text-lg" />;
-            default:
-                return <CustomIcons iconName="fa-solid fa-circle" css="text-slate-300 text-xs" />;
+    const handleSendTaskReminder = async (userId, todoId, assignId) => {
+        // console.log("first", userId, todoId, assignId)
+        const res = await sendTaskReminder(userId, todoId, assignId);
+        if (res.status === 200) {
+            setAlert({
+                open: true,
+                message: "Reminder sent successfully",
+                type: "success"
+            })
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to send reminder",
+                type: "error"
+            })
         }
-    };
+    }
 
-    const getStatusText = (status) => {
-        if (!status || status.total === 0) return "";
-        return `${status.completed} / ${status.total} Complete`;
-    };
+    const handleCompleteTodo = async (id) => {
+        const res = await completeTodo(id);
+        if (res.status === 200) {
+            refreshTodos(null)
+            setAlert({
+                open: true,
+                message: "Task closed successfully",
+                type: "success"
+            })
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to close task",
+                type: "error"
+            })
+        }
+    }
 
     // ------------------------------------------------------------------
     // Manager View (UI from copy, logic from real)
@@ -413,9 +423,9 @@ const TodoScreen = () => {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {/* Header info */}
             <div>
-                <div className="text-sm text-slate-500 mb-1">Due: {formatDueLong(task.dueDate)}</div>
-                <div className="text-sm text-slate-500">
-                    Assigned by: {task.assignedBy || "N/A"} · Team: {task.team || "N/A"} · Created: {task.createdDate || "N/A"}
+                <div className="text-sm text-black mb-1 font-bold">Due: {formatDueLong(task.dueDate)}</div>
+                <div className="text-sm text-black">
+                    <strong>Assigned by:</strong> {task.createdByName || "N/A"} &nbsp; <strong>Team:</strong> {task.teamName || "N/A"}
                 </div>
             </div>
 
@@ -456,47 +466,50 @@ const TodoScreen = () => {
                 <h3 className="text-sm font-bold text-slate-800 w-56">Completion Progress</h3>
                 <div className="flex items-center w-full gap-2">
                     <div className="flex justify-between text-sm text-slate-600 font-semibold">
-                        <span>{task.completionProgress}%</span>
+                        <span>{task.completionProgressPercent}%</span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
                             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${task.completionProgress}%` }}
+                            style={{ width: `${task.completionProgressPercent}%` }}
                         />
                     </div>
                 </div>
             </div>
 
             {/* Assignees (if any) */}
-            {task.assignees && task.assignees.length > 0 && (
+            {task.todoAssignData && task.todoAssignData.length > 0 && (
                 <div className="bg-white rounded-lg p-4 border border-slate-200">
                     <h3 className="text-sm font-bold text-slate-800 mb-3">Team Progress</h3>
                     <div className="space-y-4">
-                        {task.assignees.map((assignee) => (
+                        {task.todoAssignData.map((assignee) => (
                             <div key={assignee.id} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                                         <span className="text-blue-600 font-semibold text-sm">
-                                            {assignee.name.split(' ').map(n => n[0]).join('')}
+                                            {assignee.userName.split(' ').map(n => n[0]).join('')}
                                         </span>
                                     </div>
                                     <div>
-                                        <div className="font-medium text-slate-800">{assignee.name}</div>
-                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                        <div className="font-semibold text-slate-800">{assignee.userName}</div>
+                                        <div className="flex items-center gap-2 text-sm">
                                             <span className="flex items-center gap-1">
-                                                <span className={`w-2 h-2 rounded-full ${assignee.status === 'pending' ? 'bg-red-500' : 'bg-green-500'}`} />
-                                                <span className="capitalize">{assignee.status}</span>
+                                                <CustomIcons iconName={assignee.complectedWork !== 100 ? 'fa-solid fa-clock' : "fa-solid fa-circle-check"} css={`${assignee.complectedWork !== 100 ? 'text-yellow-500' : 'text-green-500'}`} />
+                                                <span className={`font-medium capitalize ${assignee.complectedWork !== 100 ? 'text-yellow-500' : 'text-green-500'}`}>{assignee.complectedWork !== 100 ? "Pendding" : "Complected"}</span>
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <button
-                                        onClick={() => console.log("Send reminder to", assignee.id)}
-                                        className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-                                    >
-                                        Send Reminder
-                                    </button>
+                                    {
+                                        assignee.complectedWork !== 100 && (
+                                            <Button
+                                                onClick={() => handleSendTaskReminder(assignee.userId, task.id, assignee.id)}
+                                                text={"Send Reminder"}
+                                                useFor="error"
+                                            />
+                                        )
+                                    }
                                 </div>
                             </div>
                         ))}
@@ -505,19 +518,18 @@ const TodoScreen = () => {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-                <button
+            <div className="flex gap-3 pt-4 justify-end">
+                <Button
+                    useFor="success"
                     onClick={() => openEditModal(task)}
-                    className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors"
-                >
-                    Edit Task
-                </button>
-                <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-                >
-                    Close Task
-                </button>
+                    text={'Edit Task'}
+                />
+
+                <Button
+                    disabled={task?.completionProgressPercent === 100}
+                    onClick={() => handleCompleteTodo(task.id)}
+                    text={"Close Task"}
+                />
             </div>
         </div>
     );
@@ -550,19 +562,44 @@ const TodoScreen = () => {
             });
         }
     }
+
+    const StatusPill = ({ statusColor, statusColorcompletedAssignees, totalAssignees }) => {
+        const completed = Number(statusColorcompletedAssignees || 0);
+        const total = Number(totalAssignees || 0);
+
+        const bg =
+            typeof statusColor === "function"
+                ? statusColor(completed, total)
+                : statusColor || "#E5E7EB";
+
+        return (
+            <div className="flex justify-end">
+                <div
+                    className="inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-semibold"
+                    style={{
+                        backgroundColor: bg,
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.65)",
+                    }}
+                >
+                    <span className={`${completed === total ? "text-white" : "text-black"} opacity-90`}>
+                        {completed} / {total} Complete
+                    </span>
+                </div>
+            </div>
+        );
+    };
+
     // ------------------------------------------------------------------
     // Render (UI from copy, adapted with real state & handlers)
     // ------------------------------------------------------------------
     return (
         <div className="min-h-screen p-6 font-sans text-slate-700">
             <div className="max-w-7xl mx-auto flex gap-6 h-[95vh]">
-                {/* LEFT PANEL – Task list */}
                 <div
                     className={`bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col transition-all duration-300 ${selectedTask ? "w-2/3" : "w-full"
                         }`}
                 >
-                    {/* Header */}
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between rounded-t-xl">
+                    <div className="p-4 flex items-center justify-between rounded-t-xl">
                         <div className="flex gap-3">
                             <button
                                 onClick={openAddModal}
@@ -579,7 +616,6 @@ const TodoScreen = () => {
                         )}
                     </div>
 
-                    {/* Filter pills (static) */}
                     <div className="flex gap-2 ml-4">
                         <button className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 border border-slate-200">
                             View: My Tasks
@@ -591,7 +627,6 @@ const TodoScreen = () => {
                         </button>
                     </div>
 
-                    {/* Table */}
                     <div className="flex-1 overflow-y-auto">
                         <table className="w-full table-fixed border-collapse">
                             <thead className="sticky top-0 bg-white z-10">
@@ -618,7 +653,6 @@ const TodoScreen = () => {
                                             className={`cursor-pointer transition-colors border-b border-slate-50 ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
                                                 }`}
                                         >
-                                            {/* Action Item: client + title */}
                                             <td className="px-6 py-4 align-middle">
                                                 <div className="flex items-stretch">
                                                     <div
@@ -627,7 +661,6 @@ const TodoScreen = () => {
                                                     />
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            {/* {getPriorityIcon(task.priority)} */}
                                                             <div>
                                                                 <div className="font-bold text-slate-800 text-sm truncate">
                                                                     {task.opportunity}
@@ -640,21 +673,16 @@ const TodoScreen = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            {/* Due date */}
                                             <td className="px-6 py-4 align-middle text-right text-sm text-slate-600 font-medium">
                                                 {formatDueShort(task.dueDate)}
                                             </td>
-                                            {/* Status */}
                                             <td className="px-6 py-4 align-middle text-right">
-                                                {task.status && task.status.total > 0 ? (
-                                                    <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                                                        {getStatusText(task.status)}
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium text-slate-400">
-                                                        Not Started
-                                                    </span>
-                                                )}
+                                                <StatusPill
+                                                    statusColor={task?.statusColor}
+                                                    statusColorcompletedAssignees={task?.completedAssignees}
+                                                    totalAssignees={task?.totalAssignees}
+                                                />
+
                                             </td>
                                             <td className="px-6 py-4 align-middle flex justify-end text-sm text-slate-600 font-medium">
                                                 <PermissionWrapper
@@ -677,7 +705,7 @@ const TodoScreen = () => {
                                 })}
                                 {!loadingTodos && (!tasks || tasks.length === 0) && (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-10 text-center text-slate-400">
+                                        <td colSpan={4} className="px-6 py-10 text-center text-slate-400">
                                             No tasks found.
                                         </td>
                                     </tr>
@@ -690,7 +718,6 @@ const TodoScreen = () => {
                 {/* RIGHT PANEL – Task details (conditional) */}
                 {selectedTask && (
                     <div className="w-1/2 bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col animate-fadeIn">
-                        {/* Header */}
                         <div className="p-6 border-b border-slate-100 flex justify-between items-start">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-800 mb-1">{selectedTask.opportunity}</h2>
@@ -708,7 +735,6 @@ const TodoScreen = () => {
                             </button>
                         </div>
 
-                        {/* View Tabs */}
                         <div className="border-b border-slate-100">
                             <div className="flex">
                                 <button
@@ -740,17 +766,14 @@ const TodoScreen = () => {
                             </div>
                         </div>
 
-                        {/* Tab content */}
                         {activeView === "rep" ? (
                             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                {/* Description */}
                                 <div>
                                     <p className="text-slate-700 leading-relaxed">
                                         {selectedTask.desc || "No description provided."}
                                     </p>
                                 </div>
 
-                                {/* Required Materials */}
                                 {selectedTask.materials && selectedTask.materials.length > 0 && (
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-800 mb-3">Required Materials</h3>
@@ -776,13 +799,9 @@ const TodoScreen = () => {
                                     </div>
                                 )}
 
-                                {/* Notes Section */}
                                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-sm font-bold text-slate-800">My Notes</h3>
-                                        {loadingNotes && (
-                                            <span className="text-xs text-slate-400 animate-pulse">Loading…</span>
-                                        )}
                                     </div>
 
                                     <div className="space-y-3 mb-4 max-h-40 overflow-y-auto pr-2">
@@ -811,40 +830,29 @@ const TodoScreen = () => {
                                             <p className="text-sm text-slate-400 italic">No notes yet. Add your first note below.</p>
                                         )}
                                     </div>
-
-                                    {/* Note input – auto‑saves on click outside */}
-                                    <div ref={noteInputWrapRef} className="my-2">
-                                        <label className="text-xs font-semibold text-slate-500 mb-1 block">
-                                            {editingNoteId !== null ? "Edit note..." : "Add a note..."}
-                                            {savingNote && <span className="ml-2 text-slate-400 text-xs">Saving…</span>}
-                                        </label>
-                                        <input
-                                            ref={noteInputRef}
-                                            type="text"
-                                            value={newNoteInput}
-                                            onChange={handleNoteInputChange}
-                                            onKeyDown={handleKeyPress}
-                                            placeholder="Type your note"
-                                            className="w-full border border-slate-200 rounded p-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-colors"
-                                        />
-                                    </div>
                                 </div>
-
-                                {/* Action buttons */}
-                                <div className="flex gap-3">
-                                    <button
+                                <div ref={noteInputWrapRef} className="my-2">
+                                    <input
+                                        ref={noteInputRef}
+                                        type="text"
+                                        value={newNoteInput}
+                                        onChange={handleNoteInputChange}
+                                        onKeyDown={handleKeyPress}
+                                        placeholder="Type your note"
+                                        className="w-full border border-slate-200 rounded p-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-colors"
+                                    />
+                                </div>
+                                <div className="flex gap-3 justify-end">
+                                    <Button
+                                        useFor="success"
                                         onClick={() => openEditModal(selectedTask)}
-                                        className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors"
-                                    >
-                                        Edit Task
-                                    </button>
-                                    <button
-                                        onClick={() => console.log("Mark complete", selectedTask.id)}
-                                        className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 transition-colors"
-                                    >
-                                        Mark Complete
-                                        <CustomIcons iconName="fa-solid fa-chevron-down" css="text-xs h-3 w-3" />
-                                    </button>
+                                        text={'Edit Task'}
+                                    />
+                                    <Button
+                                        disabled={selectedTask?.completionProgressPercent === 100}
+                                        onClick={() => handleCompleteTodo(selectedTask.id)}
+                                        text={"Mark Complete"}
+                                    />
                                 </div>
                             </div>
                         ) : (
@@ -854,7 +862,6 @@ const TodoScreen = () => {
                 )}
             </div>
 
-            {/* Shared AddTodo Modal */}
             <AddTodo
                 open={addTodoOpen}
                 handleClose={handleCloseAddTodo}
@@ -873,4 +880,7 @@ const TodoScreen = () => {
     );
 };
 
-export default TodoScreen;
+const mapDispatchToProps = {
+    setAlert,
+}
+export default connect(null, mapDispatchToProps)(TodoScreen)

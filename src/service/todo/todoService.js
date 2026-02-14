@@ -72,3 +72,12 @@ export const deleteImagesById = async (id) => {
         throw error;
     }
 }
+
+export const completeTodo = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${todoURL}/completeTodo/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

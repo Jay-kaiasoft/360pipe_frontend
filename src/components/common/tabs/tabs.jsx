@@ -1,7 +1,7 @@
 import Components from "../../muiComponents/components";
 import { useTheme } from "@mui/material";
 
-export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", center = false }) => {
+export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", center = false, fontSize = null }) => {
   const theme = useTheme();
 
   const getTabStyle = (index) => {
@@ -13,7 +13,7 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", ce
         ? theme.palette.text.primary
         : theme.palette.text.primary,
       fontWeight: isSelected ? 600 : 400,
-      fontSize: "20px",
+      fontSize: fontSize ? fontSize : "20px",
       textTransform: "none",
       padding: "8px 8px",
       cursor: "pointer",
