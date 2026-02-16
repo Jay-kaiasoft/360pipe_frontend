@@ -10,6 +10,15 @@ export const getAllTodos = async () => {
     }
 };
 
+export const getTodoByTeam = async (data) => {
+    try {
+        const response = await axiosInterceptor().post(`${todoURL}/getTodoByTeam`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export const getTodoByFilter = async (data) => {
     try {
         const response = await axiosInterceptor().post(`${todoURL}/getByFilter`, data);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import CustomIcons from "../../components/common/icons/CustomIcons";
 
 // Real API services
@@ -6,6 +6,7 @@ import {
     getAllTodos,
     deleteTodo as deleteTodoApi,
     completeTodo,
+    getTodoByTeam,
 } from "../../service/todo/todoService";
 import {
     getAllTodosNotes,
@@ -13,7 +14,7 @@ import {
     updateTodoNote as updateTodoNoteApi,
     deleteTodoNote as deleteTodoNoteApi,
 } from "../../service/todoNote/todoNoteService";
-import { getOpportunityOptions } from "../../service/opportunities/opportunitiesService";
+
 
 // Shared modal for add / edit
 import AddTodo from "../../components/models/todo/addTodo";
@@ -25,6 +26,8 @@ import { setAlert } from "../../redux/commonReducers/commonReducers";
 import { connect } from "react-redux";
 import { sendTaskReminder } from "../../service/todoAssign/todoAssignService";
 import Button from "../../components/common/buttons/button";
+import { getAllTeams } from "../../service/teamDetails/teamDetailsService";
+import CheckBoxSelect from "../../components/common/select/checkBoxSelect";
 
 // ----------------------------------------------------------------------
 // Date & priority helpers (from real version)
@@ -91,16 +94,10 @@ const TodoScreen = ({ setAlert }) => {
 
     // --- Data from API ---
     const [tasks, setTasks] = useState([]);
+    const [teams, setTeams] = useState([]);
+    const [selectedTeam, setSelectedTeam] = useState([]);
+
     const [selectedTask, setSelectedTask] = useState(null);
-
-    // --- Opportunity dropdown (for client mapping) ---
-    const [opportunityOptions, setOpportunityOptions] = useState([]);
-
-    // --- Loading states (from real version) ---
-    const [loadingTodos, setLoadingTodos] = useState(false);
-    const [loadingNotes, setLoadingNotes] = useState(false);
-    const [savingNote, setSavingNote] = useState(false);
-    const [deletingTodo, setDeletingTodo] = useState(false);
 
     // --- Notes state (from real version) ---
     const [editingNoteId, setEditingNoteId] = useState(null);
@@ -179,7 +176,6 @@ const TodoScreen = ({ setAlert }) => {
     // Data fetching
     // ------------------------------------------------------------------
     const refreshTodos = async (keepSelectedId = null) => {
-        setLoadingTodos(true);
         try {
             const res = await getAllTodos();
             const list = res?.result || res?.data || res || [];
@@ -199,14 +195,11 @@ const TodoScreen = ({ setAlert }) => {
             }
         } catch (e) {
             console.error("refreshTodos error:", e);
-        } finally {
-            setLoadingTodos(false);
         }
     };
 
     const refreshNotes = async (todoId, baseTask = null) => {
         if (!todoId) return;
-        setLoadingNotes(true);
         try {
             const res = await getAllTodosNotes(todoId);
             const list = res?.result || res?.data || res || [];
@@ -226,36 +219,43 @@ const TodoScreen = ({ setAlert }) => {
             );
         } catch (e) {
             console.error("refreshNotes error:", e);
-        } finally {
-            setLoadingNotes(false);
         }
     };
 
-    // ------------------------------------------------------------------
-    // Initialisation
-    // ------------------------------------------------------------------
-    const init = async () => {
-        try {
-            const oppRes = await getOpportunityOptions();
-            const list = oppRes?.result || [];
-            const opts = list?.[0]?.opportunitiesNameOptions?.map((o) => ({
-                value: o?.id ?? null,
-                label: o?.title ?? "",
-            }));
-            setOpportunityOptions(opts || []);
-        } catch (e) {
-            console.error("Error fetching opportunities:", e);
-        }
-    };
+    const handleGetAllTeams = async () => {
+        const res = await getAllTeams();
+        const data = res?.result?.map((t) => ({ id: t.id, title: t.name })) || [];
+        setTeams(data);
+    }
 
-    useEffect(() => {
-        init();
-    }, []);
+    const handleTeamChange = async (event, newValue) => {
+        setSelectedTeam(newValue);
+    }
+
+    const handleGetTodoByTeam = async () => {
+        if (!selectedTeam) {
+            refreshTodos(null);
+        } else {
+            const teamIds = selectedTeam.map(t => t.id);
+            if (teamIds?.length > 0) {
+                const res = await getTodoByTeam({ teamIds });
+                const uiTodos = (Array.isArray(res?.result) ? res.result : []).map(mapApiTodoToUi);
+                setTasks(uiTodos);
+            } else {
+                refreshTodos(null);
+            }
+        }
+    }
 
     useEffect(() => {
         refreshTodos(null);
+        handleGetAllTeams()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        handleGetTodoByTeam();
+    }, [selectedTeam])
 
     const openAddModal = () => {
         setEditingTodoId(null);
@@ -295,7 +295,6 @@ const TodoScreen = ({ setAlert }) => {
         const user = getCurrentUser();
         const customerId = user?.customerId ?? user?.customer ?? null;
 
-        setSavingNote(true);
         try {
             if (editingNoteId === null) {
                 // create
@@ -325,8 +324,6 @@ const TodoScreen = ({ setAlert }) => {
             }
         } catch (e) {
             console.error("save note error:", e);
-        } finally {
-            setSavingNote(false);
         }
     };
 
@@ -609,22 +606,17 @@ const TodoScreen = ({ setAlert }) => {
                                 New Task
                             </button>
                         </div>
-                        {(loadingTodos || deletingTodo) && (
-                            <div className="text-sm text-slate-500 flex items-center gap-2">
-                                <span className="animate-pulse">Loading…</span>
-                            </div>
-                        )}
                     </div>
 
                     <div className="flex gap-2 ml-4">
-                        <button className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 border border-slate-200">
-                            View: My Tasks
-                            <CustomIcons iconName="fa-solid fa-chevron-down" css="text-xs h-3 w-3" />
-                        </button>
-                        <button className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 border border-slate-200">
-                            Team: Sales Team A
-                            <CustomIcons iconName="fa-solid fa-chevron-down" css="text-xs h-3 w-3" />
-                        </button>
+                        <div className='w-60'>
+                            <CheckBoxSelect
+                                placeholder="Select teams"
+                                options={teams || []}
+                                value={selectedTeam}
+                                onChange={handleTeamChange}
+                            />
+                        </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
@@ -703,7 +695,7 @@ const TodoScreen = ({ setAlert }) => {
                                         </tr>
                                     );
                                 })}
-                                {!loadingTodos && (!tasks || tasks.length === 0) && (
+                                {(!tasks && tasks?.length === 0) && (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-10 text-center text-slate-400">
                                             No tasks found.
@@ -883,4 +875,5 @@ const TodoScreen = ({ setAlert }) => {
 const mapDispatchToProps = {
     setAlert,
 }
+
 export default connect(null, mapDispatchToProps)(TodoScreen)

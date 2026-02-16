@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { styled, useTheme } from '@mui/material/styles';
-import { Controller, useForm, useFieldArray } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import Components from '../../../components/muiComponents/components';
 import Button from '../../../components/common/buttons/button';
@@ -44,6 +44,18 @@ const assignedType = [
     { id: 3, title: "Individual" },
 ];
 
+const todoType = [
+    { id: 1, title: "Assigned" },
+    { id: 2, title: "Work" },
+    { id: 3, title: "Personal" },
+];
+
+const status = [
+    { id: 1, title: "Not Started" },
+    { id: 2, title: "In Progress" },
+    { id: 3, title: "Completed" },
+];
+
 // Helper: unique ID for rows
 const safeId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
@@ -83,6 +95,10 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             dueDate: null,
             description: null,
             priority: 1,
+            source: null,
+            status: 1,
+            complectedWork: 0,
+
             assignedId: null,
             teamId: null,
             assignedType: 1,
@@ -162,6 +178,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             task: null,
             dueDate: null,
             description: null,
+            source: null,
+            status: 1,
+            complectedWork: 0,
 
             assignedId: null,
             teamId: null,
@@ -203,6 +222,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 reset(res?.result);
                 setValue('createdBy', res?.result?.createdBy || null);
                 setValue('priority', priority?.find((s) => s.title === res?.result?.priority)?.id);
+                setValue("source", todoType?.find(t => t.title === res?.result?.source)?.id);
+                setValue("status", status?.find(s => s.title === res?.result?.status)?.id);
+                setValue("complectedWork", res?.result?.complectedWork || 0);
 
                 // ---------- Populate file rows from existing attachments ----------
                 const attachments = res?.result?.todoAttachmentsDtos || [];
@@ -242,6 +264,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     const assignData = response?.result;
                     setValue('assignedId', assignData?.id);
                     setValue('teamId', assignData?.teamId);
+                    setValue("status", status?.find(s => s.title === assignData?.status)?.id);
+                    setValue("complectedWork", assignData?.complectedWork || 0);
+
                     if (assignData?.teamId) {
                         setValue('customerIds', assignData?.customerIds != null ? assignData?.customerIds : []);
                         const members = await getAllTeamMembers(assignData?.teamId);
@@ -436,8 +461,10 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     : dayjs().format('MM/DD/YYYY')
                 : null,
             priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
+            status: status?.find(s => s.id === parseInt(watch("status")))?.title,
+            source: todoType?.find(t => t.id === parseInt(watch("source")))?.title,
         };
-        try {           
+        try {
 
             if (todoId) {
                 const res = await updateTodo(todoId, newData);
@@ -459,6 +486,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                             dueDate: dueDateVal.format('MM/DD/YYYY'),
                             complectedWork: parseInt(watch('complectedWork')) || 0,
                             priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
+                            status: status?.find(s => s.id === parseInt(watch("status")))?.title,
                         };
                         await assignTodo(assignData);
                     }
@@ -486,6 +514,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         dueDate: dueDateVal.format('MM/DD/YYYY'),
                         complectedWork: parseInt(watch('complectedWork')) || 0,
                         priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
+                        status: status?.find(s => s.id === parseInt(watch("status")))?.title,
                     };
                     await assignTodo(assignData);
                 } else {
@@ -553,7 +582,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-
                                 {/* Task */}
                                 <div>
                                     <Controller
@@ -572,6 +600,23 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
+                                {/* description */}
+                                <div>
+                                    <Controller
+                                        name="description"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Description"
+                                                type="text"
+                                                multiline={true}
+                                                minRows={3}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
                                 {/* Due Date */}
                                 <div>
                                     <DatePickerComponent
@@ -579,6 +624,62 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                         control={control}
                                         name="dueDate"
                                         label="Due Date"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Controller
+                                        name="status"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                options={status}
+                                                label={"Status"}
+                                                placeholder="Select status"
+                                                value={parseInt(watch("status")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                        if (newValue?.title === "Completed") {
+                                                            setValue("complectedWork", 100);
+                                                        }
+                                                        if (newValue?.title === "Not Started") {
+                                                            setValue("complectedWork", 0);
+                                                        }
+                                                    } else {
+                                                        setValue("status", null);
+                                                        setValue("complectedWork", 0);
+                                                    }
+                                                }}
+                                                error={errors.status}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Controller
+                                        name="source"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                disabled={todoId ? watch("createdBy") !== userData?.userId : false}
+                                                options={todoType}
+                                                label={"Task Type"}
+                                                placeholder="Select task type"
+                                                value={parseInt(watch("source")) || null}
+                                                onChange={(_, newValue) => {
+                                                    if (newValue?.id) {
+                                                        field.onChange(newValue.id);
+                                                    } else {
+                                                        setValue("source", null);
+                                                    }
+                                                }}
+                                                error={errors.source}
+                                            />
+                                        )}
                                     />
                                 </div>
 
@@ -773,18 +874,30 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                {/* description */}
                                 <div>
                                     <Controller
-                                        name="description"
+                                        name="complectedWork"
                                         control={control}
                                         render={({ field }) => (
                                             <Input
                                                 {...field}
-                                                label="Description"
+                                                disabled={parseInt(watch("status")) === 1}
+                                                label="Completed Work"
                                                 type="text"
-                                                multiline={true}
-                                                minRows={3}
+                                                onChange={(e) => {
+                                                    let numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                    if (numericValue === '') {
+                                                        field.onChange('');
+                                                        return;
+                                                    }
+                                                    let value = parseInt(numericValue, 10);
+
+                                                    if (Math.abs(value) <= 100) {
+                                                        field.onChange(value);
+                                                    }
+                                                }}
+                                                value={field.value ?? ""}
+                                                endIcon="%"
                                             />
                                         )}
                                     />
