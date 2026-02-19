@@ -32,9 +32,9 @@ const calendarType = [
 ]
 
 const terms = [
-    { id: 1, title: 'Monthly', kind: 'monthly' },
-    { id: 2, title: 'Semi-Annual', kind: 'semi' },
-    { id: 3, title: 'Annual', kind: 'quarterly' },
+    { id: 1, title: 'Annual (4 quarters)', kind: 'quarterly' },
+    { id: 2, title: 'Semi-Annual (2 quarters)', kind: 'semi' },
+    { id: 3, title: 'Monthly', kind: 'monthly' },
 ];
 
 const TERM_COUNTS = {

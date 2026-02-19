@@ -458,7 +458,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
         const currentEnvironmentHtml = currentEnvironment
             ? draftToHtml(convertToRaw(currentEnvironment.getCurrentContent()))
-            : null;        
+            : null;
 
         const newData = {
             ...data,
@@ -641,27 +641,13 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             onChange={(e) => {
                                                                 let value = e.target.value;
 
-                                                                // Remove everything except digits and dot
-                                                                value = value.replace(/[^0-9.]/g, "");
+                                                                // ✅ Allow only digits
+                                                                value = value.replace(/[^0-9]/g, "");
 
-                                                                // Allow only 1 dot
-                                                                const parts = value.split(".");
-                                                                if (parts.length > 2) {
-                                                                    value = parts[0] + "." + parts.slice(1).join("");
-                                                                }
-
-                                                                // Max 2 decimals
-                                                                if (parts[1]) {
-                                                                    parts[1] = parts[1].slice(0, 2);
-                                                                }
-
-                                                                value = parts.join(".");
-
-                                                                // Apply comma formatting
                                                                 const formatted = formatMoney(value);
-
                                                                 field.onChange(formatted);
                                                             }}
+
                                                             startIcon={
                                                                 <CustomIcons
                                                                     iconName={"fa-solid fa-dollar-sign"}
@@ -682,31 +668,24 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             type="text"
                                                             onChange={(e) => {
                                                                 let value = e.target.value;
-                                                                value = value.replace(/[^0-9.]/g, "");
-                                                                let parts = value.split(".");
-                                                                if (parts.length > 2) {
-                                                                    value = parts[0] + "." + parts.slice(1).join("");
-                                                                    parts = value.split(".");
-                                                                }
-                                                                if (parts[1]) {
-                                                                    parts[1] = parts[1].slice(0, 2);
-                                                                    value = parts.join(".");
-                                                                }
 
-                                                                const num = value === "" ? 0 : parseFloat(value);
-                                                                if (num > 100) {
-                                                                    return;
-                                                                }
+                                                                // ✅ Allow only digits
+                                                                value = value.replace(/[^0-9]/g, "");
 
-                                                                // set discount%
+                                                                const num = value === "" ? 0 : parseInt(value);
+
+                                                                // ✅ Prevent > 100
+                                                                if (num > 100) return;
+
                                                                 field.onChange(value);
 
-                                                                // 💡 existing forward calc: discount% → listPrice
-                                                                const listAmount = parseFloat(parseMoneyFloat(watch("listPrice")));
-                                                                const dealPrice = parseFloat((listAmount * num) / 100);
-                                                                const total = parseFloat(listAmount - dealPrice)
+                                                                const listAmount = parseInt(parseMoneyFloat(watch("listPrice")));
+                                                                const dealPrice = Math.floor((listAmount * num) / 100);
+                                                                const total = listAmount - dealPrice;
+
                                                                 setValue("dealAmount", formatMoney(total));
                                                             }}
+
                                                             startIcon={
                                                                 <CustomIcons
                                                                     iconName={"fa-solid fa-percent"}
@@ -729,51 +708,33 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             onChange={(e) => {
                                                                 let value = e.target.value;
 
-                                                                // keep only digits and dot
-                                                                value = value.replace(/[^0-9.]/g, "");
+                                                                // ✅ Allow only digits
+                                                                value = value.replace(/[^0-9]/g, "");
 
-                                                                // allow only ONE dot
-                                                                let parts = value.split(".");
-                                                                if (parts.length > 2) {
-                                                                    value = parts[0] + "." + parts.slice(1).join("");
-                                                                    parts = value.split(".");
-                                                                }
-
-                                                                // max 2 decimals
-                                                                if (parts[1]) {
-                                                                    parts[1] = parts[1].slice(0, 2);
-                                                                    value = parts.join(".");
-                                                                }
-
-                                                                // format with commas
                                                                 const formatted = formatMoney(value);
                                                                 field.onChange(formatted);
 
-                                                                // 🔁 Reverse calc: listPrice + dealAmount → discount%
                                                                 const listAmountStr = watch("listPrice");
                                                                 if (!listAmountStr) {
                                                                     setValue("discountPercentage", "");
                                                                     return;
                                                                 }
 
-                                                                const listAmount = parseFloat(parseMoneyFloat(listAmountStr));
-                                                                const dealPrice = parseFloat(parseMoneyFloat(formatted));
+                                                                const listAmount = parseInt(parseMoneyFloat(listAmountStr));
+                                                                const dealPrice = parseInt(parseMoneyFloat(value));
 
                                                                 if (!listAmount || Number.isNaN(listAmount) || Number.isNaN(dealPrice)) {
                                                                     setValue("discountPercentage", "");
                                                                     return;
                                                                 }
 
-                                                                // ✅ Correct formula:
-                                                                // discount% = ((listPrice - dealAmount) / listPrice) * 100
-                                                                let percent = ((listAmount - dealPrice) / listAmount) * 100;
+                                                                let percent = ((listAmount - dealPrice) * 100) / listAmount;
 
-                                                                // clamp 0–100
+                                                                // ✅ Clamp 0–100
                                                                 if (percent < 0) percent = 0;
                                                                 if (percent > 100) percent = 100;
 
-                                                                const percentStr = percent.toFixed(2);
-                                                                setValue("discountPercentage", percentStr);
+                                                                setValue("discountPercentage", Math.floor(percent).toString());
                                                             }}
                                                             startIcon={
                                                                 <CustomIcons
@@ -864,7 +825,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     toolbar={toolbarProperties}
                                                 />
                                             </div>
-                                            <div className='my-4'>
+                                            {/* <div className='my-4'>
                                                 <p className='mb-2'>
                                                     Current Environment
                                                 </p>
@@ -878,7 +839,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     }}
                                                     toolbar={toolbarProperties}
                                                 />
-                                            </div>
+                                            </div> */}
 
                                             <div className='my-4'>
                                                 <p className='mb-2'>
@@ -894,7 +855,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     }}
                                                     toolbar={toolbarProperties}
                                                 />
-                                            </div>                                                                                   
+                                            </div>
                                         </div>
                                     </>
                                 )
@@ -904,9 +865,13 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                     <div className="p-[30px]">
                                         <div className="flex items-center justify-between mb-3">
                                             <h3 className="text-[22px] font-semibold"></h3>
-                                            <div>
-                                                <Button type={`button`} text={'Add Partner Or Competitors'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
-                                            </div>
+                                            {
+                                                opportunitiesPartner?.length === 0 && (
+                                                    <div>
+                                                        <Button type={`button`} text={'Add Partner Or Competitors'} onClick={() => handleOpenPartnerModel()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+                                                    </div>
+                                                )
+                                            }
                                         </div>
 
                                         <div className="border rounded-md overflow-hidden">
@@ -1155,6 +1120,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                     </Components.DialogActions>
                 </form>
             </BootstrapDialog>
+
             <AlertDialog
                 open={dialog.open}
                 title={dialog.title}
@@ -1187,8 +1153,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 handleAction={() => handleDeleteOppLogo()}
                 handleClose={() => handleCloseDeleteLogoDialog()}
             />
-            <OpportunitiesPartnersModel open={openPartnerModel} handleClose={handleClosePartnerModel} id={selectedOppPartnerId} opportunityId={opportunityId || watch("id")} handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner} oppName={watch("opportunity")}/>
-            <OpportunitiesProductsModel open={openProductModel} handleClose={handleCloseProductModel} id={selectedProductId} opportunityId={opportunityId || watch("id")} handleGetAllOpportunitiesProducts={handleGetOppProduct} oppName={watch("opportunity")}/>
+            <OpportunitiesPartnersModel open={openPartnerModel} handleClose={handleClosePartnerModel} id={selectedOppPartnerId} opportunityId={opportunityId || watch("id")} handleGetAllOpportunitiesPartners={handleGetAllOpportunitiesPartner} oppName={watch("opportunity")} />
+            <OpportunitiesProductsModel open={openProductModel} handleClose={handleCloseProductModel} id={selectedProductId} opportunityId={opportunityId || watch("id")} handleGetAllOpportunitiesProducts={handleGetOppProduct} oppName={watch("opportunity")} />
             <OpportunityContactModel open={openContactModel} handleClose={handleCloseContactModel} opportunityId={opportunityId || watch("id")} handleGetAllOppContact={handleGetOppContacts} oppName={watch("opportunity")} />
         </React.Fragment>
     );

@@ -7,7 +7,6 @@ import CustomIcons from "../../../components/common/icons/CustomIcons"
 import AlertDialog from "../../../components/common/alertDialog/alertDialog";
 import PermissionWrapper from "../../../components/common/permissionWrapper/PermissionWrapper";
 
-
 export default function UserDropdown() {
 
     const userdata = getUserDetails();
@@ -76,7 +75,7 @@ export default function UserDropdown() {
             path: "/dashboard/calendar",
             iconName: "fa-solid fa-calendar",
         },
-        ...(((userdata?.roleName === "SALES REPRESENTIVE" || userdata?.roleName === "SALE MANAGER") && !userdata?.subUser)
+        ...(((userdata?.roleName?.toUpperCase() === "SALES REPRESENTIVE" || userdata?.roleName?.toUpperCase() === "SALES MANAGER" || userdata?.roleName?.toUpperCase() === "SALE MANAGER") && !userdata?.subUser)
             ? [
                 {
                     label: "My CRM",

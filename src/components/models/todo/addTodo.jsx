@@ -26,6 +26,7 @@ import PermissionWrapper from '../../common/permissionWrapper/PermissionWrapper'
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
 import { uploadFiles } from "../../../service/common/commonService";
 import { getOpportunityOptions } from '../../../service/opportunities/opportunitiesService';
+import { deleteTodoAttachment } from '../../../service/todoAttachments/todoAttachmentsService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -56,7 +57,7 @@ const status = [
     { id: 3, title: "Completed" },
 ];
 
-// Helper: unique ID for rows
+// Helper: unique ID for new rows (client side only)
 const safeId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
 function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
@@ -67,17 +68,15 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     const [teams, setTeams] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [teamAndMembers, setTeamAndMembers] = useState({ teams: [], individuals: [] });
-    const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
+    const [opportunitiesOptions, setOpportunitiesOptions] = useState(null);
 
-    // ---------- NEW: Row‑based file attachments ----------
+    // Row‑based file attachments
     const [tempFileRows, setTempFileRows] = useState([]);       // [{ id, fileName, files, existingImages }]
-    const [removedAttachmentIds, setRemovedAttachmentIds] = useState([]); // IDs to delete on save (edit mode)
-    // -----------------------------------------------------
+    const [removedAttachmentIds, setRemovedAttachmentIds] = useState([]); // IDs of images removed inside a row (to be deleted on save)
 
-    // ---------- Links state (unchanged) ----------
+    // Links state
     const [tempLinks, setTempLinks] = useState([]);
     const [linkInput, setLinkInput] = useState({ name: '', url: '' });
-    // ---------------------------------------------
 
     const {
         handleSubmit,
@@ -115,18 +114,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         setTempFileRows((prev) => [...prev, { id: safeId(), fileName: '', files: [], existingImages: [] }]);
     };
 
-    const removeFileRow = (rowId) => {
-        setTempFileRows((prev) => {
-            const row = prev.find((r) => r.id === rowId);
-            // Revoke object URLs for any local previews
-            row?.files?.forEach((f) => f?.preview && URL.revokeObjectURL(f.preview));
-            row?.existingImages?.forEach(
-                (x) => x?.__local && x?.imageURL?.startsWith('blob:') && URL.revokeObjectURL(x.imageURL)
-            );
-            return prev.filter((r) => r.id !== rowId);
-        });
-    };
-
     const setRowFileName = (rowId, value) => {
         setTempFileRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, fileName: value } : r)));
     };
@@ -153,7 +140,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 const prevImgs = r.existingImages || [];
                 const nextImgs = typeof updater === 'function' ? updater(prevImgs) : updater;
 
-                // Track removed server images (only in edit mode)
+                // Track removed server images (to be deleted on save)
                 const prevIds = new Set(prevImgs.map((x) => x?.imageId).filter(Boolean));
                 const nextIds = new Set((nextImgs || []).map((x) => x?.imageId).filter(Boolean));
                 const removed = [...prevIds].filter((id) => !nextIds.has(id));
@@ -226,14 +213,14 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 setValue("status", status?.find(s => s.title === res?.result?.status)?.id);
                 setValue("complectedWork", res?.result?.complectedWork || 0);
 
-                // ---------- Populate file rows from existing attachments ----------
+                // Populate file rows from existing attachments
                 const attachments = res?.result?.todoAttachmentsDtos || [];
                 const fileAttachments = attachments.filter(
                     (att) => att.type && att.type.toLowerCase() !== 'link'
                 );
 
                 const rows = fileAttachments.map((att) => ({
-                    id: safeId(),
+                    id: safeId(), // client‑side id for React key
                     fileName: att.fileName || att.imageName || '',
                     files: [],
                     existingImages: [
@@ -248,7 +235,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 }));
                 setTempFileRows(rows);
 
-                // ---------- Populate links ----------
+                // Populate links
                 const links = attachments.filter((att) => att.type && att.type.toLowerCase() === 'link');
                 setTempLinks(
                     links.map((l) => ({
@@ -258,7 +245,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     }))
                 );
 
-                // ---------- Assignment data ----------
+                // Assignment data
                 const response = await getTodoAssignByTodoId(todoId);
                 if (response?.status === 200) {
                     const assignData = response?.result;
@@ -314,15 +301,15 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     };
 
     const handleGetOpportunityOptions = async () => {
-        const res = await getOpportunityOptions()
-        setOpportunitiesOptions(res?.result[0]?.opportunitiesNameOptions)
-    }
+        const res = await getOpportunityOptions();
+        setOpportunitiesOptions(res?.result[0]?.opportunitiesNameOptions);
+    };
 
     useEffect(() => {
         handleGetAllTeamAndMembers();
         handleGetAllTeams();
         handleGetTodoDetails();
-        handleGetOpportunityOptions()
+        handleGetOpportunityOptions();
     }, [open]);
 
     useEffect(() => {
@@ -366,7 +353,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 formData.append('folderName', 'todo');
 
                 const response = await uploadFiles(formData);
-                // Handle both axios response and direct JSON
                 const data = response?.data ?? response;
 
                 if (data?.status === 200 && Array.isArray(data?.result) && data.result[0]) {
@@ -383,6 +369,59 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     };
 
     // -------------------------
+    // Delete handlers (immediate API calls)
+    // -------------------------
+    const handleDeleteFileRow = async (row) => {
+        // 1. Delete existing attachments from server
+        for (const img of row.existingImages) {
+            if (img.imageId) {
+                try {
+                    const res = await deleteTodoAttachment(img.imageId);
+                    if (res?.status !== 200) {
+                        setAlert({ open: true, message: res?.message || 'Failed to delete attachment', type: 'error' });
+                    }
+                } catch (err) {
+                    setAlert({ open: true, message: err.message, type: 'error' });
+                }
+            }
+        }
+
+        // 2. Clean up local previews
+        row.files?.forEach((f) => f?.preview && URL.revokeObjectURL(f.preview));
+        row.existingImages?.forEach(
+            (x) => x?.__local && x?.imageURL?.startsWith('blob:') && URL.revokeObjectURL(x.imageURL)
+        );
+
+        // 3. Remove row from state
+        setTempFileRows((prev) => prev.filter((r) => r.id !== row.id));
+
+        // 4. Refresh list (optional)
+        handleGetAllTodos();
+    };
+
+    const handleDeleteLink = async (link, index) => {
+        // 1. Delete from server if it has an ID
+        if (link.id) {
+            try {
+                const res = await deleteTodoAttachment(link.id);
+                if (res?.status !== 200) {
+                    setAlert({ open: true, message: res?.message || 'Failed to delete link', type: 'error' });
+                    return;
+                }
+            } catch (err) {
+                setAlert({ open: true, message: err.message, type: 'error' });
+                return;
+            }
+        }
+
+        // 2. Remove from state
+        setTempLinks((prev) => prev.filter((_, i) => i !== index));
+
+        // 3. Refresh list
+        handleGetAllTodos();
+    };
+
+    // -------------------------
     // Main submit handler
     // -------------------------
     const submit = async (data) => {
@@ -395,13 +434,24 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             return;
         }
 
+        // 2) Delete attachments that were individually removed inside rows
+        if (removedAttachmentIds.length > 0) {
+            for (const id of removedAttachmentIds) {
+                try {
+                    await deleteTodoAttachment(id);
+                } catch (err) {
+                    setAlert({ open: true, message: err.message, type: 'error' });
+                    setLoading(false);
+                    return;
+                }
+            }
+            setRemovedAttachmentIds([]); // clear after deletion
+        }
+
         const dueDateVal = dayjs(watch('dueDate')).isValid() ? dayjs(watch('dueDate')) : dayjs();
         const completedDateVal = dayjs(watch('completedDate')).isValid() ? dayjs(watch('completedDate')) : null;
 
-        // 2) Build todoAttachmentsDtos from rows + links
-        //    a) Existing files (already on server)
-        //    b) Newly uploaded files
-        //    c) Links
+        // 3) Build todoAttachmentsDtos from rows + links
         const fileDtos = [];
 
         for (const row of tempFileRows || []) {
@@ -450,7 +500,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
         const todoAttachmentsDtos = [...fileDtos, ...linkDtos];
 
-        // 3) Prepare main todo payload
+        // 4) Prepare main todo payload
         const newData = {
             ...data,
             todoAttachmentsDtos,
@@ -464,8 +514,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             status: status?.find(s => s.id === parseInt(watch("status")))?.title,
             source: todoType?.find(t => t.id === parseInt(watch("source")))?.title,
         };
-        try {
 
+        try {
             if (todoId) {
                 const res = await updateTodo(todoId, newData);
                 if (res?.status === 200) {
@@ -558,6 +608,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     <Components.DialogContent dividers>
                         <div className="px-[30px]">
                             <div className="grid gap-[30px]">
+                                {/* Opportunity */}
                                 <div>
                                     <Controller
                                         name="oppId"
@@ -600,7 +651,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                {/* description */}
+                                {/* Description */}
                                 <div>
                                     <Controller
                                         name="description"
@@ -627,6 +678,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
+                                {/* Status */}
                                 <div>
                                     <Controller
                                         name="status"
@@ -658,6 +710,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
+                                {/* Task Type */}
                                 <div>
                                     <Controller
                                         name="source"
@@ -850,6 +903,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     </div>
                                 )}
 
+                                {/* Priority */}
                                 <div>
                                     <Controller
                                         name="priority"
@@ -874,6 +928,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
+                                {/* Completed Work */}
                                 <div>
                                     <Controller
                                         name="complectedWork"
@@ -891,7 +946,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                         return;
                                                     }
                                                     let value = parseInt(numericValue, 10);
-
                                                     if (Math.abs(value) <= 100) {
                                                         field.onChange(value);
                                                     }
@@ -929,15 +983,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 <div key={row.id} className="bg-white rounded-lg border border-slate-200 p-3">
                                                     <div className="grid grid-cols-12 gap-3 items-start">
                                                         <div className="col-span-4">
-                                                            {/* <label className="block text-xs text-slate-500 mb-1">
-                                                                File name
-                                                            </label>
-                                                            <input
-                                                                value={row.fileName}
-                                                                onChange={(e) => setRowFileName(row.id, e.target.value)}
-                                                                placeholder="Attachment name"
-                                                                className="w-full border border-slate-200 rounded-lg p-2.5 outline-none"
-                                                            /> */}
                                                             <Input
                                                                 value={row.fileName}
                                                                 onChange={(e) => setRowFileName(row.id, e.target.value)}
@@ -964,7 +1009,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                         <div className="col-span-1 flex justify-end pt-6">
                                                             <button
                                                                 type="button"
-                                                                onClick={() => removeFileRow(row.id)}
+                                                                onClick={() => handleDeleteFileRow(row)}
                                                                 className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition"
                                                                 title="Remove row"
                                                             >
@@ -982,7 +1027,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                 </div>
                                 {/* -------------------------------------------------------- */}
 
-                                {/* ---------- Links UI (unchanged) ---------- */}
+                                {/* ---------- Links UI ---------- */}
                                 <div className="bg-white/50 rounded-lg p-4 border border-indigo-100">
                                     <div className="flex justify-between items-center mb-3">
                                         <label className="block text-sm font-semibold text-slate-600">
@@ -1041,7 +1086,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setTempLinks((prev) => prev.filter((_, i) => i !== idx))}
+                                                        onClick={() => handleDeleteLink(link, idx)}
                                                         className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition"
                                                         title="Remove"
                                                     >
@@ -1087,7 +1132,6 @@ const mapDispatchToProps = {
 };
 
 export default connect(null, mapDispatchToProps)(AddTodo);
-
 
 
 

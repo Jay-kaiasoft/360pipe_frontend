@@ -36,6 +36,7 @@ import { createSubUserTypes } from "../../../service/subUserType/subUserTypeServ
 import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
 
 const steps = ["", "", "", "", "", ""];
+
 const calendarType = [
     { id: 1, title: "Calendar Year" },
     { id: 2, title: "Financial Year" },
@@ -101,7 +102,7 @@ const Register = ({ setAlert, setLoading }) => {
             managerId: "",
             name: "",
             title: "",
-            roleId: 1,
+            roleId: 3,
             emailAddress: "",
             cellPhone: "",
             address1: "",

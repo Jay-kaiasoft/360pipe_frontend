@@ -109,8 +109,14 @@ const AppHeader = ({
 
     const currentPath = locaiton.pathname
     const currentTabIndex = tabItems?.findIndex((tab) => tab.path === currentPath)
-    if (currentTabIndex !== -1) setSelectedTab(currentTabIndex)
-    else setSelectedTab(null)
+    if (currentTabIndex !== -1) {
+      setSelectedTab(currentTabIndex);
+    }
+    else {
+      setSelectedTab(null)
+      const currentTabIndex = tabsData2?.findIndex((tab) => tab.path === currentPath)
+      setSelectedTab2(currentTabIndex)
+    }
   }
 
   const handleToggle = () => {
