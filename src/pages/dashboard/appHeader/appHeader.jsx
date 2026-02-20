@@ -249,19 +249,23 @@ const AppHeader = ({
           }
           <div className="flex items-center gap-4">
             <Tabs tabsData={tabsData2} selectedTab={selectedTab2} handleChange={handleChangeTab2} type="header" />
-            <div className="flex items-center justify-end gap-6">
-              {(userDetails?.userId === salesforceUserDetails?.userId &&
-                localStorage.getItem("accessToken_salesforce") &&
-                localStorage.getItem("instanceUrl_salesforce")) && (
-                  <>
-                    <div>
-                      <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                        <Button onClick={() => handlePushData()} text={"SYNC"} useFor="success" />
-                      </Components.Badge>
-                    </div>
-                  </>
-                )}
-            </div>
+            {
+              !userDetails?.subUser && (
+                <div className="flex items-center justify-end gap-6">
+                  {(userDetails?.userId === salesforceUserDetails?.userId &&
+                    localStorage.getItem("accessToken_salesforce") &&
+                    localStorage.getItem("instanceUrl_salesforce")) && (
+                      <>
+                        <div>
+                          <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
+                            <Button onClick={() => handlePushData()} text={"SYNC"} useFor="success" />
+                          </Components.Badge>
+                        </div>
+                      </>
+                    )}
+                </div>
+              )
+            }
           </div>
         </div>
 

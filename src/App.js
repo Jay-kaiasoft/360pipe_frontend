@@ -42,6 +42,7 @@ import Results from "./pages/dashboard/results/results";
 import Activities from "./pages/dashboard/activities/activities";
 import OppView from "./demoScreens/oppView";
 import TodoScreen from "./demoScreens/todo/todoScreen";
+import TodoScreenManager from "./demoScreens/todo/todoScreenManager";
 
 library.add(fas, far, fab)
 
@@ -54,6 +55,10 @@ const App = ({ setLoading }) => {
     {
       path: "/demoscreens/todo",
       element: <TodoScreen />,
+    },
+    {
+      path: "/demoscreens/todomanager",
+      element: <TodoScreenManager />,
     },
     {
       path: "*",

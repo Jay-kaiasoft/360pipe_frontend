@@ -75,8 +75,9 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     const [removedAttachmentIds, setRemovedAttachmentIds] = useState([]); // IDs of images removed inside a row (to be deleted on save)
 
     // Links state
-    const [tempLinks, setTempLinks] = useState([]);
+    const [tempLinks, setTempLinks] = useState([]);             // each link: { uid, id, name, url }
     const [linkInput, setLinkInput] = useState({ name: '', url: '' });
+    const [editingLinkId, setEditingLinkId] = useState(null);   // uid of link being edited
 
     const {
         handleSubmit,
@@ -154,6 +155,61 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     };
 
     // -------------------------
+    // Link handlers
+    // -------------------------
+    const handleAddOrUpdateLink = () => {
+        const nameTrim = linkInput.name.trim();
+        const urlTrim = linkInput.url.trim();
+        if (!nameTrim || !urlTrim) return;
+
+        if (editingLinkId !== null) {
+            // Update existing link (keep its server id)
+            setTempLinks((prev) =>
+                prev.map((link) =>
+                    link.uid === editingLinkId ? { ...link, name: nameTrim, url: urlTrim } : link
+                )
+            );
+            setEditingLinkId(null);
+            setLinkInput({ name: '', url: '' });
+        } else {
+            // Add new link (client id only)
+            setTempLinks((prev) => [
+                ...prev,
+                { uid: safeId(), id: null, name: nameTrim, url: urlTrim },
+            ]);
+            setLinkInput({ name: '', url: '' });
+        }
+    };
+
+    const handleDeleteLink = async (link) => {
+        // 1. Delete from server if it has an ID
+        if (link.id) {
+            try {
+                const res = await deleteTodoAttachment(link.id);
+                if (res?.status !== 200) {
+                    setAlert({ open: true, message: res?.message || 'Failed to delete link', type: 'error' });
+                    return;
+                }
+            } catch (err) {
+                setAlert({ open: true, message: err.message, type: 'error' });
+                return;
+            }
+        }
+
+        // 2. Remove from state
+        setTempLinks((prev) => prev.filter((l) => l.uid !== link.uid));
+
+        // 3. If this link was being edited, clear editing
+        if (editingLinkId === link.uid) {
+            setEditingLinkId(null);
+            setLinkInput({ name: '', url: '' });
+        }
+
+        // 4. Refresh list
+        handleGetAllTodos();
+    };
+
+    // -------------------------
     // Reset everything on close
     // -------------------------
     const onClose = () => {
@@ -188,6 +244,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         setRemovedAttachmentIds([]);
         setTempLinks([]);
         setLinkInput({ name: '', url: '' });
+        setEditingLinkId(null);
 
         handleClose();
     };
@@ -235,10 +292,11 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                 }));
                 setTempFileRows(rows);
 
-                // Populate links
+                // Populate links (add a unique uid for each)
                 const links = attachments.filter((att) => att.type && att.type.toLowerCase() === 'link');
                 setTempLinks(
                     links.map((l) => ({
+                        uid: safeId(),
                         id: l.id || null,
                         name: l.linkName || '',
                         url: l.link || '',
@@ -399,28 +457,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         handleGetAllTodos();
     };
 
-    const handleDeleteLink = async (link, index) => {
-        // 1. Delete from server if it has an ID
-        if (link.id) {
-            try {
-                const res = await deleteTodoAttachment(link.id);
-                if (res?.status !== 200) {
-                    setAlert({ open: true, message: res?.message || 'Failed to delete link', type: 'error' });
-                    return;
-                }
-            } catch (err) {
-                setAlert({ open: true, message: err.message, type: 'error' });
-                return;
-            }
-        }
-
-        // 2. Remove from state
-        setTempLinks((prev) => prev.filter((_, i) => i !== index));
-
-        // 3. Refresh list
-        handleGetAllTodos();
-    };
-
     // -------------------------
     // Main submit handler
     // -------------------------
@@ -487,6 +523,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             });
         }
 
+        // Links from tempLinks
         const linkDtos = tempLinks.map((link) => ({
             id: link.id || null,
             todoId: todoId || null,
@@ -497,6 +534,20 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             link: link.url,
             linkName: link.name,
         }));
+
+        // Add pending link if not editing and inputs are not empty
+        if (editingLinkId === null && linkInput.name.trim() && linkInput.url.trim()) {
+            linkDtos.push({
+                id: null,
+                todoId: todoId || null,
+                type: 'Link',
+                fileName: null,
+                imageName: null,
+                path: null,
+                link: linkInput.url.trim(),
+                linkName: linkInput.name.trim(),
+            });
+        }
 
         const todoAttachmentsDtos = [...fileDtos, ...linkDtos];
 
@@ -1027,7 +1078,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                 </div>
                                 {/* -------------------------------------------------------- */}
 
-                                {/* ---------- Links UI ---------- */}
+                                {/* ---------- Links UI (with edit support) ---------- */}
                                 <div className="bg-white/50 rounded-lg p-4 border border-indigo-100">
                                     <div className="flex justify-between items-center mb-3">
                                         <label className="block text-sm font-semibold text-slate-600">
@@ -1055,27 +1106,19 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                         <div className="col-span-2">
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    if (linkInput.name.trim() && linkInput.url.trim()) {
-                                                        setTempLinks((prev) => [
-                                                            ...prev,
-                                                            { id: null, name: linkInput.name.trim(), url: linkInput.url.trim() },
-                                                        ]);
-                                                        setLinkInput({ name: '', url: '' });
-                                                    }
-                                                }}
+                                                onClick={handleAddOrUpdateLink}
                                                 className="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-colors"
                                             >
-                                                Add
+                                                {editingLinkId ? 'Edit' : 'Add'}
                                             </button>
                                         </div>
                                     </div>
 
                                     {tempLinks.length > 0 && (
                                         <div className="mt-4 space-y-2">
-                                            {tempLinks.map((link, idx) => (
+                                            {tempLinks.map((link) => (
                                                 <div
-                                                    key={link.id || idx}
+                                                    key={link.uid}
                                                     className="flex items-center justify-between gap-3 border border-slate-200 bg-white rounded-lg px-3 py-2"
                                                 >
                                                     <div className="min-w-0">
@@ -1084,14 +1127,27 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                         </div>
                                                         <div className="text-xs text-slate-500 truncate">{link.url}</div>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteLink(link, idx)}
-                                                        className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition"
-                                                        title="Remove"
-                                                    >
-                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 h-4 w-4" />
-                                                    </button>
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setEditingLinkId(link.uid);
+                                                                setLinkInput({ name: link.name, url: link.url });
+                                                            }}
+                                                            className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition"
+                                                            title="Edit"
+                                                        >
+                                                            <CustomIcons iconName="fa-solid fa-pen" css="text-blue-600 h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteLink(link)}
+                                                            className="p-2 rounded-lg bg-red-50 hover:bg-red-100 transition"
+                                                            title="Remove"
+                                                        >
+                                                            <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 h-4 w-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1132,7 +1188,6 @@ const mapDispatchToProps = {
 };
 
 export default connect(null, mapDispatchToProps)(AddTodo);
-
 
 
 // import React, { useEffect, useState } from 'react';
