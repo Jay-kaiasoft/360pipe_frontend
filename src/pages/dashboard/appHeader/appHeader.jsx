@@ -11,6 +11,7 @@ import {
   setSyncingPullStatus,
   setLoadingMessage,
   setOppSelectedTabIndex,
+  setPerformanceSelectedTabIndex,
 } from "../../../redux/commonReducers/commonReducers"
 
 import Components from "../../../components/muiComponents/components"
@@ -23,6 +24,7 @@ import { Tabs } from "../../../components/common/tabs/tabs"
 import { useTheme } from "@mui/material"
 
 const oppTableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Deal Docs" }];
+const performanceTableData = [{ label: "Activity" }, { label: "Results" }];
 
 const AppHeader = ({
   setAlert,
@@ -34,7 +36,9 @@ const AppHeader = ({
   syncCount,
   syncingPushStatus,
   oppSelectedTabIndex,
-  setOppSelectedTabIndex
+  setOppSelectedTabIndex,
+  performanceSelectedTabIndex,
+  setPerformanceSelectedTabIndex
 }) => {
   const theme = useTheme()
 
@@ -76,25 +80,30 @@ const AppHeader = ({
   const handleSetNavItems = () => {
     const tabItems = [
       {
-        label: "Summary",
+        label: "Pipeline",
         path: "/dashboard/opportunities",
       },
       {
-        label: "Activities",
-        path: "/dashboard/activities",
+        label: "Performance",
+        path: "/dashboard/performance",
       },
-      {
-        label: "Results",
-        path: "/dashboard/results",
-      },
-      {
-        label: "To-Do",
-        path: "/dashboard/todos",
-      },
+      // {
+      //   label: "Activities",
+      //   path: "/dashboard/activities",
+      // },
+      // {
+      //   label: "Results",
+      //   path: "/dashboard/results",
+      // },
       {
         label: "Contacts",
         path: "/dashboard/contacts",
       },
+      {
+        label: "My Actions",
+        path: "/dashboard/todos",
+      },
+
       // ...(((userDetails?.roleName === "SALES REPRESENTIVE" || userDetails?.roleName === "SALE MANAGER") && !userDetails?.subUser)
       //   ? [
       //     {
@@ -247,6 +256,13 @@ const AppHeader = ({
               </div>
             )
           }
+          {
+            locaiton?.pathname.includes("performance") && (
+              <div className="w-full ml-32">
+                <Tabs tabsData={performanceTableData} selectedTab={performanceSelectedTabIndex} handleChange={setPerformanceSelectedTabIndex} type="header" />
+              </div>
+            )
+          }
           <div className="flex items-center gap-4">
             <Tabs tabsData={tabsData2} selectedTab={selectedTab2} handleChange={handleChangeTab2} type="header" />
             {
@@ -310,7 +326,8 @@ const mapStateToProps = (state) => ({
   syncCount: state.common.syncCount,
   syncingPullStatus: state.common.syncingPullStatus,
   syncingPushStatus: state.common.syncingPushStatus,
-  oppSelectedTabIndex: state.common.oppSelectedTabIndex
+  oppSelectedTabIndex: state.common.oppSelectedTabIndex,
+  performanceSelectedTabIndex: state.common.performanceSelectedTabIndex,
 })
 
 const mapDispatchToProps = {
@@ -320,7 +337,8 @@ const mapDispatchToProps = {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
-  setOppSelectedTabIndex
+  setOppSelectedTabIndex,
+  setPerformanceSelectedTabIndex
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

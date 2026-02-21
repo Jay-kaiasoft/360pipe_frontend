@@ -25,6 +25,7 @@ const initialState = {
   filterStartDate: null,
   filterEndDate: null,
   oppSelectedTabIndex: 0,
+  performanceSelectedTabIndex: 0,
 
 };
 
@@ -115,6 +116,9 @@ const commonReducersSlice = createSlice({
     setOppSelectedTabIndex(state, action) {
       state.oppSelectedTabIndex = action.payload;
     },
+    setPerformanceSelectedTabIndex(state, action) {
+      state.performanceSelectedTabIndex = action.payload;
+    },
   },
 });
 
@@ -142,7 +146,8 @@ export const {
   toggleSubmenu,
   setIsMobile,
   setOpenSubmenu,
-  setOppSelectedTabIndex
+  setOppSelectedTabIndex,
+  setPerformanceSelectedTabIndex
 } = commonReducersSlice.actions;
 
 export default commonReducersSlice.reducer;

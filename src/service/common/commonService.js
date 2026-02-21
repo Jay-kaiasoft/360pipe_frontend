@@ -98,7 +98,7 @@ export const stageColors = {
 
 export const headerTitles = [
     { title: "Dashboard", path: "/dashboard" },
-    { title: "Summary", path: "/dashboard/opportunities" },
+    { title: "Pipeline", path: "/dashboard/opportunities" },
     { title: "Deal Management", path: "/dashboard/opportunity-view/:opportunityId" },
     { title: "Contacts", path: "/dashboard/contacts" },
     { title: "My CRM", path: "/dashboard/mycrm" },

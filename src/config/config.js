@@ -44,7 +44,6 @@ export const teamMembersURL = baseURL + '/teamMembers'
 export const customerQuotaURL = baseURL + '/customerQuota'
 export const todoURL = baseURL + '/todo'
 export const todoAssignURL = baseURL + '/todoAssign'
-export const todoPriorityURL = baseURL + '/todoPriority'
 export const todoNoteURL = baseURL + '/todoNote'
 export const todoAttachmentsURL = baseURL + '/todoAttachments'
 

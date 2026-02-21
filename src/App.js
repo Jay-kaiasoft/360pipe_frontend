@@ -43,6 +43,7 @@ import Activities from "./pages/dashboard/activities/activities";
 import OppView from "./demoScreens/oppView";
 import TodoScreen from "./demoScreens/todo/todoScreen";
 import TodoScreenManager from "./demoScreens/todo/todoScreenManager";
+import Performance from "./pages/dashboard/performance/performance";
 
 library.add(fas, far, fab)
 
@@ -183,6 +184,10 @@ const App = ({ setLoading }) => {
         {
           path: "activities",
           element: <Activities />,
+        },
+        {
+          path: "performance",
+          element: <Performance />,
         },
       ],
     },

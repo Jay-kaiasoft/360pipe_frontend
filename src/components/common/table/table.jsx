@@ -6,7 +6,6 @@ import PropTypes from 'prop-types';
 import { DataGrid } from '@mui/x-data-grid';
 import CustomIcons from '../icons/CustomIcons';
 import { getUserDetails } from '../../../utils/getUserDetails';
-import { changeTodoPriority } from '../../../service/todoPriority/todoPriorityService';
 
 const paginationModel = { page: 0, pageSize: 10 };
 
@@ -50,7 +49,8 @@ export default function DataTable({
     setRowSelectionModel,
     rowSelectionModel,
     processRowUpdate,
-    hideFooter = false
+    hideFooter = false,
+    onRowClick
 }) {
     const userInfo = getUserDetails();
     const theme = useTheme();
@@ -68,19 +68,19 @@ export default function DataTable({
     }, [rows]);
 
 
-    const handleChangeTodoPriority = async () => {
-        if (priority) {
-            const res = await changeTodoPriority(priorityData)
-            if (res && res.status === 200) {
-                setPriority(false)
-                setPriorityData([])
-            }
-        }
-    }
+    // const handleChangeTodoPriority = async () => {
+    //     if (priority) {
+    //         const res = await changeTodoPriority(priorityData)
+    //         if (res && res.status === 200) {
+    //             setPriority(false)
+    //             setPriorityData([])
+    //         }
+    //     }
+    // }
 
-    useEffect(() => {
-        handleChangeTodoPriority()
-    }, [priority]);
+    // useEffect(() => {
+    //     handleChangeTodoPriority()
+    // }, [priority]);
 
     const renderSortableTable = (sortedRows, setSortedRows) => {
         const handleChangeValue = (newList) => {
@@ -233,6 +233,11 @@ export default function DataTable({
                         disableRowSelectionOnClick
                         hideFooterSelectedRowCount
                         hideFooter={hideFooter}
+                        onRowClick={(params) => {
+                            if (onRowClick) {
+                                onRowClick(params.row);
+                            }
+                        }}
                         getRowClassName={getRowClassName}
                         getRowId={getRowId}
                         checkboxSelection={checkboxSelection}
