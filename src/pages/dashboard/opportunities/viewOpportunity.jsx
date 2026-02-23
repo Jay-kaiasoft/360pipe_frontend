@@ -1227,8 +1227,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                     {stages?.map((stage) => {
                         const isActive = stage.id === currentStageId;
                         const isCompleted = currentStageId !== null && stage.id < currentStageId;
-                        let pillClasses = isActive ? "bg-[#1072E0] text-white border-[#1072E0]" :
-                            isCompleted ? "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF] cursor-pointer" :
+                        let pillClasses = isActive ? "bg-[#2753AF] text-white border-[#2753AF]" :
+                            isCompleted ? "bg-[#E3F2FD] text-[#2753AF] border-[#B3D7FF] cursor-pointer" :
                                 "bg-white text-gray-700 border-gray-300 cursor-pointer";
                         return (
                             <div key={stage.id} onClick={() => { if (!isActive) handleSaveField("salesStage", stage.title); }}>

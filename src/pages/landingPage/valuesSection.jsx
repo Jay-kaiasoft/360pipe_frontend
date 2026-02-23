@@ -75,9 +75,9 @@ export default function ValuesSection() {
                     <div className="relative z-10 flex justify-center pt-12">
                         <button
                             type="button"
-                            className="relative px-5 py-3 rounded group overflow-hidden font-medium text-[#1072E0] border border-[#1072E0]"
+                            className="relative px-5 py-3 rounded group overflow-hidden font-medium text-[#2753AF] border border-[#2753AF]"
                         >
-                            <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#1072E0] group-hover:h-full"></span>
+                            <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#2753AF] group-hover:h-full"></span>
 
                             <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
                                 Learn more about 360Pipe CRM

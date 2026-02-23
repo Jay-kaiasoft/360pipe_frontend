@@ -146,7 +146,7 @@ function Accordion({ items, openId: controlledOpenId, onChangeOpenId }) {
                         <span
                             className={`p-1 rounded-full border flex justify-center items-center 
                             transition-all duration-500 ease-in-out
-                            ${openId === it.id ? "rotate-180 bg-[#1072E0] border-blue-600" : "rotate-0 bg-white border-gray-300"}`}
+                            ${openId === it.id ? "rotate-180 bg-[#2753AF] border-blue-600" : "rotate-0 bg-white border-gray-300"}`}
                         >
                             {openId === it.id ? (
                                 <CustomIcons iconName="fa-solid fa-minus" css="text-white w-4 h-4" />

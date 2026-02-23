@@ -84,7 +84,7 @@ const FAQSection = () => {
                                     <span
                                         className={`p-2 rounded-full border flex justify-center items-center 
         transition-all duration-500 ease-in-out
-        ${openId === faq.id ? "rotate-180 bg-[#1072E0] border-[#1072E0]" : "rotate-0 bg-white border-gray-300"}`}
+        ${openId === faq.id ? "rotate-180 bg-[#2753AF] border-[#2753AF]" : "rotate-0 bg-white border-gray-300"}`}
                                     >
                                         {openId === faq.id ? (
                                             <CustomIcons iconName="fa-solid fa-minus" css="text-white w-5 h-5" />

@@ -199,7 +199,7 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
               actionId={2}
               component={
                 <Tooltip title="Edit" arrow>
-                  <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                  <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                     <Components.IconButton onClick={() => handleClickOpen(params.row.id)}>
                       <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                     </Components.IconButton>

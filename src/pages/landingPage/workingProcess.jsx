@@ -41,7 +41,7 @@ const workflowSteps = [
 
 const WorkingProcess = () => {
     return (
-        <section className="process pt-[130px] pb-[100px] relative bg-[#1072E0]">
+        <section className="process pt-[130px] pb-[100px] relative bg-[#2753AF]">
             <div className="container mx-auto max-w-[1320px]">
                 <div className="flex justify-center items-center mb-5">
                     <div className='px-3 py-1 shadow-sm border border-blue-500 rounded-full flex items-center'>

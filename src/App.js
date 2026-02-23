@@ -44,6 +44,7 @@ import OppView from "./demoScreens/oppView";
 import TodoScreen from "./demoScreens/todo/todoScreen";
 import TodoScreenManager from "./demoScreens/todo/todoScreenManager";
 import Performance from "./pages/dashboard/performance/performance";
+import Support from "./pages/landingPage/support";
 
 library.add(fas, far, fab)
 
@@ -72,6 +73,10 @@ const App = ({ setLoading }) => {
     {
       path: "/pricing",
       element: <PricingSection />,
+    },
+    {
+      path: "/support",
+      element: <Support />,
     },
     {
       path: "/register",

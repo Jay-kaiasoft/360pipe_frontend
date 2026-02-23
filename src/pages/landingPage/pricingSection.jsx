@@ -56,7 +56,7 @@ const PricingSection = () => {
                     type="button"
                     className="relative px-5 py-2 rounded group overflow-hidden font-medium bg-[#FFD600] text-[#222] shadow-md"
                   >
-                    <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#1072E0] group-hover:h-full"></span>
+                    <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#2753AF] group-hover:h-full"></span>
 
                     <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
                       Choose Plan
@@ -78,7 +78,7 @@ const PricingSection = () => {
                   <p className="text-2xl font-bold text-gray-900 mb-4">{plan.price}</p>
                   <button
                     onClick={() => handlePlanSelection()}
-                    className="bg-[#FFD600] px-5 py-2 rounded font-bold hover:bg-[#1072E0] hover:text-white transition"
+                    className="bg-[#FFD600] px-5 py-2 rounded font-bold hover:bg-[#2753AF] hover:text-white transition"
                   >
                     Choose Plan
                   </button>

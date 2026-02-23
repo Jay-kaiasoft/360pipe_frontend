@@ -900,7 +900,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                                 <td className="px-4 py-3">
                                                                     <div className='flex items-center gap-2 justify-end h-full'>
                                                                         <Tooltip title="Edit" arrow>
-                                                                            <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                            <div className='bg-[#2753AF] h-7 w-7 flex justify-center items-center rounded-full text-white'>
                                                                                 <Components.IconButton onClick={() => handleOpenPartnerModel(row.id)}>
                                                                                     <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
                                                                                 </Components.IconButton>
@@ -1070,7 +1070,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                                                                     <td className="px-4 py-3">
                                                                         <div className='flex items-center gap-2 justify-end h-full'>
-                                                                            <div className='bg-[#1072E0] h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                            <div className='bg-[#2753AF] h-7 w-7 flex justify-center items-center rounded-full text-white'>
                                                                                 <Tooltip title="Edit" arrow>
                                                                                     <Components.IconButton onClick={() => handleOpenProductModel(row.id)}>
                                                                                         <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />

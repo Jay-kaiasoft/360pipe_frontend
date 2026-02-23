@@ -26,7 +26,7 @@ const Footer = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <span className="bg-[#1072E0] p-3 rounded-full">
+                            <span className="bg-[#2753AF] p-3 rounded-full">
                                 <img
                                     src={Phone}
                                     alt="Phone Icon"
@@ -135,7 +135,7 @@ const Footer = () => {
 
                     {/* Bottom Section */}
                     <div className="flex flex-col md:flex-row justify-between items-center py-6 text-sm text-white">
-                        <p className="text-base font-normal">Copyright © 2025 360Pipe. All rights reserved.</p>
+                        <p className="text-base font-normal">Copyright © {new Date().getFullYear()} 360Pipe. All rights reserved.</p>
                         <div className="flex items-center gap-4 mt-4 md:mt-0">
                             <span className="uppercase text-base font-normal">Follow us :</span>
                             <NavLink to="#">

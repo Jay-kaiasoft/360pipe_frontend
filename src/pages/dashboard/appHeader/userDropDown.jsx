@@ -163,7 +163,7 @@ export default function UserDropdown() {
                                         <NavLink
                                             to={item.path}
                                             onClick={closeDropdown}
-                                            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium  rounded-lg transition-colors duration-200 ${currentPath === item.path ? "bg-[#1072E0] text-white hover:bg-[#1072E0] hover:text-white" : "text-gray-700 hover:bg-gray-100 hover:text-gray-700 "}`}
+                                            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium  rounded-lg transition-colors duration-200 ${currentPath === item.path ? "bg-[#2753AF] text-white hover:bg-[#2753AF] hover:text-white" : "text-gray-700 hover:bg-gray-100 hover:text-gray-700 "}`}
                                         >
                                             <CustomIcons
                                                 iconName={item.iconName}

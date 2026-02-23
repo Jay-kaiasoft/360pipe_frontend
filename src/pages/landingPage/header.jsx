@@ -35,6 +35,7 @@ const Header = () => {
                     ],
                 },
                 { title: "Pricing", route: "/pricing" },
+                { title: "Support", route: "/support" },
             ])
         } else {
             setNavItems([])
@@ -79,24 +80,7 @@ const Header = () => {
                             >
                                 {item.title}
                                 {/* {item.children && <span className="ml-1">+</span>} */}
-                            </NavLink>
-
-                            {/* Dropdown for desktop
-                            {item.children && (
-                                <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
-                                    <div className="py-1">
-                                        {item.children.map((child, cidx) => (
-                                            <NavLink
-                                                key={cidx}
-                                                to="#"
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                                            >
-                                                {child}
-                                            </NavLink>
-                                        ))}
-                                    </div>
-                                </div>
-                            )} */}
+                            </NavLink>                       
                         </div>
                     ))}
                 </nav>
@@ -106,13 +90,13 @@ const Header = () => {
                     <div className="hidden xl:flex space-x-3">
                         <button
                             onClick={() => navigate("/pricing")}
-                            className="bg-[#1072E0] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#1072E0] transition"
+                            className="bg-[#2753AF] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#2753AF] transition"
                         >
                             Sign Up
                         </button>
                         <button
                             onClick={() => navigate("/login")}
-                            className="px-5 py-2 rounded-md font-semibold transition-colors duration-300 border border-[#1072E0] text-[#1072E0] hover:bg-[#1072E0] hover:text-white"
+                            className="px-5 py-2 rounded-md font-semibold transition-colors duration-300 border border-[#2753AF] text-[#2753AF] hover:bg-[#2753AF] hover:text-white"
                         >
                             Sign In
                         </button>

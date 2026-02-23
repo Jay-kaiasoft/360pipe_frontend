@@ -118,7 +118,7 @@ const Quota = ({ setAlert }) => {
                                         <td className="px-4 py-3 text-right text-sm">${row.quota?.toLocaleString('en-US') || '—'}</td>
                                         <td className="px-4 py-3">
                                             <div className='flex items-center gap-2 justify-end h-full'>
-                                                <div className='bg-[#1072E0] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                                     <Components.IconButton onClick={() => handleOpenModel(row.id)}>
                                                         <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                                     </Components.IconButton>

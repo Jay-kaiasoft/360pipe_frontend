@@ -1300,9 +1300,9 @@ const ViewOpportunity = ({ setAlert }) => {
                             let pillClasses = "";
 
                             if (isActive) {
-                                pillClasses = "bg-[#1072E0] text-white border-[#1072E0] cursor-default";
+                                pillClasses = "bg-[#2753AF] text-white border-[#2753AF] cursor-default";
                             } else if (isCompleted) {
-                                pillClasses = "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF] cursor-pointer";
+                                pillClasses = "bg-[#E3F2FD] text-[#2753AF] border-[#B3D7FF] cursor-pointer";
                             } else {
                                 pillClasses = "bg-white text-gray-700 border-gray-300 cursor-pointer";
                             }
@@ -1904,7 +1904,7 @@ const ViewOpportunity = ({ setAlert }) => {
                                     <p className="text-base font-bold text-gray-700">
                                         Total Expected Revenue
                                     </p>
-                                    <p className="text-lg font-extrabold text-[#1072E0]">
+                                    <p className="text-lg font-extrabold text-[#2753AF]">
                                         {grandTotal
                                             ? `$${grandTotal.toLocaleString()}`
                                             : "—"}

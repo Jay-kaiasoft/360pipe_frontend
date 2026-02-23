@@ -881,8 +881,8 @@ export default function OppView() {
             const isCompleted = currentStageId !== null && stage.id < currentStageId;
 
             let pillClasses = "";
-            if (isActive) pillClasses = "bg-[#1072E0] text-white border-[#1072E0] cursor-default";
-            else if (isCompleted) pillClasses = "bg-[#E3F2FD] text-[#1072E0] border-[#B3D7FF] cursor-pointer";
+            if (isActive) pillClasses = "bg-[#2753AF] text-white border-[#2753AF] cursor-default";
+            else if (isCompleted) pillClasses = "bg-[#E3F2FD] text-[#2753AF] border-[#B3D7FF] cursor-pointer";
             else pillClasses = "bg-white text-gray-700 border-gray-300 cursor-pointer";
 
             return (

@@ -319,7 +319,7 @@ function AccordionItem({
                     className="flex-1 flex flex-col sm:flex-row sm:items-center sm:gap-3 text-left"
                 >
                     <span className="text-base font-medium text-gray-900">{title}</span>
-                    <span className="mt-1 sm:mt-0 inline-flex items-center rounded-full border border-[#1072E0] bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-[#1072E0]">
+                    <span className="mt-1 sm:mt-0 inline-flex items-center rounded-full border border-[#2753AF] bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-[#2753AF]">
                         Records: {emails.length}
                     </span>
                 </button>
@@ -586,7 +586,7 @@ function EmailTable({
                                                 <td className="px-4 py-3 text-sm text-gray-800">
                                                     {r.jobTitle || "—"}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-[#1072E0] truncate max-w-[220px]">
+                                                <td className="px-4 py-3 text-sm text-[#2753AF] truncate max-w-[220px]">
                                                     {r.website ? (
                                                         <a
                                                             href={

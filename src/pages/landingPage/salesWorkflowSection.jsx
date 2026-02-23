@@ -4,7 +4,7 @@ const SalesWorkflowSection = () => (
       <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-black" style={{ lineHeight: 1.2 }}>
         Revolutionize Your <br />
         Sales Workflow with <br />
-        <span className="text-[#1072E0]">360Pipe</span> CRM
+        <span className="text-[#2753AF]">360Pipe</span> CRM
       </h1>
 
       <p className="text-2xl font-semibold text-gray-600 mb-6">
@@ -28,9 +28,9 @@ const SalesWorkflowSection = () => (
 
       <button
         type="button"
-        className="relative px-5 py-3 rounded group overflow-hidden font-medium text-[#1072E0] border border-[#1072E0]"
+        className="relative px-5 py-3 rounded group overflow-hidden font-medium text-[#2753AF] border border-[#2753AF]"
       >
-        <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#1072E0] group-hover:h-full"></span>
+        <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#2753AF] group-hover:h-full"></span>
 
         <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
           Schedule Your Free Demo
@@ -39,9 +39,9 @@ const SalesWorkflowSection = () => (
 
       {/* <div className="absolute inset-0 inset-y-[35rem] z-30">
           <div className="mt-16 md:mt-10 flex flex-col items-center justify-end space-y-1">
-            <CustomIcons iconName={'fa-solid fas fa-chevron-down'} css='cursor-pointer text-[#1072E0]' />
-            <CustomIcons iconName={'fa-solid fas fa-chevron-down'} css='cursor-pointer text-[#1072E0]' />
-            <CustomIcons iconName={'fa-solid fas fa-chevron-down'} css='cursor-pointer text-[#1072E0]' />
+            <CustomIcons iconName={'fa-solid fas fa-chevron-down'} css='cursor-pointer text-[#2753AF]' />
+            <CustomIcons iconName={'fa-solid fas fa-chevron-down'} css='cursor-pointer text-[#2753AF]' />
+            <CustomIcons iconName={'fa-solid fas fa-chevron-down'} css='cursor-pointer text-[#2753AF]' />
           </div>
         </div> */}
     </div>

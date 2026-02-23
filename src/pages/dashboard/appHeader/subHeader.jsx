@@ -219,7 +219,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
     }, [startDate, endDate])
 
     return (
-        <header className="w-full bg-[#674EA7] z-50" style={{ borderColor: theme.palette.secondary.main }}>
+        <header className="w-full bg-[#2753AF] z-50" style={{ borderColor: theme.palette.secondary.main }}>
             <div className="flex justify-between items-center px-6 py-2 lg:py-1">
                 <div className="hidden lg:flex justify items-center gap-8">
                     <div className="w-40 flex items-center h-10 bg-white py-7">
