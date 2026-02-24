@@ -18,17 +18,16 @@ import {
 
 // Shared modal for add / edit
 import AddTodo from "../../../components/models/todo/addTodo";
-import PermissionWrapper from "../../../components/common/permissionWrapper/PermissionWrapper";
 import AlertDialog from "../../../components/common/alertDialog/alertDialog";
 import { Tooltip } from "@mui/material";
 import Components from "../../../components/muiComponents/components";
-import { setAlert } from "../../../redux/commonReducers/commonReducers";
+import { setAlert, setHeaderTitle } from "../../../redux/commonReducers/commonReducers";
 import { connect } from "react-redux";
 import { sendTaskReminder } from "../../../service/todoAssign/todoAssignService";
 import Button from "../../../components/common/buttons/button";
 import { getAllTeams } from "../../../service/teamDetails/teamDetailsService";
 import CheckBoxSelect from "../../../components/common/select/checkBoxSelect";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { getUserDetails } from "../../../utils/getUserDetails";
 import Select from "../../../components/common/select/select";
 
@@ -93,9 +92,9 @@ const status = [
 // ----------------------------------------------------------------------
 // TodoScreen
 // ----------------------------------------------------------------------
-const Todo = ({ setAlert }) => {
+const Todo = ({ setAlert,setHeaderTitle  }) => {
     const userData = getUserDetails();
-
+    const locaiton = useLocation()
     // --- Refs for note auto-save (from copy) ---
     const noteInputRef = useRef(null);
     const noteInputWrapRef = useRef(null);
@@ -276,10 +275,14 @@ const Todo = ({ setAlert }) => {
     }
 
     useEffect(() => {
+        if (locaiton.pathname === "/dashboard/todos") {
+            const title = userData?.roleName?.toUpperCase() === "SALES REPRESENTATIVE" ? "My Actions" : "Team Actions"
+            setHeaderTitle(title)
+        }
         refreshTodos(null);
         handleGetAllTeams()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [locaiton.pathname]);
 
     useEffect(() => {
         handleGetTodoByTeam();
@@ -427,10 +430,10 @@ const Todo = ({ setAlert }) => {
     // Manager View (UI from copy, logic from real)
     // ------------------------------------------------------------------
     const ManagerView = ({ task }) => (
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-3 space-y-4">
             {/* Header info */}
             <div>
-                <div className="text-sm text-black mb-1 font-bold">Due: {formatDueLong(task.dueDate)}</div>
+                {/* <div className="text-sm text-black mb-1 font-bold">Due: {formatDueLong(task.dueDate)}</div> */}
                 <div className="text-sm text-black">
                     <strong>Assigned by:</strong> {task.createdByName || "N/A"} &nbsp; <strong>Team:</strong> {task.teamName || "N/A"}
                 </div>
@@ -829,25 +832,18 @@ const Todo = ({ setAlert }) => {
                                             </td>
 
                                             <td className="px-6 py-4 align-middle flex justify-end text-sm text-slate-600 font-medium">
-                                                <PermissionWrapper
-                                                    functionalityName="Todo"
-                                                    moduleName="Todo"
-                                                    actionId={3}
-                                                    component={
-                                                        <Tooltip title="Delete" arrow>
-                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                <Components.IconButton
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation()
-                                                                        handleOpenDeleteDialog(task.id)
-                                                                    }}
-                                                                >
-                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                                </Components.IconButton>
-                                                            </div>
-                                                        </Tooltip>
-                                                    }
-                                                />
+                                                <Tooltip title="Delete" arrow>
+                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleOpenDeleteDialog(task.id)
+                                                            }}
+                                                        >
+                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
                                             </td>
                                         </tr>
                                     );
@@ -869,7 +865,8 @@ const Todo = ({ setAlert }) => {
                         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-800 mb-1">{selectedTask.opportunity}</h2>
-                                <div className="text-sm text-slate-500">Due: {formatDueLong(selectedTask.dueDate)}</div>
+                                {/* <div className="text-sm text-slate-500">Due: {formatDueLong(selectedTask.dueDate)}</div> */}
+                                <div className="text-sm text-black font-bold">Due: {formatDueLong(selectedTask.dueDate)}</div>
                             </div>
                             <Components.IconButton
                                 onClick={() => {
@@ -884,7 +881,7 @@ const Todo = ({ setAlert }) => {
                         {userData?.roleName?.toLowerCase() === "sales manager" ? (
                             <ManagerView task={selectedTask} />
                         ) : (
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                            <div className="flex-1 overflow-y-auto px-6 py-3 space-y-4">
                                 <div>
                                     <p className="text-slate-700 leading-relaxed whitespace-pre-line">
                                         {selectedTask.desc || "No description provided."}
@@ -974,7 +971,7 @@ const Todo = ({ setAlert }) => {
                                     />
                                     <Button
                                         disabled={selectedTask?.completionProgressPercent === 100}
-                                        onClick={() => handleCompleteTodo(selectedTask.id)}
+                                        onClick={() => handleOpenCloseTodoDialog(selectedTask.id)}
                                         text={"Mark Complete"}
                                     />
                                 </div>
@@ -1013,6 +1010,7 @@ const Todo = ({ setAlert }) => {
 
 const mapDispatchToProps = {
     setAlert,
+    setHeaderTitle
 }
 
 export default connect(null, mapDispatchToProps)(Todo)

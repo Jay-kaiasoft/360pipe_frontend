@@ -1,20 +1,29 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { connect } from 'react-redux'
-import { setPerformanceSelectedTabIndex } from '../../../redux/commonReducers/commonReducers'
+import { setHeaderTitle } from '../../../redux/commonReducers/commonReducers'
 import Activities from '../activities/activities'
 import Results from '../results/results'
+import { useLocation } from 'react-router-dom'
 
-const Performance = ({ setPerformanceSelectedTabIndex, performanceSelectedTabIndex }) => {
+const Performance = ({ setHeaderTitle, performanceSelectedTabIndex }) => {
+    const locaiton = useLocation()
+
+    useEffect(() => {
+        if (locaiton.pathname === "/dashboard/performance") {
+            const title = performanceSelectedTabIndex === 0 ? "Activities" : "Results"
+            setHeaderTitle(title)
+        }
+    }, [performanceSelectedTabIndex])
     return (
         <>
             {
                 performanceSelectedTabIndex === 0 && (
-                    <Activities/>
+                    <Activities />
                 )
             }
             {
                 performanceSelectedTabIndex === 1 && (
-                    <Results/>
+                    <Results />
                 )
             }
         </>
@@ -26,7 +35,7 @@ const mapStateToProps = (state) => ({
 })
 
 const mapDispatchToProps = {
-    setPerformanceSelectedTabIndex
+    setHeaderTitle
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Performance)

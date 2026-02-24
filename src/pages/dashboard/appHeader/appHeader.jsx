@@ -100,7 +100,7 @@ const AppHeader = ({
         path: "/dashboard/contacts",
       },
       {
-        label: "My Actions",
+        label: userDetails?.roleName?.toUpperCase() === "SALES REPRESENTATIVE" ? "My Actions" : "Team Actions",
         path: "/dashboard/todos",
       },
 

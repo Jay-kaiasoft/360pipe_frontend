@@ -7,19 +7,18 @@ import DataTable from '../../../components/common/table/table';
 
 const StatCard = ({ title, icon, children }) => (
     <div className={`bg-white rounded-xl border border-gray-200 shadow-sm p-4 w-full max-w-[400px] group ${title === "Pipeline" || "Meetings" ? "cursor-pointer" : ""}`}>
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex justify-center items-center gap-3 mb-2">
             <div className="text-[#2753AF]">
                 <CustomIcons iconName={icon} css="h-6 w-6" />
             </div>
             <h3 className="text-lg font-bold text-slate-700">{title}</h3>
         </div>
-        <hr className="mb-4 border-gray-100" />
+        {/* <hr className="mb-4 border-gray-100" /> */}
         <div className="flex items-center justify-between px-2">
             {children}
         </div>
     </div>
 );
-
 
 const Activities = ({ filterStartDate, filterEndDate }) => {
     const [activities, setActivities] = useState([]);
@@ -184,7 +183,7 @@ const Activities = ({ filterStartDate, filterEndDate }) => {
                     </div>
                     {
                         ui?.meetingData?.length > 0 && (
-                            <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-80 left-[800px] shadow-lg z-50">
+                            <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-72 left-[800px] shadow-lg z-50">
                                 {/* Header */}
                                 <div className="bg-[#2753AF] text-white w-full py-2 text-center font-bold">
                                     <p>

@@ -20,7 +20,6 @@ import { getUserDetails } from '../../../utils/getUserDetails';
 import TeamMemberSelect from './teamMemberSelect';
 import { getAllTeamMembers } from '../../../service/teamMembers/teamMembersService';
 import CheckBoxSelect from '../../common/select/checkBoxSelect';
-import PermissionWrapper from '../../common/permissionWrapper/PermissionWrapper';
 
 // Uploader component
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
@@ -550,6 +549,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         const newData = {
             ...data,
             todoAttachmentsDtos,
+            complectedWork: parseInt(watch('complectedWork')) || 0,
             dueDate: dueDateVal.format('MM/DD/YYYY'),
             completedDate: completedDateVal
                 ? completedDateVal.isValid()
@@ -721,8 +721,43 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
+                                <div>
+                                    <Controller
+                                        name="assignedType"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field }) => (
+                                            <Select
+                                                disabled={todoId ? watch('createdBy') !== userData?.userId : false}
+                                                options={assignedType}
+                                                label="Assigned To"
+                                                placeholder="Select Assigned To"
+                                                value={parseInt(watch('assignedType')) || null}
+                                                onChange={(_, newValue) => {
+                                                    const currentRemoved = watch('customerIds') || [];
+                                                    setValue('removeCustomerIds', currentRemoved);
+                                                    setValue('removeTeam', watch('teamId') || null);
+                                                    if (newValue?.id) {
+                                                        setValue('customerId', null);
+                                                        setValue('teamId', null);
+                                                        field.onChange(newValue.id);
+                                                        if (newValue?.id === 1 || newValue?.id === 2) {
+                                                            setCustomers([]);
+                                                        }
+                                                    } else {
+                                                        setValue('assignedType', null);
+                                                        setValue('customerId', null);
+                                                        setValue('teamId', null);
+                                                    }
+                                                }}
+                                                error={errors.assignedType}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
                                 {/* Assigned To (with permission wrapper) */}
-                                <PermissionWrapper
+                                {/* <PermissionWrapper
                                     functionalityName="Todo"
                                     moduleName="Assign Todo"
                                     actionIds={[2, 1]}
@@ -780,7 +815,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             />
                                         </div>
                                     }
-                                />
+                                /> */}
 
                                 {/* Team selection */}
                                 {watch('assignedType') === 2 && (

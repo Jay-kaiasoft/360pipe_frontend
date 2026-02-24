@@ -21,14 +21,14 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", ce
       alignItems: "center",
       gap: "7px",
       position: "relative",
-      borderTop: isHeaderType
+      borderBottom: isHeaderType
         ? isSelected
           ? `3px solid ${theme.palette.secondary.main}`
           : "3px solid transparent"
         : "none",
       backgroundColor: isHeaderType
         ? isSelected
-          ? "rgba(33, 150, 243, 0.08)" // light blue background
+          ? "rgba(33, 150, 243, 0.08)"
           : "transparent"
         : "transparent",
       // borderRadius: isHeaderType ? "6px 6px 0 0" : 0,

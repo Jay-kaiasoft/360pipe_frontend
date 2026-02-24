@@ -8,13 +8,13 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 
 const StatCard = ({ title, icon, children }) => (
     <div className={`bg-white rounded-xl border border-gray-200 shadow-sm p-4 w-full max-w-[400px] group ${title === "Pipeline" || "Meetings" ? "cursor-pointer" : ""}`}>
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex justify-center items-center gap-3 mb-2">
             <div className="text-[#2753AF]">
                 <CustomIcons iconName={icon} css="h-6 w-6" />
             </div>
             <h3 className="text-lg font-bold text-slate-700">{title}</h3>
         </div>
-        <hr className="mb-4 border-gray-100" />
+        {/* <hr className="mb-4 border-gray-100" /> */}
         <div className="flex items-center justify-between px-2">
             {children}
         </div>
@@ -165,7 +165,7 @@ const Results = ({ filterStartDate, filterEndDate }) => {
                         </span>
                     </div>
                     {ui?.pipeLineData?.length > 0 && (
-                        <div className="hidden group-hover:block h-80 w-[33%] overflow-y-auto absolute top-80 left-[300px] z-50">
+                        <div className="hidden group-hover:block h-80 w-[33%] overflow-y-auto absolute top-72 left-[300px] z-50">
                             <table className="border-collapse">
                                 <thead className="sticky top-0 z-10">
                                     <tr className="bg-[#2753AF] text-white">
