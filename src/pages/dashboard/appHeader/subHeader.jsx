@@ -224,15 +224,15 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
         <header className="w-full bg-gradient-to-r from-[#2c5ebd] via-[#4a80ed] to-[#2e5ec1] z-50" style={{ borderColor: theme.palette.secondary.main }}>
             <div className="flex justify-between items-center px-6 py-2 lg:py-1">
                 <div className="hidden lg:flex justify items-center gap-8">
-                    <div className="w-40 flex items-center h-10 bg-white py-7">
+                    <div className="w-40 flex items-center">
                         <NavLink to={"/dashboard"}>
-                            <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="mt-3" />
+                            <img src="/images/logo/360Pipe_logo_white.png" alt="360Pipe Logo" className="h-[50px] my-1" />
                         </NavLink>
                     </div>
                 </div>
 
                 <div>
-                    <p className='text-white text-3xl font-semibold lg:mr-24'>
+                    <p className='text-white text-3xl font-semibold lg:mr-12'>
                         {headerTitle}
                     </p>
                 </div>

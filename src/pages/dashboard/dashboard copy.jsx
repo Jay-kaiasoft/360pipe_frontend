@@ -1,4 +1,3 @@
-// My code
 // import { useEffect, useMemo, useState } from "react";
 // import ReactDOM from "react-dom";
 // import { getDashboardData } from "../../service/customers/customersService";
@@ -241,6 +240,13 @@
 // export default connect(mapStateToProps, null)(Dashboard);
 
 
+
+
+
+
+
+
+
 // Gemini code
 // import { useEffect, useMemo, useState } from "react";
 // import ReactDOM from "react-dom";
@@ -420,6 +426,8 @@
 // });
 
 // export default connect(mapStateToProps, null)(Dashboard);
+
+
 
 
 

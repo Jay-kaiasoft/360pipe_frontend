@@ -243,7 +243,7 @@ const AppHeader = ({
   }, [syncingPushStatus])
 
   return (
-    <header className="w-full bg-white border-b-2 z-50" style={{ borderColor: theme.palette.secondary.main }}>
+    <header className="w-full bg-white shadow-sm z-50">
       <div className="lg:px-6">
         <div className="hidden lg:flex justify-between py-2">
           <div>
