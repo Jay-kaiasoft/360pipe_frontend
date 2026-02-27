@@ -148,7 +148,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const handleGetOpportunityOptions = async () => {
         const res = await getOpportunityOptions()
-        setOpportunitiesOptions(res?.result[0])
+        setOpportunitiesOptions(res?.result?.[0])
     }
 
     // Updated handlers to match CheckBoxSelect onChange(event, newValue)

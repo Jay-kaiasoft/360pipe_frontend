@@ -76,7 +76,6 @@ const AppHeader = ({
       setSelectedTab2(value)
     }
   }
-
   const handleSetNavItems = () => {
     const tabItems = [
       {
@@ -100,7 +99,7 @@ const AppHeader = ({
         path: "/dashboard/contacts",
       },
       {
-        label: userDetails?.roleName?.toUpperCase() === "SALES REPRESENTATIVE" ? "My Actions" : "Team Actions",
+        label: userDetails?.roleName?.toUpperCase() === "SALES REPRESENTIVE" ? "My Actions" : "Team Actions",
         path: "/dashboard/todos",
       },
 

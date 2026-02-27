@@ -349,8 +349,10 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     };
 
     const handleGetOpportunityOptions = async () => {
-        const res = await getOpportunityOptions();
-        setOpportunitiesOptions(res?.result[0]?.opportunitiesNameOptions);
+        if (open) {
+            const res = await getOpportunityOptions();
+            setOpportunitiesOptions(res?.result?.[0]?.opportunitiesNameOptions);
+        }
     };
 
     useEffect(() => {

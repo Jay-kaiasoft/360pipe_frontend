@@ -36,11 +36,12 @@ import Select from "../../../components/common/select/select";
 // ----------------------------------------------------------------------
 const formatDueShort = (iso) => {
     if (!iso) return "TBD";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    const m = d.getMonth() + 1;
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${m}/${day}`;
+
+    // Split the string manually to avoid any hidden timezone parsing
+    const [year, month, day] = iso.split('-');
+    if (!year || !month || !day) return iso;
+
+    return `${parseInt(month)}/${day}`;
 };
 
 const formatDueLong = (iso) => {
@@ -61,10 +62,19 @@ const formatNoteDate = (iso) => {
 
 const normalizeIsoDate = (v) => {
     if (!v) return "";
+
+    // If it's already YYYY-MM-DD, just return it
     if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+
     const d = new Date(v);
-    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-    return "";
+    if (Number.isNaN(d.getTime())) return "";
+
+    // Extract local parts to prevent the "previous day" shift
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
 };
 
 const priorityIntToLabel = (p) => {
@@ -92,7 +102,7 @@ const status = [
 // ----------------------------------------------------------------------
 // TodoScreen
 // ----------------------------------------------------------------------
-const Todo = ({ setAlert,setHeaderTitle  }) => {
+const Todo = ({ setAlert, setHeaderTitle }) => {
     const userData = getUserDetails();
     const locaiton = useLocation()
     // --- Refs for note auto-save (from copy) ---
@@ -148,7 +158,6 @@ const Todo = ({ setAlert,setHeaderTitle  }) => {
         const oppId = t?.oppId ?? "";
         const opportunity = t?.opportunity;
         const due = normalizeIsoDate(t?.dueDate);
-
         const todoAssignData = t?.todoAssignData || [];
         const totalAssignees = todoAssignData.length;
         const completedAssignees = todoAssignData.filter(a => a.complectedWork === 100).length;
@@ -819,17 +828,17 @@ const Todo = ({ setAlert,setHeaderTitle  }) => {
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td className="px-6 py-4 align-middle text-right text-sm text-slate-600 font-medium">
+                                                {formatDueShort(task.dueDate)}
+                                            </td>
                                             {
                                                 userData?.roleName?.toLowerCase() === "sales manager" && (
-                                                    <td className="px-6 py-4 align-middle text-right text-sm text-slate-600 font-medium">
-                                                        {formatDueShort(task.dueDate)}
+                                                    <td className="px-6 py-4 align-middle text-right">
+                                                        <StatusPill task={task} />
                                                     </td>
                                                 )
                                             }
 
-                                            <td className="px-6 py-4 align-middle text-right">
-                                                <StatusPill task={task} />
-                                            </td>
 
                                             <td className="px-6 py-4 align-middle flex justify-end text-sm text-slate-600 font-medium">
                                                 <Tooltip title="Delete" arrow>
@@ -848,7 +857,7 @@ const Todo = ({ setAlert,setHeaderTitle  }) => {
                                         </tr>
                                     );
                                 })}
-                                {(!tasks && tasks?.length === 0) && (
+                                {tasks?.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-10 text-center text-slate-400">
                                             No tasks found.
