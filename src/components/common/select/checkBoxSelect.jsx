@@ -16,6 +16,7 @@ const CheckBoxSelect = forwardRef(
       disabled = false,
       checkAll = false,
       maxVisibleChips = 2, // Add this prop
+      requiredFiledLabel = false,
     },
     ref
   ) => {
@@ -156,6 +157,9 @@ const CheckBoxSelect = forwardRef(
       <div>
         <p className='mb-2 text-black text-left'>
           {label}
+          {
+            requiredFiledLabel && <span className='text-red-500 ml-1'>*</span>
+          }
         </p>
         <Components.Autocomplete
           multiple

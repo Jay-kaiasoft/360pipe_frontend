@@ -155,8 +155,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
     };
 
     const mapApiTodoToUi = (t) => {
-        const oppId = t?.oppId ?? "";
-        const opportunity = t?.opportunity;
+        const relatedTo = t?.relatedTo;
         const due = normalizeIsoDate(t?.dueDate);
         const todoAssignData = t?.todoAssignData || [];
         const totalAssignees = todoAssignData.length;
@@ -187,8 +186,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
 
         return {
             id: t?.id,
-            oppId,
-            opportunity: opportunity || "—",
+            relatedTo: relatedTo,
             title: t?.task || "",
             desc: t?.description || "",
             dueDate: due,
@@ -818,7 +816,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                                         <div className="flex items-center gap-2">
                                                             <div>
                                                                 <div className="font-bold text-slate-800 text-sm truncate">
-                                                                    {task.opportunity}
+                                                                    {task.relatedTo}
                                                                 </div>
                                                                 <div className={`text-slate-500 text-sm truncate ${selectedTask ? " w-60" : ""}`}>
                                                                     {task.title}
@@ -873,7 +871,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                     <div className="w-1/2 bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col animate-fadeIn">
                         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-800 mb-1">{selectedTask.opportunity}</h2>
+                                <h2 className="text-xl font-bold text-slate-800 mb-1">{selectedTask.relatedTo}</h2>
                                 {/* <div className="text-sm text-slate-500">Due: {formatDueLong(selectedTask.dueDate)}</div> */}
                                 <div className="text-sm text-black font-bold">Due: {formatDueLong(selectedTask.dueDate)}</div>
                             </div>

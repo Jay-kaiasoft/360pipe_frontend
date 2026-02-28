@@ -165,6 +165,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                                             <Select
                                                 options={accounts || []} // Prevent selecting the same account in both fields
                                                 label={"Account"}
+                                                requiredFiledLabel={true}
                                                 placeholder="Select account"
                                                 value={parseInt(watch(`accountId`)) || null}
                                                 onChange={(_, newValue) => {
@@ -191,6 +192,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
                                             <Select
                                                 options={partnerRoles}
                                                 label={"Role"}
+                                                requiredFiledLabel={true}
                                                 placeholder="Select role"
                                                 value={parseInt(watch(`roleid`)) || null}
                                                 onChange={(_, newValue) => {

@@ -226,6 +226,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                                 label={"Name"}
                                                 placeholder="Select process name"
                                                 value={parseInt(watch("process")) || null}
+                                                requiredFiledLabel={true}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {
                                                         field.onChange(newValue.id);
@@ -281,6 +282,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                         <Select
                                             options={contacts}
                                             label={"Contact"}
+                                            requiredFiledLabel={true}
                                             placeholder="Select contact"
                                             value={parseInt(watch("contactId")) || null}
                                             onChange={(_, newValue) => {
@@ -297,7 +299,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                             </div>
 
                             <div>
-                                <DatePickerComponent setValue={setValue} control={control} name='processDate' label={`Process Date`} minDate={new Date()} maxDate={null} required={true} />
+                                <DatePickerComponent requiredFiledLabel={true} setValue={setValue} control={control} name='processDate' label={`Process Date`} minDate={new Date()} maxDate={null} required={true} />
                             </div>
 
                             <div>
@@ -323,7 +325,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                 goLiveStage && (
                                     <>
                                         <div>
-                                            <DatePickerComponent setValue={setValue} control={control} name='goLive' label={`Go Live`} minDate={new Date()} maxDate={null} required={true} />
+                                            <DatePickerComponent requiredFiledLabel={true} setValue={setValue} control={control} name='goLive' label={`Go Live`} minDate={new Date()} maxDate={null} required={true} />
                                         </div>
 
                                         <div>
@@ -336,6 +338,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
                                                         {...field}
                                                         label="Reason"
                                                         type={`text`}
+                                                        requiredFiledLabel={true}
                                                         onChange={(e) => {
                                                             field.onChange(e);
                                                         }}

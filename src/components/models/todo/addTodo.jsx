@@ -15,7 +15,7 @@ import DatePickerComponent from '../../common/datePickerComponent/datePickerComp
 import dayjs from 'dayjs';
 import { getAllSubUsers } from '../../../service/customers/customersService';
 import { getAllTeamAndMembers, getAllTeams } from '../../../service/teamDetails/teamDetailsService';
-import { createTodoAssign, getTodoAssignByTodoId, updateTodoAssign } from '../../../service/todoAssign/todoAssignService';
+import { createTodoAssign, getTodoAssignByTodoId } from '../../../service/todoAssign/todoAssignService';
 import { getUserDetails } from '../../../utils/getUserDetails';
 import TeamMemberSelect from './teamMemberSelect';
 import { getAllTeamMembers } from '../../../service/teamMembers/teamMembersService';
@@ -24,7 +24,6 @@ import CheckBoxSelect from '../../common/select/checkBoxSelect';
 // Uploader component
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
 import { uploadFiles } from "../../../service/common/commonService";
-import { getOpportunityOptions } from '../../../service/opportunities/opportunitiesService';
 import { deleteTodoAttachment } from '../../../service/todoAttachments/todoAttachmentsService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -55,7 +54,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     const [teams, setTeams] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [teamAndMembers, setTeamAndMembers] = useState({ teams: [], individuals: [] });
-    const [opportunitiesOptions, setOpportunitiesOptions] = useState(null);
 
     // Row‑based file attachments
     const [tempFileRows, setTempFileRows] = useState([]);       // [{ id, fileName, files, existingImages }]
@@ -85,7 +83,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     } = useForm({
         defaultValues: {
             id: null,
-            oppId: null,
+            relatedTo: null,
             salesforceOpportunityId: null,
             task: null,
             dueDate: null,
@@ -211,7 +209,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         setLoading(false);
         reset({
             id: null,
-            oppId: null,
+            relatedTo: null,
             salesforceOpportunityId: null,
             task: null,
             dueDate: null,
@@ -300,10 +298,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     const assignData = response?.result;
                     setValue('assignedId', assignData?.id);
                     setValue('teamId', assignData?.teamId);
-                    setValue("complectedWork", assignData?.complectedWork || 0);
 
-                    if (assignData?.teamId) {
-                        setValue('customerIds', assignData?.customerIds != null ? assignData?.customerIds : []);
+                    if (assignData?.teamId && assignData?.customerIds?.length > 0) {
                         const members = await getAllTeamMembers(assignData?.teamId);
                         const data = members?.result?.map((item) => ({
                             id: item.memberId,
@@ -311,12 +307,12 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                         }));
                         setCustomers(data || []);
                         setValue('assignedType', 2);
-                    } else if (parseInt(assignData?.customerId) === userData?.userId) {
+                    } else if (assignData?.customerIds?.length > 0 && assignData?.teamId === null) {
+                        setValue('customerIds', assignData?.customerIds != null ? assignData?.customerIds : []);
+                        setValue('assignedType', 3);
+                    } else {
                         setValue('customerId', parseInt(assignData?.customerId));
                         setValue('assignedType', 1);
-                    } else if (parseInt(assignData?.customerId)) {
-                        setValue('customerId', parseInt(assignData?.customerId));
-                        setValue('assignedType', 3);
                     }
                 }
             }
@@ -348,18 +344,11 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         }
     };
 
-    const handleGetOpportunityOptions = async () => {
-        if (open) {
-            const res = await getOpportunityOptions();
-            setOpportunitiesOptions(res?.result?.[0]?.opportunitiesNameOptions);
-        }
-    };
 
     useEffect(() => {
         handleGetAllTeamAndMembers();
         handleGetAllTeams();
         handleGetTodoDetails();
-        handleGetOpportunityOptions();
     }, [open]);
 
     useEffect(() => {
@@ -371,23 +360,30 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     }, [watch('assignedType')]);
 
     const assignTodo = async (data) => {
-        if (watch('assignedId')) {
-            const res = await updateTodoAssign(watch('assignedId'), data);
-            if (res?.status === 200) {
-                handleGetAllTodos();
-                onClose();
-            } else {
-                setAlert({ open: true, message: res?.message || 'Failed to assign todo', type: 'error' });
-            }
+        const res = await createTodoAssign(data);
+        if (res?.status === 201) {
+            handleGetAllTodos();
+            onClose();
         } else {
-            const res = await createTodoAssign(data);
-            if (res?.status === 201) {
-                handleGetAllTodos();
-                onClose();
-            } else {
-                setAlert({ open: true, message: res?.message || 'Failed to assign todo', type: 'error' });
-            }
+            setAlert({ open: true, message: res?.message || 'Failed to assign todo', type: 'error' });
         }
+        // if (watch('assignedId')) {
+        //     const res = await updateTodoAssign(watch('assignedId'), data);
+        //     if (res?.status === 200) {
+        //         handleGetAllTodos();
+        //         onClose();
+        //     } else {
+        //         setAlert({ open: true, message: res?.message || 'Failed to assign todo', type: 'error' });
+        //     }
+        // } else {
+        //     const res = await createTodoAssign(data);
+        //     if (res?.status === 201) {
+        //         handleGetAllTodos();
+        //         onClose();
+        //     } else {
+        //         setAlert({ open: true, message: res?.message || 'Failed to assign todo', type: 'error' });
+        //     }
+        // }
     };
 
     // -------------------------
@@ -481,7 +477,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
         }
 
         const dueDateVal = dayjs(watch('dueDate')).isValid() ? dayjs(watch('dueDate')) : dayjs();
-        const completedDateVal = dayjs(watch('completedDate')).isValid() ? dayjs(watch('completedDate')) : null;
 
         // 3) Build todoAttachmentsDtos from rows + links
         const fileDtos = [];
@@ -553,12 +548,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
             todoAttachmentsDtos,
             complectedWork: parseInt(watch('complectedWork')) || 0,
             dueDate: dueDateVal.format('MM/DD/YYYY'),
-            completedDate: completedDateVal
-                ? completedDateVal.isValid()
-                    ? completedDateVal.format('MM/DD/YYYY')
-                    : dayjs().format('MM/DD/YYYY')
-                : null,
-            priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
+            // priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
         };
 
         try {
@@ -575,13 +565,13 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     : watch('assignedType') === 2
                                         ? null
                                         : watch('customerId'),
-                            customerIds: watch('assignedType') === 2 ? watch('customerIds') : [],
+                            customerIds: watch('customerIds') || [],
                             todoId: todoId,
                             removeCustomerIds: watch('removeCustomerIds') || [],
                             removeTeam: watch('removeTeam') || null,
                             dueDate: dueDateVal.format('MM/DD/YYYY'),
-                            complectedWork: parseInt(watch('complectedWork')) || 0,
-                            priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
+                            // complectedWork: parseInt(watch('complectedWork')) || 0,
+                            // priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
                         };
                         await assignTodo(assignData);
                     }
@@ -602,13 +592,13 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                 : watch('assignedType') === 2
                                     ? null
                                     : watch('customerId'),
-                        customerIds: watch('assignedType') === 2 ? watch('customerIds') : [],
+                        customerIds: watch('customerIds') || [],
                         todoId: res?.result?.id,
                         removeCustomerIds: watch('removeCustomerIds') || [],
                         removeTeam: watch('removeTeam') || null,
                         dueDate: dueDateVal.format('MM/DD/YYYY'),
-                        complectedWork: parseInt(watch('complectedWork')) || 0,
-                        priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
+                        // complectedWork: parseInt(watch('complectedWork')) || 0,
+                        // priority: priority?.find((s) => s.id === parseInt(watch('priority')))?.title || null,
                     };
                     await assignTodo(assignData);
                 } else {
@@ -652,26 +642,18 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     <Components.DialogContent dividers>
                         <div className="px-[30px]">
                             <div className="grid gap-[30px]">
-                                {/* Opportunity */}
                                 <div>
                                     <Controller
-                                        name="oppId"
+                                        name="relatedTo"
                                         control={control}
-                                        rules={{ required: true }}
+                                        rules={{ required: 'Related to is required' }}
                                         render={({ field }) => (
-                                            <Select
-                                                options={opportunitiesOptions}
-                                                label="Opportunity"
-                                                placeholder="Select opportunity"
-                                                value={parseInt(watch('oppId')) || null}
-                                                onChange={(_, newValue) => {
-                                                    if (newValue?.id) {
-                                                        field.onChange(newValue.id);
-                                                    } else {
-                                                        setValue('oppId', null);
-                                                    }
-                                                }}
-                                                error={errors.oppId}
+                                            <Input
+                                                {...field}
+                                                label="Related To"
+                                                type="text"
+                                                requiredFiledLabel={true}
+                                                error={errors.relatedTo}
                                             />
                                         )}
                                     />
@@ -687,7 +669,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             <Input
                                                 disabled={todoId ? watch('createdBy') !== userData?.userId : false}
                                                 {...field}
-                                                label="Task"
+                                                label="Action"
+                                                requiredFiledLabel={true}
                                                 type="text"
                                                 error={errors.task}
                                             />
@@ -695,133 +678,59 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
-                                {/* Description */}
-                                <div>
-                                    <Controller
-                                        name="description"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Input
-                                                {...field}
-                                                ref={descriptionRef}
-                                                label="Description"
-                                                type="text"
-                                                multiline={true}
-                                                minRows={1}
-                                            />
-                                        )}
-                                    />
-                                </div>
-
-                                {/* Due Date */}
-                                <div>
-                                    <DatePickerComponent
-                                        setValue={setValue}
-                                        control={control}
-                                        name="dueDate"
-                                        label="Due Date"
-                                    />
-                                </div>
-
-                                <div>
-                                    <Controller
-                                        name="assignedType"
-                                        control={control}
-                                        rules={{ required: true }}
-                                        render={({ field }) => (
-                                            <Select
-                                                disabled={todoId ? watch('createdBy') !== userData?.userId : false}
-                                                options={assignedType}
-                                                label="Assigned To"
-                                                placeholder="Select Assigned To"
-                                                value={parseInt(watch('assignedType')) || null}
-                                                onChange={(_, newValue) => {
-                                                    const currentRemoved = watch('customerIds') || [];
-                                                    setValue('removeCustomerIds', currentRemoved);
-                                                    setValue('removeTeam', watch('teamId') || null);
-                                                    if (newValue?.id) {
-                                                        setValue('customerId', null);
-                                                        setValue('teamId', null);
-                                                        field.onChange(newValue.id);
-                                                        if (newValue?.id === 1 || newValue?.id === 2) {
-                                                            setCustomers([]);
-                                                        }
-                                                    } else {
-                                                        setValue('assignedType', null);
-                                                        setValue('customerId', null);
-                                                        setValue('teamId', null);
-                                                    }
-                                                }}
-                                                error={errors.assignedType}
-                                            />
-                                        )}
-                                    />
-                                </div>
-
-                                {/* Assigned To (with permission wrapper) */}
-                                {/* <PermissionWrapper
-                                    functionalityName="Todo"
-                                    moduleName="Assign Todo"
-                                    actionIds={[2, 1]}
-                                    checkAll={false}
-                                    component={
-                                        <div>
-                                            <Controller
-                                                name="assignedType"
-                                                control={control}
-                                                rules={{ required: true }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        disabled={todoId ? watch('createdBy') !== userData?.userId : false}
-                                                        options={assignedType}
-                                                        label="Assigned To"
-                                                        placeholder="Select Assigned To"
-                                                        value={parseInt(watch('assignedType')) || null}
-                                                        onChange={(_, newValue) => {
-                                                            const currentRemoved = watch('customerIds') || [];
-                                                            setValue('removeCustomerIds', currentRemoved);
-                                                            setValue('removeTeam', watch('teamId') || null);
-                                                            if (newValue?.id) {
-                                                                setValue('customerId', null);
-                                                                setValue('teamId', null);
-                                                                field.onChange(newValue.id);
-                                                                if (newValue?.id === 1 || newValue?.id === 2) {
-                                                                    setCustomers([]);
-                                                                }
-                                                            } else {
-                                                                setValue('assignedType', null);
-                                                                setValue('customerId', null);
-                                                                setValue('teamId', null);
+                                <div className='grid grid-cols-2 gap-[30px]'>
+                                    <div>
+                                        <Controller
+                                            name="assignedType"
+                                            control={control}
+                                            rules={{ required: true }}
+                                            render={({ field }) => (
+                                                <Select
+                                                    disabled={todoId ? watch('createdBy') !== userData?.userId : false}
+                                                    options={assignedType}
+                                                    label="Owner"
+                                                    requiredFiledLabel={true}
+                                                    placeholder="Select owner"
+                                                    value={parseInt(watch('assignedType')) || null}
+                                                    onChange={(_, newValue) => {
+                                                        const currentRemoved = watch('customerIds') || [];
+                                                        setValue('removeCustomerIds', currentRemoved);
+                                                        setValue('removeTeam', watch('teamId') || null);
+                                                        if (newValue?.id) {
+                                                            setValue('customerId', null);
+                                                            setValue('teamId', null);
+                                                            field.onChange(newValue.id);
+                                                            if (newValue?.id === 1 || newValue?.id === 2) {
+                                                                setCustomers([]);
                                                             }
-                                                        }}
-                                                        error={errors.assignedType}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-                                    }
-                                    fallbackComponent={
-                                        <div>
-                                            <Controller
-                                                name="assignedType"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        disabled={true}
-                                                        options={assignedType}
-                                                        label="Assigned To"
-                                                        placeholder="Select Assigned To"
-                                                        value={parseInt(watch('assignedType')) || null}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-                                    }
-                                /> */}
+                                                        } else {
+                                                            setValue('assignedType', null);
+                                                            setValue('customerId', null);
+                                                            setValue('teamId', null);
+                                                        }
+                                                    }}
+                                                    error={errors.assignedType}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+
+                                    {/* Due Date */}
+                                    <div>
+                                        <DatePickerComponent
+                                            setValue={setValue}
+                                            control={control}
+                                            name="dueDate"
+                                            label="Due Date"
+                                            requiredFiledLabel={true}
+                                        />
+                                    </div>
+                                </div>
+                                
 
                                 {/* Team selection */}
                                 {watch('assignedType') === 2 && (
-                                    <>
+                                    <div className='grid grid-cols-2 gap-[30px]'>
                                         <div>
                                             <Controller
                                                 name="teamId"
@@ -831,7 +740,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                     <Select
                                                         options={teams}
                                                         label="Team"
-                                                        placeholder="Select Team"
+                                                        requiredFiledLabel={true}
+                                                        placeholder="Select team"
                                                         value={parseInt(watch('teamId')) || null}
                                                         onChange={(_, newValue) => {
                                                             if (newValue?.id) {
@@ -873,6 +783,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                             }
                                                             options={customers}
                                                             label="Members"
+                                                            requiredFiledLabel={true}
                                                             placeholder="Select members"
                                                             value={selectedOptions}
                                                             onChange={(event, newValue) => {
@@ -898,25 +809,40 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                                 }}
                                             />
                                         </div>
-                                    </>
+                                    </div>
                                 )}
 
                                 {/* Individual selection */}
                                 {watch('assignedType') === 3 && (
                                     <div>
                                         <Controller
-                                            name="customerId"
+                                            name="customerIds"  // now an array
                                             control={control}
                                             rules={{ required: true }}
                                             render={({ field, fieldState: { error } }) => (
                                                 <TeamMemberSelect
+                                                    multiple
                                                     disabled={todoId ? watch('createdBy') !== userData?.userId : false}
-                                                    label="Member"
-                                                    placeholder="Select Member"
+                                                    label="Members"
+                                                    placeholder="Select members"
+                                                    requiredFiledLabel={true}
                                                     options={teamAndMembers}
-                                                    value={field.value || ''}
-                                                    onChange={(e) => {
-                                                        field.onChange(e?.id);
+                                                    value={field.value || []}
+                                                    onChange={(selectedIds) => {
+                                                        const oldIds = field.value || [];
+                                                        const removedIds = oldIds.filter((id) => !selectedIds.includes(id));
+                                                        field.onChange(selectedIds);
+                                                        if (todoId) {
+                                                            const currentRemoved = watch('removeCustomerIds') || [];
+                                                            setValue('removeCustomerIds', [...new Set([...currentRemoved, ...removedIds])]);
+                                                        }
+                                                        if (selectedIds.length > 0) {
+                                                            setValue('customerId', null);
+                                                        }
+                                                        else {
+                                                            setValue('customerId', null);
+                                                            setValue('teamId', null);
+                                                        }
                                                     }}
                                                     error={!!error}
                                                 />
@@ -925,7 +851,26 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     </div>
                                 )}
 
-                                {/* Priority */}
+
+                                {/* Description */}
+                                <div>
+                                    <Controller
+                                        name="description"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                ref={descriptionRef}
+                                                label="Description"
+                                                type="text"
+                                                multiline={true}
+                                                minRows={1}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                {/* Priority
                                 <div>
                                     <Controller
                                         name="priority"
@@ -948,10 +893,10 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             />
                                         )}
                                     />
-                                </div>
+                                </div> */}
 
                                 {/* Completed Work */}
-                                <div>
+                                {/* <div>
                                     <Controller
                                         name="complectedWork"
                                         control={control}
@@ -977,7 +922,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             />
                                         )}
                                     />
-                                </div>
+                                </div> */}
 
                                 {/* ---------- NEW: Row‑based File Attachments ---------- */}
                                 <div className="bg-white/50 rounded-lg p-4 border border-indigo-100">

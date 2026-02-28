@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 
-const Select = forwardRef(({ size = "small", label, placeholder, error, helperText, value, onChange, options, disabled = false, onClick, onInputChange, freeSolo = false }, ref) => {
+const Select = forwardRef(({ size = "small", label, placeholder, error, helperText, value, onChange, options, disabled = false, onClick, onInputChange, freeSolo = false, requiredFiledLabel = false }, ref) => {
     const theme = useTheme();
     const selectOptions = Array.isArray(options) && options.length > 0 ? options : [];
 
@@ -12,6 +12,9 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
         <div>
             <p className='mb-2 text-black text-left'>
                 {label}
+                {
+                    requiredFiledLabel && <span className='text-red-500 ml-1'>*</span>
+                }            
             </p>
             <Components.Autocomplete
                 freeSolo={freeSolo}

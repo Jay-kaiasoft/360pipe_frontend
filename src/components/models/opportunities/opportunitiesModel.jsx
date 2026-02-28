@@ -620,6 +620,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             label="Opportunity Name"
                                                             type={`text`}
                                                             error={errors.opportunity}
+                                                            requiredFiledLabel={true}
                                                             onChange={(e) => {
                                                                 field.onChange(e);
                                                             }}
@@ -637,6 +638,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             {...field}
                                                             label="List Amount"
                                                             type="text"
+                                                            requiredFiledLabel={true}
                                                             error={errors.dealAmount}
                                                             onChange={(e) => {
                                                                 let value = e.target.value;
@@ -698,12 +700,16 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 <Controller
                                                     name="dealAmount"
                                                     control={control}
+                                                    rules={{
+                                                        required: "Deal amount is required",
+                                                    }}
                                                     render={({ field }) => (
                                                         <Input
                                                             {...field}
                                                             label="Deal Amount"
                                                             type="text"
                                                             placeholder=" "
+                                                            requiredFiledLabel={true}
                                                             disabled={!watch("listPrice")}
                                                             onChange={(e) => {
                                                                 let value = e.target.value;
@@ -736,6 +742,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                                                                 setValue("discountPercentage", Math.floor(percent).toString());
                                                             }}
+                                                            error={errors.dealAmount}
                                                             startIcon={
                                                                 <CustomIcons
                                                                     iconName={"fa-solid fa-dollar-sign"}
@@ -755,6 +762,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         <Select
                                                             options={opportunityStages}
                                                             label={"Stage"}
+                                                            requiredFiledLabel={true}
                                                             placeholder="Select Stage"
                                                             value={parseInt(watch("salesStage")) || null}
                                                             error={errors.salesStage}
@@ -768,7 +776,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         />
                                                     )}
                                                 />
-                                                <DatePickerComponent setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
+                                                <DatePickerComponent requiredFiledLabel={true} setValue={setValue} control={control} name='closeDate' label={`Close Date`} minDate={new Date()} maxDate={null} required={true} />
                                                 <Controller
                                                     name="status"
                                                     control={control}
@@ -776,6 +784,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                         <Select
                                                             options={opportunityStatus}
                                                             label={"Status"}
+                                                            requiredFiledLabel={true}
                                                             placeholder="Select status"
                                                             value={parseInt(watch("status")) || null}
                                                             onChange={(_, newValue) => {
@@ -799,6 +808,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                             {...field}
                                                             multiline={true}
                                                             rows={3}
+                                                            requiredFiledLabel={true}
                                                             label="Next Step"
                                                             type={`text`}
                                                             error={errors.nextSteps}

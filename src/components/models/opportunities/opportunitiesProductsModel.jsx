@@ -186,6 +186,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                             <Select
                                                 options={products || []} // Prevent selecting the same account in both fields
                                                 label={"Product"}
+                                                requiredFiledLabel={true}
                                                 placeholder="Select product"
                                                 value={parseInt(watch(`productId`)) || null}
                                                 onChange={(_, newValue) => {
@@ -228,6 +229,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                         render={({ field }) => (
                                             <Input
                                                 {...field}
+                                                requiredFiledLabel={true}
                                                 disabled={!watch("name")}
                                                 label="Quantity"
                                                 type={`text`}
@@ -251,6 +253,7 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
                                             <Input
                                                 {...field}
                                                 type="text"
+                                                requiredFiledLabel={true}
                                                 disabled={!watch("name")}
                                                 error={errors.price}
                                                 onChange={(e) => {

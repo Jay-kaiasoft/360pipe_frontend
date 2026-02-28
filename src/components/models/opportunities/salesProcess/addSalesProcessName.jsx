@@ -130,6 +130,7 @@ function AddSalesProcessName({ setAlert, open, handleClose, id, oppId, handleGet
                                             {...field}
                                             label="Process Name"
                                             type={`text`}
+                                            requiredFiledLabel={true}
                                             onChange={(e) => {
                                                 field.onChange(e);
                                             }}

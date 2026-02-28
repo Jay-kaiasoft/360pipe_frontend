@@ -166,6 +166,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
                                                 options={customers}
                                                 label={"Member"}
                                                 placeholder="Select member"
+                                                requiredFiledLabel={true}
                                                 value={parseInt(watch("memberId")) || null}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {

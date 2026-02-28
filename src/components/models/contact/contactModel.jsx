@@ -247,6 +247,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                             {...field}
                                             label="First Name"
                                             type={`text`}
+                                            requiredFiledLabel={true}
                                             error={errors.firstName}
                                         />
                                     )}

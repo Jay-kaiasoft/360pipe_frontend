@@ -295,6 +295,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                       <Select
                         options={terms}
                         label="Period"
+                        requiredFiledLabel={true}
                         placeholder="Select period"
                         value={parseInt(watch('term')) || null}
                         onChange={(_, newValue) => {
@@ -317,6 +318,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                         {...field}
                         label="Quota"
                         type="text"
+                        requiredFiledLabel={true}
                         inputMode="numeric"
                         onChange={(e) => handleIntegerInputChange(field, e)}
                         error={errors?.quota}
@@ -357,6 +359,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                                     {...field}
                                     label={`${labelText}`}
                                     type="text"
+                                    requiredFiledLabel={watch('term') ? true : false}
                                     inputMode="numeric"
                                     onChange={(e) => handleIntegerInputChange(field, e)}
                                     error={errors?.[fieldName]}

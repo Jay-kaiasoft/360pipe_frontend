@@ -132,6 +132,7 @@ function OpportunitiesNotesModel({ setAlert, open, handleClose, id, opportunityI
                                             <Input
                                                 {...field}
                                                 label="Title"
+                                                requiredFiledLabel={true}
                                                 type={`text`}
                                                 error={errors.title}
                                             />
@@ -150,6 +151,7 @@ function OpportunitiesNotesModel({ setAlert, open, handleClose, id, opportunityI
                                                 {...field}
                                                 label="Note"
                                                 type={`text`}
+                                                requiredFiledLabel={true}
                                                 error={errors.comment}
                                             />
                                         )}

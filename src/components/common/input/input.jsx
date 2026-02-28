@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { InputAdornment, useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 
-const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur }, ref) => {
+const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur, requiredFiledLabel = false }, ref) => {
     const theme = useTheme();
     return (
         <div>
@@ -10,6 +10,9 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
                 (label !== null && label !== "") && (
                     <p className='mb-2 text-black text-left'>
                         {label}
+                        {
+                            requiredFiledLabel && <span className='text-red-500 ml-1'>*</span>
+                        }
                     </p>
                 )
             }

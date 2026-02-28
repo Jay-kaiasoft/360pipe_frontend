@@ -14,6 +14,7 @@ const SelectMultiple = forwardRef(
             onChange,
             options,
             limitTags = 2,
+            requiredFiledLabel = false,
         },
         ref
     ) => {
@@ -25,6 +26,9 @@ const SelectMultiple = forwardRef(
             <div>
                 <p className='mb-2 text-black text-left'>
                     {label}
+                    {
+                        requiredFiledLabel && <span className='text-red-500 ml-1'>*</span>
+                    }
                 </p>
                 <Components.Autocomplete
                     multiple

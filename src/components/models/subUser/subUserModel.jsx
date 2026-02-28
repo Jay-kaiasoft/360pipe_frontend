@@ -600,6 +600,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 {...field}
                                                 label="Name"
                                                 type={`text`}
+                                                requiredFiledLabel={true}
                                                 error={errors.name}
                                                 onChange={(e) => {
                                                     field.onChange(e);
@@ -617,6 +618,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                         render={({ field }) => (
                                             <Select
                                                 options={subUsersTypes}
+                                                requiredFiledLabel={true}
                                                 label="Member Role"
                                                 placeholder="Select role"
                                                 value={parseInt(watch("subUserTypeId")) || null}
@@ -643,6 +645,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 {...field}
                                                 label="Email"
                                                 type={`text`}
+                                                requiredFiledLabel={true}
                                                 error={errors?.emailAddress}
                                                 onChange={(e) => {
                                                     const value = e.target.value.replace(/\s/g, "");
@@ -687,6 +690,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                         render={({ field }) => (
                                             <Input
                                                 {...field}
+                                                requiredFiledLabel={true}
                                                 label="Phone"
                                                 type={`text`}
                                                 error={errors?.cellPhone}
@@ -710,6 +714,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                         rules={{ required: "Calendar Year Type is required" }}
                                                         render={({ field }) => (
                                                             <Select
+                                                                requiredFiledLabel={true}
                                                                 options={calendarType}
                                                                 label="Calendar Type"
                                                                 placeholder="Select calendar type"
@@ -723,7 +728,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 {
                                                     watch("calendarYearType") && (
                                                         <div>
-                                                            <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                            <DatePickerComponent requiredFiledLabel={true}setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
                                                         </div>
                                                     )
                                                 }
@@ -731,7 +736,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 {
                                                     watch("calendarYearType") && (
                                                         <div>
-                                                            <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                            <DatePickerComponent requiredFiledLabel={true} setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
                                                         </div>
                                                     )
                                                 }

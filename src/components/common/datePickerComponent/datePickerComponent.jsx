@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { useTheme } from '@mui/material';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, showDates = null }) => {
+const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate, required = false, disabled = false, showDates = null, requiredFiledLabel = false }) => {
   const theme = useTheme();
 
   const customTheme = createTheme({
@@ -83,6 +83,9 @@ const DatePickerComponent = ({ name, setValue, control, label, minDate, maxDate,
     <div>
       <p className='mb-2 text-black text-left'>
         {label}
+        {
+          requiredFiledLabel && <span className='text-red-500 ml-1'>*</span>
+        }
       </p>
       <ThemeProvider theme={customTheme}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
