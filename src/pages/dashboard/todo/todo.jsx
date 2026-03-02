@@ -205,6 +205,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
             completedAssignees,
             statusColor,
             completionProgressPercent,
+            createdBy: t?.createdBy,
             createdByName: t?.createdByName,
             teamName: t?.teamName,
             todoAssignData,
@@ -217,28 +218,6 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
     // ------------------------------------------------------------------
     // Data fetching
     // ------------------------------------------------------------------
-    const refreshTodos = async (keepSelectedId = null) => {
-        try {
-            const res = await getAllTodos();
-            const list = res?.result || res?.data || res || [];
-            const uiTodos = (Array.isArray(list) ? list : []).map(mapApiTodoToUi);
-
-            setTasks(uiTodos);
-
-            const selId = keepSelectedId ?? selectedTask?.id;
-            if (selId) {
-                const found = uiTodos.find((x) => x.id === selId);
-                if (found) {
-                    setSelectedTask(found);
-                    await refreshNotes(found.id, found);
-                } else {
-                    setSelectedTask(null);
-                }
-            }
-        } catch (e) {
-            console.error("refreshTodos error:", e);
-        }
-    };
 
     const refreshNotes = async (todoId, baseTask = null) => {
         if (!todoId) return;
@@ -283,10 +262,9 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
 
     useEffect(() => {
         if (locaiton.pathname === "/dashboard/todos") {
-            const title = userData?.roleName?.toUpperCase() === "SALES REPRESENTATIVE" ? "My Actions" : "Team Actions"
+            const title = userData?.roleName?.toUpperCase() === "SALES MANAGER" ? "Team Actions" : "My Actions"
             setHeaderTitle(title)
         }
-        refreshTodos(null);
         handleGetAllTeams()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locaiton.pathname]);
@@ -569,7 +547,6 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                 message: "Todo deleted successfully",
                 type: "success"
             });
-            refreshTodos(null);
             handleCloseDeleteDialog();
         } else {
             setAlert({
@@ -703,7 +680,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
         if (todoId) {
             const res = await completeTodo(todoId);
             if (res.status === 200) {
-                refreshTodos(null)
+                handleGetTodoByTeam(null)
                 setAlert({
                     open: true,
                     message: "Task closed successfully",
@@ -762,7 +739,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                         <div>
                             <Button
                                 onClick={openAddModal}
-                                text={'New Todo'}
+                                text={'New Task'}
                                 startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4" />}
                             />
                         </div>
@@ -783,7 +760,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {(tasks || []).map((task) => {
+                                {tasks?.length > 0 ? tasks?.map((task) => {
                                     const isSelected = selectedTask && selectedTask.id === task.id;
                                     return (
                                         <tr
@@ -839,29 +816,32 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
 
 
                                             <td className="px-6 py-4 align-middle flex justify-end text-sm text-slate-600 font-medium">
-                                                <Tooltip title="Delete" arrow>
-                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                        <Components.IconButton
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                handleOpenDeleteDialog(task.id)
-                                                            }}
-                                                        >
-                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                        </Components.IconButton>
-                                                    </div>
-                                                </Tooltip>
+                                                {
+                                                    task?.createdBy === userData?.userId && (
+                                                        <Tooltip title="Delete" arrow>
+                                                            <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        handleOpenDeleteDialog(task.id)
+                                                                    }}
+                                                                >
+                                                                    <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    )
+                                                }
                                             </td>
                                         </tr>
                                     );
-                                })}
-                                {tasks?.length === 0 && (
+                                }) :
                                     <tr>
                                         <td colSpan={4} className="px-6 py-10 text-center text-slate-400">
                                             No tasks found.
                                         </td>
                                     </tr>
-                                )}
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -945,13 +925,17 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                                     >
                                                         {stripLegacyPrefix(note.text)}
                                                     </p>
-                                                    <button
-                                                        onClick={() => handleDeleteNote(note.id)}
-                                                        className="p-1 rounded hover:bg-red-100 transition"
-                                                        title="Delete note"
-                                                    >
-                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 h-3 w-3" />
-                                                    </button>
+                                                    {
+                                                        selectedTask?.createdBy === userData?.userId && (
+                                                            <button
+                                                                onClick={() => handleDeleteNote(note.id)}
+                                                                className="p-1 rounded hover:bg-red-100 transition"
+                                                                title="Delete note"
+                                                            >
+                                                                <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 h-3 w-3" />
+                                                            </button>
+                                                        )
+                                                    }
                                                 </div>
                                             ))
                                         ) : (
@@ -959,29 +943,37 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                         )}
                                     </div>
                                 </div>
-                                <div ref={noteInputWrapRef} className="my-2">
-                                    <input
-                                        ref={noteInputRef}
-                                        type="text"
-                                        value={newNoteInput}
-                                        onChange={handleNoteInputChange}
-                                        onKeyDown={handleKeyPress}
-                                        placeholder="Type your note"
-                                        className="w-full border border-slate-200 rounded p-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-colors"
-                                    />
-                                </div>
-                                <div className="flex gap-3 justify-end">
-                                    <Button
-                                        useFor="success"
-                                        onClick={() => openEditModal(selectedTask)}
-                                        text={'Edit Task'}
-                                    />
-                                    <Button
-                                        disabled={selectedTask?.completionProgressPercent === 100}
-                                        onClick={() => handleOpenCloseTodoDialog(selectedTask.id)}
-                                        text={"Mark Complete"}
-                                    />
-                                </div>
+                                {
+                                    selectedTask?.createdBy === userData?.userId && (
+                                        <div ref={noteInputWrapRef} className="my-2">
+                                            <input
+                                                ref={noteInputRef}
+                                                type="text"
+                                                value={newNoteInput}
+                                                onChange={handleNoteInputChange}
+                                                onKeyDown={handleKeyPress}
+                                                placeholder="Type your note"
+                                                className="w-full border border-slate-200 rounded p-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-colors"
+                                            />
+                                        </div>
+                                    )
+                                }
+                                {
+                                    selectedTask?.createdBy === userData?.userId && (
+                                        <div className="flex gap-3 justify-end">
+                                            <Button
+                                                useFor="success"
+                                                onClick={() => openEditModal(selectedTask)}
+                                                text={'Edit Task'}
+                                            />
+                                            <Button
+                                                disabled={selectedTask?.completionProgressPercent === 100}
+                                                onClick={() => handleOpenCloseTodoDialog(selectedTask.id)}
+                                                text={"Mark Complete"}
+                                            />
+                                        </div>
+                                    )
+                                }
                             </div>
                         )}
                     </div>
@@ -992,7 +984,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                 open={addTodoOpen}
                 handleClose={handleCloseAddTodo}
                 todoId={editingTodoId}
-                handleGetAllTodos={refreshTodos}
+                handleGetAllTodos={handleGetTodoByTeam}
             />
             <AlertDialog
                 open={dialog.open}

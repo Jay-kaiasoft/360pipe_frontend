@@ -622,7 +622,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     sx={{ m: 0, p: 2, color: theme.palette.text.primary }}
                     id="customized-dialog-title"
                 >
-                    {todoId ? 'Update ' : 'Add New '}Todo
+                    {todoId ? 'Update ' : 'New '}Priority
                 </Components.DialogTitle>
 
                 <Components.IconButton
@@ -726,7 +726,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                         />
                                     </div>
                                 </div>
-                                
+
 
                                 {/* Team selection */}
                                 {watch('assignedType') === 2 && (
@@ -861,7 +861,8 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                             <Input
                                                 {...field}
                                                 ref={descriptionRef}
-                                                label="Description"
+                                                label="Details"
+                                                placeholder="Enter action details"
                                                 type="text"
                                                 multiline={true}
                                                 minRows={1}
@@ -1077,18 +1078,18 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                     <Components.DialogActions>
                         <div className="flex justify-end items-center gap-4">
                             <Button
-                                type="submit"
-                                text={todoId ? 'Update' : 'Submit'}
-                                isLoading={loading}
-                                endIcon={<CustomIcons iconName="fa-solid fa-floppy-disk" css="cursor-pointer" />}
-                            />
-                            <Button
                                 type="button"
                                 text="Cancel"
                                 disabled={loading}
                                 useFor="disabled"
                                 onClick={() => onClose()}
                                 startIcon={<CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer mr-2" />}
+                            />
+                            <Button
+                                type="submit"
+                                text={todoId ? 'Update' : 'Create & Assign'}
+                                isLoading={loading}
+                                endIcon={<CustomIcons iconName="fa-solid fa-floppy-disk" css="cursor-pointer" />}
                             />
                         </div>
                     </Components.DialogActions>
