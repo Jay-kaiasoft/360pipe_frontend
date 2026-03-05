@@ -3,7 +3,6 @@ import CustomIcons from "../../../components/common/icons/CustomIcons";
 
 // Real API services
 import {
-    getAllTodos,
     deleteTodo as deleteTodoApi,
     completeTodo,
     getTodoByTeam,

@@ -40,7 +40,6 @@ const AppHeader = ({
   performanceSelectedTabIndex,
   setPerformanceSelectedTabIndex
 }) => {
-  const theme = useTheme()
 
   const { isMobileOpen } = useSelector((state) => state.common)
   const userDetails = getUserDetails()

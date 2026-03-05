@@ -45,11 +45,16 @@ import TodoScreen from "./demoScreens/todo/todoScreen";
 import TodoScreenManager from "./demoScreens/todo/todoScreenManager";
 import Performance from "./pages/dashboard/performance/performance";
 import Support from "./pages/landingPage/support";
+import Dashboard from "./demoScreens/dashboard/dashboard";
 
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
   const router = createBrowserRouter([
+    {
+      path: "/demoscreens/dashboard",
+      element: <Dashboard />,
+    },
     {
       path: "/demoscreens/opportunityview",
       element: <OppView />,
