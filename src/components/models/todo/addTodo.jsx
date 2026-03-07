@@ -678,6 +678,25 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                     />
                                 </div>
 
+                                {/* Description */}
+                                <div>
+                                    <Controller
+                                        name="description"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                ref={descriptionRef}
+                                                label="Details"
+                                                placeholder="Enter action details"
+                                                type="text"
+                                                multiline={true}
+                                                minRows={1}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                
                                 <div className='grid grid-cols-2 gap-[30px]'>
                                     <div>
                                         <Controller
@@ -850,26 +869,6 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
                                         />
                                     </div>
                                 )}
-
-
-                                {/* Description */}
-                                <div>
-                                    <Controller
-                                        name="description"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Input
-                                                {...field}
-                                                ref={descriptionRef}
-                                                label="Details"
-                                                placeholder="Enter action details"
-                                                type="text"
-                                                multiline={true}
-                                                minRows={1}
-                                            />
-                                        )}
-                                    />
-                                </div>
 
                                 {/* Priority
                                 <div>

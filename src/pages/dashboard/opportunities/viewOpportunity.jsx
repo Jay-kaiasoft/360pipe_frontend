@@ -1222,20 +1222,50 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     const StageTimeline = ({ stages, currentStageId }) => {
         return (
-            <div className="py-4 mb-0">
-                <div className="flex flex-wrap xl:justify-evenly gap-1 overflow-x-auto pb-1">
-                    {stages?.map((stage) => {
+            <div className="py-2 mb-4 w-full overflow-x-auto no-scrollbar">
+                <div className="flex items-center bg-[#EEF2F6] rounded-[30px] p-1.5 min-w-max h-[48px]">
+                    {stages?.map((stage, index) => {
                         const isActive = stage.id === currentStageId;
                         const isCompleted = currentStageId !== null && stage.id < currentStageId;
-                        let pillClasses = isActive ? "bg-[#2753AF] text-white border-[#2753AF]" :
-                            isCompleted ? "bg-[#E3F2FD] text-[#2753AF] border-[#B3D7FF] cursor-pointer" :
-                                "bg-white text-gray-700 border-gray-300 cursor-pointer";
+
+                        let bgClass = isActive ? "bg-[#2563EB]" : "bg-transparent hover:bg-black/5";
+                        let textClass = isActive ? "text-white" : "text-gray-600 hover:text-gray-900";
+
+                        const isFirst = index === 0;
+                        const isLast = index === stages.length - 1;
+
                         return (
-                            <div key={stage.id} onClick={() => { if (!isActive) handleSaveField("salesStage", stage.title); }}>
-                                <div className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}>
-                                    <span>{stage.title}</span>
-                                    {isCompleted && <CustomIcons iconName="fa-solid fa-check" css="h-3 w-3 inline-block ml-2" />}
+                            <div
+                                key={stage.id}
+                                onClick={() => { if (!isActive) handleSaveField("salesStage", stage.title); }}
+                                className={`relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6
+                                    ${bgClass} 
+                                    ${!isFirst ? '-ml-[15px]' : ''} 
+                                    ${isFirst ? 'rounded-l-full' : ''} 
+                                    ${isLast ? 'rounded-r-full' : ''}
+                                `}
+                                style={{
+                                    clipPath: isFirst
+                                        ? 'polygon(0% 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 0% 100%)'
+                                        : isLast
+                                            ? 'polygon(15px 50%, 0% 100%, 100% 100%, 100% 0%, 0% 0%)'
+                                            : 'polygon(15px 50%, 0% 100%, calc(100% - 15px) 100%, 100% 50%, calc(100% - 15px) 0%, 0% 0%)',
+                                    zIndex: stages.length - index
+                                }}
+                            >
+                                <div className={`relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide ${textClass} 
+                                    ${!isFirst ? 'ml-4' : ''} 
+                                    ${!isLast ? 'mr-3' : ''}`}
+                                >
+                                    {(isCompleted || isActive) && <CustomIcons iconName="fa-solid fa-check" css={isActive ? "text-white" : "text-blue-500"} />}
+                                    <span className="truncate whitespace-nowrap">{stage.title}</span>
                                 </div>
+
+                                {!isLast && (
+                                    <svg className="absolute right-0 top-0 bottom-0 h-full w-[15px] z-20 pointer-events-none" viewBox="0 0 15 48" preserveAspectRatio="none">
+                                        <polyline points="0,0 15,24 0,48" fill="none" stroke="white" strokeWidth="6" />
+                                    </svg>
+                                )}
                             </div>
                         );
                     })}
@@ -1486,7 +1516,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     const logoUrl = watch("logo");
 
     return (
-        <div className="mx-auto px-4 mb-2">
+        <div className="mx-auto px-4 mb-4">
             {oppSelectedTabIndex === 0 && (
                 <>
                     {/* Header Grid */}
@@ -1744,10 +1774,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                     <StageTimeline stages={opportunityStages} currentStageId={currentStageId} />
 
                     {/* 3-Column Layout: Why, Value, Contacts */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-3 mb-5">
                         {/* Why Do Anything */}
-                        <div ref={whyCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                        <div ref={whyCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">
                                 Why Do Anything
                             </p>
 
@@ -1792,8 +1822,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         </div>
 
                         {/* Value */}
-                        <div ref={valueCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">Value</p>
+                        <div ref={valueCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">Value</p>
 
                             <div
                                 className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
@@ -1838,14 +1868,14 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         </div>
 
                         {/* Key Contacts */}
-                        <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
                             <div className="flex justify-start items-center mb-4">
-                                <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
+                                <p className="font-medium text-gray-800 text-2xl text-center grow">Key Contacts</p>
                             </div>
 
-                            {isSelectContactsOpen && (
+                            {(isSelectContactsOpen && allContactsWithEdits?.length > 0) && (
                                 <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
-                                    {allContactsWithEdits.map(c => (
+                                    {allContactsWithEdits?.map(c => (
                                         <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
                                             <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
                                             <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
@@ -1988,29 +2018,39 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
                             )}
 
-                            <div className="overflow-y-auto px-1">
-                                <ul className="text-sm">
+                            <div className="overflow-y-auto px-1 flex-1">
+                                <ul className="text-sm space-y-3">
                                     {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                         allContactsWithEdits
                                             ?.filter((row) => row.isKey === true)
-                                            .map((c) => (
-                                                <li
-                                                    key={c.id}
-                                                    className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
-                                                >
-                                                    <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
-                                                        {c.contactName}
-                                                    </span>
-
-                                                    <span className="text-gray-500 text-base truncate" title={c.title || ""}>
-                                                        {c.title || "-"}
-                                                    </span>
-
-                                                    <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
-                                                        {c.role || "-"}
-                                                    </span>
-                                                </li>
-                                            ))
+                                            .map((c, idx) => {
+                                                const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                const badgeColor = bgColors[idx % bgColors.length];
+                                                return (
+                                                    <li
+                                                        key={c.id}
+                                                        className="flex items-center gap-3 py-1"
+                                                    >
+                                                        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                            {initials}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-bold text-[#1e3a8a] text-[15px] truncate" title={c.contactName || ""}>
+                                                                    {c.contactName}
+                                                                </span>
+                                                                <span className="text-gray-600 text-[13px] truncate" title={c.title || ""}>
+                                                                    - {c.title || "-"}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-gray-500 text-[13px] truncate" title={c.role || ""}>
+                                                                {c.role || "-"}
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                );
+                                            })
                                     ) : (
                                         <p className="text-sm text-gray-400 italic">
                                             No contacts linked to this opportunity.
@@ -2021,7 +2061,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
                             <div className="flex items-end gap-2 absolute bottom-3 right-3">
                                 <Tooltip title="Select" arrow>
-                                    <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                    {/* <CustomIcons iconName="fa-solid fa-circle-arrow-right" css="text-white h-3.5 w-3.5" /> */}
+                                    <button disabled={allContactsWithEdits?.length === 0} className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] hover:bg-[#374151] shadow-sm flex items-center gap-1.5 cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>SELECT</button>
                                 </Tooltip>
                                 <Tooltip title="Add New" arrow>
                                     <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
@@ -2035,11 +2076,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                     </div>
 
                     {/* 3-Column Layout: Decision, Env, Next Steps */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                         {/* Decision Map */}
-                        <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 flex flex-col">
+                        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-60 flex flex-col">
                             <div className="flex justify-between mb-4 flex-none">
-                                <p className="font-medium text-black tracking-wider text-2xl">Decision Map</p>
+                                <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
                                 <div
                                     className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
                                     onClick={() => setOpenDecisionMapModel(true)}
@@ -2055,9 +2096,9 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         {/* Current Environment */}
                         <div
                             ref={envCardRef}
-                            className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-[15rem] relative flex flex-col"
+                            className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-[15rem] relative flex flex-col"
                         >
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-3 shrink-0">
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-3 shrink-0">
                                 Current Environment
                             </p>
 
@@ -2122,8 +2163,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
 
                         {/* Next Steps */}
-                        <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4">Next Steps</p>
+                        <div ref={nextStepsRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
                             {isEditingNextSteps ?
                                 <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
                                 <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
@@ -2254,10 +2295,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
 
                                 {/* 3-Column Layout: Why, Value, Contacts */}
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-3 mb-5">
                                     {/* Why Do Anything */}
-                                    <div ref={whyCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                    <div ref={whyCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">
                                             Why Do Anything
                                         </p>
 
@@ -2302,8 +2343,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
 
                                     {/* Value */}
-                                    <div ref={valueCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">Value</p>
+                                    <div ref={valueCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">Value</p>
 
                                         <div
                                             className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
@@ -2348,14 +2389,14 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
 
                                     {/* Key Contacts */}
-                                    <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                                    <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
                                         <div className="flex justify-start items-center mb-4">
-                                            <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
+                                            <p className="font-medium text-gray-800 text-2xl text-center grow">Key Contacts</p>
                                         </div>
 
-                                        {isSelectContactsOpen && (
+                                        {(isSelectContactsOpen && allContactsWithEdits?.length > 0) && (
                                             <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
-                                                {allContactsWithEdits.map(c => (
+                                                {allContactsWithEdits?.map(c => (
                                                     <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
                                                         <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
                                                         <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
@@ -2498,29 +2539,39 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             </div>
                                         )}
 
-                                        <div className="overflow-y-auto px-1">
-                                            <ul className="text-sm">
+                                        <div className="overflow-y-auto px-1 flex-1">
+                                            <ul className="text-sm space-y-3">
                                                 {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                                     allContactsWithEdits
                                                         ?.filter((row) => row.isKey === true)
-                                                        .map((c) => (
-                                                            <li
-                                                                key={c.id}
-                                                                className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
-                                                            >
-                                                                <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
-                                                                    {c.contactName}
-                                                                </span>
-
-                                                                <span className="text-gray-500 text-base truncate" title={c.title || ""}>
-                                                                    {c.title || "-"}
-                                                                </span>
-
-                                                                <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
-                                                                    {c.role || "-"}
-                                                                </span>
-                                                            </li>
-                                                        ))
+                                                        .map((c, idx) => {
+                                                            const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                            const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                            const badgeColor = bgColors[idx % bgColors.length];
+                                                            return (
+                                                                <li
+                                                                    key={c.id}
+                                                                    className="flex items-center gap-3 py-1"
+                                                                >
+                                                                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                                        {initials}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="font-bold text-[#1e3a8a] text-[15px] truncate" title={c.contactName || ""}>
+                                                                                {c.contactName}
+                                                                            </span>
+                                                                            <span className="text-gray-600 text-[13px] truncate" title={c.title || ""}>
+                                                                                - {c.title || "-"}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="text-gray-500 text-[13px] truncate" title={c.role || ""}>
+                                                                            {c.role || "-"}
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            );
+                                                        })
                                                 ) : (
                                                     <p className="text-sm text-gray-400 italic">
                                                         No contacts linked to this opportunity.
@@ -2531,7 +2582,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
                                         <div className="flex items-end gap-2 absolute bottom-3 right-3">
                                             <Tooltip title="Select" arrow>
-                                                <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                                {/* <CustomIcons iconName="fa-solid fa-circle-arrow-right" css="text-white h-3.5 w-3.5" /> */}
+                                                <button disabled={allContactsWithEdits?.length === 0} className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] hover:bg-[#374151] shadow-sm flex items-center gap-1.5 cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>SELECT</button>
                                             </Tooltip>
                                             <Tooltip title="Add New" arrow>
                                                 <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
@@ -2545,11 +2597,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
 
                                 {/* 3-Column Layout: Decision, Env, Next Steps */}
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                                     {/* Decision Map */}
-                                    <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 flex flex-col">
+                                    <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-60 flex flex-col">
                                         <div className="flex justify-between mb-4 flex-none">
-                                            <p className="font-medium text-black tracking-wider text-2xl">Decision Map</p>
+                                            <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
                                             <div
                                                 className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
                                                 onClick={() => setOpenDecisionMapModel(true)}
@@ -2562,11 +2614,12 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         <DecisionMapTimeline items={salesProcess} />
                                     </div>
 
+                                    {/* Current Environment */}
                                     <div
                                         ref={envCardRef}
-                                        className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-[15rem] relative flex flex-col"
+                                        className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-[15rem] relative flex flex-col"
                                     >
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-3 shrink-0">
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-3 shrink-0">
                                             Current Environment
                                         </p>
 
@@ -2629,9 +2682,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         )}
                                     </div>
 
+
                                     {/* Next Steps */}
-                                    <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-2">Next Steps</p>
+                                    <div ref={nextStepsRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
                                         {isEditingNextSteps ?
                                             <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
                                             <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>

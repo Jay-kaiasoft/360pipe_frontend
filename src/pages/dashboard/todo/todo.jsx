@@ -540,12 +540,8 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
 
     const handleDeleteTodo = async () => {
         const res = await deleteTodoApi(todoId);
-        if (res.status === 200) {
-            setAlert({
-                open: true,
-                message: "Todo deleted successfully",
-                type: "success"
-            });
+        if (res.status === 200) {            
+            handleGetTodoByTeam()
             handleCloseDeleteDialog();
         } else {
             setAlert({

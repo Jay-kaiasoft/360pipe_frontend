@@ -60,7 +60,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#EEEDFC] font-sans pb-20">
       {/* Header Area */}
-      <div className="relative bg-[#2b4c8a] text-white py-3 shadow-lg flex items-center justify-between px-6 md:px-10">
+      <div className="relative bg-gradient-to-r from-[#1B3B89] via-[#4a80ed] to-[#1B3B89] text-white py-3 shadow-lg flex items-center justify-between px-6 md:px-10">
 
         {/* Logo - Left */}
         <div className="flex-1 flex items-center">
@@ -75,7 +75,7 @@ const Dashboard = () => {
           <div className="flex justify-center items-center">
             <button
               onClick={() => setActiveTab('Activity')}
-              className={`px-8 py-1.5 text-[14px] font-medium transition-colors border ${activeTab === 'Activity'
+              className={`px-8 py-1.5 text-[18px] font-medium transition-colors border ${activeTab === 'Activity'
                 ? 'bg-[#26488d] text-white border-white/60'
                 : 'bg-[#F4F6FB] text-[#7185AA] border-transparent hover:bg-gray-200'
                 }`}
@@ -84,7 +84,7 @@ const Dashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab('Results')}
-              className={`px-8 py-1.5 text-[14px] font-medium transition-colors border ${activeTab === 'Results'
+              className={`px-8 py-1.5 text-[18px] font-medium transition-colors border ${activeTab === 'Results'
                 ? 'bg-[#26488d] text-white border-white/60'
                 : 'bg-[#F4F6FB] text-[#7185AA] border-transparent hover:bg-gray-200'
                 }`}
@@ -97,7 +97,7 @@ const Dashboard = () => {
         {/* Right Actions */}
         <div className="flex-1 flex justify-end items-center gap-3">
           <button className="flex items-center gap-2 bg-[#1e3b7b] text-white px-4 py-1.5 border border-white/30 hover:bg-[#162d60] transition">
-            Q1 <span className="text-[10px] ml-1">▼</span>
+            This Week <span className="text-[10px] ml-1">▼</span>
           </button>
           <button className="flex items-center gap-2 bg-[#1e3b7b] text-white px-4 py-1.5 border border-white/30 hover:bg-[#162d60] transition">
             Team
@@ -111,9 +111,9 @@ const Dashboard = () => {
       <div className="max-w-[1100px] mx-auto pt-6 px-4">
         {/* Sub Navigation */}
         <div className="flex gap-8 border-b border-gray-200/80 mb-8 px-2">
-          <div className="pb-3 text-[14px] font-bold text-[#143d8a] border-b-2 border-[#143d8a] cursor-pointer">Performance</div>
-          <div className="pb-3 text-[14px] font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors">Pipeline</div>
-          <div className="pb-3 text-[14px] font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors">Team Actions</div>
+          <div className="pb-3 text-[18px] font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors">Pipeline</div>
+          <div className="pb-3 text-[18px] font-bold text-[#143d8a] border-b-2 border-[#143d8a] cursor-pointer">Performance</div>
+          <div className="pb-3 text-[18px] font-medium text-gray-400 cursor-pointer hover:text-gray-600 transition-colors">Team Actions</div>
         </div>
 
         {/* Content Area */}
