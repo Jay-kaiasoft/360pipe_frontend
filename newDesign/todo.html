@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo / My Actions Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-[#F8FAFF] min-h-screen p-6">
+
+    <div class="max-w-7xl mx-auto flex gap-6 h-[90vh] mb-2">
+
+        <!-- Left Side: Task List -->
+        <div
+            class="bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-slate-200 flex flex-col transition-all duration-300 w-2/3">
+
+            <div class="p-4 flex items-center justify-between rounded-t-xl bg-white border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-48 relative">
+                        <select
+                            class="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-sm">
+                            <option>All</option>
+                            <option>Pending</option>
+                            <option>Completed</option>
+                        </select>
+                        <i
+                            class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    </div>
+                    <div class="w-48 relative">
+                        <select
+                            class="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-sm">
+                            <option>Select teams...</option>
+                            <option>Team Alpha</option>
+                            <option>Team Beta</option>
+                        </select>
+                        <i
+                            class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-xs"></i> New Task
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                <table class="w-full table-fixed border-collapse">
+                    <thead class="sticky top-0 bg-white z-10">
+                        <tr class="border-b border-slate-200 text-sm font-semibold text-black">
+                            <th class="text-left px-6 py-3">Action Item</th>
+                            <th class="text-right px-6 py-3">Due</th>
+                            <th class="text-right px-6 py-3">Status</th>
+                            <th class="text-right px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- Selected Task Row -->
+                        <tr class="cursor-pointer transition-colors border-b border-slate-50 bg-blue-50">
+                            <td class="px-6 py-4 align-middle">
+                                <div class="flex items-stretch">
+                                    <div class="flex items-start gap-2">
+                                        <div
+                                            class="flex justify-center items-center gap-1 p-1 rounded-full w-5 h-5 bg-red-600">
+                                            <i class="fa-solid fa-exclamation text-white text-[10px]"></i>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div>
+                                                <div class="font-bold text-slate-800 text-sm truncate">Acme Renewal
+                                                </div>
+                                                <div class="text-slate-500 text-sm truncate w-60">Send finalized
+                                                    contract draft</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-middle text-right text-sm text-black">10/12</td>
+                            <td class="px-6 py-4 align-middle text-right">
+                                <div class="flex justify-end py-2 cursor-pointer ml-20">
+                                    <div class="inline-flex items-center justify-center rounded-full px-5 py-1.5 text-sm font-semibold"
+                                        style="background-color: #EED5B9; box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);">
+                                        <span class="text-black opacity-90">1 / 3 Complete</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-middle text-right w-36">
+                                <div class="flex items-center gap-3 justify-end h-full">
+                                    <i class="fa-solid fa-pen-to-square text-[#C4C4C4] hover:text-black hover:scale-125 transition-all text-lg"
+                                        title="Edit text"></i>
+                                    <i class="fa-solid fa-trash text-[#C4C4C4] hover:text-black hover:scale-125 transition-all text-lg"
+                                        title="Delete Task"></i>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Unselected Task Row -->
+                        <tr class="cursor-pointer transition-colors border-b border-slate-50 hover:bg-slate-50">
+                            <td class="px-6 py-4 align-middle">
+                                <div class="flex items-stretch">
+                                    <div class="flex items-start gap-2">
+                                        <div
+                                            class="flex justify-center items-center gap-1 p-1 rounded-full w-5 h-5 bg-yellow-400">
+                                            <i class="fa-solid fa-exclamation text-white text-[10px]"></i>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div>
+                                                <div class="font-bold text-slate-800 text-sm truncate">Global Tech Sync
+                                                </div>
+                                                <div class="text-slate-500 text-sm truncate w-60">Prep slide deck for Q4
+                                                    planning</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-middle text-right text-sm text-black">10/14</td>
+                            <td class="px-6 py-4 align-middle text-right">
+                                <div class="flex justify-end py-2 cursor-pointer ml-20">
+                                    <div class="inline-flex items-center justify-center rounded-full px-5 py-1.5 text-sm font-semibold"
+                                        style="background-color: #D7D8F4; box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);">
+                                        <span class="text-black opacity-90">0 / 2 Complete</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-middle text-right w-36">
+                                <div class="flex items-center gap-3 justify-end h-full">
+                                    <i class="fa-solid fa-pen-to-square text-[#C4C4C4] hover:text-black hover:scale-125 transition-all text-lg"
+                                        title="Edit text"></i>
+                                    <i class="fa-solid fa-trash text-[#C4C4C4] hover:text-black hover:scale-125 transition-all text-lg"
+                                        title="Delete Task"></i>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Completed Task Row -->
+                        <tr class="cursor-pointer transition-colors border-b border-slate-50 hover:bg-slate-50">
+                            <td class="px-6 py-4 align-middle">
+                                <div class="flex items-stretch">
+                                    <div class="flex items-start gap-2">
+                                        <div
+                                            class="flex justify-center items-center gap-1 p-1 rounded-full w-5 h-5 bg-gray-300">
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div>
+                                                <div class="font-bold text-slate-800 text-sm truncate">
+                                                    Onboard Stark Industries</div>
+                                                <div class="text-slate-500 text-sm truncate w-60">Ensure
+                                                    all NDAs are signed</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-middle text-right text-sm text-black opacity-50">10/01</td>
+                            <td class="px-6 py-4 align-middle text-right">
+                                <div class="flex justify-end py-2 cursor-pointer ml-20">
+                                    <div class="inline-flex items-center justify-center rounded-full px-5 py-1.5 text-sm font-semibold"
+                                        style="background-color: #2e8500; box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);">
+                                        <span class="text-white opacity-90 text-[13px]">4 / 4 Complete</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align-middle text-right w-36">
+                                <div class="flex items-center gap-3 justify-end h-full">
+                                    <i class="fa-solid fa-pen-to-square text-[#C4C4C4] hover:text-black hover:scale-125 transition-all text-lg"
+                                        title="Edit text"></i>
+                                    <i class="fa-solid fa-trash text-[#C4C4C4] hover:text-black hover:scale-125 transition-all text-lg"
+                                        title="Delete Task"></i>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Side: Manager View / Details View -->
+        <div
+            class="bg-white rounded-xl shadow-[0_4px_10px_rgba(0,0,0,0.06)] border border-slate-200 w-1/3 flex flex-col pt-3">
+            <div class="flex-1 overflow-y-auto px-6 py-3 space-y-4">
+
+                <div>
+                    <div class="text-sm text-black">
+                        <strong>Assigned by:</strong> Jane Manager &nbsp; <strong>Team:</strong> Team Alpha
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-2">Description</h3>
+                    <p class="text-slate-700 leading-relaxed whitespace-pre-line text-sm">Please finalize the MSA draft
+                        and have legal review it by COB tomorrow. Once done, send directly to Acme's procurement head.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-3">Required Materials</h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-sm group">
+                            <i class="fa-solid fa-file-pdf text-red-500 h-4 w-4"></i>
+                            <a href="#" class="text-blue-600 hover:underline font-medium">Acme_Draft_v2.pdf</a>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm group">
+                            <i class="fa-solid fa-link text-blue-500 h-4 w-4"></i>
+                            <a href="#" class="text-blue-600 hover:underline font-medium">Legal Guidelines</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-lg p-4 border border-slate-100 flex items-center">
+                    <h3 class="text-sm font-bold text-slate-800 w-40">Completion Progress</h3>
+                    <div class="flex items-center w-full gap-2">
+                        <div class="flex justify-between text-sm text-slate-600 font-semibold">
+                            <span>33%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 33%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-4 border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3">Team Progress</h3>
+                    <div class="space-y-4">
+
+                        <!-- Assignee 1 (Completed) -->
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-blue-600 font-semibold text-sm">JD</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-800 text-sm">John Doe</div>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-check text-green-500"></i>
+                                            <span class="font-medium capitalize text-green-500">Completed</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div></div>
+                        </div>
+
+                        <!-- Assignee 2 (Pending) -->
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-blue-600 font-semibold text-sm">TS</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-800 text-sm">Tristan Smith</div>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fa-solid fa-clock text-yellow-500"></i>
+                                            <span class="font-medium capitalize text-yellow-500">Pending</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold">
+                                    Send Reminder
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Assignee 3 (Pending) -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-blue-600 font-semibold text-sm">AM</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-slate-800 text-sm">Anna Miller</div>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fa-solid fa-clock text-yellow-500"></i>
+                                            <span class="font-medium capitalize text-yellow-500">Pending</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold">
+                                    Send Reminder
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-4 justify-end">
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold">
+                        Edit Task
+                    </button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold">
+                        Close Task
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

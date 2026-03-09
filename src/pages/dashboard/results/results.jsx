@@ -1,11 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { getAllResults } from '../../../service/results/results';
-import DataTable from '../../../components/common/table/table';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 
-const StatCard = ({ title, icon, children }) => (
-    <div className={`bg-white rounded-xl border border-gray-200 shadow-sm p-4 w-full max-w-[400px] group ${title === "Pipeline" || "Meetings" ? "cursor-pointer" : ""}`}>
-        <div className="flex justify-center items-center gap-3 mb-2">
+const getInitials = (name) => {
+    if (!name) return "";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return (parts[0][0] || "").toUpperCase();
+};
+
+const getAvatarColor = (name) => {
+    const colors = [
+        'bg-[#B48BED]',
+        'bg-[#93C5FD]',
+        'bg-[#A5B4FC]',
+        'bg-[#4B5563]',
+        'bg-[#FCA5A5]',
+        'bg-[#FCD34D]',
+        'bg-[#86EFAC]',
+        'bg-[#F472B6]',
+    ];
+    let sum = 0;
+    for (let i = 0; i < (name || "").length; i++) {
+        sum += name.charCodeAt(i);
+    }
+    return colors[sum % colors.length];
+}; const StatCard = ({ title, icon, children }) => (
+    <div className={`bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-4 w-full max-w-[400px] group ${title === "Pipeline" || title === "Meetings" ? "cursor-pointer" : ""}`}>
+        <div className="flex justify-start items-center gap-3 mb-2 border-b border-b-[#E5E7EB] pb-2">
             <div className="text-[#2753AF]">
                 <CustomIcons iconName={icon} css="h-6 w-6" />
             </div>
@@ -61,54 +85,13 @@ const Results = () => {
         }
     }, [results]);
 
-    const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 50,
-            sortable: false,
-        },
-        {
-            field: 'rep_name',
-            headerName: 'Rep',
-            headerClassName: 'uppercase',
-            flex: 1,
-            minWidth: 100,
-            sortable: false,
-        },
-        {
-            field: 'pipelineTotal',
-            headerName: 'Pipe',
-            headerClassName: 'uppercase',
-            flex: 1,
-            minWidth: 150,
-            renderCell: (params) => (
-                <span>{params.value ? `${moneyLabel(params.value)}` : '$0'}</span>
-            ),
-        },
-        {
-            field: 'rev',
-            headerName: 'Rev',
-            headerClassName: 'uppercase',
-            flex: 1,
-            minWidth: 150,
-            renderCell: (params) => (
-                <span>{params.value ? `${moneyLabel(params.value)}` : '$0'}</span>
-            ),
-        },
-    ];
-
-    const getRowId = (row) => row.rowId;
-
     return (
         <div className="py-6 bg-[#F8FAFF]">
             {/* STAT CARDS */}
             <div className="flex gap-6 mb-8 justify-center">
                 <StatCard title="Pipeline" icon="fa-solid fa-coins">
                     <div className="flex flex-col items-center flex-1">
-                        <span className="text-5xl font-extrabold text-slate-800">
+                        <span className="text-5xl font-extrabold text-[#111827]">
                             {moneyLabel(totalPipeline)}
                         </span>
                     </div>
@@ -116,15 +99,69 @@ const Results = () => {
 
                 <StatCard title="Revenue" icon="fa-solid fa-chart-line">
                     <div className="flex flex-col items-center flex-1">
-                        <span className="text-5xl font-extrabold text-slate-800">
+                        <span className="text-5xl font-extrabold text-[#111827]">
                             {moneyLabel(totalRev)}
                         </span>
                     </div>
                 </StatCard>
             </div>
 
-            <div className='border rounded-lg bg-white w-full lg:w-full'>
-                <DataTable columns={columns} rows={results} getRowId={getRowId} height={480} hideFooter={true} />
+            <div
+                className="w-full lg:w-full overflow-x-auto"
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.06)'
+                }}
+            >
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr style={{ backgroundColor: '#EDE9FE' }}>
+                            <th className="py-4 px-6 font-semibold text-sm tracking-wider uppercase w-1/2" style={{ color: '#5B21B6' }}>
+                                REP
+                            </th>
+                            <th className="py-4 px-6 font-semibold text-sm tracking-wider uppercase" style={{ color: '#5B21B6' }}>
+                                PIPELINE
+                            </th>
+                            <th className="py-4 px-6 font-semibold text-sm tracking-wider uppercase" style={{ color: '#5B21B6' }}>
+                                REVENUE
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {results.map((row, index) => {
+                            const isLastRow = index === results.length - 1;
+                            return (
+                                <tr
+                                    key={row.rowId || index}
+                                    style={{ borderBottom: isLastRow ? 'none' : '1px solid #F1F5F9' }}
+                                >
+                                    <td className="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                                        <div
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(row.rep_name)}`}
+                                        >
+                                            {getInitials(row.rep_name)}
+                                        </div>
+                                        <span className="text-base">{row.rep_name || '—'}</span>
+                                    </td>
+                                    <td className="py-4 px-6 text-[#111827] font-semibold text-lg">
+                                        {row.pipelineTotal ? moneyLabel(row.pipelineTotal) : '$0'}
+                                    </td>
+                                    <td className="py-4 px-6 text-[#111827] font-bold text-lg">
+                                        {row.rev ? moneyLabel(row.rev) : '$0'}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {results.length === 0 && (
+                            <tr>
+                                <td colSpan="3" className="py-8 text-center text-[#6B7280]">
+                                    No results found
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

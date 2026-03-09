@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F8FAFF] min-h-screen p-6">
+
+    <div class="max-w-[1600px] mx-auto">
+        <div
+            class="w-full bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-[#E5E7EB] overflow-hidden flex flex-col h-[600px]">
+
+            <!-- Table Header / Toolbar actions mock -->
+            <div class="px-6 py-4 border-b border-[#E5E7EB] flex justify-between items-center bg-white">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <i
+                            class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="Search contacts by name..."
+                            class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-72 text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Contact
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="flex-1 overflow-auto custom-scrollbar relative">
+                <table class="w-full text-left border-collapse min-w-[1200px]">
+                    <thead class="sticky top-0 z-10 bg-gray-50 border-b border-gray-200 shadow-sm">
+                        <tr>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 w-12 text-center">
+                                #
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 min-w-[150px]">
+                                Company Name
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 min-w-[150px]">
+                                First Name
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 min-w-[150px]">
+                                Last Name
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 min-w-[150px]">
+                                Title
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 min-w-[200px]">
+                                Email
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 min-w-[150px]">
+                                Phone
+                            </th>
+                            <th
+                                class="py-3 px-4 font-semibold text-xs tracking-wider uppercase text-gray-500 w-40 text-center">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+
+                        <!-- Row 1 -->
+                        <tr class="hover:bg-blue-50/50 transition-colors group">
+                            <td class="py-3 px-4 text-sm text-gray-500 text-center text-xs">1</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Acme Corp</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">John</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Doe</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">CTO</td>
+                            <td class="py-3 px-4 text-sm text-blue-600 hover:underline cursor-pointer">
+                                john.doe@acmecorp.com</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">+1 (555) 123-4567</td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button
+                                        class="bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-gray-700 transition-colors shadow-sm"
+                                        title="Report-Hierarchy">
+                                        <i class="fa-solid fa-sitemap text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-green-700 transition-colors shadow-sm"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-red-700 transition-colors shadow-sm"
+                                        title="Delete">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 2 -->
+                        <tr class="hover:bg-blue-50/50 transition-colors group bg-gray-50/30">
+                            <td class="py-3 px-4 text-sm text-gray-500 text-center text-xs">2</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Global Tech</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Jane</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Smith</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">VP of Engineering</td>
+                            <td class="py-3 px-4 text-sm text-blue-600 hover:underline cursor-pointer">
+                                jane.smith@globaltech.io</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">+1 (555) 987-6543</td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button
+                                        class="bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-gray-700 transition-colors shadow-sm"
+                                        title="Report-Hierarchy">
+                                        <i class="fa-solid fa-sitemap text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-green-700 transition-colors shadow-sm"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-red-700 transition-colors shadow-sm"
+                                        title="Delete">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 3 -->
+                        <tr class="hover:bg-blue-50/50 transition-colors group">
+                            <td class="py-3 px-4 text-sm text-gray-500 text-center text-xs">3</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Stark Industries</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Tony</td>
+                            <td class="py-3 px-4 text-sm text-gray-900 font-medium">Stark</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">CEO</td>
+                            <td class="py-3 px-4 text-sm text-blue-600 hover:underline cursor-pointer">t.stark@stark.com
+                            </td>
+                            <td class="py-3 px-4 text-sm text-gray-600">+1 (212) 970-4133</td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button
+                                        class="bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-gray-700 transition-colors shadow-sm"
+                                        title="Report-Hierarchy">
+                                        <i class="fa-solid fa-sitemap text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-green-700 transition-colors shadow-sm"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-red-700 transition-colors shadow-sm"
+                                        title="Delete">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -23,7 +23,6 @@ const Sidebar = ({
     toggleMobileSidebar
 }) => {
     const userDetails = getUserDetails();
-    const salesforceUserDetails = getSalesforceUserDetails();
     const [navItems, setNavItems] = useState([]);
 
     const location = useLocation()
@@ -35,10 +34,10 @@ const Sidebar = ({
     ])
     const handleSetNavItems = () => {
         setNavItems([
-            {                
+            {
                 icon: <CustomIcons iconName="fa-solid fa-circle" />,
-                name: "Dashboard",
-                path: "/dashboard",
+                name: "Pipeline",
+                path: "/dashboard/opportunities",
                 pro: false,
                 // subItems: [
                 //     // { name: "Accounts", path: "/dashboard/accounts", pro: false },
@@ -48,8 +47,8 @@ const Sidebar = ({
             },
             {
                 icon: <CustomIcons iconName="fa-solid fa-circle" />,
-                name: "Opportunities",
-                path: "/dashboard/opportunities",
+                name: "Performance",
+                path: "/dashboard/performance",
                 pro: false
             },
             {
@@ -60,20 +59,10 @@ const Sidebar = ({
             },
             {
                 icon: <CustomIcons iconName="fa-solid fa-circle" />,
-                name: "To-Do",
+                name: userDetails?.roleName?.toUpperCase() === "SALES REPRESENTIVE" ? "My Actions" : "Team Actions",
                 path: "/dashboard/todos",
                 pro: false
             },
-            ...((userDetails?.userId === salesforceUserDetails?.userId || !userDetails?.subUser)
-                ? [
-                    {
-                        icon: <CustomIcons iconName="fa-solid fa-circle" />,
-                        name: "My CRM",
-                        path: "/dashboard/mycrm",
-                        pro: false
-                    }
-                ]
-                : [])
         ])
     }
 
@@ -129,7 +118,7 @@ const Sidebar = ({
     const renderMenuItems = (items, menuType) => (
         <ul className="flex flex-col gap-1">
             {items.map((nav, index) => (
-                <li key={nav.name}>
+                <li key={index}>
                     {nav.subItems ? (
                         <button
                             onClick={() => handleSubmenuToggle(index, menuType)}
@@ -263,7 +252,7 @@ const Sidebar = ({
 
     return (
         <div
-            className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-4 left-0 bg-white text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+            className={`z-50 fixed flex flex-col lg:mt-0 top-0 p-4 left-0 bg-white text-gray-900 h-screen transition-all duration-300 ease-in-out border-r border-gray-200 
         ${isExpanded || isMobileOpen
                     ? "w-72"
                     : isHovered
@@ -283,7 +272,7 @@ const Sidebar = ({
                         <>
                             <div className="w-40 flex items-center h-2">
                                 <NavLink to={'/dashboard'}>
-                                    <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" />
+                                    <img src="/images/logo/360-2400.png" alt="360Pipe Logo" className="h-[40px] my-1" />
                                 </NavLink>
                             </div>
                         </>

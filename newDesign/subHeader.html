@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub Header Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen">
+
+    <!-- Mock AppHeader spacing -->
+    <div class="h-16 bg-white shadow-sm w-full relative z-40"></div>
+
+    <header
+        class="w-full bg-[linear-gradient(90deg,#5B21B6_0%,#6D28D9_45%,#7C3AED_100%)] z-30 relative pb-4 border-b-2 border-purple-800">
+        <div class="grid grid-cols-3 items-start px-6 py-2 lg:py-3">
+
+            <!-- 1. Left Section (Team Button) -->
+            <div class="flex justify-start">
+                <button type="button"
+                    class="flex items-center gap-2 bg-[#FFFFFF] text-[#374151] px-4 py-1 border border-[#E5E7EB] rounded-md transition min-w-[120px] justify-between shadow-sm hover:bg-gray-50">
+                    <span class="text-lg font-medium">Team</span>
+                    <i class="fa-solid fa-chevron-down text-sm opacity-80"></i>
+                </button>
+            </div>
+
+            <!-- 2. Center Section (Title) -->
+            <div class="flex justify-center text-center">
+                <p class='text-white text-3xl font-semibold whitespace-nowrap mt-1 drop-shadow-sm'>
+                    Pipeline
+                </p>
+            </div>
+
+            <!-- 3. Right Section (Filters) -->
+            <div class="flex justify-end items-center gap-4">
+                <div class="relative inline-block">
+                    <div class="flex items-center gap-4">
+                        <button type="button"
+                            class="flex items-center gap-2 bg-[#FFFFFF] text-[#374151] px-4 py-1 border border-[#E5E7EB] rounded-md transition min-w-[120px] justify-between shadow-sm hover:bg-gray-50">
+                            <span class="text-lg font-medium">Q1</span>
+                            <i class="fa-solid fa-chevron-down text-sm opacity-80"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional Bottom Tabs (e.g., Performance / Results) -->
+        <!-- Use this structure if viewing Activity/Results or Opp360/Notes/Deal Docs -->
+        <div class="flex justify-center items-center absolute inset-x-0 -bottom-5">
+            <button
+                class="px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tl-md rounded-bl-md bg-[#44288E] text-white border-[#44288E] shadow-sm">
+                Activity
+            </button>
+            <button
+                class="px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tr-md rounded-br-md bg-[#D9C6F5] text-black border-transparent shadow-sm hover:bg-[#cbb2f0]">
+                Results
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 bg-gray-50 p-8 pt-12">
+        <!-- Content goes here -->
+        <p class="text-gray-500 text-center">Page content...</p>
+    </main>
+
+</body>
+
+</html>

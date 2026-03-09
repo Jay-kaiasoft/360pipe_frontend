@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunities Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F8FAFF] min-h-screen p-6">
+
+    <div class="max-w-[1600px] mx-auto">
+        <div
+            class="w-full bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-[#E5E7EB] overflow-hidden flex flex-col h-[600px]">
+
+            <!-- Table Header / Toolbar actions mock -->
+            <div class="px-6 py-4 border-b border-[#E5E7EB] flex justify-end items-center bg-white">
+                <div class="flex gap-2">
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Opportunity
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="w-full lg:w-full overflow-x-auto bg-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 z-10 bg-gray-50 border-b border-gray-200 shadow-sm">
+                        <tr class="bg-[#EDE9FE]">
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Valid8
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Account
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Opportunity Name
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Amount
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Sales Stage
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Close Date
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Next Step
+                            </th>
+                            <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+
+                        <!-- Row 1 -->
+                        <tr class="hover:bg-[#F5F3FF] transition-colors group">
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">
+                                <div class="flex justify-center items-center gap-1">
+                                    <button
+                                        class="text-green-600 hover:bg-green-50 p-1.5 rounded-full transition-colors relative group/tooltip">
+                                        <i class="fa-solid fa-thumbs-up text-sm"></i>
+                                    </button>
+                                    <button class="text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-colors">
+                                        <i class="fa-solid fa-comment text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Acme Corp</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Acme Q3 Software
+                                Upgrade</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">$125,000</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Negotiation</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">10/15/2026</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Send finalized MSAs
+                                to
+                                legal team</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button
+                                        class="bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-blue-700 transition-colors shadow-sm"
+                                        title="Info">
+                                        <i class="fa-solid fa-info text-xs"></i>
+                                    </button>
+                                    <button onclick="window.parent.location.href='viewOpportunity.html'"
+                                        class="bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-green-700 transition-colors shadow-sm"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-gray-700 transition-colors shadow-sm"
+                                        title="Close Plan">
+                                        <i class="fa-solid fa-envelope text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 2 -->
+                        <tr class="hover:bg-[#F5F3FF] transition-colors group bg-gray-50/30">
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">
+                                <div class="flex justify-center items-center gap-1">
+                                    <button
+                                        class="text-yellow-500 hover:bg-yellow-50 p-1.5 rounded-full transition-colors">
+                                        <i class="fa-solid fa-thumbs-up text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Global Tech</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Global Tech Server Expansion
+                            </td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">$75,500</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Discovery</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">11/02/2026</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Schedule technical deep
+                                dive meeting</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button
+                                        class="bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-blue-700 transition-colors shadow-sm"
+                                        title="Info">
+                                        <i class="fa-solid fa-info text-xs"></i>
+                                    </button>
+                                    <button onclick="window.parent.location.href='viewOpportunity.html'"
+                                        class="bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-green-700 transition-colors shadow-sm"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-gray-700 transition-colors shadow-sm"
+                                        title="Close Plan">
+                                        <i class="fa-solid fa-envelope text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 3 -->
+                        <tr class="hover:bg-[#F5F3FF] transition-colors group">
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">
+                                <div class="flex justify-center items-center gap-1">
+                                    <span class="text-gray-400 font-bold">-</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Stark Industries</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Arc Reactor Integration</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">$2,500,000</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Proposal</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">12/20/2026</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">Awaiting feedback on
+                                pricing tiers</td>
+                            <td class="py-4 px-6 text-[#111827] font-semibold text-center">
+                                <div class="flex items-center gap-2 justify-center">
+                                    <button
+                                        class="bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-blue-700 transition-colors shadow-sm"
+                                        title="Info">
+                                        <i class="fa-solid fa-info text-xs"></i>
+                                    </button>
+                                    <button onclick="window.parent.location.href='viewOpportunity.html'"
+                                        class="bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-green-700 transition-colors shadow-sm"
+                                        title="Edit">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                    </button>
+                                    <button
+                                        class="bg-gray-600 h-8 w-8 flex justify-center items-center rounded-full text-white hover:bg-gray-700 transition-colors shadow-sm"
+                                        title="Close Plan">
+                                        <i class="fa-solid fa-envelope text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

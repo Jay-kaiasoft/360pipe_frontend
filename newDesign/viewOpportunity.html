@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Opportunity Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-[#F8FAFF] min-h-screen">
+
+    <!-- App Header -->
+    <header class="w-full bg-white shadow-sm z-50 flex-none relative">
+        <div class="flex lg:grid grid-cols-3 items-center px-6 py-2">
+            <!-- 1. Left Section (Logo) -->
+            <div class="flex justify-start">
+                <div class="hidden lg:flex items-center">
+                    <a href="#" onclick="window.location.href='index.html'">
+                        <img src="./360Pipe_logo_new.png" alt="360Pipe Logo" class="h-[40px] my-1" />
+                    </a>
+                </div>
+            </div>
+
+            <!-- Center Section (Tabs) -->
+            <div class="hidden lg:flex items-center w-full col-span-1 justify-center gap-6">
+                <!-- Nav Tabs -->
+                <div class="flex items-center gap-2">
+                    <a href="#" onclick="window.location.href='index.html'"
+                        class="main-nav-tab flex items-center justify-center w-10 h-10 bg-transparent rounded-md text-[18px] text-[#4C3B7B] transition-colors">
+                        <i class="fa-solid fa-house"></i>
+                    </a>
+                    <a href="#" onclick="window.location.href='index.html'"
+                        class="main-nav-tab flex px-4 py-2 bg-[#EADDFF] text-[#4C3B7B] text-[14px] font-medium rounded-md transition-colors">
+                        Pipeline
+                    </a>
+                    <a href="#" onclick="window.location.href='index.html'"
+                        class="main-nav-tab flex px-4 py-2 bg-transparent text-[#4C3B7B] text-[14px] font-medium rounded-md transition-colors">
+                        Performance
+                    </a>
+                    <a href="#" onclick="window.location.href='index.html'"
+                        class="main-nav-tab flex px-4 py-2 bg-transparent text-[#4C3B7B] text-[14px] font-medium rounded-md transition-colors">
+                        Contacts
+                    </a>
+                    <a href="#" id="nav-actions" onclick="navigateMain('actions')"
+                        class="main-nav-tab flex px-4 py-2 bg-transparent text-[#4C3B7B] text-[14px] font-medium rounded-md transition-colors">
+                        Team Actions
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3. Right Section -->
+            <div class="flex justify-end items-center gap-4 col-span-1 ml-auto">
+                <div class="hidden lg:block relative">
+                    <button
+                        class="bg-[#44288E] text-white font-medium py-[6px] px-6 rounded-md shadow-sm transition-colors text-sm relative">
+                        SYNC
+                        <span
+                            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white">
+                            3
+                        </span>
+                    </button>
+                </div>
+                <!-- User Dropdown Mock -->
+                <div class="z-50 flex items-center gap-2 cursor-pointer relative ml-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 shadow-sm">
+                        JD
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <div class="lg:hidden absolute right-6">
+                <button
+                    class="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11">
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M1 1h14a.75.75 0 0 1 0 1.5H1A.75.75 0 0 1 1 1ZM1 5.25h7a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5ZM1 10.25h14a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5Z"
+                            fill="currentColor" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub Header Mock with Tabs -->
+    <header
+        class="w-full bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)] z-40 relative pb-4 flex-none transition-all duration-300">
+        <div class="grid grid-cols-3 items-start px-6 py-2 lg:py-3">
+            <!-- 1. Left Section -->
+            <div class="flex justify-start relative">
+                <button type="button" onclick="toggleDropdown('teamDropdown')"
+                    class="flex items-center gap-2 bg-[#44288E] text-white px-4 py-1 rounded-md transition min-w-[120px] justify-between shadow-sm flex-none focus:outline-none">
+                    <span class="text-lg font-medium" id="selectedTeam">Team</span>
+                    <i class="fa-solid fa-chevron-down text-sm opacity-80 pointer-events-none"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="teamDropdown"
+                    class="hidden absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1 origin-top-left">
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors font-semibold">All
+                        Teams</a>
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team Alpha', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Team
+                        Alpha</a>
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team Beta', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Team
+                        Beta</a>
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team Gamma', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Team
+                        Gamma</a>
+                </div>
+            </div>
+
+            <!-- 2. Center Section (Title) -->
+            <div class="flex justify-center text-center">
+                <p id="subHeaderTitle"
+                    class='text-white text-3xl font-semibold whitespace-nowrap mt-1 drop-shadow-sm transition-all'>
+                    Pipeline
+                </p>
+            </div>
+
+            <!-- 3. Right Section (Filters) -->
+            <div class="flex justify-end items-center gap-4 relative">
+                <button type="button" onclick="toggleDropdown('quarterDropdown')"
+                    class="flex items-center gap-2 bg-[#44288E] text-white px-4 py-1 rounded-md transition min-w-[120px] justify-between shadow-sm flex-none focus:outline-none">
+                    <span class="text-lg font-medium" id="selectedQuarter">Week</span>
+                    <i class="fa-solid fa-chevron-down text-sm opacity-80 pointer-events-none"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="quarterDropdown"
+                    class="hidden absolute top-full right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1 origin-top-right">
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Week', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Week</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Month', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Month</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q1', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q1</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q2', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q2</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q3', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q3</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q4', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q4</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Year to Date', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Year
+                        to Date</a>
+                    <div class="border-t border-gray-100 my-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sub Tabs -->
+        <div class="flex justify-center items-center absolute inset-x-0 -bottom-5 z-20">
+            <button onclick="switchTab('opp360')" id="tab-opp360"
+                class="px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tl-md rounded-bl-md bg-[#44288E] text-white border-[#44288E]">
+                Opp360
+            </button>
+            <button onclick="switchTab('notes')" id="tab-notes"
+                class="px-6 py-1.5 text-[18px] font-medium transition-colors border border-l-[#44288E] border-r-[#44288E] bg-[#D9C6F5] text-black border-transparent">
+                Notes
+            </button>
+            <button onclick="switchTab('dealDocs')" id="tab-dealDocs"
+                class="px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tr-md rounded-br-md bg-[#D9C6F5] text-black border-transparent">
+                Deal Docs
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-[1600px] mx-auto px-6 pt-10 pb-6">
+
+        <!-- ==================== OPP360 TAB ==================== -->
+        <div id="content-opp360" class="block">
+
+            <!-- Header Grid (Logo, Details, Pipeline) -->
+            <div class="flex flex-wrap md:flex-nowrap justify-center items-start gap-10 mb-8">
+                <!-- Logo -->
+                <div class="flex justify-center md:justify-start items-center relative shrink-0">
+                    <div
+                        class="w-24 h-24 border border-gray-200 rounded-full flex items-center justify-center text-gray-400 overflow-hidden bg-white shadow-sm">
+                        <img src="https://cdn.brandfetch.io/acme.com/w/100/h/100/icon?c=1id2vhiypCcqm7fpTjx" alt="Logo"
+                            class="w-full h-full object-cover"
+                            onerror="this.src='https://via.placeholder.com/100?text=Logo'" />
+                    </div>
+                </div>
+
+                <!-- Fields -->
+                <div class="flex-1 w-full flex flex-col gap-3">
+                    <div class="flex justify-start items-center text-sm py-1 w-full">
+                        <span class="w-32 text-gray-500 font-medium">Account:</span>
+                        <span class="text-gray-900 font-semibold text-base">Acme Corp</span>
+                    </div>
+                    <div class="flex justify-start items-center text-sm py-1 w-full">
+                        <span class="w-32 text-gray-500 font-medium">Deal Amount:</span>
+                        <span class="text-gray-900 font-semibold text-base">$120,000</span>
+                    </div>
+                    <div class="flex justify-start items-center text-sm py-1 w-full">
+                        <span class="w-32 text-gray-500 font-medium">Opp Name:</span>
+                        <span class="text-gray-900 font-semibold text-base">Acme Q4 Expansion</span>
+                    </div>
+                    <div class="flex justify-start items-center text-sm py-1 w-full">
+                        <span class="w-32 text-gray-500 font-medium">Close Date:</span>
+                        <span class="text-gray-900 font-semibold text-base">Dec 15, 2024</span>
+                    </div>
+                    <div class="flex justify-start items-center text-sm py-1 w-full">
+                        <span class="w-32 text-gray-500 font-medium">Status:</span>
+                        <span class="text-gray-900 font-semibold text-base">Open</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage Timeline Mock -->
+            <div class="py-2 mb-8 w-full overflow-x-auto no-scrollbar">
+                <div class="flex items-center bg-[#EEF2F6] rounded-[30px] p-1.5 min-w-max h-[48px]">
+                    <!-- Completed -->
+                    <div class="relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6 bg-transparent hover:bg-black/5 rounded-l-full"
+                        style="clip-path: polygon(0% 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 0% 100%); z-index: 5;">
+                        <div
+                            class="relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide text-gray-600 hover:text-gray-900 mr-3">
+                            <i class="fa-solid fa-check text-blue-500"></i>
+                            <span class="truncate whitespace-nowrap">Prospecting</span>
+                        </div>
+                        <svg class="absolute right-0 top-0 bottom-0 h-full w-[15px] z-20 pointer-events-none"
+                            viewBox="0 0 15 48" preserveAspectRatio="none">
+                            <polyline points="0,0 15,24 0,48" fill="none" stroke="white" stroke-width="6" />
+                        </svg>
+                    </div>
+                    <!-- Completed -->
+                    <div class="relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6 bg-transparent hover:bg-black/5 -ml-[15px]"
+                        style="clip-path: polygon(15px 50%, 0% 100%, calc(100% - 15px) 100%, 100% 50%, calc(100% - 15px) 0%, 0% 0%); z-index: 4;">
+                        <div
+                            class="relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide text-gray-600 hover:text-gray-900 ml-4 mr-3">
+                            <i class="fa-solid fa-check text-blue-500"></i>
+                            <span class="truncate whitespace-nowrap">Qualification</span>
+                        </div>
+                        <svg class="absolute right-0 top-0 bottom-0 h-full w-[15px] z-20 pointer-events-none"
+                            viewBox="0 0 15 48" preserveAspectRatio="none">
+                            <polyline points="0,0 15,24 0,48" fill="none" stroke="white" stroke-width="6" />
+                        </svg>
+                    </div>
+                    <!-- Active -->
+                    <div class="relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6 bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)] -ml-[15px]"
+                        style="clip-path: polygon(15px 50%, 0% 100%, calc(100% - 15px) 100%, 100% 50%, calc(100% - 15px) 0%, 0% 0%); z-index: 3;">
+                        <div
+                            class="relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide text-white ml-4 mr-3">
+                            <i class="fa-solid fa-check text-white"></i>
+                            <span class="truncate whitespace-nowrap">Proposal</span>
+                        </div>
+                        <svg class="absolute right-0 top-0 bottom-0 h-full w-[15px] z-20 pointer-events-none"
+                            viewBox="0 0 15 48" preserveAspectRatio="none">
+                            <polyline points="0,0 15,24 0,48" fill="none" stroke="white" stroke-width="6" />
+                        </svg>
+                    </div>
+                    <!-- Future -->
+                    <div class="relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6 bg-transparent hover:bg-black/5 -ml-[15px]"
+                        style="clip-path: polygon(15px 50%, 0% 100%, calc(100% - 15px) 100%, 100% 50%, calc(100% - 15px) 0%, 0% 0%); z-index: 2;">
+                        <div
+                            class="relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide text-gray-600 hover:text-gray-900 ml-4 mr-3">
+                            <span class="truncate whitespace-nowrap">Negotiation</span>
+                        </div>
+                        <svg class="absolute right-0 top-0 bottom-0 h-full w-[15px] z-20 pointer-events-none"
+                            viewBox="0 0 15 48" preserveAspectRatio="none">
+                            <polyline points="0,0 15,24 0,48" fill="none" stroke="white" stroke-width="6" />
+                        </svg>
+                    </div>
+                    <!-- Future -->
+                    <div class="relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6 bg-transparent hover:bg-black/5 -ml-[15px] rounded-r-full"
+                        style="clip-path: polygon(15px 50%, 0% 100%, 100% 100%, 100% 0%, 0% 0%); z-index: 1;">
+                        <div
+                            class="relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide text-gray-600 hover:text-gray-900 ml-4">
+                            <span class="truncate whitespace-nowrap">Closed Won</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3-Column Layout: Why, Value, Contacts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-5">
+                <!-- Why Do Anything -->
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 min-h-[15rem] flex flex-col">
+                    <p className="font-medium text-gray-800 text-2xl text-center mb-4">Why Do Anything</p>
+                    <div class="flex-1 text-sm text-gray-700 leading-relaxed">
+                        <p>The client needs to expand their current infrastructure to support the new Q4 product launch.
+                            Current systems will not handle the expected 3x load.</p>
+                        <ul class="list-disc pl-5 mt-2">
+                            <li>Scale operations</li>
+                            <li>Reduce latency in EU region</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Value -->
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 min-h-[15rem] flex flex-col">
+                    <p className="font-medium text-gray-800 text-2xl text-center mb-4">Value</p>
+                    <div class="flex-1 text-sm text-gray-700 leading-relaxed">
+                        <p>Our solution provides a 40% reduction in server costs while maintaining 99.99% uptime during
+                            peak loads, ensuring their launch goes smoothly without breaking the budget.</p>
+                    </div>
+                </div>
+
+                <!-- Key Contacts -->
+                <div
+                    class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 min-h-[15rem] relative flex flex-col">
+                    <p className="font-medium text-gray-800 text-2xl text-center mb-4">Key Contacts</p>
+                    <div class="overflow-y-auto flex-1">
+                        <ul class="space-y-3">
+                            <li class="flex items-center gap-3 py-1">
+                                <div
+                                    class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-[#4267B2]">
+                                    JD</div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2"><span
+                                            class="font-bold text-[#1e3a8a] text-[15px]">John Doe</span><span
+                                            class="text-gray-600 text-[13px]">- CTO</span></div>
+                                    <div class="text-gray-500 text-[13px]">Decision Maker</div>
+                                </div>
+                            </li>
+                            <li class="flex items-center gap-3 py-1">
+                                <div
+                                    class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-[#009688]">
+                                    JS</div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2"><span
+                                            class="font-bold text-[#1e3a8a] text-[15px]">Jane Smith</span><span
+                                            class="text-gray-600 text-[13px]">- VP Eng</span></div>
+                                    <div class="text-gray-500 text-[13px]">Technical Evaluator</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="flex items-end gap-2 absolute bottom-3 right-3">
+                        <button
+                            class="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">SELECT</button>
+                        <div class="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
+                            <i class="fa-solid fa-plus h-3 w-3 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3-Column Layout: Decision, Env, Next Steps -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Decision Map -->
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 h-60 flex flex-col relative">
+                    <div class="flex justify-between mb-4 flex-none border-b pb-2">
+                        <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
+                        <div
+                            class="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer">
+                            <i class="fa-solid fa-plus h-3 w-3"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between w-full flex-1 px-4">
+                        <div class="flex flex-col items-center">
+                            <span class="font-semibold text-sm text-gray-800">Tech Review</span>
+                            <span class="w-px h-3 bg-black my-1"></span>
+                            <span class="text-sm text-gray-600">10/12</span>
+                        </div>
+                        <div class="flex-1 flex items-center px-2">
+                            <div class="h-px bg-gray-400 w-full"></div>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="font-semibold text-sm text-gray-800">Legal</span>
+                            <span class="w-px h-3 bg-black my-1"></span>
+                            <span class="text-sm text-gray-600">10/20</span>
+                        </div>
+                        <div class="flex-1 flex items-center px-2">
+                            <div class="h-px bg-gray-400 w-full"></div><i
+                                class="fa-solid fa-angle-right text-gray-400 ml-1"></i>
+                        </div>
+                        <div class="flex flex-col items-center opacity-50">
+                            <span class="font-semibold text-sm text-gray-800">Sign</span>
+                            <span class="w-px h-3 bg-black my-1"></span>
+                            <span class="text-sm text-gray-600">11/05</span>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-2 right-4 text-xs text-gray-700">
+                        <span class="font-bold text-black">Go Live: </span>12/01
+                    </div>
+                </div>
+
+                <!-- Current Environment -->
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 h-60 flex flex-col">
+                    <p className="font-medium text-gray-800 text-2xl text-center mb-3">Current Environment</p>
+                    <div class="flex-1 overflow-y-auto">
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li class="text-black text-lg">AWS EC2 / S3</li>
+                            <li class="text-black text-lg">Legacy Monolith</li>
+                        </ul>
+                        <div class="pt-2 mt-2 border-t">
+                            <p class="text-lg"><span class="font-bold text-blue-700">Competition:</span> Azure Cloud</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 h-60 flex flex-col">
+                    <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
+                    <div class="text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                        1. Send customized proposal deck by Friday.
+                        2. Schedule technical deep-dive with Jane Smith.
+                        3. Review initial contract terms with Legal.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== NOTES TAB ==================== -->
+        <div id="content-notes" class="hidden">
+            <div class="flex gap-6 h-[70vh]">
+                <!-- Meetings List -->
+                <div
+                    class="w-80 bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col h-full shrink-0">
+                    <h3 class="font-semibold text-lg mb-4 border-b pb-2">Meetings (Oct 12)</h3>
+                    <div class="overflow-y-auto flex-1 space-y-2 pr-2">
+                        <button
+                            class="w-full text-left bg-blue-500 text-white rounded-md px-3 py-3 font-semibold shadow-sm">
+                            Phase 1 Demo & Review
+                        </button>
+                        <button
+                            class="w-full text-left hover:bg-gray-100 text-gray-700 rounded-md px-3 py-3 font-semibold transition-colors">
+                            Technical Deep Dive
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Meeting Details -->
+                <div class="flex-1 flex flex-col gap-6 overflow-y-auto pr-2">
+                    <!-- Attendees Table -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                        <div class="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
+                            <h3 class="font-bold text-lg text-black">Attendees</h3>
+                            <button
+                                class="bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white shadow-sm hover:bg-blue-700">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
+                        </div>
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-100 text-gray-700 text-sm">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold">Name</th>
+                                    <th class="px-4 py-2 font-semibold">Title</th>
+                                    <th class="px-4 py-2 font-semibold">Role</th>
+                                    <th class="px-4 py-2 font-semibold">Notes</th>
+                                    <th class="px-4 py-2 font-semibold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-sm">John Doe</td>
+                                    <td class="px-4 py-3 text-sm">CTO</td>
+                                    <td class="px-4 py-3 text-sm">Decision Maker</td>
+                                    <td class="px-4 py-3 text-sm">Asked about SLA guarantees</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button class="bg-green-600 h-7 w-7 rounded-full text-white"><i
+                                                    class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                            <button class="bg-red-600 h-7 w-7 rounded-full text-white"><i
+                                                    class="fa-solid fa-trash text-xs"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Meeting Notes Table -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                        <table class="w-full border-collapse">
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="w-[25%] bg-gray-50 border-r px-4 py-4 font-bold text-gray-900 align-top">
+                                        Purpose</td>
+                                    <td class="px-4 py-4 align-top text-sm text-gray-700">Present initial findings and
+                                        demo the solution working in their staging environment.</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="w-[25%] bg-gray-50 border-r px-4 py-4 font-bold text-gray-900 align-top">
+                                        Background</td>
+                                    <td class="px-4 py-4 align-top text-sm text-gray-700">They had issues last week with
+                                        their current provider going down for 2 hours.</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="w-[25%] bg-gray-50 border-r px-4 py-4 font-bold text-gray-900 align-top">
+                                        Agenda</td>
+                                    <td class="px-4 py-4 align-top text-sm text-gray-700">
+                                        <ul class="list-disc pl-5">
+                                            <li>Intro (5 min)</li>
+                                            <li>Demo (20 min)</li>
+                                            <li>Q&A (20 min)</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="w-[25%] bg-gray-50 border-r px-4 py-4 font-bold text-gray-900 align-top">
+                                        Alignment</td>
+                                    <td class="px-4 py-4 align-top text-sm text-gray-700">Team is aligned on moving
+                                        forward to the next step (legal review).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== DEAL DOCS TAB ==================== -->
+        <div id="content-dealDocs" class="hidden">
+            <div
+                class="bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-gray-200 min-h-[50vh] flex flex-col">
+                <div class="p-6 flex justify-between items-center border-b">
+                    <h2 class="text-xl font-bold text-gray-800">Deal Documents</h2>
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Upload Document
+                    </button>
+                </div>
+
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Doc Item -->
+                    <div
+                        class="border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:shadow-md transition-shadow group">
+                        <div class="bg-red-100 text-red-600 rounded-lg p-3 shrink-0">
+                            <i class="fa-solid fa-file-pdf text-2xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-900 truncate" title="Acme_Proposal_v2.pdf">
+                                Acme_Proposal_v2.pdf</h4>
+                            <p class="text-xs text-gray-500 mt-1">Uploaded Oct 11, 2024</p>
+                            <p class="text-xs text-gray-500">2.4 MB</p>
+                        </div>
+                        <button
+                            class="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <!-- Doc Item -->
+                    <div
+                        class="border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:shadow-md transition-shadow group">
+                        <div class="bg-blue-100 text-blue-600 rounded-lg p-3 shrink-0">
+                            <i class="fa-solid fa-file-word text-2xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-900 truncate" title="Draft_MSA_Clean.docx">
+                                Draft_MSA_Clean.docx</h4>
+                            <p class="text-xs text-gray-500 mt-1">Uploaded Oct 09, 2024</p>
+                            <p class="text-xs text-gray-500">1.1 MB</p>
+                        </div>
+                        <button
+                            class="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Dropdown functions
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            // Close other dropdowns
+            const allDropdowns = ['teamDropdown', 'quarterDropdown'];
+            allDropdowns.forEach(d => {
+                if (d !== id) document.getElementById(d).classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        }
+
+        function selectOption(dropdownId, textId, value, event) {
+            event.preventDefault();
+
+            // Revert "All Teams" text back to "Team" so it matches default state
+            if (value === "All Teams") value = "Team";
+
+            document.getElementById(textId).innerText = value;
+            document.getElementById(dropdownId).classList.add('hidden');
+        }
+
+        // Close dropdowns when clicking outside
+        window.addEventListener('click', function (event) {
+            if (!event.target.closest('button') || !event.target.closest('button').hasAttribute('onclick')) {
+                document.getElementById('teamDropdown').classList.add('hidden');
+                document.getElementById('quarterDropdown').classList.add('hidden');
+            }
+        });
+
+        function switchTab(tabName) {
+            // Hide all content
+            document.getElementById('content-opp360').classList.add('hidden');
+            document.getElementById('content-notes').classList.add('hidden');
+            document.getElementById('content-dealDocs').classList.add('hidden');
+
+            // Show selected content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+
+            // Reset tab styles
+            const tabs = ['opp360', 'notes', 'dealDocs'];
+            tabs.forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                el.classList.remove('bg-[#44288E]', 'text-white', 'border-[#44288E]');
+                el.classList.add('bg-[#D9C6F5]', 'text-black', 'border-transparent');
+            });
+
+            // Set active tab style
+            const activeEl = document.getElementById('tab-' + tabName);
+            activeEl.classList.remove('bg-[#D9C6F5]', 'text-black', 'border-transparent');
+            activeEl.classList.add('bg-[#44288E]', 'text-white', 'border-[#44288E]');
+        }
+    </script>
+</body>
+
+</html>

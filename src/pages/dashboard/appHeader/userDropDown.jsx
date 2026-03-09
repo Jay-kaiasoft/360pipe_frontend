@@ -7,6 +7,18 @@ import CustomIcons from "../../../components/common/icons/CustomIcons"
 import AlertDialog from "../../../components/common/alertDialog/alertDialog";
 import PermissionWrapper from "../../../components/common/permissionWrapper/PermissionWrapper";
 
+// Utility function to get initials from a full name
+const getInitials = (name) => {
+    if (!name) return '';
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) {
+        // If only one word, return the first letter (uppercase)
+        return words[0].charAt(0).toUpperCase();
+    }
+    // Otherwise, return first letter of first and last word
+    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+};
+
 export default function UserDropdown() {
 
     const userdata = getUserDetails();
@@ -86,7 +98,6 @@ export default function UserDropdown() {
             : [])
     ];
 
-
     const [logOutDialog, setLogOutDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
     const [isOpen, setIsOpen] = useState(false)
@@ -106,6 +117,7 @@ export default function UserDropdown() {
         navigate('/login');
         localStorage.removeItem("userInfo");
     }
+
     const handleOpenLogOutDialog = () => {
         setLogOutDialog({ open: true, title: 'Log Out', message: 'Are you sure! Do you want to log out?', actionButtonText: 'yes' });
     }
@@ -113,6 +125,7 @@ export default function UserDropdown() {
     const handleCloseLogOutDialog = () => {
         setLogOutDialog({ open: false, title: '', message: '', actionButtonText: '' });
     }
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -130,10 +143,11 @@ export default function UserDropdown() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={toggleDropdown}
-                className="flex items-center text-gray-700 dropdown-toggle"
+                className="flex items-center justify-center text-white dropdown-toggle rounded-full w-10 h-10 p-2 bg-[#44288E]"
             >
                 <span className="overflow-hidden rounded-full">
-                    <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-white h-6 w-6"} />
+                    {getInitials(userdata?.username || userdata?.name)}
+                    {/* <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-[#6033A3] h-6 w-6"} /> */}
                 </span>
             </button>
 

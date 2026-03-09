@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-[#F8FAFF] min-h-screen">
+
+    <div class="py-6 px-4 max-w-7xl mx-auto">
+        <!-- STAT CARDS -->
+        <div class="flex gap-6 mb-8 justify-center">
+
+            <!-- Card 1 -->
+            <div
+                class="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-4 w-full max-w-[400px]">
+                <div class="flex justify-start items-center gap-3 mb-2 border-b border-b-[#E5E7EB] pb-2">
+                    <div class="text-[#2753AF]">
+                        <i class="fa-solid fa-coins h-6 w-6 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-700">Pipeline</h3>
+                </div>
+                <div class="flex items-center justify-between px-2 pt-2">
+                    <div class="flex flex-col items-center flex-1">
+                        <span class="text-5xl font-extrabold text-[#111827]">
+                            $1M
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div
+                class="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-4 w-full max-w-[400px]">
+                <div class="flex justify-start items-center gap-3 mb-2 border-b border-b-[#E5E7EB] pb-2">
+                    <div class="text-[#2753AF]">
+                        <i class="fa-solid fa-chart-line h-6 w-6 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-700">Revenue</h3>
+                </div>
+                <div class="flex items-center justify-between px-2 pt-2">
+                    <div class="flex flex-col items-center flex-1">
+                        <span class="text-5xl font-extrabold text-[#111827]">
+                            $250K
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-full lg:w-full overflow-x-auto bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#EDE9FE]">
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase w-1/2 text-[#5B21B6]">
+                            REP
+                        </th>
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                            PIPELINE
+                        </th>
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                            REVENUE
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Row 1 -->
+                    <tr class="border-b border-[#F1F5F9] hover:bg-[#F5F3FF] transition-colors">
+                        <td class="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-[#B48BED]">
+                                JD
+                            </div>
+                            <span class="text-base">John Doe</span>
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg">
+                            $500K
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-bold text-lg">
+                            $210K
+                        </td>
+                    </tr>
+                    <!-- Row 2 -->
+                    <tr class="border-b border-[#F1F5F9] hover:bg-[#F5F3FF] transition-colors">
+                        <td class="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-[#93C5FD]">
+                                TS
+                            </div>
+                            <span class="text-base">Tristan Smith</span>
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg">
+                            $300K
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-bold text-lg">
+                            $40K
+                        </td>
+                    </tr>
+                    <!-- Row 3 -->
+                    <tr class="hover:bg-[#F5F3FF] transition-colors">
+                        <td class="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-[#86EFAC]">
+                                AM
+                            </div>
+                            <span class="text-base">Anna Miller</span>
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg">
+                            $200K
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-bold text-lg">
+                            $0
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+
+</html>

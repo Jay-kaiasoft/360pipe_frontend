@@ -5,10 +5,11 @@ import { useForm } from 'react-hook-form';
 import dayjs from 'dayjs';
 
 import { useTheme } from '@mui/material';
-import { setFilterEndDate, setFilterStartDate, setHeaderTitle, setLoading, setOppSelectedTabIndex, setPerformanceSelectedTabIndex } from '../../../redux/commonReducers/commonReducers';
+import { setFilterEndDate, setFilterStartDate, setHeaderTitle, setLoading } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import DatePickerComponent from '../../../components/common/datePickerComponent/datePickerComponent';
 import { headerTitles, matchRoute } from '../../../service/common/commonService';
+import UserDropdown from './userDropDown';
 
 const RANGE_TYPES = [
     { id: "week", label: "Week" },
@@ -39,7 +40,7 @@ function getPreviousWorkWeekMonFri(today = new Date()) {
     return { start: prevMonday, end: prevFriday }
 }
 
-const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterEndDate, setPerformanceSelectedTabIndex, performanceSelectedTabIndex, oppSelectedTabIndex, setOppSelectedTabIndex, }) => {
+const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterEndDate, }) => {
     const theme = useTheme()
     const locaiton = useLocation()
     const currentPath = locaiton?.pathname
@@ -163,20 +164,17 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
     }, [startDate, endDate])
 
     return (
-        <header className={`w-full bg-[linear-gradient(90deg,#5B21B6_0%,#6D28D9_45%,#7C3AED_100%)] z-30 relative ${currentPath?.includes("performance") || locaiton?.pathname.includes("opportunity-view") ? "pb-4" : ""} `} style={{ borderColor: theme.palette.secondary.main }}>
+        <header className="w-full bg-gradient-to-r from-[#1B3B89] via-[#4a80ed] to-[#1B3B89] z-50" style={{ borderColor: theme.palette.secondary.main }}>
             {/* Using grid-cols-3 to force exact centering of the middle element */}
-            <div className="grid grid-cols-3 items-start px-6 py-2 lg:py-3">
-
+            <div className="grid grid-cols-3 items-center px-6 py-2 lg:py-1">
+                
                 {/* 1. Left Section (Logo) */}
                 <div className="flex justify-start">
-                    <button
-                        type="button"
-                        aria-haspopup="menu"
-                        className="flex items-center gap-2 bg-[#FFFFFF] text-[#374151] px-4 py-1 border border-[#E5E7EB] rounded-md transition min-w-[120px] justify-between"
-                    >
-                        <span className="text-lg font-medium">Team</span>
-                        <CustomIcons iconName={"fa-solid fa-chevron-down"} css={"text-sm opacity-80"} />
-                    </button>
+                    <div className="hidden lg:flex items-center">
+                        <NavLink to={"/dashboard"}>
+                            <img src="/images/logo/360Pipe_logo_white.png" alt="360Pipe Logo" className="h-[50px] my-1 w-36" />
+                        </NavLink>
+                    </div>
                 </div>
 
                 {/* 2. Center Section (Title) */}
@@ -195,11 +193,15 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                                 aria-haspopup="menu"
                                 aria-expanded={isOpen ? "true" : "false"}
                                 onClick={() => setIsOpen((s) => !s)}
-                                className="flex items-center gap-2 bg-[#FFFFFF] text-[#374151] px-4 py-1 border border-[#E5E7EB] rounded-md transition min-w-[120px] justify-between"
+                                className="flex items-center gap-2 bg-blue-900/70 text-white px-4 py-1 border border-white/30 hover:bg-blue-900 transition min-w-[120px] justify-between"
                             >
                                 <span className="text-lg font-medium">{rangeLabel}</span>
                                 <CustomIcons iconName={"fa-solid fa-chevron-down"} css={"text-sm opacity-80"} />
                             </button>
+
+                            <div className="z-30">
+                                <UserDropdown />
+                            </div>
                         </div>
 
                         {isOpen && (
@@ -270,64 +272,6 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                     </div>
                 </div>
             </div>
-            {
-                currentPath?.includes("performance") && (
-                    <div className="flex justify-center items-center absolute inset-x-0 -bottom-5">
-                        <button
-                            onClick={() => setPerformanceSelectedTabIndex(0)}
-                            className={`px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tl-md rounded-bl-md ${performanceSelectedTabIndex === 0
-                                ? 'bg-[#44288E] text-white border-[#44288E]'
-                                : 'bg-[#D9C6F5] text-black border-transparent'
-                                }`}
-                        >
-                            Activity
-                        </button>
-                        <button
-                            onClick={() => setPerformanceSelectedTabIndex(1)}
-                            className={`px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tr-md rounded-br-md ${performanceSelectedTabIndex === 1
-                                ? 'bg-[#44288E] text-white border-[#44288E]'
-                                : 'bg-[#D9C6F5] text-black border-transparent'
-                                }`}
-                        >
-                            Results
-                        </button>
-                    </div>
-                )
-            }
-
-            {
-                currentPath?.includes("opportunity-view") && (
-                    <div className="flex justify-center items-center absolute inset-x-0 -bottom-5">
-                        <button
-                            onClick={() => setOppSelectedTabIndex(0)}
-                            className={`px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tl-md rounded-bl-md ${oppSelectedTabIndex === 0
-                                ? 'bg-[#44288E] text-white border-[#44288E]'
-                                : 'bg-[#D9C6F5] text-black border-transparent'
-                                }`}
-                        >
-                            Opp360
-                        </button>
-                        <button
-                            onClick={() => setOppSelectedTabIndex(1)}
-                            className={`px-6 py-1.5 text-[18px] font-medium transition-colors border border-l-[#44288E] border-r-[#44288E] ${oppSelectedTabIndex === 1
-                                ? 'bg-[#44288E] text-white border-[#44288E]'
-                                : 'bg-[#D9C6F5] text-black border-transparent'
-                                }`}
-                        >
-                            Notes
-                        </button>
-                        <button
-                            onClick={() => setOppSelectedTabIndex(2)}
-                            className={`px-6 py-1.5 text-[18px] font-medium transition-colors border rounded-tr-md rounded-br-md ${oppSelectedTabIndex === 2
-                                ? 'bg-[#44288E] text-white border-[#44288E]'
-                                : 'bg-[#D9C6F5] text-black border-transparent'
-                                }`}
-                        >
-                            Deal Docs
-                        </button>
-                    </div>
-                )
-            }
         </header>
     )
 }
@@ -335,8 +279,6 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
 const mapStateToProps = (state) => ({
     loading: state.common.loading,
     headerTitle: state.common.headerTitle,
-    performanceSelectedTabIndex: state.common.performanceSelectedTabIndex,
-    oppSelectedTabIndex: state.common.oppSelectedTabIndex,
 })
 
 const mapDispatchToProps = {
@@ -344,8 +286,6 @@ const mapDispatchToProps = {
     setHeaderTitle,
     setFilterStartDate,
     setFilterEndDate,
-    setPerformanceSelectedTabIndex,
-    setOppSelectedTabIndex,
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(SubHeader)

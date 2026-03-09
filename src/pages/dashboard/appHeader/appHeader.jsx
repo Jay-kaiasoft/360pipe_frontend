@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { useSelector, useDispatch, connect } from "react-redux"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useDispatch, connect, useSelector } from "react-redux"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import {
   toggleSidebar,
   toggleMobileSidebar,
@@ -10,8 +10,6 @@ import {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
-  setOppSelectedTabIndex,
-  setPerformanceSelectedTabIndex,
 } from "../../../redux/commonReducers/commonReducers"
 
 import Components from "../../../components/muiComponents/components"
@@ -21,10 +19,9 @@ import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsServi
 import Button from "../../../components/common/buttons/button"
 import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
 import { Tabs } from "../../../components/common/tabs/tabs"
-import { useTheme } from "@mui/material"
+import UserDropdown from "./userDropDown"
+import CustomIcons from "../../../components/common/icons/CustomIcons"
 
-const oppTableData = [{ label: "Opp360" }, { label: "Notes" }, { label: "Deal Docs" }];
-const performanceTableData = [{ label: "Activity" }, { label: "Results" }];
 
 const AppHeader = ({
   setAlert,
@@ -35,12 +32,7 @@ const AppHeader = ({
   setSyncingPullStatus,
   syncCount,
   syncingPushStatus,
-  oppSelectedTabIndex,
-  setOppSelectedTabIndex,
-  performanceSelectedTabIndex,
-  setPerformanceSelectedTabIndex
 }) => {
-
   const { isMobileOpen } = useSelector((state) => state.common)
   const userDetails = getUserDetails()
   const salesforceUserDetails = getSalesforceUserDetails()
@@ -52,7 +44,8 @@ const AppHeader = ({
 
   const [tabsData, setTabsData] = useState([])
   const [tabsData2, setTabsData2] = useState([{
-    label: "Dashboard",
+    // label: "Dashboard",
+    icon: <CustomIcons iconName="fa-solid fa-house" />,
     path: "/dashboard",
   }])
   const [selectedTab, setSelectedTab] = useState(null)
@@ -75,6 +68,12 @@ const AppHeader = ({
       setSelectedTab2(value)
     }
   }
+
+  const handleToggle = () => {
+    if (window.innerWidth >= 1024) dispatch(toggleSidebar())
+    else dispatch(toggleMobileSidebar())
+  }
+
   const handleSetNavItems = () => {
     const tabItems = [
       {
@@ -85,14 +84,6 @@ const AppHeader = ({
         label: "Performance",
         path: "/dashboard/performance",
       },
-      // {
-      //   label: "Activities",
-      //   path: "/dashboard/activities",
-      // },
-      // {
-      //   label: "Results",
-      //   path: "/dashboard/results",
-      // },
       {
         label: "Contacts",
         path: "/dashboard/contacts",
@@ -101,15 +92,6 @@ const AppHeader = ({
         label: userDetails?.roleName?.toUpperCase() === "SALES REPRESENTIVE" ? "My Actions" : "Team Actions",
         path: "/dashboard/todos",
       },
-
-      // ...(((userDetails?.roleName === "SALES REPRESENTIVE" || userDetails?.roleName === "SALE MANAGER") && !userDetails?.subUser)
-      //   ? [
-      //     {
-      //       label: "My CRM",
-      //       path: "/dashboard/mycrm",
-      //     },
-      //   ]
-      //   : []),
     ]
 
     setTabsData(tabItems)
@@ -124,11 +106,6 @@ const AppHeader = ({
       const currentTabIndex = tabsData2?.findIndex((tab) => tab.path === currentPath)
       setSelectedTab2(currentTabIndex)
     }
-  }
-
-  const handleToggle = () => {
-    if (window.innerWidth >= 1024) dispatch(toggleSidebar())
-    else dispatch(toggleMobileSidebar())
   }
 
   const handleGetAllSyncRecords = async () => {
@@ -242,27 +219,32 @@ const AppHeader = ({
 
   return (
     <header className="w-full bg-white shadow-sm z-50">
-      <div className="lg:px-6">
-        <div className="hidden lg:flex justify-between py-2">
-          <div>
-            <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" />
+      <div className="flex lg:grid grid-cols-3 items-center px-6 py-2">
+        {/* 1. Left Section (Logo) */}
+        <div className="flex justify-start">
+          <div className="hidden lg:flex items-center">
+            <NavLink to={"/dashboard"}>
+              <img src="/images/logo/360-2400.png" alt="360Pipe Logo" className="h-[40px] my-1" />
+            </NavLink>
           </div>
-          {
+        </div>
+
+        <div className="hidden lg:flex justify-between">
+          <div className="mr-[7px]">
+            <Tabs tabsData={tabsData2} selectedTab={selectedTab2} handleChange={handleChangeTab2} type="pipeline" fontSize={"16px"} />
+          </div>
+
+          <div>
+            <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="pipeline" fontSize={"16px"} />
+          </div>
+          {/* {
             locaiton?.pathname.includes("opportunity-view") && (
               <div className="w-full ml-32">
-                <Tabs tabsData={oppTableData} selectedTab={oppSelectedTabIndex} handleChange={setOppSelectedTabIndex} type="header" />
+                <Tabs tabsData={oppTableData} selectedTab={oppSelectedTabIndex} handleChange={setOppSelectedTabIndex} type="pipeline" fontSize={"16px"} />
               </div>
             )
-          }
-          {
-            locaiton?.pathname.includes("performance") && (
-              <div className="w-full ml-32">
-                <Tabs tabsData={performanceTableData} selectedTab={performanceSelectedTabIndex} handleChange={setPerformanceSelectedTabIndex} type="header" />
-              </div>
-            )
-          }
+          } */}
           <div className="flex items-center gap-4">
-            <Tabs tabsData={tabsData2} selectedTab={selectedTab2} handleChange={handleChangeTab2} type="header" />
             {
               !userDetails?.subUser && (
                 <div className="flex items-center justify-end gap-6">
@@ -283,7 +265,7 @@ const AppHeader = ({
           </div>
         </div>
 
-        <div className="px-3 py-3 border-b border-gray-200 sm:gap-4 lg:border-b-0 lg:px-0 lg:py-4 lg:hidden">
+        <div className="lg:hidden absolute right-6">
           <div>
             <button
               className="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11"
@@ -314,6 +296,12 @@ const AppHeader = ({
             </button>
           </div>
         </div>
+
+        <div className="flex justify-end items-center gap-4">
+          <div className="z-50">
+            <UserDropdown />
+          </div>
+        </div>
       </div>
     </header>
   )
@@ -324,8 +312,6 @@ const mapStateToProps = (state) => ({
   syncCount: state.common.syncCount,
   syncingPullStatus: state.common.syncingPullStatus,
   syncingPushStatus: state.common.syncingPushStatus,
-  oppSelectedTabIndex: state.common.oppSelectedTabIndex,
-  performanceSelectedTabIndex: state.common.performanceSelectedTabIndex,
 })
 
 const mapDispatchToProps = {
@@ -335,8 +321,6 @@ const mapDispatchToProps = {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
-  setOppSelectedTabIndex,
-  setPerformanceSelectedTabIndex
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

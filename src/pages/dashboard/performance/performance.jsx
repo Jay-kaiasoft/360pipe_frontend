@@ -10,8 +10,7 @@ const Performance = ({ setHeaderTitle, performanceSelectedTabIndex }) => {
 
     useEffect(() => {
         if (locaiton.pathname === "/dashboard/performance") {
-            const title = performanceSelectedTabIndex === 0 ? "Activities" : "Results"
-            setHeaderTitle(title)
+            setHeaderTitle("Performance")
         }
     }, [performanceSelectedTabIndex])
     return (

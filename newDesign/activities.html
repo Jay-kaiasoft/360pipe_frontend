@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activities Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-[#F8FAFF] min-h-screen">
+
+    <div class="py-6 px-4 max-w-7xl mx-auto">
+        <!-- STAT CARDS -->
+        <div class="flex gap-6 mb-8 justify-center flex-wrap">
+
+            <!-- Card 1 -->
+            <div
+                class="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-5 flex-1 w-full max-w-[350px]">
+                <div class="flex justify-center items-center gap-2 mb-3">
+                    <div class="text-[#6B7280]">
+                        <i class="fa-solid fa-bolt h-5 w-5 text-xl"></i>
+                    </div>
+                    <h3 class="text-[#4B5563] font-medium text-lg">Meetings</h3>
+                </div>
+                <div class="flex flex-col items-center mb-4">
+                    <span class="text-4xl font-bold text-[#1F2937] leading-none mb-1">25</span>
+                    <span class="text-[#6B7280] text-sm font-medium">(50%)</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full mb-2 overflow-hidden flex bg-[#DDD6FE]">
+                    <div class="h-full bg-[#6D28D9]" style="width: 50%"></div>
+                </div>
+                <div class="flex justify-between w-full text-sm font-medium">
+                    <span class="text-[#6B7280]">50 <span class="text-[#6B7280] font-normal">Actual</span></span>
+                    <span class="text-[#6B7280]">50 <span class="text-[#6B7280] font-normal">Goal</span></span>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div
+                class="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-5 flex-1 w-full max-w-[350px]">
+                <div class="flex justify-center items-center gap-2 mb-3">
+                    <div class="text-[#6B7280]">
+                        <i class="fa-solid fa-map-location-dot h-5 w-5 text-xl"></i>
+                    </div>
+                    <h3 class="text-[#4B5563] font-medium text-lg">Onsite Intensity</h3>
+                </div>
+                <div class="flex flex-col items-center mb-4">
+                    <span class="text-4xl font-bold text-[#1F2937] leading-none mb-1">8</span>
+                    <span class="text-[#6B7280] text-sm font-medium">(32%)</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full mb-2 overflow-hidden flex bg-[#DDD6FE]">
+                    <div class="h-full bg-[#65B79F]" style="width: 32%"></div>
+                </div>
+                <div class="flex justify-between w-full text-sm font-medium">
+                    <span class="text-[#65B79F]">8 <span class="text-[#6B7280] font-normal">Onsite</span></span>
+                    <span class="text-[#6B7280]">17 <span class="text-[#6B7280] font-normal">Virtual</span></span>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div
+                class="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-5 flex-1 w-full max-w-[350px]">
+                <div class="flex justify-center items-center gap-2 mb-3">
+                    <div class="text-[#6B7280]">
+                        <i class="fa-solid fa-handshake h-5 w-5 text-xl"></i>
+                    </div>
+                    <h3 class="text-[#4B5563] font-medium text-lg">Hunter / Farmer</h3>
+                </div>
+                <div class="flex flex-col items-center mb-4">
+                    <span class="text-4xl font-bold text-[#1F2937] leading-none mb-1">10</span>
+                    <span class="text-[#6B7280] text-sm font-medium">(40%)</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full mb-2 overflow-hidden flex bg-[#6D28D9]">
+                    <div class="h-full bg-[#65B79F]" style="width: 40%"></div>
+                </div>
+                <div class="flex justify-between w-full text-sm font-medium">
+                    <span class="text-[#65B79F]">10 <span class="text-[#6B7280] font-normal">Hunter</span></span>
+                    <span class="text-[#6B7280]">15 <span class="text-[#6B7280] font-normal">Farmer</span></span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-full lg:w-full overflow-x-auto bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#EDE9FE]">
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-[#5B21B6]">
+                            REP
+                        </th>
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-center text-[#5B21B6]">
+                            NET NEW
+                        </th>
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-center text-[#5B21B6]">
+                            EXISTING
+                        </th>
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-center text-[#5B21B6]">
+                            (ONSITE)
+                        </th>
+                        <th class="py-4 px-6 font-semibold text-sm tracking-wider uppercase text-center text-[#5B21B6]">
+                            TOTAL
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Row 1 -->
+                    <tr class="border-b border-[#F1F5F9] hover:bg-[#F5F3FF] transition-colors">
+                        <td class="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-[#B48BED]">
+                                JD
+                            </div>
+                            <span class="text-base text-[#111827]">John Doe</span>
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg text-center">
+                            12
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg text-center">
+                            8
+                        </td>
+                        <td class="py-4 px-6 text-[#6B7280] font-medium text-lg text-center">
+                            (4)
+                        </td>
+                        <td class="py-4 px-6 font-bold text-lg text-center bg-[#F5F3FF] text-[#111827]">
+                            20
+                        </td>
+                    </tr>
+                    <!-- Row 2 -->
+                    <tr class="border-b border-[#F1F5F9] hover:bg-[#F5F3FF] transition-colors">
+                        <td class="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-[#93C5FD]">
+                                TS
+                            </div>
+                            <span class="text-base text-[#111827]">Tristan Smith</span>
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg text-center">
+                            5
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg text-center">
+                            6
+                        </td>
+                        <td class="py-4 px-6 text-[#6B7280] font-medium text-lg text-center">
+                            (2)
+                        </td>
+                        <td class="py-4 px-6 font-bold text-lg text-center bg-[#F5F3FF] text-[#111827]">
+                            11
+                        </td>
+                    </tr>
+                    <!-- Row 3 -->
+                    <tr class="hover:bg-[#F5F3FF] transition-colors">
+                        <td class="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-[#86EFAC]">
+                                AM
+                            </div>
+                            <span class="text-base text-[#111827]">Anna Miller</span>
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg text-center">
+                            8
+                        </td>
+                        <td class="py-4 px-6 text-[#111827] font-semibold text-lg text-center">
+                            2
+                        </td>
+                        <td class="py-4 px-6 text-[#6B7280] font-medium text-lg text-center">
+                            (6)
+                        </td>
+                        <td class="py-4 px-6 font-bold text-lg text-center bg-[#F5F3FF] text-[#111827]">
+                            10
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+
+</html>

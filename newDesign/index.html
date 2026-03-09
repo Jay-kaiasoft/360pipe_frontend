@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360Pipe HTML Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Prevent double scrollbars by letting the iframe handle scrolling */
+        iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F8FAFF] flex flex-col h-screen overflow-hidden">
+
+    <!-- App Header -->
+    <header class="w-full bg-white shadow-sm z-50 flex-none relative">
+        <div class="flex lg:grid grid-cols-3 items-center px-6 py-2">
+            <!-- 1. Left Section (Logo) -->
+            <div class="flex justify-start">
+                <div class="hidden lg:flex items-center">
+                    <a href="#" onclick="navigateMain('pipeline')">
+                        <img src="./360Pipe_logo_new.png" alt="360Pipe Logo" class="h-[40px] my-1" />
+                    </a>
+                </div>
+            </div>
+
+            <!-- Center Section (Tabs) -->
+            <div class="hidden lg:flex items-center w-full col-span-1 justify-center gap-6">
+                <!-- Home Icon -->
+
+                <!-- Nav Tabs -->
+                <div class="flex items-center gap-2">
+                    <a href="#" id="nav-dashboard" onclick="navigateMain('dashboard')"
+                        class="main-nav-tab flex items-center justify-center w-10 h-10 bg-transparent rounded-md text-[18px] text-[#4C3B7B] transition-colors">
+                        <i class="fa-solid fa-house"></i>
+                    </a>
+                    <a href="#" id="nav-pipeline" onclick="navigateMain('pipeline')"
+                        class="main-nav-tab flex px-4 py-2 bg-[#EADDFF] text-[#4C3B7B] text-[14px] rounded-md transition-colors">
+                        Pipeline
+                    </a>
+                    <a href="#" id="nav-performance" onclick="navigateMain('performance')"
+                        class="main-nav-tab flex px-4 py-2 bg-transparent text-[#4C3B7B] text-[14px] rounded-md transition-colors">
+                        Performance
+                    </a>
+                    <a href="#" id="nav-contacts" onclick="navigateMain('contacts')"
+                        class="main-nav-tab flex px-4 py-2 bg-transparent text-[#4C3B7B] text-[14px] rounded-md transition-colors">
+                        Contacts
+                    </a>
+                    <a href="#" id="nav-actions" onclick="navigateMain('actions')"
+                        class="main-nav-tab flex px-4 py-2 bg-transparent text-[#4C3B7B] text-[14px] rounded-md transition-colors">
+                        Team Actions
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3. Right Section -->
+            <div class="flex justify-end items-center gap-4 col-span-1 ml-auto">
+                <div class="hidden lg:block relative">
+                    <button
+                        class="bg-[#44288E] text-white font-medium py-[6px] px-6 rounded-md shadow-sm transition-colors text-sm relative">
+                        SYNC
+                        <span
+                            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white">
+                            3
+                        </span>
+                    </button>
+                </div>
+                <!-- User Dropdown Mock -->
+                <div class="z-50 flex items-center gap-2 cursor-pointer relative ml-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 shadow-sm">
+                        JD
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <div class="lg:hidden absolute right-6">
+                <button
+                    class="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11">
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M1 1h14a.75.75 0 0 1 0 1.5H1A.75.75 0 0 1 1 1ZM1 5.25h7a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5ZM1 10.25h14a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5Z"
+                            fill="currentColor" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub Header -->
+    <header
+        class="w-full bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)] z-40 relative pb-4 border-b-2 border-purple-800 flex-none transition-all duration-300">
+        <div class="grid grid-cols-3 items-start px-6 py-2 lg:py-3">
+
+            <!-- 1. Left Section -->
+            <div class="flex justify-start relative">
+                <button type="button" onclick="toggleDropdown('teamDropdown')"
+                    class="flex items-center gap-2 bg-[#44288E] text-white px-4 py-1 rounded-md transition min-w-[120px] justify-between shadow-sm flex-none focus:outline-none">
+                    <span class="text-lg font-medium" id="selectedTeam">Team</span>
+                    <i class="fa-solid fa-chevron-down text-sm opacity-80 pointer-events-none"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="teamDropdown"
+                    class="hidden absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1 origin-top-left">
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors font-semibold">All
+                        Teams</a>
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team Alpha', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Team
+                        Alpha</a>
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team Beta', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Team
+                        Beta</a>
+                    <a href="#" onclick="selectOption('teamDropdown', 'selectedTeam', 'Team Gamma', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Team
+                        Gamma</a>
+                </div>
+            </div>
+
+            <!-- 2. Center Section (Title) -->
+            <div class="flex justify-center text-center">
+                <p id="subHeaderTitle"
+                    class='text-white text-3xl font-semibold whitespace-nowrap mt-1 drop-shadow-sm transition-all'>
+                    Pipeline
+                </p>
+            </div>
+
+            <!-- 3. Right Section (Filters) -->
+            <div class="flex justify-end items-center gap-4 relative">
+                <button type="button" onclick="toggleDropdown('quarterDropdown')"
+                    class="flex items-center gap-2 bg-[#44288E] text-white px-4 py-1 rounded-md transition min-w-[120px] justify-between shadow-sm flex-none focus:outline-none">
+                    <span class="text-lg font-medium" id="selectedQuarter">Week</span>
+                    <i class="fa-solid fa-chevron-down text-sm opacity-80 pointer-events-none"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="quarterDropdown"
+                    class="hidden absolute top-full right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-100 z-50 py-1 origin-top-right">
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Week', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Week</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Month', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Month</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q1', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q1</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q2', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q2</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q3', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q3</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Q4', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Q4</a>
+                    <a href="#" onclick="selectOption('quarterDropdown', 'selectedQuarter', 'Year to Date', event)"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">Year
+                        to Date</a>
+                    <div class="border-t border-gray-100 my-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional Bottom Tabs (Performance only) -->
+        <div id="subTabs" class="hidden justify-center items-center absolute inset-x-0 -bottom-5">
+            <button id="tabActivity" onclick="navigateSub('activity')"
+                class="px-6 py-1.5 text-[18px] font-medium transition-colors border shadow-sm rounded-tl-md rounded-bl-md bg-[#44288E] text-white border-[#44288E]">
+                Activity
+            </button>
+            <button id="tabResults" onclick="navigateSub('results')"
+                class="px-6 py-1.5 text-[18px] font-medium underline-offset-1 transition-colors border shadow-sm rounded-tr-md rounded-br-md bg-[#D9C6F5] text-black border-transparent hover:bg-[#cbb2f0]">
+                Results
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content (Iframe) -->
+    <!-- Added mt-5 so the iframe content is not hidden under the overlapping Activity/Results buttons when they appear -->
+    <main class="flex-1 bg-[#F8FAFF] w-full relative z-0 mt-5 overflow-hidden">
+        <iframe id="contentFrame" src="opportunities.html" title="Main Content"></iframe>
+    </main>
+
+    <script>
+        // Dropdown functions
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            // Close other dropdowns
+            const allDropdowns = ['teamDropdown', 'quarterDropdown'];
+            allDropdowns.forEach(d => {
+                if (d !== id) document.getElementById(d).classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        }
+
+        function selectOption(dropdownId, textId, value, event) {
+            event.preventDefault();
+
+            // Revert "All Teams" text back to "Team" so it matches default state
+            if (value === "All Teams") value = "Team";
+
+            document.getElementById(textId).innerText = value;
+            document.getElementById(dropdownId).classList.add('hidden');
+        }
+
+        // Close dropdowns when clicking outside
+        window.addEventListener('click', function (event) {
+            if (!event.target.closest('button') || !event.target.closest('button').hasAttribute('onclick')) {
+                document.getElementById('teamDropdown').classList.add('hidden');
+                document.getElementById('quarterDropdown').classList.add('hidden');
+            }
+        });
+
+        // Define navigation targets
+        const tabs = {
+            dashboard: { url: 'dashboard.html', title: 'Dashboard', showSubTabs: false },
+            pipeline: { url: 'opportunities.html', title: 'Pipeline', showSubTabs: false },
+            performance: { url: 'activities.html', title: 'Performance', showSubTabs: true, defaultSubTab: 'activity' },
+            contacts: { url: 'contacts.html', title: 'Contacts', showSubTabs: false },
+            actions: { url: 'todo.html', title: 'Team Actions', showSubTabs: false }
+        };
+
+        function navigateMain(tabId) {
+            // 1. Update Top Nav Active State
+            const allNavTabs = document.querySelectorAll('.main-nav-tab');
+            console.log("allNavTabs", allNavTabs)
+            allNavTabs.forEach(el => {
+                el.classList.remove('font-bold');
+                // el.classList.remove('bg-[#EADDFF]');
+                el.classList.add('bg-transparent');
+                el.classList.remove("underline");
+                el.classList.remove("font-bold");
+                el.classList.add("font-medium");
+            });
+
+            const activeTab = document.getElementById('nav-' + tabId);
+            console.log("activeTab", activeTab)
+            if (activeTab) {
+                activeTab.classList.add('font-bold');
+                activeTab.classList.add("underline");
+                activeTab.classList.add("font-bold");
+                // activeTab.classList.remove('bg-transparent');
+            }
+
+            // 2. Update SubHeader Title
+            const titleEl = document.getElementById('subHeaderTitle');
+            if (titleEl) {
+                titleEl.textContent = tabs[tabId].title;
+            }
+
+            // 3. Toggle SubTabs visibility and handle iframe URL
+            const subTabsEl = document.getElementById('subTabs');
+            if (tabs[tabId].showSubTabs) {
+                subTabsEl.classList.remove('hidden');
+                subTabsEl.classList.add('flex');
+                // Auto-load default subtab for this section
+                navigateSub(tabs[tabId].defaultSubTab);
+            } else {
+                subTabsEl.classList.add('hidden');
+                subTabsEl.classList.remove('flex');
+                document.getElementById('contentFrame').src = tabs[tabId].url;
+            }
+        }
+
+        function navigateSub(subTabId) {
+            const activityBtn = document.getElementById('tabActivity');
+            const resultsBtn = document.getElementById('tabResults');
+
+            const inactiveClass = "px-6 py-1.5 text-[18px] font-medium transition-colors border shadow-sm bg-[#D9C6F5] text-black border-transparent hover:bg-[#cbb2f0]";
+            const activeClass = "px-6 py-1.5 text-[18px] font-medium transition-colors border shadow-sm bg-[#44288E] text-white border-[#44288E]";
+
+            if (subTabId === 'activity') {
+                activityBtn.className = `${activeClass} rounded-tl-md rounded-bl-md`;
+                resultsBtn.className = `${inactiveClass} rounded-tr-md rounded-br-md`;
+                document.getElementById('contentFrame').src = 'activities.html';
+            } else {
+                activityBtn.className = `${inactiveClass} rounded-tl-md rounded-bl-md`;
+                resultsBtn.className = `${activeClass} rounded-tr-md rounded-br-md`;
+                document.getElementById('contentFrame').src = 'results.html';
+            }
+        }
+    </script>
+</body>
+
+</html>

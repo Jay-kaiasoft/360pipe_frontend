@@ -110,8 +110,8 @@ export const headerTitles = [
     { title: "Sync History", path: "/dashboard/syncHistory" },
     { title: "Mail Scraper", path: "/dashboard/managemails" },
     { title: "Products & Service", path: "/dashboard/products" },
-    { title: "Activity", path: "/dashboard/activities" },
-    { title: "Results", path: "/dashboard/results" },
+    { title: "Performance", path: "/dashboard/activities" },
+    { title: "Performance", path: "/dashboard/results" },
 ];
 
 export const matchRoute = (routePath, currentPath) => {

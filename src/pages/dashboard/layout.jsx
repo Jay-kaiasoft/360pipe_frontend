@@ -14,11 +14,11 @@ const Layout = ({ sessionEndModel }) => {
 
   return (
     // overflow-hidden makes sure ONLY main scrolls (not the body/page)
-    <div className="bg-gray-50 h-screen flex flex-col overflow-hidden">
+    <div className="bg-[#F6F8FB] h-screen flex flex-col overflow-hidden">
       {/* Sticky Header Stack (does NOT overlap content like fixed) */}
       <div className="sticky top-0 left-0 right-0 z-50">
-        <SubHeader />
         <AppHeader />
+        <SubHeader />
       </div>
 
       {/* Main Content Area */}

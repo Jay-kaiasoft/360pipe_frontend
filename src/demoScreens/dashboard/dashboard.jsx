@@ -58,14 +58,14 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('Activity');
 
   return (
-    <div className="min-h-screen bg-[#EEEDFC] font-sans pb-20">
+    <div className="min-h-screen bg-[#F6F8FB] font-sans pb-20">
       {/* Header Area */}
       <div className="relative bg-gradient-to-r from-[#1B3B89] via-[#4a80ed] to-[#1B3B89] text-white py-3 shadow-lg flex items-center justify-between px-6 md:px-10">
 
         {/* Logo - Left */}
         <div className="flex-1 flex items-center">
           <NavLink>
-            <img src="/images/logo/360Pipe_logo_white.png" alt="360Pipe Logo" className="h-[54px] w-36" />
+            <img src="/images/logo/360-2400.png" alt="360Pipe Logo" className="h-[40px]" />
           </NavLink>
         </div>
 

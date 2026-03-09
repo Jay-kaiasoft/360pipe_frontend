@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Header Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50">
+
+  <header class="w-full bg-white shadow-sm z-50">
+    <div class="flex lg:grid grid-cols-3 items-center px-6 py-2">
+      <!-- 1. Left Section (Logo) -->
+      <div class="flex justify-start">
+        <div class="hidden lg:flex items-center">
+          <a href="#">
+            <img src="./360Pipe_logo_new.png" alt="360Pipe Logo" class="h-[40px] my-1" />
+          </a>
+        </div>
+      </div>
+
+      <!-- Center Section (Tabs) -->
+      <div class="hidden lg:flex justify-between items-center w-full col-span-1">
+        <div class="flex items-center mr-[7px]">
+          <a href="#"
+            class="flex px-4 py-2 border-b-2 border-transparent hover:border-blue-600 hover:text-blue-600 text-[16px] text-gray-500 font-medium">
+            <i class="fa-solid fa-house mr-2 mt-1"></i>
+          </a>
+        </div>
+
+        <div class="flex items-center space-x-6">
+          <a href="#"
+            class="flex px-2 py-2 border-b-2 border-blue-600 text-blue-600 text-[16px] font-medium transition-colors">
+            Pipeline
+          </a>
+          <a href="#"
+            class="flex px-2 py-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-600 text-[16px] font-medium transition-colors">
+            Performance
+          </a>
+          <a href="#"
+            class="flex px-2 py-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-600 text-[16px] font-medium transition-colors">
+            Contacts
+          </a>
+          <a href="#"
+            class="flex px-2 py-2 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-600 text-[16px] font-medium transition-colors">
+            My Actions
+          </a>
+        </div>
+      </div>
+
+      <!-- 3. Right Section -->
+      <div class="flex justify-end items-center gap-4 col-span-1 ml-auto">
+        <div class="hidden lg:block relative">
+          <button
+            class="bg-green-600 hover:bg-green-700 text-white font-medium py-[6px] px-6 rounded-md shadow-sm transition-colors text-sm relative">
+            SYNC
+            <!-- Badge mock -->
+            <span
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white">
+              3
+            </span>
+          </button>
+        </div>
+
+        <!-- User Dropdown Mock -->
+        <div class="z-50 flex items-center gap-2 cursor-pointer relative ml-4">
+          <div
+            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 shadow-sm">
+            JD
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Toggle -->
+      <div class="lg:hidden absolute right-6">
+        <button class="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11"
+          aria-label="Toggle Sidebar">
+          <!-- Hamburger Icon -->
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M1 1h14a.75.75 0 0 1 0 1.5H1A.75.75 0 0 1 1 1ZM1 5.25h7a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5ZM1 10.25h14a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5Z"
+              fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+</body>
+
+</html>

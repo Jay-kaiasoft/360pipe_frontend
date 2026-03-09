@@ -4,6 +4,79 @@ import { useTheme } from "@mui/material";
 export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", center = false, fontSize = null }) => {
   const theme = useTheme();
 
+  // Define styles based on type
+  const getContainerStyles = () => {
+    switch (type) {
+      case "pipeline":
+        return {
+          // borderBottom: "2px solid #E0E0E0", // subtle container line
+          backgroundColor: "#fafafa",        // light background for the whole bar
+        };
+      case "header":
+        return {
+          borderBottom: "none",
+          backgroundColor: "#ffffff",
+        };
+      default: // "default"
+        return {
+          borderBottom: "1px solid #E0E0E0",
+          backgroundColor: "transparent",
+        };
+    }
+  };
+
+  const getTabStyles = (isSelected, isHeaderType, isPipelineType) => {
+    const base = {
+      color: isPipelineType?"#624B8B" : theme.palette.text.primary,
+      fontWeight: isSelected ? 600 : 400,
+      fontSize: fontSize ? fontSize : "20px",
+      textTransform: "none",
+      padding: isPipelineType?"12px 12px":"8px 8px",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "7px",
+      position: "relative",
+      fontFamily: '"Inter", sans-serif',
+      transition: "background-color 0.3s ease",
+    };
+
+    // Type-specific background
+    if (isHeaderType) {
+      base.backgroundColor = isSelected ? "rgba(33, 150, 243, 0.08)" : "transparent";
+    } else if (isPipelineType) {
+      base.backgroundColor = isSelected ? "#E7DBFE" : "transparent"; // light purple for active
+      base.borderRadius = "8px"; // rounding on all corners
+    } else {
+      base.backgroundColor = "transparent";
+    }
+
+    return base;
+  };
+
+  const getAfterStyles = (isSelected, isHeaderType, isPipelineType) => {
+    const afterBase = {
+      content: '""',
+      position: "absolute",
+      bottom: 0,
+      left: "50%",
+      transform: "translateX(-50%)",
+      height: isHeaderType ? "3px" : isPipelineType ? "4px" : "3px", // thicker for pipeline
+      width: isSelected ? "100%" : "0%",
+      transition: "width 0.3s ease-in-out",
+    };
+
+    if (isPipelineType) {
+      afterBase.backgroundColor = "transparent"; // No bottom line for pipeline tabs
+    } else if (isHeaderType) {
+      afterBase.backgroundColor = theme.palette.secondary.main;
+    } else {
+      afterBase.backgroundColor = theme.palette.secondary.main;
+    }
+
+    return afterBase;
+  };
+
   return (
     <Components.Box
       sx={{
@@ -11,66 +84,34 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", ce
         display: "flex",
         justifyContent: center ? "center" : "start",
         gap: "20px",
-        borderBottom: type === "default" ? "1px solid #E0E0E0" : "none",
         overflowX: "auto",
         whiteSpace: "nowrap",
         scrollbarWidth: "none",
         "&::-webkit-scrollbar": { display: "none" },
-        backgroundColor: type === "header" ? "#ffffff" : "transparent",
-        fontFamily: '"Inter", sans-serif'
+        fontFamily: '"Inter", sans-serif',
+        ...getContainerStyles(),
       }}
     >
       {[...new Map(tabsData?.map((item) => [item.label, item])).values()].map(
         (item, index) => {
           const isSelected = selectedTab === index;
           const isHeaderType = type === "header";
+          const isPipelineType = type === "pipeline";
 
           return (
             <Components.Box
               key={index}
               onClick={() => handleChange(index)}
               sx={{
-                color: theme.palette.text.primary,
-                fontWeight: isSelected ? 600 : 400,
-                fontSize: fontSize ? fontSize : "20px",
-                textTransform: "none",
-                padding: "8px 8px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "7px",
-                position: "relative",
-                fontFamily: '"Inter", sans-serif',
-                transition: "background-color 0.3s ease",
-                
-                // Keep the background logic for the header type
-                backgroundColor: isHeaderType
-                  ? isSelected
-                    ? "rgba(33, 150, 243, 0.08)"
-                    : "transparent"
-                  : "transparent",            
-
-                // The Animated Bottom Border
-                "&::after": {
-                  content: '""',
-                  position: "absolute",
-                  bottom: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)", // Centers the line so it grows outward
-                  height: isHeaderType ? "3px" : "3px",
-                  width: isSelected ? "100%" : "0%", // Full width if selected, 0% if not
-                  backgroundColor: theme.palette.secondary.main,
-                  transition: "width 0.3s ease-in-out", // The animation effect
-                },
-
-                // Triggers the width to expand to 100% on hover
+                ...getTabStyles(isSelected, isHeaderType, isPipelineType),
+                "&::after": getAfterStyles(isSelected, isHeaderType, isPipelineType),
                 "&:hover::after": {
                   width: "100%",
-                }
+                },
               }}
             >
               {item.icon && <span>{item.icon}</span>}
-              <span>{item.label}</span>
+              {item.label && <span>{item.label}</span>}
             </Components.Box>
           );
         }
@@ -79,74 +120,11 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", ce
   );
 };
 
-
 // import Components from "../../muiComponents/components";
 // import { useTheme } from "@mui/material";
 
 // export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", center = false, fontSize = null }) => {
 //   const theme = useTheme();
-
-//   const getTabStyle = (index) => {
-//     const isSelected = selectedTab === index;
-//     const isHeaderType = type === "header";
-
-//     const baseStyle = {
-//       color: theme.palette.text.primary,
-//       fontWeight: isSelected ? 600 : 400,
-//       fontSize: fontSize ? fontSize : "20px",
-//       textTransform: "none",
-//       padding: "8px 8px",
-//       cursor: "pointer",
-//       display: "flex",
-//       alignItems: "center",
-//       gap: "7px",
-//       position: "relative",
-//       borderBottom: isHeaderType
-//         ? isSelected
-//           ? `3px solid ${theme.palette.secondary.main}`
-//           : "3px solid transparent"
-//         : "none",
-//       backgroundColor: isHeaderType
-//         ? isSelected
-//           ? "rgba(33, 150, 243, 0.08)"
-//           : "transparent"
-//         : "transparent",
-//       fontFamily: '"Inter", sans-serif',
-//     };
-
-//     // Add hover underline animation only for non‑selected tabs
-//     if (!isSelected) {
-//       baseStyle["&::after"] = {
-//         content: '""',
-//         position: "absolute",
-//         bottom: 0,
-//         left: 0,
-//         width: "100%",
-//         height: "3px",
-//         backgroundColor: theme.palette.secondary.main,
-//         transform: "scaleX(0)",
-//         transformOrigin: "left",
-//         transition: "transform 0.4s ease-in-out",
-//       };
-//       baseStyle["&:hover::after"] = {
-//         transform: "scaleX(1)",
-//       };
-//     }
-
-//     return baseStyle;
-//   };
-
-//   const underlineStyle = (index) => ({
-//     content: '""',
-//     position: "absolute",
-//     bottom: "0",
-//     left: "0",
-//     height: "3px",
-//     width: selectedTab === index ? "100%" : "0%",
-//     backgroundColor: theme.palette.secondary.main,
-//     transition: "width 0.3s ease",
-//     fontFamily: '"Inter", sans-serif'
-//   });
 
 //   return (
 //     <Components.Box
@@ -165,18 +143,59 @@ export const Tabs = ({ selectedTab, handleChange, tabsData, type = "default", ce
 //       }}
 //     >
 //       {[...new Map(tabsData?.map((item) => [item.label, item])).values()].map(
-//         (item, index) => (
-//           <Components.Box
-//             key={index}
-//             sx={getTabStyle(index)}
-//             onClick={() => handleChange(index)}
-//           >
-//             {item.icon && <span>{item.icon}</span>}
-//             <span>{item.label}</span>
+//         (item, index) => {
+//           const isSelected = selectedTab === index;
+//           const isHeaderType = type === "header";
 
-//             {type === "default" && <span style={underlineStyle(index)} />}
-//           </Components.Box>
-//         )
+//           return (
+//             <Components.Box
+//               key={index}
+//               onClick={() => handleChange(index)}
+//               sx={{
+//                 color: theme.palette.text.primary,
+//                 fontWeight: isSelected ? 600 : 400,
+//                 fontSize: fontSize ? fontSize : "20px",
+//                 textTransform: "none",
+//                 padding: "8px 8px",
+//                 cursor: "pointer",
+//                 display: "flex",
+//                 alignItems: "center",
+//                 gap: "7px",
+//                 position: "relative",
+//                 fontFamily: '"Inter", sans-serif',
+//                 transition: "background-color 0.3s ease",
+                
+//                 // Keep the background logic for the header type
+//                 backgroundColor: isHeaderType
+//                   ? isSelected
+//                     ? "rgba(33, 150, 243, 0.08)"
+//                     : "transparent"
+//                   : "transparent",            
+
+//                 // The Animated Bottom Border
+//                 "&::after": {
+//                   content: '""',
+//                   position: "absolute",
+//                   bottom: 0,
+//                   left: "50%",
+//                   transform: "translateX(-50%)", // Centers the line so it grows outward
+//                   height: isHeaderType ? "3px" : "3px",
+//                   width: isSelected ? "100%" : "0%", // Full width if selected, 0% if not
+//                   backgroundColor: theme.palette.secondary.main,
+//                   transition: "width 0.3s ease-in-out", // The animation effect
+//                 },
+
+//                 // Triggers the width to expand to 100% on hover
+//                 "&:hover::after": {
+//                   width: "100%",
+//                 }
+//               }}
+//             >
+//               {item.icon && <span>{item.icon}</span>}
+//               {item.label && <span>{item.label}</span>}
+//             </Components.Box>
+//           );
+//         }
 //       )}
 //     </Components.Box>
 //   );
