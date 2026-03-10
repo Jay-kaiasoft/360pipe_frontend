@@ -272,7 +272,7 @@ const Sidebar = ({
                         <>
                             <div className="w-40 flex items-center h-2">
                                 <NavLink to={'/dashboard'}>
-                                    <img src="/images/logo/360-2400.png" alt="360Pipe Logo" className="h-[40px] my-1" />
+                                    <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="h-[40px] my-1" />
                                 </NavLink>
                             </div>
                         </>

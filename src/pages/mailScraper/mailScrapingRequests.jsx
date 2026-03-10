@@ -104,14 +104,14 @@ const MailScrapingRequests = ({ setAlert, setSelectedTab }) => {
     }, [])
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 70,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 70,
+        //     sortable: false,
+        // },
         {
             field: 'email',
             headerName: 'Sender Email',
@@ -134,6 +134,7 @@ const MailScrapingRequests = ({ setAlert, setSelectedTab }) => {
             flex: 1,
             maxWidth: 150,
             sortable: false,
+            headerAlign: "center",
             renderCell: (params) => (
                 <div className="flex justify-center items-center w-full">
                     <StatusIcon value={params.value === 0 ? 0 : params.value} />
@@ -146,6 +147,7 @@ const MailScrapingRequests = ({ setAlert, setSelectedTab }) => {
             headerClassName: 'uppercase',
             sortable: false,
             minWidth: 380,
+            headerAlign: "center",
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
@@ -165,7 +167,7 @@ const MailScrapingRequests = ({ setAlert, setSelectedTab }) => {
     return (
         <>
             <div className='border rounded-lg bg-white mt-4'>
-                <DataTable columns={columns} rows={mails} getRowId={getRowId} height={500} hideFooter={true}/>
+                <DataTable columns={columns} rows={mails} getRowId={getRowId} height={500} hideFooter={true} />
             </div>
             <AlertDialog
                 open={dialog.open}

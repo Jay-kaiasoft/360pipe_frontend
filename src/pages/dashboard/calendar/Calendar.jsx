@@ -48,7 +48,7 @@ const setBgColor = (event) => {
     } else if (event?.calType === "outlook") {
       return "#ef6c00";
     } else {
-      return "#2753AF";
+      return "#44288E";
     }
   }
 }
@@ -417,7 +417,7 @@ const Calendar = ({ setAlert }) => {
           <div className="pl-14">
             {/* Calendar Name Item */}
             <div className="flex items-center mb-3">
-              <span className="flex w-[30px] h-[30px] rounded-[3px] border-2 border-[#dee2e6] mr-2 bg-[#2753AF]"></span>
+              <span className="flex w-[30px] h-[30px] rounded-[3px] border-2 border-[#dee2e6] mr-2 bg-[#44288E]"></span>
               {calenderName}
             </div>
 

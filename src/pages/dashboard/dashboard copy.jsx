@@ -122,7 +122,7 @@
 
 //                     {ui?.meetingData?.length > 0 && (
 //                         <div className="hidden group-hover:block h-40 w-96 overflow-y-auto absolute top-40 left-0 shadow-lg z-50 bg-white rounded-md border border-gray-100">
-//                             <div className="bg-[#2753AF] text-white w-full py-2 text-center font-bold">
+//                             <div className="bg-[#44288E] text-white w-full py-2 text-center font-bold">
 //                                 <p>Accounts</p>
 //                             </div>
 //                             <div className="w-full p-3 text-sm text-black">
@@ -146,7 +146,7 @@
 //                         <div className="hidden group-hover:block h-80 w-[400px] overflow-y-auto absolute top-40 left-0 z-50 shadow-lg border border-gray-100 rounded-md">
 //                             <table className="border-collapse w-full bg-white">
 //                                 <thead className="sticky top-0 z-10">
-//                                     <tr className="bg-[#2753AF] text-white">
+//                                     <tr className="bg-[#44288E] text-white">
 //                                         <th className="px-4 py-2 text-left font-bold">Rep</th>
 //                                         <th className="px-4 py-2 text-left font-bold">Account</th>
 //                                         <th className="px-4 py-2 text-left font-bold">Amount</th>
@@ -208,7 +208,7 @@
 //                         {hoveredPipelineRow?.opps?.length > 0 ? (
 //                             <table className="w-full border-collapse">
 //                                 <thead>
-//                                     <tr className="bg-[#2753AF] text-white">
+//                                     <tr className="bg-[#44288E] text-white">
 //                                         <th className="px-4 py-2 text-left w-80">Opportunity</th>
 //                                         <th className="px-4 py-2 text-left">Amount</th>
 //                                     </tr>

@@ -881,8 +881,8 @@ export default function OppView() {
             const isCompleted = currentStageId !== null && stage.id < currentStageId;
 
             let pillClasses = "";
-            if (isActive) pillClasses = "bg-[#2753AF] text-white border-[#2753AF] cursor-default";
-            else if (isCompleted) pillClasses = "bg-[#E3F2FD] text-[#2753AF] border-[#B3D7FF] cursor-pointer";
+            if (isActive) pillClasses = "bg-[#44288E] text-white border-[#44288E] cursor-default";
+            else if (isCompleted) pillClasses = "bg-[#E3F2FD] text-[#44288E] border-[#B3D7FF] cursor-pointer";
             else pillClasses = "bg-white text-gray-700 border-gray-300 cursor-pointer";
 
             return (
@@ -1862,7 +1862,7 @@ export default function OppView() {
         // <div className="border border-gray-200 rounded-md p-6">
         <DealDocs />
         // </div>
-      )}     
+      )}
     </div>
   );
 }

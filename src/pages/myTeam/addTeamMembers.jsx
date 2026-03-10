@@ -266,14 +266,14 @@ const AddTeamMembers = ({ setAlert }) => {
                             </div>
                         </Tooltip>
                         <Tooltip title="Assign Opportunities" arrow>
-                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <div className='bg-[#44288E] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row)}>
                                     <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
                                 </Components.IconButton>
                             </div>
                         </Tooltip>
                         <Tooltip title="Edit" arrow>
-                            <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => handleOpen(params.row)}>
                                     <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                 </Components.IconButton>

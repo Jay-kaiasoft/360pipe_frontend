@@ -80,7 +80,7 @@ const Header = () => {
                             >
                                 {item.title}
                                 {/* {item.children && <span className="ml-1">+</span>} */}
-                            </NavLink>                       
+                            </NavLink>
                         </div>
                     ))}
                 </nav>
@@ -90,13 +90,13 @@ const Header = () => {
                     <div className="hidden xl:flex space-x-3">
                         <button
                             onClick={() => navigate("/pricing")}
-                            className="bg-[#2753AF] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#2753AF] transition"
+                            className="bg-[#44288E] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#44288E] transition"
                         >
                             Sign Up
                         </button>
                         <button
                             onClick={() => navigate("/login")}
-                            className="px-5 py-2 rounded-md font-semibold transition-colors duration-300 border border-[#2753AF] text-[#2753AF] hover:bg-[#2753AF] hover:text-white"
+                            className="px-5 py-2 rounded-md font-semibold transition-colors duration-300 border border-[#44288E] text-[#44288E] hover:bg-[#44288E] hover:text-white"
                         >
                             Sign In
                         </button>

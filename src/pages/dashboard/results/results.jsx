@@ -30,7 +30,7 @@ const getAvatarColor = (name) => {
 }; const StatCard = ({ title, icon, children }) => (
     <div className={`bg-white rounded-xl border border-[#E5E7EB] shadow-[0_8px_20px_rgba(0,0,0,0.05)] p-4 w-full max-w-[400px] group ${title === "Pipeline" || title === "Meetings" ? "cursor-pointer" : ""}`}>
         <div className="flex justify-start items-center gap-3 mb-2 border-b border-b-[#E5E7EB] pb-2">
-            <div className="text-[#2753AF]">
+            <div className="text-[#44288E]">
                 <CustomIcons iconName={icon} css="h-6 w-6" />
             </div>
             <h3 className="text-lg font-bold text-slate-700">{title}</h3>
@@ -182,7 +182,7 @@ export default Results;
 // const StatCard = ({ title, icon, children }) => (
 //     <div className={`bg-white rounded-xl border border-gray-200 shadow-sm p-4 w-full max-w-[400px] group ${title === "Pipeline" || "Meetings" ? "cursor-pointer" : ""}`}>
 //         <div className="flex justify-center items-center gap-3 mb-2">
-//             <div className="text-[#2753AF]">
+//             <div className="text-[#44288E]">
 //                 <CustomIcons iconName={icon} css="h-6 w-6" />
 //             </div>
 //             <h3 className="text-lg font-bold text-slate-700">{title}</h3>
@@ -341,7 +341,7 @@ export default Results;
 //                         <div className="hidden group-hover:block h-80 w-[33%] overflow-y-auto absolute top-72 left-[300px] z-50">
 //                             <table className="border-collapse">
 //                                 <thead className="sticky top-0 z-10">
-//                                     <tr className="bg-[#2753AF] text-white">
+//                                     <tr className="bg-[#44288E] text-white">
 //                                         <th className="px-4 py-1 text-left font-bold">Rep</th>
 //                                         <th className="px-4 py-1 text-left font-bold">Account</th>
 //                                         <th className="px-4 py-1 text-left font-bold w-40">Amount</th>
@@ -401,7 +401,7 @@ export default Results;
 //                         {hoveredPipelineRow?.opps?.length > 0 ? (
 //                             <table className="w-full border-collapse">
 //                                 <thead>
-//                                     <tr className="bg-[#2753AF] text-white">
+//                                     <tr className="bg-[#44288E] text-white">
 //                                         <th className="px-4 py-1 text-left w-80">Opportunity</th>
 //                                         <th className="px-4 py-1 text-left">Amount</th>
 //                                     </tr>

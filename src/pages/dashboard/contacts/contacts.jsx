@@ -177,14 +177,14 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
     }, [syncingPullStatus]);
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 50,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 50,
+        //     sortable: false,
+        // },
         {
             field: 'companyName',
             headerName: 'Company Name',
@@ -234,6 +234,7 @@ const Contacts = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
             sortable: false,
             flex: 1,
             maxWidth: 150,
+            headerAlign: "center",
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>

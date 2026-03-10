@@ -97,41 +97,44 @@ const Quota = ({ setAlert }) => {
 
                 {/* Table */}
                 <div className="border rounded-md overflow-hidden">
-                    <table className="border-collapse w-full">
+                    <table className="w-full text-left border-collapse">
                         {/* Header */}
-                        <thead className="sticky top-0 z-10">
-                            <tr className="bg-[#0478DC] text-white">
-                                <th className="px-4 py-3 text-left text-sm font-semibold w-12">#</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold">Term</th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold">Quota</th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold w-32">Action</th>
+                        <thead className="sticky top-0 bg-white z-10">
+                            <tr style={{ backgroundColor: '#EDE9FE' }}>
+                                <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left w-16" style={{ color: '#5B21B6' }}>#</th>
+                                <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left w-60" style={{ color: '#5B21B6' }}>Term</th>
+                                <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right w-40" style={{ color: '#5B21B6' }}>Quota</th>
+                                <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right w-40" style={{ color: '#5B21B6' }}>Action</th>
                             </tr>
                         </thead>
 
                         {/* Body */}
                         {quota?.length > 0 ? (
                             <tbody>
-                                {quota.map((row, i) => (
-                                    <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
-                                        <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
-                                        <td className="px-4 py-3 text-sm">{row.term || '—'}</td>
-                                        <td className="px-4 py-3 text-right text-sm">${row.quota?.toLocaleString('en-US') || '—'}</td>
-                                        <td className="px-4 py-3">
-                                            <div className='flex items-center gap-2 justify-end h-full'>
-                                                <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleOpenModel(row.id)}>
-                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                                                    </Components.IconButton>
+                                {quota.map((row, i) => {
+                                    const isLastRow = i === (quota?.length || 0) - 1;
+                                    return (
+                                        <tr key={row.id ?? i} style={{ borderBottom: isLastRow ? 'none' : '1px solid #F1F5F9' }} className="transition-colors hover:bg-[#F5F3FF]">
+                                            <td className="px-6 py-4 align-middle text-sm font-bold text-[#111827]">{i + 1}</td>
+                                            <td className="px-6 py-4 align-middle text-sm text-[#111827] font-medium">{row.term || '—'}</td>
+                                            <td className="px-6 py-4 align-middle text-sm text-[#111827] font-medium text-right">${row.quota?.toLocaleString('en-US') || '—'}</td>
+                                            <td className="px-6 py-4 align-middle">
+                                                <div className='flex items-center gap-2 justify-end h-full'>
+                                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleOpenModel(row.id)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                        </Components.IconButton>
+                                                    </div>
                                                 </div>
-                                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                                                    </Components.IconButton>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         ) : (
                             <tbody>

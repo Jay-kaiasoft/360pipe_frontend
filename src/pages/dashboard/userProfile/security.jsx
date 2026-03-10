@@ -223,7 +223,7 @@ const Security = ({ setAlert }) => {
                             {/* Biometric Authenticator */}
                             <button
                                 className={`border-2 ${watch("loginPreference") === "authId"
-                                    ? "border-blue-600 shadow-md"
+                                    ? "border-[#44288E] shadow-md"
                                     : "border-gray-200"
                                     } rounded-xl p-3 cursor-pointer transition-all hover:shadow-md`}
                                 onClick={() => setValue("loginPreference", "authId")}
@@ -244,7 +244,7 @@ const Security = ({ setAlert }) => {
                             {/* Password */}
                             <button
                                 className={`border-2 ${watch("loginPreference") === "password"
-                                    ? "border-blue-600 shadow-md"
+                                    ? "border-[#44288E] shadow-md"
                                     : "border-gray-200"
                                     } rounded-xl p-3 cursor-pointer transition-all hover:shadow-md`}
                                 onClick={() => setValue("loginPreference", "password")}

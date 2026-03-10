@@ -262,8 +262,6 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
     useEffect(() => {
         if (locaiton.pathname === "/dashboard/todos") {
             const title = userData?.roleName?.toUpperCase() === "SALES MANAGER" ? "Team Actions" : "My Actions"
-            document.title = `${title} - 360Pipe`;
-
             setHeaderTitle(title)
         }
         handleGetAllTeams()
@@ -542,7 +540,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
 
     const handleDeleteTodo = async () => {
         const res = await deleteTodoApi(todoId);
-        if (res.status === 200) {
+        if (res.status === 200) {            
             handleGetTodoByTeam()
             handleCloseDeleteDialog();
         } else {
@@ -561,7 +559,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
         const pendingAssignees = task?.todoAssignData?.filter(a => a.complectedWork !== 100) || [];
 
         const pillContent = (
-            <div className="flex justify-center py-2 cursor-pointer">
+            <div className="flex justify-end py-2 cursor-pointer  ml-20">
                 <div
                     className="inline-flex items-center justify-center rounded-full px-5 py-1.5 text-sm font-semibold"
                     style={{
@@ -649,7 +647,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                     arrow: {
                         sx: {
                             // 5. Make the arrow white to match the tooltip body
-                            color: 'gray',
+                            color: 'white',
                             // 6. Optional: add a slight drop shadow to the arrow itself
                             "&::before": {
                                 boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
@@ -743,23 +741,22 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full table-fixed border-collapse">
                             <thead className="sticky top-0 bg-white z-10">
-                                <tr style={{ backgroundColor: '#EDE9FE' }}>
-                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left" style={{ color: '#5B21B6' }}>Action Item</th>
-                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right" style={{ color: '#5B21B6' }}>Due</th>
+                                <tr className="border-b border-slate-200 text-sm font-semibold text-black">
+                                    <th className="text-left px-6 py-3">Action Item</th>
+                                    <th className="text-right px-6 py-3">Due</th>
                                     {
                                         userData?.roleName?.toLowerCase() === "sales manager" && (
-                                            <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-center" style={{ color: '#5B21B6' }}>Status</th>
+                                            <th className="text-right px-6 py-3">Status</th>
                                         )
                                     }
-                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-center" style={{ color: '#5B21B6' }}>Actions</th>
+                                    <th className="text-right px-6 py-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {tasks?.length > 0 ? tasks?.map((task, index) => {
+                                {tasks?.length > 0 ? tasks?.map((task) => {
                                     const isSelected = selectedTask && selectedTask.id === task.id;
-                                    const isLastRow = index === (tasks?.length || 0) - 1;
                                     return (
                                         <tr
                                             key={task.id}
@@ -769,8 +766,8 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                                 setEditingNoteId(null);
                                                 await refreshNotes(task.id, task);
                                             }}
-                                            style={{ borderBottom: isLastRow ? 'none' : '1px solid #F1F5F9' }}
-                                            className={`cursor-pointer transition-colors hover:bg-[#F5F3FF] ${isSelected ? "bg-[#F5F3FF]" : ""}`}
+                                            className={`cursor-pointer transition-colors border-b border-slate-50 ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
+                                                }`}
                                         >
                                             <td className="px-6 py-4 align-middle">
                                                 <div className="flex items-stretch">
@@ -801,19 +798,19 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 align-middle text-right text-base text-[#111827] font-medium">
+                                            <td className="px-6 py-4 align-middle text-right text-sm text-slate-600 font-medium">
                                                 {formatDueShort(task.dueDate)}
                                             </td>
                                             {
                                                 userData?.roleName?.toLowerCase() === "sales manager" && (
-                                                    <td className="px-6 py-4 align-middle text-center">
+                                                    <td className="px-6 py-4 align-middle text-right">
                                                         <StatusPill task={task} />
                                                     </td>
                                                 )
                                             }
 
 
-                                            <td className="px-6 py-4 align-middle flex justify-center text-sm text-slate-600 font-medium">
+                                            <td className="px-6 py-4 align-middle flex justify-end text-sm text-slate-600 font-medium">
                                                 {
                                                     task?.createdBy === userData?.userId && (
                                                         <Tooltip title="Delete" arrow>

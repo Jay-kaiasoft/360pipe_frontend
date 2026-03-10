@@ -146,7 +146,7 @@ function Accordion({ items, openId: controlledOpenId, onChangeOpenId }) {
                         <span
                             className={`p-1 rounded-full border flex justify-center items-center 
                             transition-all duration-500 ease-in-out
-                            ${openId === it.id ? "rotate-180 bg-[#2753AF] border-blue-600" : "rotate-0 bg-white border-gray-300"}`}
+                            ${openId === it.id ? "rotate-180 bg-[#44288E] border-[#44288E]" : "rotate-0 bg-white border-gray-300"}`}
                         >
                             {openId === it.id ? (
                                 <CustomIcons iconName="fa-solid fa-minus" css="text-white w-4 h-4" />
@@ -166,7 +166,6 @@ function Accordion({ items, openId: controlledOpenId, onChangeOpenId }) {
         </div>
     );
 }
-
 
 function MailScraper({ setAlert, setLoading }) {
     const [showPassword, setShowPassword] = useState(false);
@@ -353,7 +352,7 @@ function MailScraper({ setAlert, setLoading }) {
                                                 error={errors?.email}
                                                 onChange={(e) => {
                                                     const value = e.target.value.replace(/\s/g, "");
-                                                    field.onChange(value);                                                  
+                                                    field.onChange(value);
                                                 }}
                                                 onBlur={() => {
                                                     handleGetMx();

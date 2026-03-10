@@ -43,11 +43,11 @@ const AppHeader = ({
   const inputRef = useRef(null)
 
   const [tabsData, setTabsData] = useState([])
-  const [tabsData2, setTabsData2] = useState([{
-    // label: "Dashboard",
-    icon: <CustomIcons iconName="fa-solid fa-house" />,
-    path: "/dashboard",
-  }])
+  // const [tabsData2, setTabsData2] = useState([{
+  //   // label: "Dashboard",
+  //   icon: <CustomIcons iconName="fa-solid fa-house" />,
+  //   path: "/dashboard",
+  // }])
   const [selectedTab, setSelectedTab] = useState(null)
   const [selectedTab2, setSelectedTab2] = useState(null)
 
@@ -60,14 +60,14 @@ const AppHeader = ({
     }
   }
 
-  const handleChangeTab2 = (value) => {
-    const selectedPath = tabsData2[value]?.path
-    if (selectedPath) {
-      navigate(selectedPath)
-      setSelectedTab(null)
-      setSelectedTab2(value)
-    }
-  }
+  // const handleChangeTab2 = (value) => {
+  //   const selectedPath = tabsData2[value]?.path
+  //   if (selectedPath) {
+  //     navigate(selectedPath)
+  //     setSelectedTab(null)
+  //     setSelectedTab2(value)
+  //   }
+  // }
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) dispatch(toggleSidebar())
@@ -76,6 +76,10 @@ const AppHeader = ({
 
   const handleSetNavItems = () => {
     const tabItems = [
+      {
+        icon: <CustomIcons iconName="fa-solid fa-house" />,
+        path: "/dashboard",
+      },
       {
         label: "Pipeline",
         path: "/dashboard/opportunities",
@@ -103,8 +107,8 @@ const AppHeader = ({
     }
     else {
       setSelectedTab(null)
-      const currentTabIndex = tabsData2?.findIndex((tab) => tab.path === currentPath)
-      setSelectedTab2(currentTabIndex)
+      // const currentTabIndex = tabsData2?.findIndex((tab) => tab.path === currentPath)
+      // setSelectedTab2(currentTabIndex)
     }
   }
 
@@ -218,86 +222,48 @@ const AppHeader = ({
   }, [syncingPushStatus])
 
   return (
-    <header className="w-full bg-white shadow-sm z-50">
-      <div className="flex lg:grid grid-cols-3 items-center px-6 py-2">
-        {/* 1. Left Section (Logo) */}
-        <div className="flex justify-start">
-          <div className="hidden lg:flex items-center">
-            <NavLink to={"/dashboard"}>
-              <img src="/images/logo/360-2400.png" alt="360Pipe Logo" className="h-[40px] my-1" />
-            </NavLink>
-          </div>
+    <header className="relative w-full bg-white shadow-sm z-50">
+      <div className="relative flex justify-between items-center px-6 py-2 w-full">
+        {/* 1. Left Section (Logo & Sidebar Toggle) */}
+        <div className="flex items-center gap-3 z-10 shrink-0">
+          <button
+            className="lg:hidden flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg shrink-0"
+            onClick={handleToggle}
+            aria-label="Toggle Sidebar"
+          >
+            {isMobileOpen ? (
+              <CustomIcons iconName={'fa-solid fa-xmark'} css='text-black text-xl' />
+            ) : (
+              <CustomIcons iconName={'fa-solid fa-bars-staggered'} css='text-black text-xl' />
+            )}
+          </button>
+
+          <NavLink to={"/dashboard"} className="hidden lg:flex items-center">
+            <img src="/images/logo/360Pipe_logo.png" alt="360Pipe Logo" className="h-[40px] my-1" />
+          </NavLink>
         </div>
 
-        <div className="hidden lg:flex justify-between">
-          <div className="mr-[7px]">
-            <Tabs tabsData={tabsData2} selectedTab={selectedTab2} handleChange={handleChangeTab2} type="pipeline" fontSize={"16px"} />
-          </div>
+        {/* 2. Center Section (Tabs) */}
+        <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 items-center justify-center z-0 w-auto overflow-x-auto no-scrollbar">
+          <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="header" fontSize={"16px"} />
+        </div>
 
-          <div>
-            <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} type="pipeline" fontSize={"16px"} />
-          </div>
-          {/* {
-            locaiton?.pathname.includes("opportunity-view") && (
-              <div className="w-full ml-32">
-                <Tabs tabsData={oppTableData} selectedTab={oppSelectedTabIndex} handleChange={setOppSelectedTabIndex} type="pipeline" fontSize={"16px"} />
+        {/* 3. Right Section */}
+        <div className="flex justify-end items-center gap-4 z-10 shrink-0">
+          {
+            !userDetails?.subUser && (
+              <div className="flex items-center gap-6">
+                {(userDetails?.userId === salesforceUserDetails?.userId &&
+                  localStorage.getItem("accessToken_salesforce") &&
+                  localStorage.getItem("instanceUrl_salesforce")) && (
+                    <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
+                      <Button onClick={() => handlePushData()} text={"SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
+                    </Components.Badge>
+                  )}
               </div>
             )
-          } */}
-          <div className="flex items-center gap-4">
-            {
-              !userDetails?.subUser && (
-                <div className="flex items-center justify-end gap-6">
-                  {(userDetails?.userId === salesforceUserDetails?.userId &&
-                    localStorage.getItem("accessToken_salesforce") &&
-                    localStorage.getItem("instanceUrl_salesforce")) && (
-                      <>
-                        <div>
-                          <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                            <Button onClick={() => handlePushData()} text={"SYNC"} useFor="success" />
-                          </Components.Badge>
-                        </div>
-                      </>
-                    )}
-                </div>
-              )
-            }
-          </div>
-        </div>
+          }
 
-        <div className="lg:hidden absolute right-6">
-          <div>
-            <button
-              className="flex items-center justify-center w-10 h-10 border border-gray-200 rounded-lg lg:h-11 lg:w-11"
-              onClick={handleToggle}
-              aria-label="Toggle Sidebar"
-            >
-              {isMobileOpen ? (
-                // Cross Icon
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M6.22 7.28a.75.75 0 0 1 1.06-1.06L12 10.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L13.06 12l4.72 4.72a.75.75 0 0 1-1.06 1.06L12 13.06l-4.72 4.72a.75.75 0 0 1-1.06-1.06L10.94 12 6.22 7.28Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              ) : (
-                // Hamburger Icon
-                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M1 1h14a.75.75 0 0 1 0 1.5H1A.75.75 0 0 1 1 1ZM1 5.25h7a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5ZM1 10.25h14a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1 0-1.5Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex justify-end items-center gap-4">
           <div className="z-50">
             <UserDropdown />
           </div>

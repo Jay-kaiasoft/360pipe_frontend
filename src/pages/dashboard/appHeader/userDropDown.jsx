@@ -140,7 +140,7 @@ export default function UserDropdown() {
     }, [])
 
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative z-50" ref={dropdownRef}>
             <button
                 onClick={toggleDropdown}
                 className="flex items-center justify-center text-white dropdown-toggle rounded-full w-10 h-10 p-2 bg-[#44288E]"
@@ -177,11 +177,11 @@ export default function UserDropdown() {
                                         <NavLink
                                             to={item.path}
                                             onClick={closeDropdown}
-                                            className={`flex items-center gap-3 px-3 py-2 text-sm font-medium  rounded-lg transition-colors duration-200 ${currentPath === item.path ? "bg-[#2753AF] text-white hover:bg-[#2753AF] hover:text-white" : "text-gray-700 hover:bg-gray-100 hover:text-gray-700 "}`}
+                                            className={`group flex items-center gap-3 px-3 py-2 text-sm font-medium  rounded-lg transition-colors duration-200 ${currentPath === item.path ? "bg-[#44288E] text-white hover:bg-[#44288E] hover:text-white" : "hover:bg-[#44288E] hover:text-white text-gray-700 "}`}
                                         >
                                             <CustomIcons
                                                 iconName={item.iconName}
-                                                css={`text-lg ${currentPath === item.path ? "group-hover:text-white" : "group-hover:text-gray-700 text-gray-500"} `}
+                                                css={`text-lg transition-colors duration-200 ${currentPath === item.path ? "text-white" : "group-hover:text-white text-gray-500"} `}
                                             />
                                             {item.label}
                                         </NavLink>
@@ -207,9 +207,9 @@ export default function UserDropdown() {
 
                     <div
                         onClick={handleOpenLogOutDialog}
-                        className="cursor-pointer flex items-center gap-3 px-3 py-2 mt-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
+                        className="group cursor-pointer flex items-center gap-3 px-3 py-2 mt-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-[#44288E] hover:text-white transition-colors duration-200"
                     >
-                        <CustomIcons iconName="fa-solid fa-arrow-right-from-bracket" css={"text-lg text-gray-500 group-hover:text-gray-700"} />
+                        <CustomIcons iconName="fa-solid fa-arrow-right-from-bracket" css={"text-lg text-gray-500 transition-colors duration-200 group-hover:text-white"} />
                         Sign out
                     </div>
                 </div>

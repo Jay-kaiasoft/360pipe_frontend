@@ -96,7 +96,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                 setSyncingPullStatus(false);
                 setSyncingPushStatus(false);
                 setLoadingMessage(null)
-            }else{
+            } else {
                 setLoadingMessage(null)
             }
         } catch (error) {
@@ -360,7 +360,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                         href={userInfo?.profile}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-blue-500 text-sm font-medium underline hover:text-blue-700 transition-colors duration-200"
+                        className="text-[#44288E] text-sm font-medium underline hover:text-[#44288E] transition-colors duration-200"
                     >
                         View Salesforce Profile
                     </a>
@@ -368,7 +368,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                     <div className='flex justify-between gap-4 w-full mt-4'>
                         <button
                             onClick={handleOpenDialog}
-                            className="flex-1 py-3 bg-red-500 text-white rounded shadow-md hover:bg-red-600 transition-colors duration-300"
+                            className="flex-1 py-3 bg-[#44288E] text-white rounded shadow-md hover:bg-[#44288E] transition-colors duration-300"
                         >
                             Logout
                         </button>
@@ -387,9 +387,9 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                     <button
                         onClick={handleLogin}
                         type="button"
-                        className="relative px-8 py-3 rounded-full group overflow-hidden font-medium text-[#2753AF] border border-[#2753AF]"
+                        className="relative px-8 py-3 rounded-full group overflow-hidden font-medium text-[#44288E] border border-[#44288E]"
                     >
-                        <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#2753AF] group-hover:h-full"></span>
+                        <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 ease-out bg-[#44288E] group-hover:h-full"></span>
                         <span className="relative z-10 transition-colors duration-300 group-hover:text-white text-lg font-bold">
                             Log in with Salesforce
                         </span>

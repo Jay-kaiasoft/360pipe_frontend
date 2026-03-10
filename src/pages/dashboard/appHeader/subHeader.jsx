@@ -163,7 +163,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
     }, [startDate, endDate])
 
     return (
-        <header className={`w-full bg-[linear-gradient(90deg,#5B21B6_0%,#6D28D9_45%,#7C3AED_100%)] z-30 relative ${currentPath?.includes("performance") || locaiton?.pathname.includes("opportunity-view") ? "pb-4" : ""} `} style={{ borderColor: theme.palette.secondary.main }}>
+        <header className={`w-full full bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)] z-30 relative ${currentPath?.includes("performance") || locaiton?.pathname.includes("opportunity-view") ? "pb-4" : ""} `} style={{ borderColor: theme.palette.secondary.main }}>
             {/* Using grid-cols-3 to force exact centering of the middle element */}
             <div className="grid grid-cols-3 items-start px-6 py-2 lg:py-3">
 
@@ -172,7 +172,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                     <button
                         type="button"
                         aria-haspopup="menu"
-                        className="flex items-center gap-2 bg-[#FFFFFF] text-[#374151] px-4 py-1 border border-[#E5E7EB] rounded-md transition min-w-[120px] justify-between"
+                        className="flex items-center gap-2 bg-[#44288E] text-white px-4 py-1 rounded-md transition min-w-[120px] justify-between"
                     >
                         <span className="text-lg font-medium">Team</span>
                         <CustomIcons iconName={"fa-solid fa-chevron-down"} css={"text-sm opacity-80"} />
@@ -195,7 +195,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                                 aria-haspopup="menu"
                                 aria-expanded={isOpen ? "true" : "false"}
                                 onClick={() => setIsOpen((s) => !s)}
-                                className="flex items-center gap-2 bg-[#FFFFFF] text-[#374151] px-4 py-1 border border-[#E5E7EB] rounded-md transition min-w-[120px] justify-between"
+                                className="flex items-center gap-2 bg-[#44288E] text-white px-4 py-1 rounded-md transition min-w-[120px] justify-between"
                             >
                                 <span className="text-lg font-medium">{rangeLabel}</span>
                                 <CustomIcons iconName={"fa-solid fa-chevron-down"} css={"text-sm opacity-80"} />
@@ -225,10 +225,10 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
                                             <button
                                                 key={o.id}
                                                 type="button"
-                                                className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${selected ? "bg-blue-50" : "bg-white"}`}
+                                                className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left group/item hover:bg-[#44288E] hover:text-white ${selected ? "bg-[#44288E]" : "bg-white"}`}
                                                 onClick={() => handleSelectRangeType(o.id)}
                                             >
-                                                <span className={`${selected ? "text-blue-700 font-medium" : "text-gray-700"}`}>
+                                                <span className={`${selected ? "text-white font-medium" : "text-gray-700 group-hover/item:text-white"}`}>
                                                     {o.label}
                                                 </span>
                                             </button>

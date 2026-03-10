@@ -51,20 +51,20 @@ const SyncHistory = () => {
     }, []);
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 70,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 70,
+        //     sortable: false,
+        // },
         {
             field: 'date',
             headerName: 'Date',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 180,            
+            maxWidth: 180,
         },
 
         {
@@ -113,7 +113,7 @@ const SyncHistory = () => {
     return (
         <>
             <div className='border rounded-lg bg-white mt-4'>
-                <DataTable columns={columns} rows={syncHistory} getRowId={getRowId} height={550} hideFooter={true}/>
+                <DataTable columns={columns} rows={syncHistory} getRowId={getRowId} height={550} hideFooter={true} />
             </div>
         </>
     )

@@ -126,27 +126,27 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   }, [syncingPullStatus]);
 
   const columns = [
-    {
-      field: 'rowId',
-      headerName: '#',
-      headerClassName: 'uppercase',
-      flex: 1,
-      maxWidth: 50,
-      sortable: false,
-    },
+    // {
+    //   field: 'rowId',
+    //   headerName: '#',
+    //   headerClassName: 'uppercase',
+    //   flex: 1,
+    //   maxWidth: 50,
+    //   sortable: false,
+    // },
     {
       field: 'name',
       headerName: 'Member Name',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 800,      
+      maxWidth: 800,
     },
     {
       field: 'emailAddress',
       headerName: 'Email Address',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 700,      
+      maxWidth: 700,
       renderCell: (params) => {
         return (
           <div>
@@ -163,64 +163,68 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       headerName: 'Role',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 400,      
+      maxWidth: 400,
     },
     {
       field: 'status',
       headerName: 'Status',
       headerClassName: 'uppercase',
       flex: 1,
-      maxWidth: 200,      
+      maxWidth: 200,
     },
     {
       field: 'action',
       headerName: 'action',
-      headerAlign: 'right',
       headerClassName: 'uppercase',
       sortable: false,
       flex: 1,
+      headerAlign: "center",
+      maxWidth: 200,
+      align: 'center',
       renderCell: (params) => {
         return (
-          <div className='flex items-center gap-2 justify-end h-full'>
-            {
-              params?.row?.status === 'Pending' && (
-                <Tooltip title="Send Invitation" arrow>
-                  <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                    <Components.IconButton onClick={() => handleOpenInviteDialog(params.row)}>
-                      <CustomIcons iconName={'fa-solid fa-share-from-square'} css='cursor-pointer text-white h-4 w-4' />
-                    </Components.IconButton>
-                  </div>
-                </Tooltip>
-              )
-            }
-            <PermissionWrapper
-              functionalityName="Members"
-              moduleName="Members"
-              actionId={2}
-              component={
-                <Tooltip title="Edit" arrow>
-                  <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                    <Components.IconButton onClick={() => handleClickOpen(params.row.id)}>
-                      <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
-                    </Components.IconButton>
-                  </div>
-                </Tooltip>
+          <div className='h-full flex justify-center'>
+            <div className='flex justify-end items-center gap-2 w-[140px] h-full'>
+              {
+                params?.row?.status === 'Pending' && (
+                  <Tooltip title="Send Invitation" arrow>
+                    <div className='bg-[#44288E] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                      <Components.IconButton onClick={() => handleOpenInviteDialog(params.row)}>
+                        <CustomIcons iconName={'fa-solid fa-share-from-square'} css='cursor-pointer text-white h-4 w-4' />
+                      </Components.IconButton>
+                    </div>
+                  </Tooltip>
+                )
               }
-            />
-            <PermissionWrapper
-              functionalityName="Members"
-              moduleName="Members"
-              actionId={3}
-              component={
-                <Tooltip title="Delete" arrow>
-                  <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                    <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
-                      <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
-                    </Components.IconButton>
-                  </div>
-                </Tooltip>
-              }
-            />
+              <PermissionWrapper
+                functionalityName="Members"
+                moduleName="Members"
+                actionId={2}
+                component={
+                  <Tooltip title="Edit" arrow>
+                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                      <Components.IconButton onClick={() => handleClickOpen(params.row.id)}>
+                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                      </Components.IconButton>
+                    </div>
+                  </Tooltip>
+                }
+              />
+              <PermissionWrapper
+                functionalityName="Members"
+                moduleName="Members"
+                actionId={3}
+                component={
+                  <Tooltip title="Delete" arrow>
+                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                      <Components.IconButton onClick={() => handleOpenDeleteDialog(params.row.id)}>
+                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                      </Components.IconButton>
+                    </div>
+                  </Tooltip>
+                }
+              />
+            </div>
           </div>
         );
       },
@@ -249,7 +253,7 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   return (
     <div className='w-full'>
       <div className='border rounded-lg bg-white'>
-        <DataTable columns={columns} rows={subUsers} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true}/>
+        <DataTable columns={columns} rows={subUsers} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true} />
       </div>
       <AlertDialog
         open={dialog.open}

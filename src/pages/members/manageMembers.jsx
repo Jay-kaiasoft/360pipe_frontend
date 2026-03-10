@@ -37,7 +37,7 @@ const ManageMembers = () => {
     return (
         <>
             <div>
-                <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} />
+                <Tabs tabsData={tabsData} selectedTab={selectedTab} handleChange={handleChangeTab} fontSize={"16px"} />
             </div>
 
             <div className="mt-2">

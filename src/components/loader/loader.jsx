@@ -9,7 +9,7 @@ const Loader = ({ loading, loadingMessage }) => {
 
                 {/* Spinner */}
                 <div className="w-16 h-16">
-                    <div className="w-full h-full rounded-full border-4 border-blue-600 border-t-transparent border-r-transparent animate-spinDualRing"></div>
+                    <div className="w-full h-full rounded-full border-4 border-[#44288E] border-t-transparent border-r-transparent animate-spinDualRing"></div>
                 </div>
 
                 {/* Message */}

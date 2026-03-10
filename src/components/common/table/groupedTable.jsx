@@ -18,21 +18,21 @@ import { stageColors, statusColors } from '../../../service/common/commonService
 const AscIcon = () => (
     <CustomIcons
         iconName="fa-solid fa-sort-up"
-        css="text-black text-sm ml-2"
+        css="text-[#5B21B6] text-sm ml-2"
     />
 );
 
 const DescIcon = () => (
     <CustomIcons
         iconName="fa-solid fa-sort-down"
-        css="text-black text-sm ml-2"
+        css="text-[#5B21B6] text-sm ml-2"
     />
 );
 
 const UnsortedIcon = () => (
     <CustomIcons
         iconName="fa-solid fa-sort"
-        css="text-black text-sm ml-2"
+        css="text-[#5B21B6] text-sm ml-2"
     />
 );
 
@@ -145,7 +145,7 @@ export default function GroupedDataTable({
 
                             </AccordionSummary>
 
-                            <AccordionDetails>
+                            <AccordionDetails sx={{ padding: 0 }}>
                                 <div
                                     style={{
                                         width: '100%',
@@ -217,7 +217,11 @@ export default function GroupedDataTable({
                                                 position: 'sticky',
                                                 top: 0,
                                                 zIndex: 2,
-                                                backgroundColor: theme.palette.background.paper,
+                                                backgroundColor: '#EDE9FE',
+                                                color: '#5B21B6',
+                                                fontSize: '0.875rem',
+                                                fontWeight: 600,
+                                                lineHeight: '1.25rem',
                                             },
                                             '& .MuiDataGrid-footerContainer': {
                                                 position: 'sticky',
@@ -225,12 +229,14 @@ export default function GroupedDataTable({
                                                 zIndex: 2,
                                                 backgroundColor: theme.palette.background.paper,
                                             },
-                                            '& .MuiDataGrid-container--top [role="row"], .MuiDataGrid-container--bottom [role="row"]':
-                                            {
+                                            '& .MuiDataGrid-container--top [role="row"]': {
+                                                backgroundColor: '#EDE9FE',
+                                            },
+                                            '& .MuiDataGrid-container--bottom [role="row"]': {
                                                 backgroundColor: theme.palette.background.paper,
                                             },
                                             '& .MuiDataGrid-row:hover': {
-                                                backgroundColor: theme.palette.background.paper,
+                                                backgroundColor: '#F5F3FF',
                                             },
                                             '& .MuiDataGrid-overlay': {
                                                 backgroundColor: theme.palette.background.paper,

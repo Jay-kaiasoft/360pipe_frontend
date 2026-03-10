@@ -3,10 +3,10 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const colors = {
   // #1072E0
-  primary: "#ffffff",        // yellow
+  primary: "#ffffff",
   primaryRgb: "255, 214, 0",
-  secondary: "#2753AF",      // blue
-  secondaryRgb: "15, 83, 220",
+  secondary: "#44288E",      //#2753AF prev color
+  secondaryRgb: "90, 46, 155",
 
   primaryTwo: "#d44a00",
   primaryThree: "#9a4497",
@@ -66,7 +66,7 @@ const MuiTheme = () =>
         defaultTwo: colors.defaultTwo,
       },
     },
-});
+  });
 
 const MuiThemeProvider = ({ children }) => {
   const theme = MuiTheme(); // Call the function to create the theme object

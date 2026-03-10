@@ -728,7 +728,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                 {
                                                     watch("calendarYearType") && (
                                                         <div>
-                                                            <DatePickerComponent requiredFiledLabel={true}setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                            <DatePickerComponent requiredFiledLabel={true} setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
                                                         </div>
                                                     )
                                                 }
@@ -854,48 +854,51 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                     <div className="max-h-56 overflow-y-auto">
                                                         <table className="min-w-full border-collapse">
                                                             {/* Header */}
-                                                            <thead className="sticky top-0 z-10">
-                                                                <tr className="bg-[#0478DC] text-white">
-                                                                    <th className="px-4 py-3 text-left text-sm font-semibold w-16">#</th>
-                                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Term</th>
-                                                                    <th className="px-4 py-3 text-right text-sm font-semibold w-40">Quota</th>
-                                                                    <th className="px-4 py-3 text-right text-sm font-semibold w-40">Action</th>
+                                                            <thead className="sticky top-0 bg-white z-10">
+                                                                <tr style={{ backgroundColor: '#EDE9FE' }}>
+                                                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left w-16" style={{ color: '#5B21B6' }}>#</th>
+                                                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left" style={{ color: '#5B21B6' }}>Term</th>
+                                                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right w-40" style={{ color: '#5B21B6' }}>Quota</th>
+                                                                    <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right w-40" style={{ color: '#5B21B6' }}>Action</th>
                                                                 </tr>
                                                             </thead>
 
                                                             {/* Body */}
                                                             <tbody>
-                                                                {(customerQuotaDtos?.length ? customerQuotaDtos : []).map((row, i) => (
-                                                                    <tr key={row.id ?? i} className="odd:bg-white even:bg-gray-200">
-                                                                        <td className="px-4 py-3 text-sm font-bold">{i + 1}</td>
-                                                                        <td className="px-4 py-3 text-sm">{row.term || "—"}</td>
-                                                                        <td className="px-4 py-3 text-sm text-right">
-                                                                            {typeof row.quota === "number"
-                                                                                ? `$${row.quota.toLocaleString()}`
-                                                                                : row.quota
-                                                                                    ? `$${Number(row.quota).toLocaleString()}`
-                                                                                    : "—"}
-                                                                        </td>
-                                                                        <td className="px-4 py-3">
-                                                                            <div className='flex items-center gap-2 justify-end h-full'>
-                                                                                <Tooltip title="Edit" arrow>
-                                                                                    <div className='bg-[#2753AF] h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                        <Components.IconButton onClick={() => handleSetQuota(row.id)}>
-                                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                        </Components.IconButton>
-                                                                                    </div>
-                                                                                </Tooltip>
-                                                                                <Tooltip title="Delete" arrow>
-                                                                                    <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
-                                                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
-                                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
-                                                                                        </Components.IconButton>
-                                                                                    </div>
-                                                                                </Tooltip>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                ))}
+                                                                {(customerQuotaDtos?.length ? customerQuotaDtos : []).map((row, i) => {
+                                                                    const isLastRow = i === (customerQuotaDtos?.length || 0) - 1;
+                                                                    return (
+                                                                        <tr key={row.id ?? i} style={{ borderBottom: isLastRow ? 'none' : '1px solid #F1F5F9' }} className="transition-colors hover:bg-[#F5F3FF]">
+                                                                            <td className="px-6 py-4 align-middle text-sm font-bold text-[#111827]">{i + 1}</td>
+                                                                            <td className="px-6 py-4 align-middle text-sm text-[#111827] font-medium">{row.term || "—"}</td>
+                                                                            <td className="px-6 py-4 align-middle text-sm text-[#111827] font-medium text-right">
+                                                                                {typeof row.quota === "number"
+                                                                                    ? `$${row.quota.toLocaleString()}`
+                                                                                    : row.quota
+                                                                                        ? `$${Number(row.quota).toLocaleString()}`
+                                                                                        : "—"}
+                                                                            </td>
+                                                                            <td className="px-6 py-4 align-middle">
+                                                                                <div className='flex items-center gap-2 justify-end h-full'>
+                                                                                    <Tooltip title="Edit" arrow>
+                                                                                        <div className='bg-green-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                            <Components.IconButton onClick={() => handleSetQuota(row.id)}>
+                                                                                                <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                            </Components.IconButton>
+                                                                                        </div>
+                                                                                    </Tooltip>
+                                                                                    <Tooltip title="Delete" arrow>
+                                                                                        <div className='bg-red-600 h-7 w-7 flex justify-center items-center rounded-full text-white'>
+                                                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                                <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-3 w-3' />
+                                                                                            </Components.IconButton>
+                                                                                        </div>
+                                                                                    </Tooltip>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    )
+                                                                })}
 
                                                                 {/* Empty state */}
                                                                 {(!customerQuotaDtos || customerQuotaDtos.length === 0) && (

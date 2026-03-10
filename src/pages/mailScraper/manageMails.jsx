@@ -171,14 +171,14 @@ const ManageMails = ({ setAlert }) => {
     }, [selectedTab])
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 70,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 70,
+        //     sortable: false,
+        // },
         {
             field: 'firstName',
             headerName: 'First Name',
@@ -198,7 +198,7 @@ const ManageMails = ({ setAlert }) => {
             headerName: 'Sender Email',
             headerClassName: 'uppercase',
             flex: 1,
-            minWidth: 230,            
+            minWidth: 230,
         },
         {
             field: 'companyName',
@@ -237,13 +237,13 @@ const ManageMails = ({ setAlert }) => {
             headerClassName: 'uppercase',
             sortable: false,
             flex: 1,
-            align: 'right',
-            headerAlign: 'right',
+            align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => {
                 return (
-                    <div className='flex items-center gap-2 justify-end h-full'>
+                    <div className='flex items-center gap-2 justify-center h-full'>
                         <Tooltip title="Edit" arrow>
-                            <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => handleOpen(params.row.id)}>
                                     <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                 </Components.IconButton>
@@ -277,7 +277,7 @@ const ManageMails = ({ setAlert }) => {
     return (
         <>
             <div>
-                <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} />
+                <Tabs tabsData={tableData} selectedTab={selectedTab} handleChange={handleChangeTab} fontSize={"16px"} />
             </div>
             {
                 selectedTab === 0 && <MailScraper />
@@ -286,7 +286,7 @@ const ManageMails = ({ setAlert }) => {
                 selectedTab === 2 &&
                 (
                     <div className='border rounded-lg bg-white mt-4'>
-                        <DataTable columns={columns} rows={mails} getRowId={getRowId} height={rowSelectionModel?.length > 0 ? 450 : 500} checkboxSelection={true} setRowSelectionModel={handleChangeRowSelectionModel} rowSelectionModel={rowSelectionModel} showButtons={rowSelectionModel?.length > 0} buttons={actionButtons} />
+                        <DataTable columns={columns} rows={mails} getRowId={getRowId} height={rowSelectionModel?.length > 0 ? 450 : 500} checkboxSelection={true} setRowSelectionModel={handleChangeRowSelectionModel} rowSelectionModel={rowSelectionModel} showButtons={rowSelectionModel?.length > 0} buttons={actionButtons} hideFooter={true} />
                     </div>
                 )
             }

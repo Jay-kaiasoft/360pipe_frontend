@@ -89,14 +89,14 @@ const ManageTeam = ({ setAlert }) => {
     }, [])
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 50,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 50,
+        //     sortable: false,
+        // },
         {
             field: 'name',
             headerName: 'Name',
@@ -132,6 +132,8 @@ const ManageTeam = ({ setAlert }) => {
             headerClassName: 'uppercase',
             sortable: false,
             flex: 1,
+            headerAlign: "center",
+            maxWidth: 200,
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
@@ -143,14 +145,14 @@ const ManageTeam = ({ setAlert }) => {
                             </div>
                         </Tooltip>
                         <Tooltip title="Assign Opportunities" arrow>
-                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <div className='bg-[#44288E] h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => handleOpenAssignOpportunities(params.row.id)}>
                                     <CustomIcons iconName={'fa-solid fa-user-plus'} css='cursor-pointer text-white h-4 w-4' />
                                 </Components.IconButton>
                             </div>
                         </Tooltip>
                         <Tooltip title="Edit" arrow>
-                            <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                            <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                 <Components.IconButton onClick={() => navigate(`/dashboard/myTeam/edit/${params.row.id}`)}>
                                     <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                 </Components.IconButton>

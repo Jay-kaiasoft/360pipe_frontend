@@ -339,14 +339,14 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     };
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 50,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 50,
+        //     sortable: false,
+        // },
         {
             field: 'valid8',
             headerName: 'Valid8',
@@ -607,7 +607,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             headerClassName: 'uppercase',
             sortable: false,
             flex: 1,
-            maxWidth: 140,
+            maxWidth: 150,
+            headerAlign: 'center',
             renderCell: (params) => {
                 return (
                     <div className='flex items-center gap-2 justify-center h-full'>
@@ -1253,7 +1254,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const filterComponent = () => {
         return (
-            <div className='w-[750px] flex justify-start items-center gap-4'>
+            <div className='lg:w-[750px] flex justify-start items-center gap-4'>
                 <div className='w-full'>
                     <CheckBoxSelect
                         label="Opportunity Name"

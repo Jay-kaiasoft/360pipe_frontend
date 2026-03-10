@@ -12,21 +12,21 @@ const paginationModel = { page: 0, pageSize: 10 };
 const AscIcon = () => (
     <CustomIcons
         iconName="fa-solid fa-sort-up"
-        css="text-black text-sm ml-2"
+        css="text-[#5B21B6] text-sm ml-2"
     />
 );
 
 const DescIcon = () => (
     <CustomIcons
         iconName="fa-solid fa-sort-down"
-        css="text-black text-sm ml-2"
+        css="text-[#5B21B6] text-sm ml-2"
     />
 );
 
 const UnsortedIcon = () => (
     <CustomIcons
         iconName="fa-solid fa-sort"
-        css="text-black text-sm ml-2"
+        css="text-[#5B21B6] text-sm ml-2"
     />
 );
 
@@ -107,13 +107,13 @@ export default function DataTable({
         return (
             <div className="overflow-x-auto" style={{ height: height || "full", width: '100%' }}>
                 <table className="min-w-full divide-y divide-gray-200">
-                    <thead style={{ background: theme.palette.background.paper }}>
-                        <tr className='sticky top-0 bg-white z-30 '>
+                    <thead style={{ background: '#EDE9FE', color: '#5B21B6' }}>
+                        <tr className='sticky top-0 bg-[#EDE9FE] text-[#5B21B6] z-30 '>
                             <th className="w-6"></th>
                             {columns.map(col => (
                                 <th
                                     key={col.field}
-                                    className="px-2 py-4 font-bold uppercase border-b text-left text-sm"
+                                    className="px-2 py-4 font-semibold uppercase border-b text-left text-[0.875rem] leading-[1.25rem]"
                                     style={{
                                         maxWidth: col.maxWidth,
                                         minWidth: col.minWidth,
@@ -142,7 +142,7 @@ export default function DataTable({
                         {sortedRows?.length > 0 ? sortedRows?.map((row, idx) => (
                             <tr
                                 key={String(getRowId(row))}
-                                className={`${getRowClassName ? getRowClassName({ row }) : ''} border-b`}
+                                className={`${getRowClassName ? getRowClassName({ row }) : ''} border-b hover:bg-[#F5F3FF]`}
                                 data-id={String(getRowId(row))}
                             >
                                 <td className="sortable-handle cursor-move px-2 py-4 align-middle">
@@ -270,7 +270,11 @@ export default function DataTable({
                                 position: 'sticky',
                                 top: 0,
                                 zIndex: 2,
-                                backgroundColor: theme.palette.background.paper,
+                                backgroundColor: '#EDE9FE',
+                                color: '#5B21B6',
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                lineHeight: '1.25rem',
                             },
                             '& .MuiDataGrid-footerContainer': {
                                 position: 'sticky',
@@ -278,11 +282,14 @@ export default function DataTable({
                                 zIndex: 2,
                                 backgroundColor: theme.palette.background.paper,
                             },
-                            '& .MuiDataGrid-container--top [role="row"], .MuiDataGrid-container--bottom [role="row"]': {
+                            '& .MuiDataGrid-container--top [role="row"]': {
+                                backgroundColor: '#EDE9FE',
+                            },
+                            '& .MuiDataGrid-container--bottom [role="row"]': {
                                 backgroundColor: theme.palette.background.paper,
                             },
                             '& .MuiDataGrid-row:hover': {
-                                backgroundColor: theme.palette.background.paper,
+                                backgroundColor: '#F5F3FF',
                             },
                             '& .MuiDataGrid-overlay': {
                                 backgroundColor: theme.palette.background.paper,

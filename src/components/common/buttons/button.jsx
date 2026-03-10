@@ -12,6 +12,9 @@ const Button = ({
     endIcon = null,
     value = null,
     id,
+    className,          // for Tailwind classes
+    sx: userSx,         // for MUI sx overrides
+    ...rest             // capture any other props (e.g., fullWidth)
 }) => {
     const theme = useTheme();
     const ButtonComponent = isLoading ? Components.LoadingButton : Components.Button;
@@ -52,6 +55,7 @@ const Button = ({
         textTransform: "uppercase",
         // cursor: disabled ? "not-allowed" : "pointer"
     };
+
     const primaryStyles = {
         background: theme.palette.primary.main,
         color: theme.palette.secondary.main,
@@ -99,12 +103,15 @@ const Button = ({
             loading={isLoading}
             id={id}
             data-value={value}
+            className={className}
             sx={{
                 ...baseStyles,
                 ...(useFor === "primary" ? primaryStyles : normalStyles),
                 textTransform: "capitalize",
                 cursor: disabled ? "not-allowed" : "pointer",
+                ...userSx,
             }}
+            {...rest}
         >
             {useFor === "primary" ? (
                 <>

@@ -58,38 +58,39 @@ const MemberRolesList = ({ setAlert }) => {
     }, []);
 
     const columns = [
-        {
-            field: 'rowId',
-            headerName: '#',
-            headerClassName: 'uppercase',
-            flex: 1,
-            maxWidth: 50,
-            sortable: false,
-        },
+        // {
+        //     field: 'rowId',
+        //     headerName: '#',
+        //     headerClassName: 'uppercase',
+        //     flex: 1,
+        //     maxWidth: 50,
+        //     sortable: false,
+        // },
         {
             field: 'name',
             headerName: 'Member Role',
             headerClassName: 'uppercase',
             flex: 1,
-            maxWidth: 800,
+            // maxWidth: 800,
             sortable: false,
         },
         {
             field: 'action',
             headerName: 'action',
-            headerAlign: 'right',
+            headerAlign: 'center',
             headerClassName: 'uppercase',
             sortable: false,
             flex: 1,
+            maxWidth: 140,
             renderCell: (params) => {
                 return (
-                    <div className='flex items-center gap-2 justify-end h-full'>
+                    <div className='flex items-center gap-2 justify-center h-full'>
                         <PermissionWrapper
                             functionalityName="Account"
                             moduleName="Account"
                             actionId={2}
                             component={
-                                <div className='bg-[#2753AF] h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
                                     <Components.IconButton onClick={() => navigate(`/dashboard/members/edit/${params.row.id}`)}>
                                         <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
                                     </Components.IconButton>
@@ -136,7 +137,7 @@ const MemberRolesList = ({ setAlert }) => {
     return (
         <>
             <div className='border rounded-lg bg-white w-full lg:w-full '>
-                <DataTable columns={columns} rows={subUserTypes} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true}/>
+                <DataTable columns={columns} rows={subUserTypes} getRowId={getRowId} showButtons={true} buttons={actionButtons} height={450} hideFooter={true} />
             </div>
             <AlertDialog
                 open={dialog.open}

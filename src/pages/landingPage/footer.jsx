@@ -26,7 +26,7 @@ const Footer = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <span className="bg-[#2753AF] p-3 rounded-full">
+                            <span className="bg-[#44288E] p-3 rounded-full">
                                 <img
                                     src={Phone}
                                     alt="Phone Icon"
