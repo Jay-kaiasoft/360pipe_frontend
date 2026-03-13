@@ -46,6 +46,7 @@ import TodoScreenManager from "./demoScreens/todo/todoScreenManager";
 import Performance from "./pages/dashboard/performance/performance";
 import Support from "./pages/landingPage/support";
 import Dashboard from "./demoScreens/dashboard/dashboard";
+import DealManagement from "./pages/dashboard/dealManagement/dealManagement";
 
 library.add(fas, far, fab)
 
@@ -198,6 +199,10 @@ const App = ({ setLoading }) => {
         {
           path: "performance",
           element: <Performance />,
+        },
+        {
+          path: "deals",
+          element: <DealManagement />,
         },
       ],
     },

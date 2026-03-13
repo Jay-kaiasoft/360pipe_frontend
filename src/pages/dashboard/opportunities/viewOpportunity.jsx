@@ -2019,7 +2019,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                             )}
 
                             <div className="overflow-y-auto px-1 flex-1">
-                                <ul className="text-sm space-y-3">
+                                <ul className="text-sm">
                                     {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                         allContactsWithEdits
                                             ?.filter((row) => row.isKey === true)
@@ -2028,28 +2028,21 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
                                                 const badgeColor = bgColors[idx % bgColors.length];
                                                 return (
-                                                    <li
-                                                        key={c.id}
-                                                        className="flex items-center gap-3 py-1"
-                                                    >
-                                                        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                    <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
                                                             {initials}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-bold text-[#1e3a8a] text-[15px] truncate" title={c.contactName || ""}>
-                                                                    {c.contactName}
-                                                                </span>
-                                                                <span className="text-gray-600 text-[13px] truncate" title={c.title || ""}>
-                                                                    - {c.title || "-"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-gray-500 text-[13px] truncate" title={c.role || ""}>
-                                                                {c.role || "-"}
-                                                            </div>
-                                                        </div>
+                                                        </span>
+                                                        <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                            {c.contactName}
+                                                        </span>
+                                                        <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                            {c.title || "-"}
+                                                        </span>
+                                                        <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                            {c.role || "-"}
+                                                        </span>
                                                     </li>
-                                                );
+                                                )
                                             })
                                     ) : (
                                         <p className="text-sm text-gray-400 italic">
@@ -2540,7 +2533,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         )}
 
                                         <div className="overflow-y-auto px-1 flex-1">
-                                            <ul className="text-sm space-y-3">
+                                            <ul className="text-sm">
                                                 {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                                     allContactsWithEdits
                                                         ?.filter((row) => row.isKey === true)
@@ -2549,28 +2542,21 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                             const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
                                                             const badgeColor = bgColors[idx % bgColors.length];
                                                             return (
-                                                                <li
-                                                                    key={c.id}
-                                                                    className="flex items-center gap-3 py-1"
-                                                                >
-                                                                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                                <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
                                                                         {initials}
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span className="font-bold text-[#1e3a8a] text-[15px] truncate" title={c.contactName || ""}>
-                                                                                {c.contactName}
-                                                                            </span>
-                                                                            <span className="text-gray-600 text-[13px] truncate" title={c.title || ""}>
-                                                                                - {c.title || "-"}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="text-gray-500 text-[13px] truncate" title={c.role || ""}>
-                                                                            {c.role || "-"}
-                                                                        </div>
-                                                                    </div>
+                                                                    </span>
+                                                                    <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                                        {c.contactName}
+                                                                    </span>
+                                                                    <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                                        {c.title || "-"}
+                                                                    </span>
+                                                                    <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                                        {c.role || "-"}
+                                                                    </span>
                                                                 </li>
-                                                            );
+                                                            )
                                                         })
                                                 ) : (
                                                     <p className="text-sm text-gray-400 italic">

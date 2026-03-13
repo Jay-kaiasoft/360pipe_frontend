@@ -942,7 +942,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
 
                                     {tempFileRows.length === 0 ? (
                                         <div className="text-sm text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-lg bg-white">
-                                            No attachments added.
+                                            Drag & Drop files here.
                                         </div>
                                     ) : (
                                         <div className="space-y-3">

@@ -163,7 +163,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
     }, [startDate, endDate])
 
     return (
-        <header className={`w-full full bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)] z-30 relative ${currentPath?.includes("performance") || locaiton?.pathname.includes("opportunity-view") ? "pb-4" : ""} `} style={{ borderColor: theme.palette.secondary.main }}>
+        <header className={`w-full full bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)] z-30 relative ${currentPath?.includes("performance") || locaiton?.pathname.includes("opportunity-view") || locaiton?.pathname?.includes("deals") ? "pb-4" : ""} `} style={{ borderColor: theme.palette.secondary.main }}>
             {/* Using grid-cols-3 to force exact centering of the middle element */}
             <div className="grid grid-cols-3 items-start px-6 py-2 lg:py-3">
 
@@ -296,7 +296,7 @@ const SubHeader = ({ headerTitle, setHeaderTitle, setFilterStartDate, setFilterE
             }
 
             {
-                currentPath?.includes("opportunity-view") && (
+                (currentPath?.includes("opportunity-view") || currentPath?.includes("deals")) && (
                     <div className="flex justify-center items-center absolute inset-x-0 -bottom-5">
                         <button
                             onClick={() => setOppSelectedTabIndex(0)}

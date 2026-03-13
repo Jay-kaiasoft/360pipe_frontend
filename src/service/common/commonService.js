@@ -100,6 +100,7 @@ export const headerTitles = [
     { title: "Dashboard", path: "/dashboard" },
     { title: "Pipeline", path: "/dashboard/opportunities" },
     { title: "Deal Management", path: "/dashboard/opportunity-view/:opportunityId" },
+    { title: "Deal Management", path: "/dashboard/deals" },
     { title: "Contacts", path: "/dashboard/contacts" },
     { title: "My CRM", path: "/dashboard/mycrm" },
     { title: "To-Do", path: "/dashboard/todos" },

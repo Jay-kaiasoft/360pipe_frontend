@@ -80,23 +80,22 @@ const AppHeader = ({
         icon: <CustomIcons iconName="fa-solid fa-house" />,
         path: "/dashboard",
       },
-      {
-        label: "Pipeline",
-        path: "/dashboard/opportunities",
-      },
-      {
-        label: "Performance",
-        path: "/dashboard/performance",
-      },
+      { label: "Pipeline", path: "/dashboard/opportunities" },
+      ...(userDetails?.roleName?.toUpperCase() === "SALE MANAGER" || userDetails?.roleName?.toUpperCase() === "SALES MANAGER"
+        ? [{ label: "Performance", path: "/dashboard/performance", }]
+        : [{ label: "Deal Mgt", path: "/dashboard/deals", }]),
       {
         label: "Contacts",
         path: "/dashboard/contacts",
       },
       {
-        label: userDetails?.roleName?.toUpperCase() === "SALES REPRESENTIVE" ? "My Actions" : "Team Actions",
+        label:
+          userDetails?.roleName?.toUpperCase() !== "SALES MANAGER" || userDetails?.roleName?.toUpperCase() !== "SALE MANAGER"
+            ? "My Actions"
+            : "Team Actions",
         path: "/dashboard/todos",
       },
-    ]
+    ];
 
     setTabsData(tabItems)
 

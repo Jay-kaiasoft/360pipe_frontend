@@ -87,7 +87,7 @@ export default function UserDropdown() {
             path: "/dashboard/calendar",
             iconName: "fa-solid fa-calendar",
         },
-        ...(((userdata?.roleName?.toUpperCase() === "SALES REPRESENTIVE" || userdata?.roleName?.toUpperCase() === "SALES MANAGER" || userdata?.roleName?.toUpperCase() === "SALE MANAGER") && !userdata?.subUser)
+        ...(((userdata?.roleName?.toUpperCase() === "SALES REPRESENTIVE" || userdata?.rolename === "Sales Representative" || userdata?.roleName?.toUpperCase() === "SALES MANAGER" || userdata?.roleName?.toUpperCase() === "SALE MANAGER") && !userdata?.subUser)
             ? [
                 {
                     label: "My CRM",

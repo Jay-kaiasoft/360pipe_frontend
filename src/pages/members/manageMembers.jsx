@@ -17,7 +17,7 @@ const ManageMembers = () => {
     }
 
     useEffect(() => {
-        if (userdata?.roleName?.toLowerCase() === 'sales representative' || userdata?.roleName?.toLowerCase() === 'sales manager') {
+        if (userdata?.roleName?.toLowerCase() === 'sales representative' || userdata?.roleName?.toLowerCase() === 'sales manager' || userdata?.rolename === "Sales Representative") {
             setTabsData([
                 {
                     label: 'Members'
