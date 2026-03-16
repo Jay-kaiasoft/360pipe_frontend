@@ -94,7 +94,7 @@ const DealDocs = ({ setAlert, opportunityId, userdata }) => {
     // FILE EDIT mode fields
     const [resourceName, setResourceName] = useState("");
     const [modalFiles, setModalFiles] = useState([]);
-    const [existingImages, setExistingImages] = useState([]);
+    // const [existingImages, setExistingImages] = useState([]);
 
     // FILE ADD mode rows
     const [fileRows, setFileRows] = useState([]); // [{id, fileName, files:[], existingImages:[]}]
@@ -202,7 +202,6 @@ const DealDocs = ({ setAlert, opportunityId, userdata }) => {
 
         setResourceName("");
         setModalFiles([]);
-        setExistingImages([]);
         setFileRows([]);
 
         setLinkRows([]);
@@ -229,7 +228,6 @@ const DealDocs = ({ setAlert, opportunityId, userdata }) => {
 
         setResourceName("");
         setModalFiles([]);
-        setExistingImages([]);
 
         setFileRows([
             { id: uid(), fileName: "", files: [], existingImages: [] },
@@ -300,7 +298,6 @@ const DealDocs = ({ setAlert, opportunityId, userdata }) => {
         setFileRows([]);
         setResourceName("");
         setModalFiles([]);
-        setExistingImages([]);
 
         setIsModalOpen(true);
     };
@@ -343,18 +340,7 @@ const DealDocs = ({ setAlert, opportunityId, userdata }) => {
         setModalType("file");
         setResourceName(res.name || "");
         setModalFiles([]);
-        // Keep existing preview (if you want to show it inside MultipleFileUpload)
-        setExistingImages(
-            res.fileUrl
-                ? [
-                    {
-                        imageId: res.id,
-                        imageURL: res.fileUrl,
-                        imageName: res.imageName || res.name,
-                    },
-                ]
-                : []
-        );
+        // Keep existing preview (if you want to show it inside MultipleFileUpload)      
         setIsModalOpen(true);
     };
 
@@ -592,7 +578,7 @@ const DealDocs = ({ setAlert, opportunityId, userdata }) => {
     };
 
     return (
-        <div className="w-full">
+        <div className="w-full py-5">
             <div className="border border-gray-400 bg-white overflow-hidden">
                 {/* Header */}
                 <div className="grid grid-cols-[1.1fr_2fr]">

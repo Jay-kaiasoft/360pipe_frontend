@@ -453,3 +453,10 @@ export const convertAsiaKolkata = (value) => {
         return value
     }
 }
+
+export const brandfetchSrc = (domain) => `https://cdn.brandfetch.io/${domain}/w/100/h/100/icon?c=1id2vhiypCcqm7fpTjx`;
+
+export const handleRequestClose = (event, reason, onClose) => {
+    if (reason && reason === "backdropClick") return;
+    onClose();
+};

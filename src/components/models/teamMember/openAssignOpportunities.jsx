@@ -7,6 +7,7 @@ import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import CheckBoxSelect from '../../common/select/checkBoxSelect';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -108,6 +109,7 @@ function OpenAssignOpportunities({ open, handleClose, selectedMember, members, a
   return (
     <React.Fragment>
       <BootstrapDialog
+        onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
         open={open}
         aria-labelledby="customized-dialog-title"
         fullWidth

@@ -12,6 +12,7 @@ import Input from '../../common/input/input';
 import { getMeetingsAttendeesById, saveMeetingAttendees, updateMeetingAttendees } from '../../../service/meetingAttendees/meetingAttendeesService';
 import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import Select from '../../common/select/select';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -120,6 +121,7 @@ function MeetingAttendeesModel({ setAlert, open, handleClose, meetingid, id, opp
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

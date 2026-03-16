@@ -9,6 +9,7 @@ import Select from '../../common/select/select';
 import { getAllSubUsers } from '../../../service/customers/customersService';
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
 import CheckBoxSelect from '../../common/select/checkBoxSelect';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -128,6 +129,7 @@ function AddTeamMemberModel({ open, handleClose, selectedMember, members, append
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

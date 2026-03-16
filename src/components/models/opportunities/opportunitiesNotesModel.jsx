@@ -10,6 +10,7 @@ import CustomIcons from '../../common/icons/CustomIcons';
 
 import Input from '../../common/input/input';
 import { getNotesById, saveOppNotes, updateOppNotes } from '../../../service/opportunitiesComment/opportunitiesCommentService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -74,7 +75,7 @@ function OpportunitiesNotesModel({ setAlert, open, handleClose, id, opportunityI
                 setAlert({
                     open: true,
                     message: res.message || "Fail to update note",
-                    type:"error"
+                    type: "error"
                 })
             }
         } else {
@@ -86,7 +87,7 @@ function OpportunitiesNotesModel({ setAlert, open, handleClose, id, opportunityI
                 setAlert({
                     open: true,
                     message: res.message || "Fail to add note",
-                    type:"error"
+                    type: "error"
                 })
             }
         }
@@ -95,6 +96,7 @@ function OpportunitiesNotesModel({ setAlert, open, handleClose, id, opportunityI
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

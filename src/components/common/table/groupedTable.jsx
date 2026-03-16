@@ -1,17 +1,15 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import { Chip, useTheme } from '@mui/material';
 import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
-    Typography,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 
 import Input from '../input/input';
 import CustomIcons from '../icons/CustomIcons';
-import { stageColors, statusColors } from '../../../service/common/commonService';
+import { statusColors } from '../../../service/common/commonService';
 
 // const paginationModel = { page: 0, pageSize: 10 };
 
@@ -41,6 +39,11 @@ export default function GroupedDataTable({
     columns,
     height,
     showSearch = false,
+    searchLabel = "Search",
+    searchPlaceholder = "Type to search...",
+    searchValue = "",
+    onSearchChange,
+    onSearchClick,
     showButtons = false,
     showFilters = false,
     filtersComponent = null,
@@ -59,16 +62,20 @@ export default function GroupedDataTable({
         <>
             {(showSearch || showButtons || showFilters) && (
                 <div className="border border-1 py-4 px-5 rounded-lg rounded-b-none flex justify-between items-center gap-4">
-                    <div className="grow">
+                    <div className="grow flex justify-start items-center gap-4 flex-wrap">
                         {showSearch && (
-                            <div className="w-full md:w-60 mb-3 md:mb-0 md:max-w-xs">
+                            <div className="w-full md:w-80 mb-3 md:mb-0">
                                 <Input
+                                    value={searchValue}          // BIND VALUE
+                                    onChange={onSearchChange}    // BIND CHANGE HANDLER
                                     name="search"
-                                    label="Search"
+                                    placeholder={searchPlaceholder}
+                                    label={searchLabel}
                                     endIcon={
                                         <CustomIcons
                                             iconName={'fa-solid fa-magnifying-glass'}
-                                            css="mr-3"
+                                            css="mr-0 cursor-pointer"
+                                            onClick={onSearchClick}
                                         />
                                     }
                                 />
@@ -303,4 +310,6 @@ GroupedDataTable.propTypes = {
     processRowUpdate: PropTypes.func,
     isEditing: PropTypes.bool,
     editingRowId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    searchValue: PropTypes.string,
+    onSearchChange: PropTypes.func,
 };

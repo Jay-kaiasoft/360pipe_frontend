@@ -125,7 +125,7 @@ function FileInputBox({
                         />
                     </a>
 
-                    <div className="absolute top-5 right-7 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500">
+                    <div className="z-50 absolute top-3 right-7 h-6 w-6 flex justify-center items-center rounded-full border border-red-500 bg-red-500">
                         <button type="button" onClick={onRemove}>
                             <CustomIcons
                                 iconName="fa-solid fa-xmark"

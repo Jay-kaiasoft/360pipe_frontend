@@ -27,7 +27,7 @@ import AlertDialog from '../../common/alertDialog/alertDialog';
 
 import { createOpportunity, deleteOpportunityLogo, updateOpportunity } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { opportunityStatus, uploadFiles, opportunityStages } from '../../../service/common/commonService';
+import { opportunityStatus, uploadFiles, opportunityStages, brandfetchSrc, handleRequestClose } from '../../../service/common/commonService';
 import { deleteOpportunitiesPartner, getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 import { deleteOpportunitiesProducts, getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import { deleteOpportunitiesContact, getAllOpportunitiesContact, updateOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
@@ -67,7 +67,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
     const [businessValue, setBusinessValue] = useState(() => EditorState.createEmpty());
     // const [decisionMap, setDecisionMap] = useState(() => EditorState.createEmpty());
-    const [currentEnvironment, setCurrentEnvironment] = useState(() => EditorState.createEmpty());
 
     const theme = useTheme()
     const [accounts, setAccounts] = useState([]);
@@ -192,7 +191,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             businessValue: null,
             currentEnvironment: null,
             decisionMap: null,
-            opportunityDocs: []
+            opportunityDocs: [],
+            domain: null
         },
     });
 
@@ -211,8 +211,9 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                 });
             }
         }
-        if (watch("newLogo")) {
+        if (watch("newLogo") || watch("logo")) {
             setValue("newLogo", null)
+            setValue("logo", null)
             handleCloseDeleteLogoDialog()
         }
     }
@@ -287,7 +288,8 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             status: 1,
             logo: null,
             newLogo: null,
-            opportunityDocs: []
+            opportunityDocs: [],
+            domain: null
         });
         setActiveStep(0)
         handleClose();
@@ -455,23 +457,19 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         const businessValueHtml = businessValue
             ? draftToHtml(convertToRaw(businessValue.getCurrentContent()))
             : null;
-
-        const currentEnvironmentHtml = currentEnvironment
-            ? draftToHtml(convertToRaw(currentEnvironment.getCurrentContent()))
-            : null;
-
+       
         const newData = {
             ...data,
             whyDoAnything: whyDoAnythingHtml,
             businessValue: businessValueHtml,
             // decisionMap: decisionMapHtml,
-            currentEnvironment: currentEnvironmentHtml,
             dealAmount: data.dealAmount ? parseFloat(parseMoneyFloat(data.dealAmount)) : null,
             discountPercentage: data.discountPercentage ? parseFloat(parseMoneyFloat(data.discountPercentage)) : null,
             listPrice: data.listPrice ? parseFloat(parseMoneyFloat(data.listPrice)) : null,
             salesStage: opportunityStages?.find(stage => stage.id === parseInt(data.salesStage))?.title || null,
             status: opportunityStatus?.find(row => row.id === parseInt(data.status))?.title || null,
-            newLogo: watch("newLogo")
+            newLogo: watch("newLogo"),
+            logo: watch("newLogo") === null ? brandfetchSrc(watch("domain")) : watch("logo")
         }
         try {
             if (activeStep === 0) {
@@ -537,6 +535,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 // fullScreen={opportunityId != null}
@@ -585,7 +584,46 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                 </div>
                                             </div>
 
+
                                             <div className='flex flex-col gap-[30px] md:col-span-2'>
+                                                <Controller
+                                                    name="domain"
+                                                    control={control}
+                                                    rules={{
+                                                        required: "Domain is required",
+                                                        pattern: {
+                                                            // Regex to match domain format (e.g., google.com) and exclude http/https
+                                                            value: /^(?!https?:\/\/)[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/,
+                                                            message: "Please enter a valid domain (e.g., example.com) without http://"
+                                                        }
+                                                    }}
+                                                    render={({ field, fieldState: { error } }) => (
+                                                        <div>
+                                                            <Input
+                                                                {...field}
+                                                                label="Domain"
+                                                                type="text"
+                                                                placeholder="Enter domain for fetch logo (e.g. example.com) without http://"
+                                                                error={errors.domain}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e); // Updates React Hook Form state
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    const value = e.target.value.trim();
+                                                                    if (value && /^(?!https?:\/\/)[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/.test(value)) {
+                                                                        const formattedDomain = value.toLowerCase();
+                                                                        if (watch("newLogo") === null) {
+                                                                            setValue("domain", formattedDomain);
+                                                                            setValue("logo", brandfetchSrc(formattedDomain));
+                                                                        }
+                                                                    } else {
+                                                                        setValue("logo", null);
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                />
                                                 <div>
                                                     <Controller
                                                         name="accountId"

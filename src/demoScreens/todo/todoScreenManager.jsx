@@ -20,15 +20,6 @@ const formatDueLong = (iso) => {
     return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 };
 
-const formatNoteDate = (iso) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    return `${m}/${day}`;
-};
-
 const TodoScreenManager = () => {
     // --- State Management ---
     // Notes: focus + click-outside save

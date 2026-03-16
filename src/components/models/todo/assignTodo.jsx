@@ -17,6 +17,7 @@ import dayjs from 'dayjs';
 import { createTodoAssign, getTodoAssign, updateTodoAssign } from '../../../service/todoAssign/todoAssignService';
 import { getAllSubUsers } from '../../../service/customers/customersService';
 import { getAllTeams } from '../../../service/teamDetails/teamDetailsService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -150,6 +151,7 @@ function AssignTodo({ setAlert, open, handleClose, id, todoData }) {
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

@@ -19,6 +19,7 @@ import '@xyflow/react/dist/style.css';
 import Components from '../../../components/muiComponents/components';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import { getReportHierarch } from '../../../service/contact/contactService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -235,10 +236,10 @@ function ContactReportHierarch({ open, handleClose, contactId }) {
 
   return (
     <BootstrapDialog
+      onClose={(event, reason) => handleRequestClose(event, reason, handleClose)}
       open={open}
       fullWidth
       maxWidth="lg"
-      onClose={handleClose}
     >
       <Components.DialogTitle sx={{ m: 0, p: 2 }}>
         Contact Reporting Hierarchy

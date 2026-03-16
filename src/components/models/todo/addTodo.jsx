@@ -23,7 +23,7 @@ import CheckBoxSelect from '../../common/select/checkBoxSelect';
 
 // Uploader component
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
-import { uploadFiles } from "../../../service/common/commonService";
+import { handleRequestClose, uploadFiles } from "../../../service/common/commonService";
 import { deleteTodoAttachment } from '../../../service/todoAttachments/todoAttachmentsService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -617,7 +617,7 @@ function AddTodo({ setAlert, open, handleClose, todoId, handleGetAllTodos }) {
     // -------------------------
     return (
         <React.Fragment>
-            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
+            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle
                     sx={{ m: 0, p: 2, color: theme.palette.text.primary }}
                     id="customized-dialog-title"

@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import { createQuota, deleteQuota, getAllCustomerQuotas, getQuota, updateQuota } from '../../../service/customerQuota/customerQuotaService';
 import AlertDialog from '../../common/alertDialog/alertDialog';
 import { Tooltip } from '@mui/material';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -562,6 +563,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

@@ -22,7 +22,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import { getTimeZones } from '../../../service/timeZones/timeZoneService';
 import Checkbox from '../../common/checkBox/checkbox';
 import Select from '../../common/select/select';
-import { convertAsiaKolkata, dateTimeFormatDB, userTimeZone } from '../../../service/common/commonService';
+import { convertAsiaKolkata, dateTimeFormatDB, handleRequestClose, userTimeZone } from '../../../service/common/commonService';
 import { getEventById, saveEvents } from '../../../service/calendar/calendarService';
 import DeleteEventAlert from './deleteEventAlert';
 import { useLocation, useParams } from 'react-router-dom';
@@ -495,7 +495,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
 
     return (
         <React.Fragment>
-            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
+            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {
                         location?.pathname === "/dashboard/calendar" ? (

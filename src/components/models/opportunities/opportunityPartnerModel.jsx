@@ -10,7 +10,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
 import { getAllAccounts } from '../../../service/account/accountService';
-import { partnerRoles } from '../../../service/common/commonService';
+import { handleRequestClose, partnerRoles } from '../../../service/common/commonService';
 import { createOpportunitiesPartner, getOpportunitiesPartner, updateOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -130,6 +130,7 @@ function OpportunitiesPartnersModel({ setAlert, open, handleClose, id, opportuni
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

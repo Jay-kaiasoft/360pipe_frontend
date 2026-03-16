@@ -12,6 +12,7 @@ import Select from '../../common/select/select';
 
 import { getAllCRM } from '../../../service/crm/crmService';
 import { createAccount, getAccountDetails, updateAccount } from '../../../service/account/accountService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -152,6 +153,7 @@ function AccountModel({ setSyncingPushStatus, setAlert, open, handleClose, accou
         <React.Fragment>
             <BootstrapDialog
                 open={open}
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
                 maxWidth='sm'

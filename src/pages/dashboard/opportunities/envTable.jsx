@@ -171,7 +171,7 @@ function EnvTable({ setAlert, opportunityId, handleGetOpportunitiesCurrentEnviro
                     setAlert({
                         open: true,
                         type: "error",
-                        message: res.message
+                        message: created.message
                     })
                 }
             }

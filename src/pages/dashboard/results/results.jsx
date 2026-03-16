@@ -142,8 +142,16 @@ const Results = () => {
                                         >
                                             {getInitials(row.rep_name)}
                                         </div>
-                                        <span className="text-base">{row.rep_name || '—'}</span>
+                                        <span className="text-base text-[#111827]">{row.rep_name || '—'}</span>
                                     </td>
+                                    {/* <td className="py-4 px-6 flex items-center gap-4 text-[#6B7280]">
+                                        <div
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${getAvatarColor(row.rep_name)}`}
+                                        >
+                                            {getInitials(row.rep_name)}
+                                        </div>
+                                        <span className="text-base">{row.rep_name || '—'}</span>
+                                    </td> */}
                                     <td className="py-4 px-6 text-[#111827] font-semibold text-lg">
                                         {row.pipelineTotal ? moneyLabel(row.pipelineTotal) : '$0'}
                                     </td>

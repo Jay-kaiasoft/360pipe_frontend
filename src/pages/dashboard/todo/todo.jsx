@@ -93,9 +93,9 @@ const getCurrentUser = () => {
 };
 
 const status = [
-    { id: 1, title: "All" },
-    { id: 2, title: "Pending" },
-    { id: 3, title: "Completed" },
+    { id: 1, title: "Open Action" },
+    { id: 2, title: "Completed" },
+    { id: 3, title: "All" },
 ];
 
 // ----------------------------------------------------------------------
@@ -168,7 +168,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
         const statusColor =
             completionProgress === 0
                 ? "#D7D8F4"
-                : (completedAssignees === totalAssignees ? "#2e8500" : "#EED5B9");
+                : (completedAssignees === totalAssignees ? "#44288E" : "#EED5B9");
 
         // ✅ Date-only comparison
         const today = new Date();
@@ -254,7 +254,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
 
     const handleGetTodoByTeam = async () => {
         const teamIds = selectedTeam?.map(t => t.id) || [];
-        const res = await getTodoByTeam({ teamIds, status: status?.find(s => s.id === selectedStatus)?.title });
+        const res = await getTodoByTeam({ teamIds, status: status?.find(s => s.id === selectedStatus)?.title === "Open Action" ? "Pending" : status?.find(s => s.id === selectedStatus)?.title || "" });
         const uiTodos = (Array.isArray(res?.result) ? res.result : []).map(mapApiTodoToUi);
         setTasks(uiTodos);
     }
@@ -491,7 +491,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                         <div className="flex items-center gap-2 text-sm">
                                             <span className="flex items-center gap-1">
                                                 <CustomIcons iconName={assignee.complectedWork !== 100 ? 'fa-solid fa-clock' : "fa-solid fa-circle-check"} css={`${assignee.complectedWork !== 100 ? 'text-yellow-500' : 'text-green-500'}`} />
-                                                <span className={`font-medium capitalize ${assignee.complectedWork !== 100 ? 'text-yellow-500' : 'text-green-500'}`}>{assignee.complectedWork !== 100 ? "Pendding" : "Complected"}</span>
+                                                <span className={`font-medium capitalize ${assignee.complectedWork !== 100 ? 'text-yellow-500' : 'text-green-500'}`}>{assignee.complectedWork !== 100 ? "Pending" : "Complected"}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -683,6 +683,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                     message: "Task closed successfully",
                     type: "success"
                 })
+                handleCloseCloseTodoDialog()
             } else {
                 setAlert({
                     open: true,

@@ -4,6 +4,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import Components from '../../muiComponents/components';
 import CustomIcons from '../../common/icons/CustomIcons';
 import { getAllOpportunities } from '../../../service/opportunities/opportunitiesService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -45,6 +46,7 @@ function OpenDisplayOpportunities({ open, handleClose, selectedMember, type }) {
   return (
     <React.Fragment>
       <BootstrapDialog
+        onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
         open={open}
         aria-labelledby="customized-dialog-title"
         fullWidth

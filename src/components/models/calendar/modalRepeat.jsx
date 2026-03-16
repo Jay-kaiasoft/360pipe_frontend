@@ -10,7 +10,7 @@ import Button from '../../../components/common/buttons/button';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../common/select/select';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
-import { dateTimeFormatDB } from '../../../service/common/commonService';
+import { dateTimeFormatDB, handleRequestClose } from '../../../service/common/commonService';
 
 const calRepeatEveryList = Array.from({ length: 99 }, (_, idx) => {
     const v = idx + 1;
@@ -274,7 +274,7 @@ function ModalRepeat({ setAlert, open, handleClose, values, setValues }) {
 
     return (
         <React.Fragment>
-            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
+            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     Repeat
                 </Components.DialogTitle>

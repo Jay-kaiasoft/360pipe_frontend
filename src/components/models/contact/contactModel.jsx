@@ -11,7 +11,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../../components/common/select/select';
 
 import { createContact, getAllContacts, getContactDetails, updateContact } from '../../../service/contact/contactService';
-import { opportunityContactRoles } from '../../../service/common/commonService';
+import { handleRequestClose, opportunityContactRoles } from '../../../service/common/commonService';
 import { getAllAccounts } from '../../../service/account/accountService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -188,6 +188,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
@@ -221,8 +222,8 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                         render={({ field }) => (
                                             <Select
                                                 options={accounts}
-                                                label={"Account"}
-                                                placeholder="Select Account"
+                                                label={"Company Name"}
+                                                placeholder="Select Company"
                                                 value={parseInt(watch("accountId")) || null}
                                                 onChange={(_, newValue) => {
                                                     if (newValue?.id) {
@@ -264,6 +265,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                             {...field}
                                             label="Last Name"
                                             type={`text`}
+                                            requiredFiledLabel={true}
                                             error={errors.lastName}
                                         />
                                     )}
@@ -296,6 +298,7 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                             {...field}
                                             label="Title"
                                             type={`text`}
+                                            requiredFiledLabel={true}
                                             error={errors.title}
                                         />
                                     )}
@@ -304,7 +307,6 @@ function ContactModel({ setSyncingPushStatus, setAlert, open, handleClose, conta
                                     name="emailAddress"
                                     control={control}
                                     rules={{
-                                        required: "Email address is required",
                                         pattern: {
                                             value: /^\S+@\S+$/i,
                                             message: "Email address is invalid",

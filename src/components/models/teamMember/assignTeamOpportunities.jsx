@@ -11,6 +11,7 @@ import { getTeamDetails } from '../../../service/teamDetails/teamDetailsService'
 import { assignOpportunitiesToTeamMember } from '../../../service/teamMembers/teamMembersService';
 import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -89,6 +90,7 @@ function AssignTeamOpportunities({ setAlert, open, handleClose, teamId }) {
   return (
     <React.Fragment>
       <BootstrapDialog
+        onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
         open={open}
         aria-labelledby="customized-dialog-title"
         fullWidth

@@ -9,6 +9,7 @@ import CustomIcons from '../../common/icons/CustomIcons';
 
 // NEW: uploader + picker
 import MultipleFileUpload from '../../fileInputBox/multipleFileUpload';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -24,7 +25,7 @@ function AttachmentsModel({ setAlert, open, handleClose, data }) {
 
     return (
         <React.Fragment>
-            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth='md'>
+            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth='md'>
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     Attachments
                 </Components.DialogTitle>

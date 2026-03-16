@@ -12,6 +12,7 @@ import Checkbox from '../../common/checkBox/checkbox';
 import { saveClosePlan } from '../../../service/closePlanService/closePlanService';
 import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import { getOpportunityDetails } from '../../../service/opportunities/opportunitiesService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 
 const steps = [
@@ -156,7 +157,7 @@ function KeyContactModel({
 
     return (
         <React.Fragment>
-            <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
+            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     Send Close Plan For <strong>{oppDetails?.opportunity}</strong>
                 </Components.DialogTitle>

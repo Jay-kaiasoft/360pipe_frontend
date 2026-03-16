@@ -10,6 +10,7 @@ import { createQuota, getQuota, updateQuota } from '../../../service/customerQuo
 import Input from '../../common/input/input';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import { connect } from 'react-redux';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -263,7 +264,7 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
 
   return (
     <React.Fragment>
-      <BootstrapDialog open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
+      <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
         <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
           {id ? 'Update' : 'Add'} Quota
         </Components.DialogTitle>

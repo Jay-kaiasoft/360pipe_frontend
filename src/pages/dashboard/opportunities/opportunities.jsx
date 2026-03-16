@@ -90,7 +90,8 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
 
     // NOTE: these now hold ARRAYS OF OPTION OBJECTS from CheckBoxSelect
-    const [selectedOppName, setSelectedOppName] = useState([])
+    const [searchText, setSearchText] = useState("");
+
     const [selectedOppStage, setSelectedOppStage] = useState([])
     const [selectedOppStatus, setSelectedOppStatus] = useState([])
 
@@ -123,6 +124,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             });
     };
 
+    const handleSearch = (event) => {
+        setSearchText(event.target.value);
+    };
+
+    const handleSearchIconClick = () => {
+        handleGetOpportunities()
+    };
     const handleOpenCommentModel = (id) => {
         setSelectedOpportunityId(id);
         setOpenCommentsModel(true)
@@ -151,11 +159,6 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
         setOpportunitiesOptions(res?.result?.[0])
     }
 
-    // Updated handlers to match CheckBoxSelect onChange(event, newValue)
-    const handleSetName = (event, newValue) => {
-        setSelectedOppName(newValue || []);
-    }
-
     const handleSetStages = (event, newValue) => {
         setSelectedOppStage(newValue || []);
     }
@@ -166,16 +169,9 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const handleGetOpportunities = async () => {
         try {
-            let opportunityName = []
             let opportunityStages = []
             let oppStatus = []
 
-            // Now selectedOppName/Stage/Status are arrays of {id, title}
-            if (selectedOppName?.length > 0) {
-                opportunityName = selectedOppName
-                    .map((opt) => opt?.title)
-                    .filter(Boolean);
-            }
             if (selectedOppStage?.length > 0) {
                 opportunityStages = selectedOppStage
                     .map((opt) => opt?.title)
@@ -188,15 +184,13 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
             }
 
             let params = {
-                opportunity: opportunityName,
                 salesStage: opportunityStages,
                 status: oppStatus,
             };
 
             const searchParams = new URLSearchParams();
-            // Append each array properly
-            if (params.opportunity?.length) {
-                params.opportunity.forEach((item) => searchParams.append("opportunity", item));
+            if (searchText !== null && searchText !== "") {
+                searchParams.append("search", searchText);
             }
             if (params.salesStage?.length) {
                 params.salesStage.forEach((item) => searchParams.append("salesStage", item));
@@ -256,7 +250,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     useEffect(() => {
         handleGetOpportunities()
-    }, [selectedOppName, selectedOppStage, selectedOppStatus])
+    }, [selectedOppStage, selectedOppStatus])
 
     useEffect(() => {
         if (syncingPullStatus && location.pathname === '/dashboard/opportunities') {
@@ -844,11 +838,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 { id, field: "accountId", value: newId },
                 event
             );
-        };
-
-        const handleSave = () => {
-            api.stopCellEditMode({ id, field: "accountName" });
-        };
+        };    
 
         const handleCancel = () => {
             api.setEditCellValue({
@@ -1254,16 +1244,17 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const filterComponent = () => {
         return (
-            <div className='lg:w-[750px] flex justify-start items-center gap-4'>
-                <div className='w-full'>
+            <div className='lg:w-[550px] flex justify-start items-center gap-4'>
+                {/* <div className='w-full'>
                     <CheckBoxSelect
                         label="Opportunity Name"
                         placeholder="Select opportunity name"
                         options={opportunitiesOptions?.opportunitiesNameOptions || []}
                         value={selectedOppName}
                         onChange={handleSetName}
+                        maxVisibleChips={1}
                     />
-                </div>
+                </div> */}
                 <div className='w-full'>
                     <CheckBoxSelect
                         label="Sales Stages"
@@ -1271,6 +1262,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         options={opportunitiesOptions?.opportunitiesStagesOptions || []}
                         value={selectedOppStage}
                         onChange={handleSetStages}
+                        maxVisibleChips={1}
                     />
                 </div>
                 <div className='w-full'>
@@ -1280,6 +1272,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         options={opportunityStatus || []}
                         value={selectedOppStatus}
                         onChange={handleSetStatus}
+                        maxVisibleChips={1}
                     />
                 </div>
             </div>
@@ -1301,6 +1294,11 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                     groups={opportunities}
                     columns={columns}
                     // height={350}
+                    showSearch={true}
+                    searchPlaceholder={"Type account or opportunity name..."}
+                    searchValue={searchText}
+                    onSearchChange={handleSearch}
+                    onSearchClick={handleSearchIconClick}
                     showButtons={true}
                     buttons={actionButtons}
                     showFilters={true}

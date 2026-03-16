@@ -11,6 +11,7 @@ import CustomIcons from '../../../../components/common/icons/CustomIcons';
 
 import { createProcessName, getProcessName, updateProcessName } from '../../../../service/processName/processNameService';
 import { getUserDetails } from '../../../../utils/getUserDetails';
+import { handleRequestClose } from '../../../../service/common/commonService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -95,6 +96,7 @@ function AddSalesProcessName({ setAlert, open, handleClose, id, oppId, handleGet
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

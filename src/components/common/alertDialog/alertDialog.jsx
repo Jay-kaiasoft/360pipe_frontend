@@ -3,6 +3,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import Components from '../../muiComponents/components';
 import Button from '../buttons/button';
 import CustomIcons from '../icons/CustomIcons';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -24,7 +25,7 @@ export default function AlertDialog({ open, handleClose, title, message, handleA
         <React.Fragment>
             <BootstrapDialog
                 open={open}
-                // onClose={onClose}
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
                 maxWidth='sm'

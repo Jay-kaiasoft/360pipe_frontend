@@ -7,6 +7,7 @@ import Components from '../../../components/muiComponents/components';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Button from '../../common/buttons/button';
 import { getReportHierarch } from '../../../service/contact/contactService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -152,6 +153,7 @@ function ContactReportHierarch({ open, handleClose, contactId }) {
   return (
     <>
       <BootstrapDialog
+      onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
         open={open}
         aria-labelledby="contact-hierarch-title"
         fullWidth

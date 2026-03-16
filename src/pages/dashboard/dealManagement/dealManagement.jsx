@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { connect } from 'react-redux';
 
 // Rich Text Editor
@@ -36,7 +36,6 @@ import { setAlert, setOppSelectedTabIndex, setSyncingPushStatus } from '../../..
 import { getUserDetails } from '../../../utils/getUserDetails';
 import {
     deleteOpportunityLogo,
-    getAllOpportunities,
     getOpportunityDetails,
     getOpportunityOptions,
     updateOpportunity,
@@ -582,20 +581,40 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
 
     const currentKeyContactsCount = allContactsWithEdits.filter((c) => c.isKey).length;
 
-    const handleToggleKeyContact = (id, isKey) => {
+    const handleToggleKeyContact = (id, isKey, contact) => {
         setEditedContacts((prev) => {
             const next = [...prev];
             const idx = next.findIndex((e) => String(e.id) === String(id));
-            if (idx >= 0) next[idx] = { id, isKey };
-            else next.push({ id, isKey });
+
+            // Create the updated contact object including the new isKey value
+            const updatedContact = { ...contact, id, isKey };
+
+            if (idx >= 0) {
+                // Update the existing entry in the edit list
+                next[idx] = updatedContact;
+            } else {
+                // Add the contact to the edit list for the first time
+                next.push(updatedContact);
+            }
+
             return next;
         });
     };
 
+    // const handleToggleKeyContact = (id, isKey, contact) => {
+    //     setEditedContacts((prev) => {
+    //         const next = [...prev];
+    //         const idx = next.findIndex((e) => String(e.id) === String(id));
+    //         if (idx >= 0) next[idx] = { id, isKey };
+    //         else next.push({ id, isKey });
+    //         return next;
+    //     });
+    // };
+
     useClickOutside(selectContactsRef, async () => {
         if (!isSelectContactsOpen) return;
         if (editedContacts.length > 0) {
-            const requestData = editedContacts.map(item => ({ id: item.id, isKey: item.isKey }));
+            const requestData = editedContacts.map(item => { return item });
             const res = await updateOpportunitiesContact(requestData);
             if (res?.status === 200) {
                 handleGetOppContacts();
@@ -603,7 +622,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
             }
         }
         setIsSelectContactsOpen(false);
-    }, isSelectContactsOpen);
+    }, isSelectContactsOpen);    
 
     const openAddContactModal = () => {
         setEditingOppContactId(null);
@@ -1789,23 +1808,32 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                     )}
                                 </div>
 
-                                {/* Details Grid */}
-                                <div className="flex justify-center items-center w-full">
-                                    <OpportunityField
-                                        label="Account"
-                                        value={getDisplayName(watch("accountId"), accounts)}
-                                        type="select"
-                                        options={accounts}
-                                        onSave={(newValue) => handleSaveField("accountId", newValue)}
-                                    />
+                                {/* Details Grid – six‑column aligned grid */}
+                                <div className="w-full grid grid-cols-2 lg:grid-cols-[128px_1fr_128px_1fr_128px_1fr] gap-3 my-5">
+                                    {/* ---- Row 1: Account, Deal Amount, Opp Name ---- */}
+                                    {/* Account label */}
+                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Account:</span>
+                                    {/* Account value */}
+                                    <div className="text-gray-900 font-semibold text-base">
+                                        <OpportunityField
+                                            label="Account"
+                                            value={getDisplayName(watch("accountId"), accounts)}
+                                            type="select"
+                                            options={accounts}
+                                            onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                            hideLabel
+                                        />
+                                    </div>
 
-                                    {/* Pricing Popover Trigger */}
-                                    <div className="relative cursor-pointer w-full">
-                                        <p className="font-semibold text-black" onClick={openPricingBox}>
+                                    {/* Deal Amount label */}
+                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Deal Amount:</span>
+                                    {/* Deal Amount value with pricing popover */}
+                                    <div className="relative cursor-pointer text-gray-900 font-semibold text-base">
+                                        <span onClick={openPricingBox}>
                                             {watch("dealAmount") ? `$${parseInt(watch("dealAmount")).toLocaleString()}` : "—"}
-                                        </p>
+                                        </span>
                                         {showPricingBox && (
-                                            <div ref={pricingBoxRef} className="absolute z-50 right-0 top-10 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
+                                            <div ref={pricingBoxRef} className="absolute z-50 left-0 top-6 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
                                                 <div>
                                                     <label className="text-xs font-semibold">List Amount</label>
                                                     <Input
@@ -1816,7 +1844,6 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                         error={pricingDraft.listPrice === ""}
                                                     />
                                                 </div>
-
                                                 <div>
                                                     <label className="text-xs font-semibold">Discount (%)</label>
                                                     <Input
@@ -1826,7 +1853,6 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                         onChange={handleChange}
                                                     />
                                                 </div>
-
                                                 <div>
                                                     <label className="text-xs font-semibold">Deal Amount</label>
                                                     <Input
@@ -1836,33 +1862,57 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                         onChange={handleChange}
                                                     />
                                                 </div>
-
                                             </div>
                                         )}
                                     </div>
 
-                                    <OpportunityField
-                                        label="Opportunity Name"
-                                        value={watch("opportunity")}
-                                        type="text"
-                                        onSave={(newValue) => handleSaveField("opportunity", newValue)}
-                                        required={true}
-                                    />
-                                    <OpportunityField
-                                        label="Close Date"
-                                        value={formatDate(watch("closeDate"))}
-                                        type="date"
-                                        onSave={(newValue) => handleSaveField("closeDate", newValue)}
-                                        required={true}
-                                    />
-                                    <OpportunityField
-                                        label="Status"
-                                        value={watch("status")}
-                                        type="select"
-                                        options={opportunityStatus}
-                                        onSave={(newValue) => handleSaveField("status", newValue)}
-                                        required={true}
-                                    />
+                                    {/* Opp Name label */}
+                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Opp Name:</span>
+                                    {/* Opp Name value */}
+                                    <div className="text-gray-900 font-semibold text-base">
+                                        <OpportunityField
+                                            label="Opportunity Name"
+                                            value={watch("opportunity")}
+                                            type="text"
+                                            onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                            required
+                                            hideLabel
+                                        />
+                                    </div>
+
+                                    {/* ---- Row 2: Close Date, Status, (empty placeholders) ---- */}
+                                    {/* Close Date label */}
+                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Close Date:</span>
+                                    {/* Close Date value */}
+                                    <div className="text-gray-900 font-semibold text-base">
+                                        <OpportunityField
+                                            label="Close Date"
+                                            value={formatDate(watch("closeDate"))}
+                                            type="date"
+                                            onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                            required
+                                            hideLabel
+                                        />
+                                    </div>
+
+                                    {/* Status label */}
+                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Status:</span>
+                                    {/* Status value */}
+                                    <div className="text-gray-900 font-semibold text-base">
+                                        <OpportunityField
+                                            label="Status"
+                                            value={watch("status")}
+                                            type="select"
+                                            options={opportunityStatus}
+                                            onSave={(newValue) => handleSaveField("status", newValue)}
+                                            required
+                                            hideLabel
+                                        />
+                                    </div>
+
+                                    {/* Empty cells to complete the 6‑column row – keep alignment */}
+                                    <div></div>
+                                    <div></div>
                                 </div>
                             </div>
 
@@ -2113,7 +2163,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                         </div>
                                     )}
 
-                                    <div className="overflow-y-auto px-1 flex-1">
+                                    {/* <div className="overflow-y-auto px-1 flex-1">
                                         <ul className="text-sm">
                                             {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                                 allContactsWithEdits
@@ -2145,6 +2195,43 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                 </p>
                                             )}
                                         </ul>
+                                    </div> */}
+
+                                    <div className="overflow-y-auto flex-1 max-h-[8rem]">
+                                        {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                            <ul className="space-y-3">
+                                                {allContactsWithEdits
+                                                    ?.filter((row) => row.isKey === true)
+                                                    .map((c, idx) => {
+                                                        const initials = (c.contactName || c.title || c.role || "UK")
+                                                            .split(' ')
+                                                            .map(n => n?.[0] || '')
+                                                            .join('')
+                                                            .substring(0, 2)
+                                                            .toUpperCase();
+
+                                                        const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                        const badgeColor = bgColors[idx % bgColors.length];
+
+                                                        return (
+                                                            <li key={idx} className="flex items-center gap-3 py-1">
+                                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                                    {initials}
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
+                                                                        <span className="text-gray-600 text-[13px]">- {c.title || 'Role'}</span>
+                                                                    </div>
+                                                                    <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
+                                                                </div>
+                                                            </li>
+                                                        );
+                                                    })}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-end gap-2 absolute bottom-3 right-3">
@@ -2627,7 +2714,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                     </div>
                                                 )}
 
-                                                <div className="overflow-y-auto px-1 flex-1">
+                                                {/* <div className="overflow-y-auto px-1 flex-1">
                                                     <ul className="text-sm">
                                                         {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                                             allContactsWithEdits
@@ -2659,6 +2746,43 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                             </p>
                                                         )}
                                                     </ul>
+                                                </div> */}
+
+                                                <div className="overflow-y-auto flex-1 max-h-[8rem]">
+                                                    {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                                        <ul className="space-y-3">
+                                                            {allContactsWithEdits
+                                                                ?.filter((row) => row.isKey === true)
+                                                                .map((c, idx) => {
+                                                                    const initials = (c.contactName || c.title || c.role || "UK")
+                                                                        .split(' ')
+                                                                        .map(n => n?.[0] || '')
+                                                                        .join('')
+                                                                        .substring(0, 2)
+                                                                        .toUpperCase();
+
+                                                                    const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                                    const badgeColor = bgColors[idx % bgColors.length];
+
+                                                                    return (
+                                                                        <li key={idx} className="flex items-center gap-3 py-1">
+                                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                                                {initials}
+                                                                            </div>
+                                                                            <div className="flex-1">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
+                                                                                    <span className="text-gray-600 text-[13px]">- {c.title || 'Role'}</span>
+                                                                                </div>
+                                                                                <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
+                                                                            </div>
+                                                                        </li>
+                                                                    );
+                                                                })}
+                                                        </ul>
+                                                    ) : (
+                                                        <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
+                                                    )}
                                                 </div>
 
                                                 <div className="flex items-end gap-2 absolute bottom-3 right-3">

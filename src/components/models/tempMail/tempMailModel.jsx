@@ -10,6 +10,7 @@ import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 
 import { getTempMail, updateMail } from '../../../service/tempMail/tempMail';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -95,6 +96,7 @@ function TempMailModel({ setAlert, open, handleClose, id, handleGetAllMails }) {
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

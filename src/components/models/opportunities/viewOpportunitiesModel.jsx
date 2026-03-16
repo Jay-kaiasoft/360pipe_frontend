@@ -11,7 +11,7 @@ import Select from '../../common/select/select';
 
 import { getOpportunityDetails } from '../../../service/opportunities/opportunitiesService';
 import { getAllAccounts } from '../../../service/account/accountService';
-import { opportunityStages, opportunityStatus, partnerRoles } from '../../../service/common/commonService';
+import { handleRequestClose, opportunityStages, opportunityStatus, partnerRoles } from '../../../service/common/commonService';
 import { getAllOpportunitiesPartner } from '../../../service/opportunities/opportunityPartnerService';
 import { getAllOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
 import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
@@ -188,6 +188,7 @@ function ViewOpportunitiesModel({ open, handleClose, opportunityId, }) {
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 maxWidth={"md"}

@@ -12,6 +12,7 @@ import Select from '../../../components/common/select/select';
 import { getAllActiveProducts } from '../../../service/products/productService';
 import Input from '../../common/input/input';
 import { createOpportunitiesProducts, getOpportunitiesProducts, updateOpportunitiesProducts } from '../../../service/opportunities/OpportunityProductsService';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -146,11 +147,10 @@ function OpportunitiesProductsModel({ setAlert, open, handleClose, id, opportuni
         }
     }
 
-
-
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

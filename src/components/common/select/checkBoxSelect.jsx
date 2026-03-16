@@ -1,3 +1,132 @@
+// import React, { forwardRef } from 'react';
+// import { useTheme } from '@mui/material/styles';
+// import Components from '../../muiComponents/components';
+// import Checkbox from '../checkBox/checkbox';
+
+// const ITEM_HEIGHT = 48;
+
+// const CheckBoxSelect = forwardRef(
+//   (
+//     {
+//       size = "small",
+//       label,
+//       placeholder,
+//       error,
+//       value = [],
+//       onChange,
+//       options,
+//       disabled = false,
+//       checkAll = false,
+//       requiredFiledLabel = false,
+//     },
+//     ref
+//   ) => {
+//     const theme = useTheme();
+//     const selectOptions = Array.isArray(options) && options.length > 0 ? options : [];
+
+//     const finalOptions = checkAll
+//       ? [{ id: "__all__", title: "Select All" }, ...selectOptions]
+//       : selectOptions;
+
+//     const handleChange = (event, newValue) => {
+//       const allOption = newValue.find((opt) => opt.id === "__all__");
+//       if (allOption) {
+//         if (value.length === selectOptions.length) {
+//           onChange(event, []);
+//         } else {
+//           onChange(event, [...selectOptions]);
+//         }
+//         return;
+//       }
+//       onChange(event, newValue);
+//     };
+
+//     return (
+//       <Components.Autocomplete
+//         ref={ref}
+//         multiple
+//         disableCloseOnSelect
+//         options={finalOptions}
+//         size={size}
+//         disabled={disabled}
+//         getOptionLabel={(option) => option?.title || ""}
+//         value={value}
+//         isOptionEqualToValue={(option, val) => option?.id === val?.id}
+//         onChange={handleChange}
+//         // Hides the standard Chips to show text instead
+//         renderTags={(tagValue) => {
+//           const labelText = tagValue.map((option) => option.title).join(', ');
+//           return (
+//             <div style={{ 
+//               overflow: 'hidden', 
+//               textOverflow: 'ellipsis', 
+//               whiteSpace: 'nowrap', 
+//               maxWidth: '90%',
+//               fontSize: '14px',
+//               paddingLeft: '4px'
+//             }}>
+//               {labelText}
+//             </div>
+//           );
+//         }}
+//         renderInput={(params) => (
+//           <Components.TextField
+//             {...params}
+//             // Label is now inside the border as seen in your image
+//             label={label}
+//             // Placeholder only shows if nothing is selected
+//             placeholder={value.length > 0 ? "" : (placeholder || "Select options")}
+//             error={!!error}
+//             required={requiredFiledLabel}
+//             sx={{
+//               '& .MuiOutlinedInput-root': {
+//                 borderRadius: '4px',
+//                 '& fieldset': {
+//                   borderColor: theme.palette.secondary.main,
+//                 },
+//               },
+//               '& .MuiInputLabel-root': {
+//                 color: theme.palette.text.primary,
+//               },
+//               '& .MuiInputBase-input': {
+//                 // Shrink input width when text is present so it doesn't push the text
+//                 width: value.length > 0 ? '0px !important' : 'auto',
+//                 minWidth: value.length > 0 ? '0px !important' : '50px',
+//               }
+//             }}
+//           />
+//         )}
+//         renderOption={(props, option, { selected }) => {
+//           const isAll = option.id === "__all__";
+//           const isChecked = isAll ? value.length === selectOptions.length : selected;
+
+//           return (
+//             <li {...props} style={{ 
+//               backgroundColor: isChecked ? theme.palette.secondary.main : 'transparent',
+//               color: isChecked ? '#fff' : 'inherit',
+//               padding: '4px 10px'
+//             }}>
+//               <Checkbox 
+//                 checked={isChecked} 
+//                 sx={{ color: isChecked ? '#fff !important' : 'inherit' }}
+//               />
+//               <Components.ListItemText 
+//                 primary={option.title} 
+//                 sx={{ '& span': { color: isChecked ? '#fff' : 'inherit' }}}
+//               />
+//             </li>
+//           );
+//         }}
+//         ListboxProps={{
+//           style: { maxHeight: ITEM_HEIGHT * 4.5 }
+//         }}
+//       />
+//     );
+//   }
+// );
+
+// export default CheckBoxSelect;
+
 import React, { forwardRef } from 'react';
 import { useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
@@ -89,13 +218,14 @@ const CheckBoxSelect = forwardRef(
                         },
                       },
                     }}
+                    size='small'
                   />
                 ))}
                 {selectedCount > maxVisibleChips && (
                   <Components.Chip
                     label={`+${selectedCount - maxVisibleChips} more`}
                     size="small"
-                    variant="outlined"
+                    variant="outlined"                  
                     sx={{
                       margin: '2px',
                       borderColor: theme.palette.secondary.main,

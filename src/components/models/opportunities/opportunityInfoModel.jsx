@@ -28,6 +28,7 @@ import AlertDialog from '../../common/alertDialog/alertDialog';
 import Checkbox from '../../common/checkBox/checkbox';
 import Input from '../../common/input/input';
 import OpportunityKeyContactModel from './opportunityKeyContactModel';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -990,6 +991,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
     return (
         <React.Fragment>
             <BootstrapDialog
+                onClose={(event, reason) => handleRequestClose(event, reason, handleCancelWithUnsavedCheck)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 maxWidth={"lg"}
@@ -1946,7 +1948,7 @@ function OpportunityInfoModel({ open, handleClose, opportunityId, setSyncingPush
                 </Components.DialogActions>
 
             </BootstrapDialog>
-            
+
             {/* CONTACT MODAL + CONTACT DELETE DIALOG */}
             <OpportunityKeyContactModel
                 open={contactModalOpen}

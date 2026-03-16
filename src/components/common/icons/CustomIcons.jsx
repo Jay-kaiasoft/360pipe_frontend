@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const CustomIcons = ({ iconName, css }) => {    
+const CustomIcons = ({ iconName, css , onClick}) => {    
     return (
         <>
-            <FontAwesomeIcon icon={iconName} className={css} />
+            <FontAwesomeIcon icon={iconName} className={css} onClick={onClick} />
         </>
     )
 }

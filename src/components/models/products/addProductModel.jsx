@@ -11,6 +11,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Select from '../../common/select/select';
 import { createProducts, getProducts, updateProducts } from '../../../service/products/productService';
 import Checkbox from '../../common/checkBox/checkbox';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -115,6 +116,7 @@ function AddProductModel({ setAlert, open, handleClose, id, handleGetAllProducts
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

@@ -17,6 +17,7 @@ import DatePickerComponent from '../../../common/datePickerComponent/datePickerC
 import { getAllProcessNameByCustomer } from '../../../../service/processName/processNameService';
 import { createSalesProcess, getSalesProcess, updateSalesProcess } from '../../../../service/salesProcess/salesProcessService';
 import { getAllOpportunitiesContact } from '../../../../service/opportunities/opportunitiesContactService';
+import { handleRequestClose } from '../../../../service/common/commonService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -186,6 +187,7 @@ function AddSalesProcessModel({ setAlert, open, handleClose, id, oppId, handleGe
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth

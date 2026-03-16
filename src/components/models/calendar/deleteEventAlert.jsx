@@ -7,6 +7,7 @@ import Checkbox from '../../common/checkBox/checkbox';
 import { deleteEvent } from '../../../service/calendar/calendarService';
 import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': {
@@ -58,6 +59,7 @@ function DeleteEventAlert({ setAlert, open, handleClose, loading, id, thirdParty
         <React.Fragment>
             <BootstrapDialog
                 open={open}
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
                 maxWidth='sm'

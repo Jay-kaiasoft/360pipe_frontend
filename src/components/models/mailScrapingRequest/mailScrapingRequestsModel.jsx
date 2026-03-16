@@ -9,6 +9,7 @@ import Input from '../../../components/common/input/input';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
 import CustomIcons from '../../../components/common/icons/CustomIcons';
 import { changeScrapingMessageCount, getScrapingRequests } from '../../../service/emailScrapingRequest/emailScrapingRequest';
+import { handleRequestClose } from '../../../service/common/commonService';
 
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
@@ -88,6 +89,7 @@ function MailScrapingRequestsModel({ setAlert, open, handleClose, id, handleGetA
     return (
         <React.Fragment>
             <BootstrapDialog
+            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
