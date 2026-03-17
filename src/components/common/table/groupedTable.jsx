@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Chip, useTheme } from '@mui/material';
+import { Chip, Tooltip, useTheme } from '@mui/material';
 import {
     Accordion,
     AccordionSummary,
@@ -66,17 +66,24 @@ export default function GroupedDataTable({
                         {showSearch && (
                             <div className="w-full md:w-80 mb-3 md:mb-0">
                                 <Input
-                                    value={searchValue}          // BIND VALUE
-                                    onChange={onSearchChange}    // BIND CHANGE HANDLER
+                                    value={searchValue}
+                                    onChange={onSearchChange}
                                     name="search"
                                     placeholder={searchPlaceholder}
                                     label={searchLabel}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            onSearchClick();
+                                        }
+                                    }}
                                     endIcon={
-                                        <CustomIcons
-                                            iconName={'fa-solid fa-magnifying-glass'}
-                                            css="mr-0 cursor-pointer"
-                                            onClick={onSearchClick}
-                                        />
+                                        <Tooltip title="Search" arrow>
+                                            <CustomIcons
+                                                iconName={'fa-solid fa-magnifying-glass'}
+                                                css="mr-0 cursor-pointer"
+                                                onClick={onSearchClick}
+                                            />
+                                        </Tooltip>
                                     }
                                 />
                             </div>

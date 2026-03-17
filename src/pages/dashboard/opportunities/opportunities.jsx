@@ -24,7 +24,6 @@ import KeyContactModel from '../../../components/models/closePlan/keyContactMode
 import ClosePlanCommentModel from '../../../components/models/closePlan/closePlanCommentModel';
 import OpportunityInfoModel from '../../../components/models/opportunities/opportunityInfoModel';
 
-
 const HtmlTooltip = styled(({ className, ...props }) => (
     <Tooltip
         {...props}
@@ -90,7 +89,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const [opportunitiesOptions, setOpportunitiesOptions] = useState(null)
 
     // NOTE: these now hold ARRAYS OF OPTION OBJECTS from CheckBoxSelect
-    const [searchText, setSearchText] = useState("");
+    const [searchText, setSearchText] = useState(null);
 
     const [selectedOppStage, setSelectedOppStage] = useState([])
     const [selectedOppStatus, setSelectedOppStatus] = useState([])
@@ -131,6 +130,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
     const handleSearchIconClick = () => {
         handleGetOpportunities()
     };
+
     const handleOpenCommentModel = (id) => {
         setSelectedOpportunityId(id);
         setOpenCommentsModel(true)
@@ -838,7 +838,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                 { id, field: "accountId", value: newId },
                 event
             );
-        };    
+        };
 
         const handleCancel = () => {
             api.setEditCellValue({
@@ -1244,17 +1244,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const filterComponent = () => {
         return (
-            <div className='lg:w-[550px] flex justify-start items-center gap-4'>
-                {/* <div className='w-full'>
-                    <CheckBoxSelect
-                        label="Opportunity Name"
-                        placeholder="Select opportunity name"
-                        options={opportunitiesOptions?.opportunitiesNameOptions || []}
-                        value={selectedOppName}
-                        onChange={handleSetName}
-                        maxVisibleChips={1}
-                    />
-                </div> */}
+            <div className='lg:w-[550px] flex justify-start items-center gap-4'>               
                 <div className='w-full'>
                     <CheckBoxSelect
                         label="Sales Stages"

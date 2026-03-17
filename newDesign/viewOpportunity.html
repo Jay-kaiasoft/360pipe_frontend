@@ -305,39 +305,139 @@
 
                 <!-- Key Contacts -->
                 <div
-                    class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 min-h-[15rem] relative flex flex-col">
-                    <p className="font-medium text-gray-800 text-2xl text-center mb-4">Key Contacts</p>
-                    <div class="overflow-y-auto flex-1">
-                        <ul class="space-y-3">
-                            <li class="flex items-center gap-3 py-1">
-                                <div
-                                    class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-[#4267B2]">
-                                    JD</div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2"><span
-                                            class="font-bold text-[#1e3a8a] text-[15px]">John Doe</span><span
-                                            class="text-gray-600 text-[13px]">- CTO</span></div>
-                                    <div class="text-gray-500 text-[13px]">Decision Maker</div>
-                                </div>
-                            </li>
-                            <li class="flex items-center gap-3 py-1">
-                                <div
-                                    class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-[#009688]">
-                                    JS</div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2"><span
-                                            class="font-bold text-[#1e3a8a] text-[15px]">Jane Smith</span><span
-                                            class="text-gray-600 text-[13px]">- VP Eng</span></div>
-                                    <div class="text-gray-500 text-[13px]">Technical Evaluator</div>
-                                </div>
-                            </li>
+                    class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 max-h-[15rem] relative flex flex-col">
+                    <p class="font-medium text-gray-800 text-2xl text-center mb-4">Key Contacts</p>
+                    <div class="overflow-y-auto overflow-x-hidden flex-1 h-32 pr-1">
+                        <ul id="key-contacts-list" class="space-y-3">
+                            <!-- Dynamically populated -->
                         </ul>
                     </div>
-                    <div class="flex items-end gap-2 absolute bottom-3 right-3">
-                        <button
-                            class="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">SELECT</button>
-                        <div class="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
-                            <i class="fa-solid fa-plus h-3 w-3 text-white"></i>
+
+                    <div class="flex items-end gap-2 absolute bottom-4 right-4 z-10">
+                        <button onclick="openSelectContactsModal(event)"
+                            class="h-6 px-6 rounded-full text-[12px] font-bold tracking-wider text-white bg-[#374151] hover:bg-[#1f2937] shadow-sm flex items-center gap-1.5 cursor-pointer transition-colors uppercase">SELECT</button>
+                        <div onclick="openAddContactModal()"
+                            class="bg-[#2563eb] hover:bg-[#1d4ed8] h-7 w-7 flex justify-center items-center rounded-full cursor-pointer shadow-md transition-colors">
+                            <i class="fa-solid fa-plus h-3.5 w-3.5 text-white"></i>
+                        </div>
+                    </div>
+
+                    <!-- Select Contacts Popup (Anchored) -->
+                    <div id="select-contacts-modal"
+                        class="hidden absolute bottom-14 right-4 z-[100] w-[320px] bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-gray-100 p-3 animate-in fade-in zoom-in duration-200">
+                        <div class="space-y-2" id="select-contacts-popup-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Add/Edit Contact Modal REDESIGN -->
+                    <div id="add-contact-modal" class="hidden absolute -left-[300px] z-50">
+                        <div
+                            class="w-full min-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                            <!-- Header with Close Button -->
+                            <div class="flex justify-end px-4 border-b">
+                                <button onclick="closeAddContactModal()"
+                                    class="text-black text-3xl transition-colors">&times;</button>
+                            </div>
+
+                            <div class="p-6 pt-0">
+                                <form id="add-contact-form" onsubmit="handleAddContact(event)">
+                                    <input type="hidden" id="modal-edit-id">
+
+                                    <!-- Table Style UI -->
+                                    <div class="rounded-lg border border-gray-200 overflow-hidden mb-3">
+                                        <table class="w-full">
+                                            <thead class="bg-[#5B45A6] text-white">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                    <th class="px-4 py-3 text-left text-sm font-semibold">Title</th>
+                                                    <th class="px-4 py-3 text-left text-sm font-semibold">Role</th>
+                                                    <th class="px-4 py-3 text-center text-sm font-semibold w-16">Key
+                                                    </th>
+                                                    <th class="px-4 py-3 text-center w-12">
+                                                        <div
+                                                            class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                                            <i class="fa-solid fa-plus text-xs"></i>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="bg-white">
+                                                    <td class="p-3">
+                                                        <input type="text" id="contact-name" placeholder="Select name"
+                                                            required
+                                                            class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm text-gray-500">
+                                                    </td>
+                                                    <td class="p-3">
+                                                        <input type="text" id="contact-title" placeholder="Title"
+                                                            required
+                                                            class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm text-gray-500">
+                                                    </td>
+                                                    <td class="p-3">
+                                                        <div class="relative">
+                                                            <select id="contact-role" required
+                                                                class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm text-gray-500 appearance-none pr-8">
+                                                                <option value="" disabled selected>Role</option>
+                                                                <option value="Decision Maker">Decision Maker</option>
+                                                                <option value="Technical Evaluator">Technical Evaluator
+                                                                </option>
+                                                                <option value="Economic Buyer">Economic Buyer</option>
+                                                                <option value="Influencer">Influencer</option>
+                                                                <option value="Project Manager">Project Manager</option>
+                                                                <option value="Other">Other</option>
+                                                            </select>
+                                                            <i
+                                                                class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-3 text-center">
+                                                        <input type="checkbox" id="contact-is-key"
+                                                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                                    </td>
+                                                    <td class="p-3 text-center">
+                                                        <button type="button" class="text-red-500 hover:text-red-700">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr class="bg-white">
+                                                    <td colspan="3" class="p-3">
+                                                        <textarea id="contact-notes" rows="3" placeholder="Notes"
+                                                            class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm text-gray-500"></textarea>
+                                                    </td>
+                                                </tr>
+                                                <tr class="bg-white">
+                                                    <td colspan="5" class="px-3 pb-3">
+                                                        <div class="flex items-center gap-6">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="radio" id="note-personal" name="note-type"
+                                                                    value="Personal"
+                                                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                                                <label for="note-personal"
+                                                                    class="text-sm font-medium text-gray-700">Personal</label>
+                                                            </div>
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="radio" id="note-professional"
+                                                                    name="note-type" value="Professional" checked
+                                                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                                                <label for="note-professional"
+                                                                    class="text-sm font-medium text-gray-700">Professional</label>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Footer Buttons -->
+                                    <div class="flex justify-end">
+                                        <button type="submit" id="add-modal-submit-btn"
+                                            class="px-10 py-2.5 rounded bg-[#2c69e6] text-white font-medium hover:bg-[#2157c9] shadow-md transition-colors">Add</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -615,6 +715,244 @@
             activeEl.classList.remove('bg-[#D9C6F5]', 'text-black', 'border-transparent');
             activeEl.classList.add('bg-[#44288E]', 'text-white', 'border-[#44288E]');
         }
+
+        // Demo Key Contacts Logic
+        let allContacts = [
+            { id: 1, name: "John Doe", title: "CTO", role: "Decision Maker", isKey: true },
+            { id: 2, name: "Jane Smith", title: "VP Eng", role: "Technical Evaluator", isKey: true },
+            { id: 3, name: "Robert Brown", title: "CFO", role: "Economic Buyer", isKey: false },
+            { id: 4, name: "Sarah Miller", title: "Legal Counsel", role: "Influencer", isKey: false }
+        ];
+
+        const contactRoles = [
+            { id: 1, title: "Decision Maker" },
+            { id: 2, title: "Technical Evaluator" },
+            { id: 3, title: "Economic Buyer" },
+            { id: 4, title: "Influencer" },
+            { id: 5, title: "Project Manager" },
+            { id: 6, title: "Other" }
+        ];
+
+        function renderKeyContacts() {
+            const list = document.getElementById('key-contacts-list');
+            list.innerHTML = '';
+
+            const keyContacts = allContacts.filter(c => c.isKey);
+
+            if (keyContacts.length === 0) {
+                list.innerHTML = '<li class="text-gray-400 italic text-sm text-center py-4">No key contacts selected</li>';
+                return;
+            }
+
+            keyContacts.forEach((c, idx) => {
+                const initials = c.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                const badgeColor = bgColors[idx % bgColors.length];
+
+                const li = document.createElement('li');
+                li.className = "flex items-center gap-3 py-1 group relative";
+
+                // Construct tooltip text
+                let tooltipText = "";
+                if (c.notes) {
+                    tooltipText = `Notes (${c.noteType || 'Professional'}): ${c.notes}`;
+                }
+
+                li.innerHTML = `
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}">
+                        ${initials}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-[#1e3a8a] text-[15px] cursor-pointer truncate">${c.name}</span>
+                            <span class="text-gray-600 text-[13px] truncate">- ${c.title}</span>
+                        </div>
+                        <div class="text-gray-500 text-[13px]">${c.role}</div>
+                    </div>
+                    ${tooltipText ? `
+                    <div class="hidden group-hover:block absolute bottom-full left-4 mb-1 z-[120] w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-xl text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                        <div class="font-bold text-[#1e3a8a] mb-1">Notes (${c.noteType || 'Professional'})</div>
+                        <div class="whitespace-pre-wrap">${c.notes}</div>
+                        <!-- Tiny arrow -->
+                        <div class="absolute top-full left-4 -mt-1 w-2 h-2 bg-white border-r border-b border-gray-200 rotate-45"></div>
+                    </div>
+                    ` : ''}
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function openSelectContactsModal(event) {
+            event.stopPropagation();
+            const modal = document.getElementById('select-contacts-modal');
+            const isHidden = modal.classList.contains('hidden');
+
+            // Close all first
+            closeSelectContactsModal();
+
+            if (isHidden) {
+                modal.classList.remove('hidden');
+                renderSelectContactsPopup();
+
+                // Close on outside click
+                const clickHandler = (e) => {
+                    if (!modal.contains(e.target) && e.target.innerText !== 'SELECT') {
+                        closeSelectContactsModal();
+                        document.removeEventListener('click', clickHandler);
+                    }
+                };
+                setTimeout(() => document.addEventListener('click', clickHandler), 10);
+            }
+        }
+
+        function closeSelectContactsModal() {
+            document.getElementById('select-contacts-modal').classList.add('hidden');
+        }
+
+        function renderSelectContactsPopup() {
+            const list = document.getElementById('select-contacts-popup-list');
+            list.innerHTML = '';
+
+            allContacts.forEach((c) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center gap-3 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group relative";
+                item.innerHTML = `
+                    <input type="checkbox" class="w-5 h-5 rounded border-gray-400 text-[#5B45A6] focus:ring-[#5B45A6]" 
+                        ${c.isKey ? 'checked' : ''} onchange="toggleKeyStatus(${c.id}, this.checked)">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[14px] font-bold text-[#1e3a8a] truncate" title="${c.name}">${c.name}</div>
+                        <div class="text-[12px] text-gray-500 truncate">${c.title}</div>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button onclick="editContact(${c.id})" class="text-blue-500 hover:text-blue-700 p-1">
+                            <i class="fa-solid fa-pen-to-square text-[14px]"></i>
+                        </button>
+                        <button onclick="deleteContact(${c.id})" class="text-red-500 hover:text-red-700 p-1">
+                            <i class="fa-solid fa-trash text-[14px]"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function toggleKeyStatus(id, isKey) {
+            const contact = allContacts.find(c => c.id === id);
+            if (contact) {
+                if (isKey && allContacts.filter(c => c.isKey).length >= 4) {
+                    alert("You can mark up to 4 key contacts.");
+                    renderSelectContactsPopup();
+                    return;
+                }
+                contact.isKey = isKey;
+                renderKeyContacts();
+                // Keep popup open but update list if needed
+                renderSelectContactsPopup();
+            }
+        }
+
+        function updateContactRole(id, role) {
+            const contact = allContacts.find(c => c.id === id);
+            if (contact) contact.role = role;
+        }
+
+        function submitSelection() {
+            renderKeyContacts();
+            closeSelectContactsModal();
+        }
+
+        function deleteContact(id) {
+            if (confirm("Are you sure you want to delete this contact?")) {
+                allContacts = allContacts.filter(c => c.id !== id);
+                renderKeyContacts();
+                if (!document.getElementById('select-contacts-modal').classList.contains('hidden')) {
+                    renderSelectContactsPopup();
+                }
+            }
+        }
+
+        function openAddContactModal() {
+            document.getElementById('add-contact-modal').classList.remove('hidden');
+            document.getElementById('add-contact-form').reset();
+            document.getElementById('modal-edit-id').value = '';
+            document.getElementById('add-modal-submit-btn').innerText = 'Add';
+        }
+
+        function closeAddContactModal() {
+            document.getElementById('add-contact-modal').classList.add('hidden');
+        }
+
+        function editContact(id) {
+            const contact = allContacts.find(c => c.id === id);
+            if (contact) {
+                document.getElementById('modal-edit-id').value = contact.id;
+                document.getElementById('contact-name').value = contact.name;
+                document.getElementById('contact-title').value = contact.title;
+                document.getElementById('contact-role').value = contact.role;
+                document.getElementById('contact-is-key').checked = contact.isKey;
+                document.getElementById('contact-notes').value = contact.notes || '';
+
+                if (contact.noteType === 'Personal') {
+                    document.getElementById('note-personal').checked = true;
+                } else {
+                    document.getElementById('note-professional').checked = true;
+                }
+
+                document.getElementById('add-modal-submit-btn').innerText = 'Update';
+
+                document.getElementById('add-contact-modal').classList.remove('hidden');
+            }
+        }
+
+        function handleAddContact(event) {
+            event.preventDefault();
+            const id = document.getElementById('modal-edit-id').value;
+            const name = document.getElementById('contact-name').value;
+            const title = document.getElementById('contact-title').value;
+            const role = document.getElementById('contact-role').value;
+            const isKey = document.getElementById('contact-is-key').checked;
+            const notes = document.getElementById('contact-notes').value;
+            const noteType = document.querySelector('input[name="note-type"]:checked').value;
+
+            if (isKey && allContacts.filter(c => c.isKey && c.id != id).length >= 4) {
+                alert("You can mark up to 4 key contacts.");
+                return;
+            }
+
+            if (id) {
+                // Edit
+                const contact = allContacts.find(c => c.id == id);
+                if (contact) {
+                    contact.name = name;
+                    contact.title = title;
+                    contact.role = role;
+                    contact.isKey = isKey;
+                    contact.notes = notes;
+                    contact.noteType = noteType;
+                }
+            } else {
+                // Add
+                const newContact = {
+                    id: Date.now(),
+                    name,
+                    title,
+                    role,
+                    isKey,
+                    notes,
+                    noteType
+                };
+                allContacts.push(newContact);
+            }
+
+            renderKeyContacts();
+            closeAddContactModal();
+            if (!document.getElementById('select-contacts-modal').classList.contains('hidden')) {
+                renderSelectContactsPopup();
+            }
+        }
+
+        // Initialize display
+        renderKeyContacts();
     </script>
 </body>
 

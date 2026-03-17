@@ -1249,7 +1249,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         const isActive = stage.id === currentStageId;
                         const isCompleted = currentStageId !== null && stage.id < currentStageId;
 
-                        let bgClass = isActive ? "bg-[#2563EB]" : "bg-transparent hover:bg-black/5";
+                        let bgClass = isActive ? "bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)]" : "bg-transparent hover:bg-black/5";
                         let textClass = isActive ? "text-white" : "text-gray-600 hover:text-gray-900";
 
                         const isFirst = index === 0;

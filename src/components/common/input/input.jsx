@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { InputAdornment, useTheme } from '@mui/material';
 import Components from '../../muiComponents/components';
 
-const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur, requiredFiledLabel = false }, ref) => {
+const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name, label, placeholder, type, error, helperText, value, onChange, endIcon = null, startIcon, InputLabelProps, onFocus, onBlur, requiredFiledLabel = false, onKeyDown }, ref) => {
     const theme = useTheme();
     return (
         <div>
@@ -75,6 +75,7 @@ const Input = forwardRef(({ disabled = false, multiline = false, rows = 2, name,
                 }}
                 onBlur={onBlur}
                 onFocus={onFocus}
+                onKeyDown={onKeyDown}
             />
         </div>
     );
