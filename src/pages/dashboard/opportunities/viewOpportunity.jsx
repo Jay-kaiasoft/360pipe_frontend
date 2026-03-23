@@ -226,7 +226,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         title: "",
         isKeyContact: false,
         name: null,
-        oppId: opportunityId
+        oppId: opportunityId,
+        opportunityContactNotesList: [
+            { id: null, opportunityContactId: null, note: "", type: "Personal" },
+            { id: null, opportunityContactId: null, note: "", type: "Professional" }
+        ]
     });
     const [contactRows, setContactRows] = useState([emptyContactRow()]);
     const selectContactsRef = useRef(null);
@@ -631,6 +635,12 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             roleId: opportunityContactRoles?.find((row) => row?.title === contact?.role)?.id,
             isKeyContact: !!contact?.isKey,
             oppId: opportunityId,
+            opportunityContactNotesList: contact?.opportunityContactNotesList?.length > 0
+                ? contact.opportunityContactNotesList
+                : [
+                    { id: null, opportunityContactId: null, note: "", type: "Personal" },
+                    { id: null, opportunityContactId: null, note: "", type: "Professional" }
+                ]
         };
 
         setContactRows([row]);
@@ -645,45 +655,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     const updateContactRow = (tempId, key, value) =>
         setContactRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [key]: value } : r)));
-
-    // const saveContactsFromModal = async () => {
-    //     const data = contactRows?.map((item) => {
-    //         let firstName = null;
-    //         let lastName = null;
-
-    //         if (!item?.id) {
-    //             const fullName = (item?.name || "").trim();
-
-    //             if (fullName) {
-    //                 const parts = fullName.split(/\s+/)
-    //                 firstName = parts[0];
-    //                 lastName = parts.slice(1).join(" ");
-    //             }
-    //         }
-
-    //         return {
-    //             firstName,
-    //             lastName,
-    //             oppId: parseInt(item?.oppId),
-    //             title: item.title,
-    //             isKeyContact: item.isKeyContact,
-    //             role: item.role,
-    //             contactId: parseInt(item.id),
-    //         };
-    //     });
-
-    //     const res = await addMultipleContacts(data);
-    //     if (res.status === 201) {
-    //         handleGetOppContacts()
-    //         closeAddContactModal();
-    //     } else {
-    //         setAlert({
-    //             open: true,
-    //             type: "error",
-    //             message: res.message
-    //         })
-    //     }
-    // };
 
     const saveContactsFromModal = async () => {
         const data = contactRows?.map((item) => {
@@ -708,6 +679,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                 isKeyContact: item.isKeyContact,
                 role: item.role,
                 contactId: item?.id ? parseInt(item.id) : null,
+                opportunityContactNotesList: item.opportunityContactNotesList
             };
         });
 
@@ -721,6 +693,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                 role: first?.role || null,
                 isKey: !!first?.isKeyContact,
                 contactId: Number.isFinite(first?.contactId) ? first.contactId : null,
+                opportunityContactNotesList: first?.opportunityContactNotesList
             };
 
             // We send array to match how updateOpportunitiesContact is used elsewhere
@@ -1985,73 +1958,117 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
                                                 <tbody>
                                                     {contactRows.map((row, index) => (
-                                                        <tr key={index} className="bg-white">
-                                                            {/* Name */}
-                                                            <td className="px-1 py-1 align-middle w-48">
-                                                                <Select
-                                                                    options={allContacts}
-                                                                    placeholder="Select name"
-                                                                    freeSolo={true}
-                                                                    value={row.id ? Number(row.id) : null}
-                                                                    onChange={(e, newValue) => {
-                                                                        if (typeof newValue === "object" && newValue?.id) {
-                                                                            updateContactRow(row.tempId, "id", String(newValue.id));
-                                                                            updateContactRow(row.tempId, "name", newValue?.name ?? "");
-                                                                        }
-                                                                    }}
-                                                                    onInputChange={(e, inputValue) => {
-                                                                        updateContactRow(row.tempId, "name", inputValue);
-                                                                        if (inputValue) updateContactRow(row.tempId, "id", "");
-                                                                    }}
-                                                                />
-                                                            </td>
-
-                                                            {/* Title */}
-                                                            <td className="px-1 py-1 align-middle w-40">
-                                                                <Input
-                                                                    value={row.title || ""}
-                                                                    placeholder="Title"
-                                                                    type="text"
-                                                                    onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
-                                                                />
-                                                            </td>
-
-                                                            {/* Role */}
-                                                            <td className="px-1 py-1 align-middle w-48">
-                                                                <Select
-                                                                    options={opportunityContactRoles}
-                                                                    label={null}
-                                                                    placeholder="Role"
-                                                                    value={row.roleId ? Number(row.roleId) : null}
-                                                                    onChange={(_, newValue) => {
-                                                                        updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
-                                                                        updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
-                                                                    }}
-                                                                />
-                                                            </td>
-
-                                                            {/* Key */}
-                                                            <td className="px-1 py-1 align-middle w-20">
-                                                                <div className="flex justify-end items-center">
-                                                                    <Checkbox
-                                                                        checked={!!row.isKeyContact}
-                                                                        onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                        <React.Fragment key={row.tempId || index}>
+                                                            <tr className="bg-white border-b-0">
+                                                                {/* Name */}
+                                                                <td className="px-1 py-1 align-middle w-48">
+                                                                    <Select
+                                                                        options={allContacts}
+                                                                        placeholder="Select name"
+                                                                        freeSolo={true}
+                                                                        value={row.id ? Number(row.id) : null}
+                                                                        onChange={(e, newValue) => {
+                                                                            if (typeof newValue === "object" && newValue?.id) {
+                                                                                updateContactRow(row.tempId, "id", String(newValue.id));
+                                                                                updateContactRow(row.tempId, "name", newValue?.name ?? "");
+                                                                            }
+                                                                        }}
+                                                                        onInputChange={(e, inputValue) => {
+                                                                            updateContactRow(row.tempId, "name", inputValue);
+                                                                            if (inputValue) updateContactRow(row.tempId, "id", "");
+                                                                        }}
                                                                     />
-                                                                </div>
-                                                            </td>
+                                                                </td>
 
-                                                            {/* Actions */}
-                                                            <td className="px-1 py-1 align-middle text-right">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => removeContactRow(row.tempId)}
-                                                                    className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
-                                                                    title="Remove"
-                                                                >
-                                                                    <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
-                                                                </button>
-                                                            </td>
-                                                        </tr>
+                                                                {/* Title */}
+                                                                <td className="px-1 py-1 align-middle w-40">
+                                                                    <Input
+                                                                        value={row.title || ""}
+                                                                        placeholder="Title"
+                                                                        type="text"
+                                                                        onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                                                    />
+                                                                </td>
+
+                                                                {/* Role */}
+                                                                <td className="px-1 py-1 align-middle w-48">
+                                                                    <Select
+                                                                        options={opportunityContactRoles}
+                                                                        label={null}
+                                                                        placeholder="Role"
+                                                                        value={row.roleId ? Number(row.roleId) : null}
+                                                                        onChange={(_, newValue) => {
+                                                                            updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
+                                                                            updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
+                                                                        }}
+                                                                    />
+                                                                </td>
+
+                                                                {/* Key */}
+                                                                <td className="px-1 py-1 align-middle w-20">
+                                                                    <div className="flex justify-end items-center">
+                                                                        <Checkbox
+                                                                            checked={!!row.isKeyContact}
+                                                                            onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                        />
+                                                                    </div>
+                                                                </td>
+
+                                                                {/* Actions */}
+                                                                <td className="px-1 py-1 align-middle text-right">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeContactRow(row.tempId)}
+                                                                        className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                                                                        title="Remove"
+                                                                    >
+                                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            {/* Notes Row */}
+                                                            <tr className="bg-white">
+                                                                <td colSpan={3} className="px-1 py-1">
+                                                                    <div className="flex justify-start items-center gap-3">
+                                                                        <Input
+                                                                            multiline={true}
+                                                                            rows={3}
+                                                                            placeholder="Professional Note"
+                                                                            value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value;
+                                                                                const currentNotes = row.opportunityContactNotesList || [];
+                                                                                const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                const nextNotes = [
+                                                                                    { ...proNote, note: val, type: proNote.type || "Professional" },
+                                                                                    { ...perNote, type: perNote.type || "Personal" }
+                                                                                ];
+                                                                                updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                            }}
+                                                                        />
+                                                                        <Input
+                                                                            multiline={true}
+                                                                            rows={3}
+                                                                            placeholder="Personal Note"
+                                                                            value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value;
+                                                                                const currentNotes = row.opportunityContactNotesList || [];
+                                                                                const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                const nextNotes = [
+                                                                                    { ...proNote, type: proNote.type || "Professional" },
+                                                                                    { ...perNote, note: val, type: perNote.type || "Personal" }
+                                                                                ];
+                                                                                updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                                <td colSpan={2}></td>
+                                                            </tr>
+                                                        </React.Fragment>
                                                     ))}
                                                 </tbody>
                                             </table>
@@ -2104,7 +2121,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </ul>
                             </div> */}
 
-                            <div className="overflow-y-auto flex-1 max-h-[8rem]">
+                            <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
                                 {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                     <ul className="space-y-3">
                                         {allContactsWithEdits
@@ -2121,7 +2138,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 const badgeColor = bgColors[idx % bgColors.length];
 
                                                 return (
-                                                    <li key={idx} className="flex items-center gap-3 py-1">
+                                                    <li key={idx} className="flex items-center gap-3 py-1 group">
                                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
                                                             {initials}
                                                         </div>
@@ -2132,6 +2149,22 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                             </div>
                                                             <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
                                                         </div>
+
+                                                        {/* Hover Tooltip */}
+                                                        {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
+                                                            <div className="hidden group-hover:block absolute top-0 left-28 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                                                                {c.opportunityContactNotesList.map((n, i) => (
+                                                                    n.note?.trim() ? (
+                                                                        <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
+                                                                            <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                            <div className="whitespace-pre-wrap break-words">{n.note}</div>
+                                                                        </div>
+                                                                    ) : null
+                                                                ))}
+                                                                {/* Tiny arrow */}
+                                                                {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
+                                                            </div>
+                                                        )}
                                                     </li>
                                                 );
                                             })}

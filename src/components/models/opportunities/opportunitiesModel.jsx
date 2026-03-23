@@ -61,7 +61,7 @@ const steps = [
 
 function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, setSyncingPushStatus }) {
     const userdata = getUserDetails();
-    const [activeStep, setActiveStep] = useState(0)
+    const [activeStep, setActiveStep] = useState(2)
     // const [opportunityStages, setOpportunityStages] = useState([])
 
     const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
@@ -457,7 +457,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
         const businessValueHtml = businessValue
             ? draftToHtml(convertToRaw(businessValue.getCurrentContent()))
             : null;
-       
+
         const newData = {
             ...data,
             whyDoAnything: whyDoAnythingHtml,
@@ -535,7 +535,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
     return (
         <React.Fragment>
             <BootstrapDialog
-            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 // fullScreen={opportunityId != null}
@@ -590,7 +590,6 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
                                                     name="domain"
                                                     control={control}
                                                     rules={{
-                                                        required: "Domain is required",
                                                         pattern: {
                                                             // Regex to match domain format (e.g., google.com) and exclude http/https
                                                             value: /^(?!https?:\/\/)[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/,

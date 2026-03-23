@@ -29,6 +29,8 @@ export const opportunitiesProductURL = baseURL + '/opportunitiesProduct'
 export const opportunitiesContactURL = baseURL + '/opportunitiesContact'
 export const opportunitiesNotesURL = baseURL + '/opportunitiesComment'
 export const opportunitiesCurrentEnvironmentURL = baseURL + '/opportunitiesCurrentEnvironment'
+export const opportunitiesContactNoteURL = baseURL + '/opportunitiesContactNote'
+
 export const docsAttachmentsURL = baseURL + '/docsAttachments'
 export const docsCategoryURL = baseURL + '/docsCategory'
 
