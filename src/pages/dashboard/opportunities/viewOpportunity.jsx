@@ -2144,7 +2144,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-2 group relative">
                                                                 <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
-                                                                <span className="text-gray-600 text-[13px]">- {c.title || 'Role'}</span>
+                                                                <span className="text-gray-600 text-[13px]">- {c.title}</span>
                                                                 {/* Hover Tooltip */}
                                                                 {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
                                                                     <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
@@ -2520,7 +2520,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
                                                 {allContactsWithEdits?.map(c => (
                                                     <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
-                                                        <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
+                                                        <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey, c)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
                                                         <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
                                                         <Components.IconButton onClick={() => openEditContactModal(c)}>
                                                             <CustomIcons
@@ -2576,73 +2576,117 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
                                                             <tbody>
                                                                 {contactRows.map((row, index) => (
-                                                                    <tr key={index} className="bg-white">
-                                                                        {/* Name */}
-                                                                        <td className="px-1 py-1 align-middle w-48">
-                                                                            <Select
-                                                                                options={allContacts}
-                                                                                placeholder="Select name"
-                                                                                freeSolo={true}
-                                                                                value={row.id ? Number(row.id) : null}
-                                                                                onChange={(e, newValue) => {
-                                                                                    if (typeof newValue === "object" && newValue?.id) {
-                                                                                        updateContactRow(row.tempId, "id", String(newValue.id));
-                                                                                        updateContactRow(row.tempId, "name", newValue?.name ?? "");
-                                                                                    }
-                                                                                }}
-                                                                                onInputChange={(e, inputValue) => {
-                                                                                    updateContactRow(row.tempId, "name", inputValue);
-                                                                                    if (inputValue) updateContactRow(row.tempId, "id", "");
-                                                                                }}
-                                                                            />
-                                                                        </td>
-
-                                                                        {/* Title */}
-                                                                        <td className="px-1 py-1 align-middle w-40">
-                                                                            <Input
-                                                                                value={row.title || ""}
-                                                                                placeholder="Title"
-                                                                                type="text"
-                                                                                onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
-                                                                            />
-                                                                        </td>
-
-                                                                        {/* Role */}
-                                                                        <td className="px-1 py-1 align-middle w-48">
-                                                                            <Select
-                                                                                options={opportunityContactRoles}
-                                                                                label={null}
-                                                                                placeholder="Role"
-                                                                                value={row.roleId ? Number(row.roleId) : null}
-                                                                                onChange={(_, newValue) => {
-                                                                                    updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
-                                                                                    updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
-                                                                                }}
-                                                                            />
-                                                                        </td>
-
-                                                                        {/* Key */}
-                                                                        <td className="px-1 py-1 align-middle w-20">
-                                                                            <div className="flex justify-end items-center">
-                                                                                <Checkbox
-                                                                                    checked={!!row.isKeyContact}
-                                                                                    onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                    <React.Fragment key={row.tempId || index}>
+                                                                        <tr className="bg-white border-b-0">
+                                                                            {/* Name */}
+                                                                            <td className="px-1 py-1 align-middle w-48">
+                                                                                <Select
+                                                                                    options={allContacts}
+                                                                                    placeholder="Select name"
+                                                                                    freeSolo={true}
+                                                                                    value={row.id ? Number(row.id) : null}
+                                                                                    onChange={(e, newValue) => {
+                                                                                        if (typeof newValue === "object" && newValue?.id) {
+                                                                                            updateContactRow(row.tempId, "id", String(newValue.id));
+                                                                                            updateContactRow(row.tempId, "name", newValue?.name ?? "");
+                                                                                        }
+                                                                                    }}
+                                                                                    onInputChange={(e, inputValue) => {
+                                                                                        updateContactRow(row.tempId, "name", inputValue);
+                                                                                        if (inputValue) updateContactRow(row.tempId, "id", "");
+                                                                                    }}
                                                                                 />
-                                                                            </div>
-                                                                        </td>
+                                                                            </td>
 
-                                                                        {/* Actions */}
-                                                                        <td className="px-1 py-1 align-middle text-right">
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => removeContactRow(row.tempId)}
-                                                                                className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
-                                                                                title="Remove"
-                                                                            >
-                                                                                <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
+                                                                            {/* Title */}
+                                                                            <td className="px-1 py-1 align-middle w-40">
+                                                                                <Input
+                                                                                    value={row.title || ""}
+                                                                                    placeholder="Title"
+                                                                                    type="text"
+                                                                                    onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                                                                />
+                                                                            </td>
+
+                                                                            {/* Role */}
+                                                                            <td className="px-1 py-1 align-middle w-48">
+                                                                                <Select
+                                                                                    options={opportunityContactRoles}
+                                                                                    label={null}
+                                                                                    placeholder="Role"
+                                                                                    value={row.roleId ? Number(row.roleId) : null}
+                                                                                    onChange={(_, newValue) => {
+                                                                                        updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
+                                                                                        updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
+                                                                                    }}
+                                                                                />
+                                                                            </td>
+
+                                                                            {/* Key */}
+                                                                            <td className="px-1 py-1 align-middle w-20">
+                                                                                <div className="flex justify-end items-center">
+                                                                                    <Checkbox
+                                                                                        checked={!!row.isKeyContact}
+                                                                                        onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                                    />
+                                                                                </div>
+                                                                            </td>
+
+                                                                            {/* Actions */}
+                                                                            <td className="px-1 py-1 align-middle text-right">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => removeContactRow(row.tempId)}
+                                                                                    className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                                                                                    title="Remove"
+                                                                                >
+                                                                                    <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                        {/* Notes Row */}
+                                                                        <tr className="bg-white">
+                                                                            <td colSpan={3} className="px-1 py-1">
+                                                                                <div className="flex justify-start items-center gap-3">
+                                                                                    <Input
+                                                                                        multiline={true}
+                                                                                        rows={3}
+                                                                                        placeholder="Professional Note"
+                                                                                        value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
+                                                                                        onChange={(e) => {
+                                                                                            const val = e.target.value;
+                                                                                            const currentNotes = row.opportunityContactNotesList || [];
+                                                                                            const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                            const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                            const nextNotes = [
+                                                                                                { ...proNote, note: val, type: proNote.type || "Professional" },
+                                                                                                { ...perNote, type: perNote.type || "Personal" }
+                                                                                            ];
+                                                                                            updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                        }}
+                                                                                    />
+                                                                                    <Input
+                                                                                        multiline={true}
+                                                                                        rows={3}
+                                                                                        placeholder="Personal Note"
+                                                                                        value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
+                                                                                        onChange={(e) => {
+                                                                                            const val = e.target.value;
+                                                                                            const currentNotes = row.opportunityContactNotesList || [];
+                                                                                            const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                            const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                            const nextNotes = [
+                                                                                                { ...proNote, type: proNote.type || "Professional" },
+                                                                                                { ...perNote, note: val, type: perNote.type || "Personal" }
+                                                                                            ];
+                                                                                            updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                        }}
+                                                                                    />
+                                                                                </div>
+                                                                            </td>
+                                                                            <td colSpan={2}></td>
+                                                                        </tr>
+                                                                    </React.Fragment>
                                                                 ))}
                                                             </tbody>
                                                         </table>
@@ -2661,7 +2705,41 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             </div>
                                         )}
 
-                                        <div className="overflow-y-auto flex-1 max-h-[8rem]">
+                                        {/* <div className="overflow-y-auto px-1 flex-1">
+                                <ul className="text-sm">
+                                    {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                        allContactsWithEdits
+                                            ?.filter((row) => row.isKey === true)
+                                            .map((c, idx) => {
+                                                const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                const badgeColor = bgColors[idx % bgColors.length];
+                                                return (
+                                                    <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
+                                                            {initials}
+                                                        </span>
+                                                        <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                            {c.contactName}
+                                                        </span>
+                                                        <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                            {c.title || "-"}
+                                                        </span>
+                                                        <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                            {c.role || "-"}
+                                                        </span>
+                                                    </li>
+                                                )
+                                            })
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">
+                                            No contacts linked to this opportunity.
+                                        </p>
+                                    )}
+                                </ul>
+                            </div> */}
+
+                                        <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
                                             {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                                 <ul className="space-y-3">
                                                     {allContactsWithEdits
@@ -2683,9 +2761,24 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                         {initials}
                                                                     </div>
                                                                     <div className="flex-1">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)} >{c.contactName || ''}</span>
-                                                                            <span className="text-gray-600 text-[13px]">- {c.title || 'Role'}</span>
+                                                                        <div className="flex items-center gap-2 group relative">
+                                                                            <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
+                                                                            <span className="text-gray-600 text-[13px]">- {c.title}</span>
+                                                                            {/* Hover Tooltip */}
+                                                                            {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
+                                                                                <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                                                                                    {c.opportunityContactNotesList.map((n, i) => (
+                                                                                        n.note?.trim() ? (
+                                                                                            <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
+                                                                                                <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                                                <div className="whitespace-pre-wrap break-words">{n.note}</div>
+                                                                                            </div>
+                                                                                        ) : null
+                                                                                    ))}
+                                                                                    {/* Tiny arrow */}
+                                                                                    {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                         <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
                                                                     </div>
@@ -2696,6 +2789,15 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             ) : (
                                                 <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
                                             )}
+                                        </div>
+
+                                        <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                            <button className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                                SELECT
+                                            </button>
+                                            <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
+                                                <i className="fa-solid fa-plus h-3 w-3 text-white"></i>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-end gap-2 absolute bottom-3 right-3">
