@@ -6,11 +6,14 @@ import { setAlert, setSyncingPushStatus } from '../../../redux/commonReducers/co
 import Components from '../../muiComponents/components';
 import Button from '../../common/buttons/button';
 import CustomIcons from '../../common/icons/CustomIcons';
-import { getAllContacts } from '../../../service/contact/contactService';
+import { addMultipleContacts, getAllContacts } from '../../../service/contact/contactService';
 import Checkbox from '../../common/checkBox/checkbox';
 import { addOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import Select from '../../common/select/select';
 import { handleRequestClose, opportunityContactRoles } from '../../../service/common/commonService';
+import { Tooltip } from '@mui/material';
+import { Controller, useForm } from 'react-hook-form';
+import Input from '../../common/input/input';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -28,6 +31,103 @@ function OpportunityContactModel({
 }) {
     const theme = useTheme();
     const [contacts, setContacts] = useState([]);
+    // const [isAddContact, setIsAddContact] = useState(false);
+    // const [selectedContactId, setSelectedContactId] = useState(null);
+
+
+    // const {
+    //     handleSubmit,
+    //     control,
+    //     reset,
+    //     watch,
+    //     setValue,
+    //     formState: { errors },
+    // } = useForm({
+    //     defaultValues: {
+    //         id: null,
+    //         name: "",
+    //         firstName: "",
+    //         lastName: "",
+    //         title: "",
+    //         role: "",
+    //         roleId: null,
+    //         isKeyContact: false,
+    //         oppId: opportunityId,
+    //         contactId: null,
+    //         opportunityContactNotesList: [
+    //             { id: null, opportunityContactId: null, note: "", type: "Personal" },
+    //             { id: null, opportunityContactId: null, note: "", type: "Professional" }
+    //         ]
+    //     },
+    // });
+
+    // const handleOpenAddContact = (contactId = null) => {
+    //     if (!contactId) {
+    //         reset({
+    //             id: null,
+    //             name: "",
+    //             firstName: "",
+    //             lastName: "",
+    //             title: "",
+    //             role: "",
+    //             roleId: null,
+    //             isKeyContact: false,
+    //             oppId: opportunityId,
+    //             contactId: null,
+    //             opportunityContactNotesList: [
+    //                 { id: null, opportunityContactId: null, note: "", type: "Personal" },
+    //                 { id: null, opportunityContactId: null, note: "", type: "Professional" }
+    //             ]
+    //         });
+    //     }
+    //     setSelectedContactId(contactId);
+    //     setIsAddContact(true);
+    // };
+
+    // const handleCloseAddContact = () => {
+    //     setSelectedContactId(null)
+    //     setIsAddContact(false);
+    // };
+
+    // const submitContact = async (data) => {
+    //     let firstName = null;
+    //     let lastName = null;
+
+    //     // If no contact is selected (free text), split name into first/last
+    //     if (!data?.id) {
+    //         const fullName = (data?.name || "").trim();
+    //         if (fullName) {
+    //             const parts = fullName.split(/\s+/);
+    //             firstName = parts[0];
+    //             lastName = parts.slice(1).join(" ");
+    //         }
+    //     }
+
+    //     let payload = {
+    //         firstName,
+    //         lastName,
+    //         oppId: parseInt(data?.oppId),
+    //         title: data.title,
+    //         isKeyContact: data.isKeyContact,
+    //         role: data.role,
+    //         contactId: data?.contactId ? parseInt(data.contactId) : null,
+    //         opportunityContactNotesList: data.opportunityContactNotesList
+    //     };
+
+    //     const res = await addMultipleContacts([payload]);
+    //     if (res?.status === 201) {
+    //         handleGetAllContact();
+    //         handleCloseAddContact();
+    //         handleGetAllOppContact()
+    //     } else {
+    //         setAlert({
+    //             open: true,
+    //             type: "error",
+    //             message: res?.message || "Failed to add contact.",
+    //         });
+    //     }
+    // }
+
     const selectedRows = contacts?.filter((c) => c.isAdd);
 
     const onClose = () => {
@@ -54,8 +154,6 @@ function OpportunityContactModel({
         }
     };
 
-    const getKeyCount = (arr) => arr.filter((r) => r.isKey === true).length;
-
     const handleAddRow = (row, checked) => {
         setContacts((prev) => {
             const next = prev.map((item) =>
@@ -79,15 +177,6 @@ function OpportunityContactModel({
             const target = prev.find((i) => i.contactId === row.contactId);
             if (!target?.isAdd) {
                 setAlert({ open: true, type: 'warning', message: 'Select the contact first.' });
-                return prev;
-            }
-
-            const prospectiveSelected = prev.filter((c) => c.isAdd);
-            const currentKeyCount = getKeyCount(prospectiveSelected);
-            const alreadyKey = !!target.isKey;
-
-            if (checked && !alreadyKey && currentKeyCount >= 4) {
-                setAlert({ open: true, type: 'warning', message: 'You can mark up to 4 key contacts.' });
                 return prev;
             }
 
@@ -135,6 +224,11 @@ function OpportunityContactModel({
                 setSyncingPushStatus(true);
                 handleGetAllOppContact();
                 onClose();
+                setAlert({
+                    open: true,
+                    message: `Contact added successfully into ${oppName}`,
+                    type: 'success',
+                });
             } else {
                 setAlert({
                     open: true,
@@ -173,7 +267,131 @@ function OpportunityContactModel({
                         flexDirection: 'column',
                     }}
                 >
-                    <div className="py-3 px-[30px] h-full">
+                    <div className="py- px-2 h-full">
+                        {/* {
+                            isAddContact ? (
+                                <form noValidate onSubmit={handleSubmit(submitContact)}>
+                                    <div className='grid grid-cols-3 gap-3 items-center mb-4'>
+                                        <Controller
+                                            name="name"
+                                            control={control}
+                                            rules={{
+                                                required: "Name is required",
+                                            }}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    label="Name"
+                                                    type={`text`}
+                                                    error={errors.name}
+                                                    requiredFiledLabel={true}
+                                                    onChange={(e) => {
+                                                        field.onChange(e);
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            name="title"
+                                            control={control}
+                                            rules={{
+                                                required: "Title is required",
+                                            }}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    label="Title"
+                                                    type={`text`}
+                                                    error={errors.title}
+                                                    requiredFiledLabel={true}
+                                                    onChange={(e) => {
+                                                        field.onChange(e);
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            name="roleId"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={opportunityContactRoles}
+                                                    label={"Role"}
+                                                    placeholder="Select role"
+                                                    value={watch("roleId") || null}
+                                                    onChange={(_, newValue) => {
+                                                        if (newValue?.id) {
+                                                            field.onChange(newValue.id);
+                                                            setValue("role", newValue.title);
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className='grid grid-cols-2 gap-3 items-center mb-4'>
+                                        <Controller
+                                            name="opportunityContactNotesList.1.note"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    multiline={true}
+                                                    rows={3}
+                                                    label="Professional Notes"
+                                                    type={`text`}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            name="opportunityContactNotesList.0.note"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    multiline={true}
+                                                    rows={3}
+                                                    label="Personal Notes"
+                                                    type={`text`}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className='flex items-center gap-4 mb-4'>
+                                        <div className='grow'>
+                                            <Controller
+                                                name="isKeyContact"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Checkbox
+                                                        {...field}
+                                                        checked={field.value}
+                                                        onChange={(e) => field.onChange(e.target.checked)}
+                                                    />
+                                                )}
+                                            />
+                                        </div>
+                                        <div className='flex justify-end items-center gap-4'>
+                                            <Button type="submit" text={'Add Contact'} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                                            <Button type="button" text={'Cancel'} useFor="disabled" onClick={() => handleCloseAddContact()} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
+                                        </div>
+                                    </div>
+                                </form>
+                            ) : (
+                                <div className='flex justify-end mb-4'>
+                                    <Tooltip title="Add New Contact" arrow>
+                                        <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                            <Components.IconButton onClick={() => handleOpenAddContact()}>
+                                                <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                            </Components.IconButton>
+                                        </div>
+                                    </Tooltip>
+                                </div>
+                            )
+                        } */}
+
                         <div className="max-h-[63vh] overflow-y-auto border rounded-md overflow-hidden">
                             <table className="min-w-full border-collapse">
                                 {/* 🔵 Blue sticky header */}
@@ -191,6 +409,7 @@ function OpportunityContactModel({
                                         <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold w-60">Role</th>
                                         <th className="px-4 py-3 text-left text-sm font-semibold w-32">Key Contact</th>
+                                        {/* <th className="px-4 py-3 text-left text-sm font-semibold w-12">Action</th> */}
                                     </tr>
                                 </thead>
 
@@ -240,12 +459,16 @@ function OpportunityContactModel({
                                                     <Checkbox
                                                         onChange={(e) => handleToggleKey(row, e.target.checked)}
                                                         checked={!!row.isKey}
-                                                        disabled={
-                                                            !row.isAdd ||
-                                                            (!row.isKey && selectedRows.filter((r) => r.isKey).length >= 4)
-                                                        }
+                                                        disabled={!row.isAdd}
                                                     />
                                                 </td>
+                                                {/* <td className='text-center'>
+                                                    <Tooltip title="Edit" arrow>
+                                                        <Components.IconButton onClick={() => handleOpenAddContact(row.contactId)}>
+                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-green-600 h-4 w-4' />
+                                                        </Components.IconButton>
+                                                    </Tooltip>
+                                                </td> */}
                                             </tr>
                                         ))
                                     ) : (
@@ -260,10 +483,9 @@ function OpportunityContactModel({
                                 {/* Sticky footer summary */}
                                 <tfoot className="bg-gray-100 sticky bottom-0">
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-2 text-sm font-semibold text-gray-700">
+                                        <td colSpan={5} className="px-4 py-2 text-sm font-semibold text-gray-700">
                                             <div className="flex justify-between items-center">
                                                 <span>Added: {selectedRows?.length}</span>
-                                                <span>Key Contacts: {selectedRows?.filter((r) => r.isKey).length} / 4</span>
                                                 <span>Total Contacts: {contacts.length}</span>
                                             </div>
                                         </td>

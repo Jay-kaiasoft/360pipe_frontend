@@ -714,7 +714,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
         // ✅ ADD MODE: keep your existing add behavior
         const res = await addMultipleContacts(data);
-
         if (res?.status === 201) {
             handleGetOppContacts();
             closeAddContactModal();
@@ -2138,33 +2137,32 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 const badgeColor = bgColors[idx % bgColors.length];
 
                                                 return (
-                                                    <li key={idx} className="flex items-center gap-3 py-1 group">
+                                                    <li key={idx} className="flex items-center gap-3 py-1">
                                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
                                                             {initials}
                                                         </div>
                                                         <div className="flex-1">
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2 group relative">
                                                                 <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
                                                                 <span className="text-gray-600 text-[13px]">- {c.title || 'Role'}</span>
+                                                                {/* Hover Tooltip */}
+                                                                {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
+                                                                    <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                                                                        {c.opportunityContactNotesList.map((n, i) => (
+                                                                            n.note?.trim() ? (
+                                                                                <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
+                                                                                    <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                                    <div className="whitespace-pre-wrap break-words">{n.note}</div>
+                                                                                </div>
+                                                                            ) : null
+                                                                        ))}
+                                                                        {/* Tiny arrow */}
+                                                                        {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
                                                         </div>
-
-                                                        {/* Hover Tooltip */}
-                                                        {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
-                                                            <div className="hidden group-hover:block absolute top-0 left-28 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
-                                                                {c.opportunityContactNotesList.map((n, i) => (
-                                                                    n.note?.trim() ? (
-                                                                        <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
-                                                                            <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
-                                                                            <div className="whitespace-pre-wrap break-words">{n.note}</div>
-                                                                        </div>
-                                                                    ) : null
-                                                                ))}
-                                                                {/* Tiny arrow */}
-                                                                {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
-                                                            </div>
-                                                        )}
                                                     </li>
                                                 );
                                             })}

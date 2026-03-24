@@ -61,7 +61,7 @@ const steps = [
 
 function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handleGetAllOpportunities, setSyncingPushStatus }) {
     const userdata = getUserDetails();
-    const [activeStep, setActiveStep] = useState(2)
+    const [activeStep, setActiveStep] = useState(0)
     // const [opportunityStages, setOpportunityStages] = useState([])
 
     const [whyDoAnything, setWhyDoAnything] = useState(() => EditorState.createEmpty());
@@ -178,7 +178,7 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
             opportunity: null,
             salesStage: null,
             dealAmount: null,
-            discountPercentage: 0.00,
+            discountPercentage: 0,
             listPrice: null,
             closeDate: null,
             nextSteps: null,
@@ -685,6 +685,16 @@ function OpportunitiesModel({ setAlert, open, handleClose, opportunityId, handle
 
                                                                 const formatted = formatMoney(value);
                                                                 field.onChange(formatted);
+
+                                                                const listAmount = parseInt(parseMoneyFloat(formatted));
+                                                                const dealPrice = Math.floor((listAmount * parseInt(watch("discountPercentage"))) / 100);
+                                                                const total = listAmount - dealPrice;
+
+                                                                if (watch("discountPercentage")) {
+                                                                    setValue("dealAmount", formatMoney(total));
+                                                                } else {
+                                                                    setValue("dealAmount", formatMoney(listAmount));
+                                                                }
                                                             }}
 
                                                             startIcon={
