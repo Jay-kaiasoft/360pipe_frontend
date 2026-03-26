@@ -778,14 +778,14 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                                     <div className="flex items-start gap-2">
                                                         <div
                                                             className={`flex justify-center items-center gap-1 p-1 rounded-full w-5 h-5 
-    ${task.isOverdue
+                                                                ${task.completionProgressPercent === 100 ? "bg-transparent w-0 h-0" :task.isOverdue
                                                                     ? "bg-red-600"
                                                                     : task.isDueToday
                                                                         ? "bg-yellow-400"
                                                                         : "bg-gray-300"
                                                                 }`}
                                                         >
-                                                            {task.isOverdue || task.isDueToday ? (
+                                                            {task.completionProgressPercent === 100 ? null : task.isOverdue || task.isDueToday ? (
                                                                 <CustomIcons iconName={"fa-solid fa-exclamation"} css={"text-white"} />
                                                             ) : null}
                                                         </div>

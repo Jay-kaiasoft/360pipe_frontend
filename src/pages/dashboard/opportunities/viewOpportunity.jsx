@@ -1943,14 +1943,18 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         <th className="py-1 px-2 text-left">Role</th>
                                                         <th className="py-1 px-2 text-right">Key</th>
                                                         <th className="py-1 px-2 text-right">
-                                                            <button
-                                                                type="button"
-                                                                onClick={addContactRow}
-                                                                className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
-                                                                title="Add row"
-                                                            >
-                                                                <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
-                                                            </button>
+                                                            {
+                                                                editingOppContactId === null && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={addContactRow}
+                                                                        className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
+                                                                        title="Add row"
+                                                                    >
+                                                                        <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
+                                                                    </button>
+                                                                )
+                                                            }
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -2562,14 +2566,18 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                     <th className="py-1 px-2 text-left">Role</th>
                                                                     <th className="py-1 px-2 text-right">Key</th>
                                                                     <th className="py-1 px-2 text-right">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={addContactRow}
-                                                                            className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
-                                                                            title="Add row"
-                                                                        >
-                                                                            <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
-                                                                        </button>
+                                                                        {
+                                                                            editingOppContactId === null && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={addContactRow}
+                                                                                    className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
+                                                                                    title="Add row"
+                                                                                >
+                                                                                    <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
+                                                                                </button>
+                                                                            )
+                                                                        }
                                                                     </th>
                                                                 </tr>
                                                             </thead>

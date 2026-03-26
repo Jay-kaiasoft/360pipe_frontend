@@ -18,6 +18,7 @@ const CheckBoxSelect = forwardRef(
       checkAll = false,
       maxVisibleChips = 2,
       requiredFiledLabel = false,
+      showAllOnHover = false,
     },
     ref
   ) => {
@@ -59,16 +60,60 @@ const CheckBoxSelect = forwardRef(
           isOptionEqualToValue={(option, val) => option?.id === val?.id}
           onChange={handleChange}
           noOptionsText={"No data found"}
-          
+
           // 1. Handle the text display natively using renderTags
           renderTags={(tagValue) => {
             const visibleTitles = tagValue.slice(0, maxVisibleChips).map((opt) => opt.title).join(', ');
             const extraCount = tagValue.length - maxVisibleChips;
-            const displayText = tagValue.length > 0 
-              ? `${visibleTitles}${extraCount > 0 ? `, +${extraCount} more` : ''}` 
+            const displayText = tagValue.length > 0
+              ? `${visibleTitles}${extraCount > 0 ? `, +${extraCount} more` : ''}`
               : '';
 
-            return (
+            const tooltipContent = (
+              <Components.Box sx={{ p: 0.5 }}>
+                <Components.Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 700,
+                    color: theme.palette.secondary.main,
+                    borderBottom: `1px solid ${theme.palette.divider || '#e0e0e0'}`,
+                    pb: 0.5,
+                    mb: 0.5,
+                    fontSize: '16px'
+                  }}
+                >
+                  {label}
+                </Components.Typography>
+                <Components.Box sx={{ maxHeight: '250px', overflowY: 'auto' }}>
+                  {tagValue.map((opt) => (
+                    <Components.Typography
+                      key={opt.id}
+                      variant="body2"
+                      sx={{
+                        py: 0.3,
+                        color: theme.palette.text.primary,
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: '14px',
+                        '&:before': {
+                          content: '""',
+                          width: '4px',
+                          height: '4px',
+                          borderRadius: '50%',
+                          backgroundColor: theme.palette.secondary.main,
+                          marginRight: '8px',
+                          flexShrink: 0
+                        }
+                      }}
+                    >
+                      {opt.title}
+                    </Components.Typography>
+                  ))}
+                </Components.Box>
+              </Components.Box>
+            );
+
+            const content = (
               <span
                 style={{
                   maxWidth: 'calc(100% - 30px)', // Prevents text from overlapping the dropdown arrow
@@ -82,6 +127,36 @@ const CheckBoxSelect = forwardRef(
                 {displayText}
               </span>
             );
+
+            if (showAllOnHover && tagValue.length > 0) {
+              return (
+                <Components.Tooltip
+                  title={tooltipContent}
+                  arrow
+                  placement="top"
+                  slotProps={{
+                    tooltip: {
+                      sx: {
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+                        border: `1px solid ${theme.palette.divider || '#e0e0e0'}`,
+                        padding: '8px',
+                        maxWidth: '300px',
+                        '& .MuiTooltip-arrow': {
+                          color: '#ffffff',
+                          '&::before': {
+                            border: `1px solid ${theme.palette.divider || '#e0e0e0'}`,
+                          },
+                        },
+                      },
+                    },
+                  }}
+                >
+                  {content}
+                </Components.Tooltip>
+              );
+            }
+            return content;
           }}
           renderOption={(props, option, { selected }) => {
             if (option.id === "__all__") {
@@ -135,7 +210,7 @@ const CheckBoxSelect = forwardRef(
               },
             },
           }}
-          
+
           // 2. Cleaned up renderInput with standardized padding
           renderInput={(params) => (
             <Components.TextField
@@ -289,7 +364,7 @@ export default CheckBoxSelect;
 //                   <Components.Chip
 //                     label={`+${selectedCount - maxVisibleChips} more`}
 //                     size="small"
-//                     variant="outlined"                  
+//                     variant="outlined"
 //                     sx={{
 //                       margin: '2px',
 //                       borderColor: theme.palette.secondary.main,

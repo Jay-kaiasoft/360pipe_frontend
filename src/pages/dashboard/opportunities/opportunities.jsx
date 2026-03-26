@@ -1244,7 +1244,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
 
     const filterComponent = () => {
         return (
-            <div className='lg:w-[550px] flex justify-start items-center gap-4'>               
+            <div className='lg:w-[550px] flex justify-start items-center gap-4'>
                 <div className='w-full'>
                     <CheckBoxSelect
                         label="Sales Stages"
@@ -1253,6 +1253,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         value={selectedOppStage}
                         onChange={handleSetStages}
                         maxVisibleChips={1}
+                        showAllOnHover={true}
                     />
                 </div>
                 <div className='w-full'>
@@ -1263,6 +1264,7 @@ const Opportunities = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) =>
                         value={selectedOppStatus}
                         onChange={handleSetStatus}
                         maxVisibleChips={1}
+                        showAllOnHover={true}
                     />
                 </div>
             </div>
