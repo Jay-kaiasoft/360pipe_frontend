@@ -2199,6 +2199,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                                                 <Input
                                                                                     multiline={true}
                                                                                     rows={3}
+                                                                                    label="Professional Note"
                                                                                     placeholder="Professional Note"
                                                                                     value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
                                                                                     onChange={(e) => {
@@ -2216,6 +2217,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                                                 <Input
                                                                                     multiline={true}
                                                                                     rows={3}
+                                                                                    label="Personal Note"
                                                                                     placeholder="Personal Note"
                                                                                     value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
                                                                                     onChange={(e) => {
@@ -2254,38 +2256,38 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                     )}
 
                                     {/* <div className="overflow-y-auto px-1 flex-1">
-                                                           <ul className="text-sm">
-                                                               {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
-                                                                   allContactsWithEdits
-                                                                       ?.filter((row) => row.isKey === true)
-                                                                       .map((c, idx) => {
-                                                                           const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
-                                                                           const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
-                                                                           const badgeColor = bgColors[idx % bgColors.length];
-                                                                           return (
-                                                                               <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
-                                                                                   <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
-                                                                                       {initials}
-                                                                                   </span>
-                                                                                   <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
-                                                                                       {c.contactName}
-                                                                                   </span>
-                                                                                   <span className="text-gray-500 text-base truncate" title={c.title || ""}>
-                                                                                       {c.title || "-"}
-                                                                                   </span>
-                                                                                   <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
-                                                                                       {c.role || "-"}
-                                                                                   </span>
-                                                                               </li>
-                                                                           )
-                                                                       })
-                                                               ) : (
-                                                                   <p className="text-sm text-gray-400 italic">
-                                                                       No contacts linked to this opportunity.
-                                                                   </p>
-                                                               )}
-                                                           </ul>
-                                                       </div> */}
+                                                                <ul className="text-sm">
+                                                                    {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                                                        allContactsWithEdits
+                                                                            ?.filter((row) => row.isKey === true)
+                                                                            .map((c, idx) => {
+                                                                                const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                                                const badgeColor = bgColors[idx % bgColors.length];
+                                                                                return (
+                                                                                    <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
+                                                                                            {initials}
+                                                                                        </span>
+                                                                                        <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                                                            {c.contactName}
+                                                                                        </span>
+                                                                                        <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                                                            {c.title || "-"}
+                                                                                        </span>
+                                                                                        <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                                                            {c.role || "-"}
+                                                                                        </span>
+                                                                                    </li>
+                                                                                )
+                                                                            })
+                                                                    ) : (
+                                                                        <p className="text-sm text-gray-400 italic">
+                                                                            No contacts linked to this opportunity.
+                                                                        </p>
+                                                                    )}
+                                                                </ul>
+                                                            </div> */}
 
                                     <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
                                         {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
@@ -2318,7 +2320,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                                                 {c.opportunityContactNotesList.map((n, i) => (
                                                                                     n.note?.trim() ? (
                                                                                         <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
-                                                                                            <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                                            <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
                                                                                             <div className="whitespace-pre-wrap break-words">{n.note}</div>
                                                                                         </div>
                                                                                     ) : null
@@ -2822,6 +2824,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                                                             <Input
                                                                                                 multiline={true}
                                                                                                 rows={3}
+                                                                                                label="Professional Note"
                                                                                                 placeholder="Professional Note"
                                                                                                 value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
                                                                                                 onChange={(e) => {
@@ -2839,6 +2842,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                                                             <Input
                                                                                                 multiline={true}
                                                                                                 rows={3}
+                                                                                                label="Personal Note"
                                                                                                 placeholder="Personal Note"
                                                                                                 value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
                                                                                                 onChange={(e) => {
@@ -2877,38 +2881,38 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                 )}
 
                                                 {/* <div className="overflow-y-auto px-1 flex-1">
-                                                                         <ul className="text-sm">
-                                                                             {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
-                                                                                 allContactsWithEdits
-                                                                                     ?.filter((row) => row.isKey === true)
-                                                                                     .map((c, idx) => {
-                                                                                         const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
-                                                                                         const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
-                                                                                         const badgeColor = bgColors[idx % bgColors.length];
-                                                                                         return (
-                                                                                             <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
-                                                                                                 <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
-                                                                                                     {initials}
-                                                                                                 </span>
-                                                                                                 <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
-                                                                                                     {c.contactName}
-                                                                                                 </span>
-                                                                                                 <span className="text-gray-500 text-base truncate" title={c.title || ""}>
-                                                                                                     {c.title || "-"}
-                                                                                                 </span>
-                                                                                                 <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
-                                                                                                     {c.role || "-"}
-                                                                                                 </span>
-                                                                                             </li>
-                                                                                         )
-                                                                                     })
-                                                                             ) : (
-                                                                                 <p className="text-sm text-gray-400 italic">
-                                                                                     No contacts linked to this opportunity.
-                                                                                 </p>
-                                                                             )}
-                                                                         </ul>
-                                                                     </div> */}
+                                                                <ul className="text-sm">
+                                                                    {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                                                        allContactsWithEdits
+                                                                            ?.filter((row) => row.isKey === true)
+                                                                            .map((c, idx) => {
+                                                                                const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                                                const badgeColor = bgColors[idx % bgColors.length];
+                                                                                return (
+                                                                                    <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
+                                                                                            {initials}
+                                                                                        </span>
+                                                                                        <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                                                            {c.contactName}
+                                                                                        </span>
+                                                                                        <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                                                            {c.title || "-"}
+                                                                                        </span>
+                                                                                        <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                                                            {c.role || "-"}
+                                                                                        </span>
+                                                                                    </li>
+                                                                                )
+                                                                            })
+                                                                    ) : (
+                                                                        <p className="text-sm text-gray-400 italic">
+                                                                            No contacts linked to this opportunity.
+                                                                        </p>
+                                                                    )}
+                                                                </ul>
+                                                            </div> */}
 
                                                 <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
                                                     {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
@@ -2941,7 +2945,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                                                                             {c.opportunityContactNotesList.map((n, i) => (
                                                                                                 n.note?.trim() ? (
                                                                                                     <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
-                                                                                                        <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                                                        <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
                                                                                                         <div className="whitespace-pre-wrap break-words">{n.note}</div>
                                                                                                     </div>
                                                                                                 ) : null

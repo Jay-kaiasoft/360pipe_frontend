@@ -2036,6 +2036,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                         <Input
                                                                             multiline={true}
                                                                             rows={3}
+                                                                            label="Professional Note"
                                                                             placeholder="Professional Note"
                                                                             value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
                                                                             onChange={(e) => {
@@ -2053,6 +2054,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                         <Input
                                                                             multiline={true}
                                                                             rows={3}
+                                                                            label="Personal Note"
                                                                             placeholder="Personal Note"
                                                                             value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
                                                                             onChange={(e) => {
@@ -2155,7 +2157,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                         {c.opportunityContactNotesList.map((n, i) => (
                                                                             n.note?.trim() ? (
                                                                                 <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
-                                                                                    <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                                    <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
                                                                                     <div className="whitespace-pre-wrap break-words">{n.note}</div>
                                                                                 </div>
                                                                             ) : null
@@ -2659,6 +2661,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                                     <Input
                                                                                         multiline={true}
                                                                                         rows={3}
+                                                                                        label="Professional Note"
                                                                                         placeholder="Professional Note"
                                                                                         value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
                                                                                         onChange={(e) => {
@@ -2676,6 +2679,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                                     <Input
                                                                                         multiline={true}
                                                                                         rows={3}
+                                                                                        label="Personal Note"
                                                                                         placeholder="Personal Note"
                                                                                         value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
                                                                                         onChange={(e) => {
@@ -2778,7 +2782,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                                     {c.opportunityContactNotesList.map((n, i) => (
                                                                                         n.note?.trim() ? (
                                                                                             <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
-                                                                                                <div className="font-bold text-[#1e3a8a] mb-1">Notes ({n.type || 'Note'})</div>
+                                                                                                <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
                                                                                                 <div className="whitespace-pre-wrap break-words">{n.note}</div>
                                                                                             </div>
                                                                                         ) : null

@@ -408,7 +408,7 @@ export const getStaticRolesWithPermissions = () => {
                                 "moduleId": 12,
                                 "moduleName": "Close Plan",
                                 "moduleAssignedActions": [1],
-                                "roleAssignedActions": (isSalesRep || isSalesManager) && [1]
+                                "roleAssignedActions": (isSalesRep || isSalesManager) ? [1] : [4]
                             },
                         ]
                     },

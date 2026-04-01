@@ -96,9 +96,9 @@ const Login = ({ setAlert, loading }) => {
         const res = await userLogin(data)
         if (res?.data?.result?.loginPreference) {
             setLoginPreference(res?.data?.result?.loginPreference || "password")
-            if (res?.data?.result?.loginPreference === "authId") {
-                handleSubmitAuth()
-            }
+            // if (res?.data?.result?.loginPreference === "authId") {
+            //     handleSubmitAuth()
+            // }
         } else if (res?.data?.status === 200 && res?.data?.result?.token) {
             Cookies.set('authToken', res?.data?.result?.token, { expires: 0.5 });
             const userdata = {

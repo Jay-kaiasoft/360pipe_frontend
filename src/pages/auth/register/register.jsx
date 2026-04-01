@@ -5,14 +5,14 @@ import { Controller, useForm } from "react-hook-form";
 import Cookies from 'js-cookie';
 
 import '@authid/web-component'
-import AuthIDComponent from '@authid/react-component';
+// import AuthIDComponent from '@authid/react-component';
 
 import { setAlert, setLoading } from "../../../redux/commonReducers/commonReducers";
 
-import AuthIdLogo from "../../../assets/svgs/authid-logo.svg"
-import AuthIdSignUpSvg from '../../../assets/svgs/authid-signup.svg';
-import AuthidAthenticator from "../../../assets/svgs/authid-authenticator.svg";
-import PasswordAuthenticator from "../../../assets/svgs/password-authenticator.svg";
+// import AuthIdLogo from "../../../assets/svgs/authid-logo.svg"
+// import AuthIdSignUpSvg from '../../../assets/svgs/authid-signup.svg';
+// import AuthidAthenticator from "../../../assets/svgs/authid-authenticator.svg";
+// import PasswordAuthenticator from "../../../assets/svgs/password-authenticator.svg";
 
 import Button from "../../../components/common/buttons/button";
 import CopyRight from "../../landingPage/copyRight";
@@ -24,8 +24,8 @@ import Input from "../../../components/common/input/input";
 import Select from "../../../components/common/select/select";
 import FileInputBox from "../../../components/fileInputBox/fileInputBox";
 import Checkbox from "../../../components/common/checkBox/checkbox";
-import { getCurrentLocation } from "../../../service/common/radarService";
-import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
+// import { getCurrentLocation } from "../../../service/common/radarService";
+// import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
 import { addCustomer, updateCustomer, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
 import { getAllRoles } from "../../../service/roles/rolesService";
 import { capitalize, getStaticRolesWithPermissions, securityQuestions, uploadFiles } from "../../../service/common/commonService";
@@ -35,7 +35,7 @@ import { addBusinessInfo, deleteBrandLogo, updateBusinessInfo, uploadBrandLogo }
 import { createSubUserTypes } from "../../../service/subUserType/subUserTypeService";
 import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
 
-const steps = ["", "", "", "", "", ""];
+const steps = ["", "", "", "", ""];
 
 const calendarType = [
     { id: 1, title: "Calendar Year" },
@@ -49,8 +49,6 @@ const Register = ({ setAlert, setLoading }) => {
 
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [showPasswordRequirement, setShowPasswordRequirement] = useState(false);
-    const [finalUrl, setFinalUrl] = useState(null);
-    const [authOperationData, setAuthOperationData] = useState(null);
     const [roles, setRoles] = useState([]);
     const [countrys, setCountrys] = useState([]);
     const [states, setStates] = useState([]);
@@ -182,7 +180,7 @@ const Register = ({ setAlert, setLoading }) => {
     };
 
     const handleGetAllCountrys = async () => {
-        if (activeStep === 3) {
+        if (activeStep === 2) {
             const res = await getAllCountry()
             const data = res?.data?.result?.map((item) => {
                 return {
@@ -195,7 +193,7 @@ const Register = ({ setAlert, setLoading }) => {
     }
 
     const handleGetAllStatesByCountryId = async (id) => {
-        if (activeStep === 3) {
+        if (activeStep === 2) {
             const res = await getAllStateByCountry(id)
             const data = res?.data?.result?.map((item) => {
                 return {
@@ -238,153 +236,153 @@ const Register = ({ setAlert, setLoading }) => {
         setRoles(data);
     }
 
-    const handleAuthSuccess = async (event) => {
-        setLoading(true);
-        if (event.data.success && authOperationData) {
-            const updateJsonData = {
-                authOperationId: authOperationData.operationId,
-                authSelfieOperationId: '',
-                id: authOperationData.userData?.id
-            };
-            setValue("authId", authOperationData.userData?.id);
-            try {
-                const updateResponse = await updateUser(updateJsonData);
-                if (updateResponse.data?.status === 200) {
-                    setLoading(false);
-                    handleCloseAuthModel();
-                    setAlert({
-                        open: true,
-                        type: "success",
-                        message: "Verification process is completed. Let's continue with registration process.",
-                    });
-                    if (parseInt(watch("documentType")) === 21) {
-                        let name = updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.split(" ") || [];
-                        if (name.length > 0) {
-                            setValue(
-                                "name",
-                                name[0].charAt(0).toUpperCase() + name[0].slice(1).toLowerCase() + name[1].charAt(0).toUpperCase() + name[1].slice(1).toLowerCase()
-                            );
+    // const handleAuthSuccess = async (event) => {
+    //     setLoading(true);
+    //     if (event.data.success && authOperationData) {
+    //         const updateJsonData = {
+    //             authOperationId: authOperationData.operationId,
+    //             authSelfieOperationId: '',
+    //             id: authOperationData.userData?.id
+    //         };
+    //         setValue("authId", authOperationData.userData?.id);
+    //         try {
+    //             const updateResponse = await updateUser(updateJsonData);
+    //             if (updateResponse.data?.status === 200) {
+    //                 setLoading(false);
+    //                 handleCloseAuthModel();
+    //                 setAlert({
+    //                     open: true,
+    //                     type: "success",
+    //                     message: "Verification process is completed. Let's continue with registration process.",
+    //                 });
+    //                 if (parseInt(watch("documentType")) === 21) {
+    //                     let name = updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.split(" ") || [];
+    //                     if (name.length > 0) {
+    //                         setValue(
+    //                             "name",
+    //                             name[0].charAt(0).toUpperCase() + name[0].slice(1).toLowerCase() + name[1].charAt(0).toUpperCase() + name[1].slice(1).toLowerCase()
+    //                         );
 
-                        }
-                        setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.Address?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
-                    } else if (parseInt(watch("documentType")) === 2) {
-                        setValue("name", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.toLowerCase() + updateResponse?.data?.result?.authUserData?.userInfo?.primaryID?.toLowerCase()));
-                        setValue("city", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressCity?.toLowerCase()));
-                        let pc = updateResponse?.data?.result?.authUserData?.userInfo?.AddressPostalCode?.split("-");
-                        if (pc.length > 0) {
-                            setValue("zipCode", pc[0]);
-                        }
-                        setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressStreet?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
-                    }
-                    setActiveStep((prevStep) => prevStep + 1);
-                } else {
-                    handleCloseAuthModel();
-                    setAlert({
-                        open: true,
-                        type: "error",
-                        message: "An error occurred. Please try again.",
-                    });
-                }
-            } catch (error) {
-                handleCloseAuthModel();
-                setAlert({
-                    open: true,
-                    type: "error",
-                    message: "An error occurred. Please try again.",
-                });
-            }
-        }
-    };
+    //                     }
+    //                     setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.Address?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
+    //                 } else if (parseInt(watch("documentType")) === 2) {
+    //                     setValue("name", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.toLowerCase() + updateResponse?.data?.result?.authUserData?.userInfo?.primaryID?.toLowerCase()));
+    //                     setValue("city", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressCity?.toLowerCase()));
+    //                     let pc = updateResponse?.data?.result?.authUserData?.userInfo?.AddressPostalCode?.split("-");
+    //                     if (pc.length > 0) {
+    //                         setValue("zipCode", pc[0]);
+    //                     }
+    //                     setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressStreet?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
+    //                 }
+    //                 setActiveStep((prevStep) => prevStep + 1);
+    //             } else {
+    //                 handleCloseAuthModel();
+    //                 setAlert({
+    //                     open: true,
+    //                     type: "error",
+    //                     message: "An error occurred. Please try again.",
+    //                 });
+    //             }
+    //         } catch (error) {
+    //             handleCloseAuthModel();
+    //             setAlert({
+    //                 open: true,
+    //                 type: "error",
+    //                 message: "An error occurred. Please try again.",
+    //             });
+    //         }
+    //     }
+    // };
 
-    const handleAuthFailure = (event) => {
-        switch (event.data.pageName) {
-            case "documentFailedPage":
-            case "documentFailedNonMobilePage":
-            case "networkErrorPage":
-            case "livenessErrorPage":
-            case "docScanWasmTimeoutPage":
-            case "requestTimeoutPage":
-                // We don't want to stop the process for these pages
-                return;
-            case "verifiedMatchFailPage":
-            case "verifyDeclinedPage":
-            case "docScanResolutionTooLowPage":
-            case "videoDeviceNotFoundPage":
-            case "standardErrorPage":
-            case "defaultFailedPage":
-                handleCloseAuthModel();
-                setAlert({
-                    open: true,
-                    type: "error",
-                    message: "Verification failed. Please try again.",
-                });
-                break;
-            default:
-                handleCloseAuthModel();
-                break;
-        }
-    };
+    // const handleAuthFailure = (event) => {
+    //     switch (event.data.pageName) {
+    //         case "documentFailedPage":
+    //         case "documentFailedNonMobilePage":
+    //         case "networkErrorPage":
+    //         case "livenessErrorPage":
+    //         case "docScanWasmTimeoutPage":
+    //         case "requestTimeoutPage":
+    //             // We don't want to stop the process for these pages
+    //             return;
+    //         case "verifiedMatchFailPage":
+    //         case "verifyDeclinedPage":
+    //         case "docScanResolutionTooLowPage":
+    //         case "videoDeviceNotFoundPage":
+    //         case "standardErrorPage":
+    //         case "defaultFailedPage":
+    //             handleCloseAuthModel();
+    //             setAlert({
+    //                 open: true,
+    //                 type: "error",
+    //                 message: "Verification failed. Please try again.",
+    //             });
+    //             break;
+    //         default:
+    //             handleCloseAuthModel();
+    //             break;
+    //     }
+    // };
 
-    const handleAuthenticator = async () => {
-        try {
-            const locationResponse = await getCurrentLocation();
-            if (locationResponse?.address?.country === "United States") {
-                setValue("documentType", "2");
-            } else if (locationResponse?.address?.country === "India") {
-                setValue("documentType", "21");
-            }
+    // const handleAuthenticator = async () => {
+    //     try {
+    //         const locationResponse = await getCurrentLocation();
+    //         if (locationResponse?.address?.country === "United States") {
+    //             setValue("documentType", "2");
+    //         } else if (locationResponse?.address?.country === "India") {
+    //             setValue("documentType", "21");
+    //         }
 
-            let addUserRequestData = {
-                email: watch("emailAddress"),
-                documentType: watch("documentType")
-            };
-            setLoading(true);
+    //         let addUserRequestData = {
+    //             email: watch("emailAddress"),
+    //             documentType: watch("documentType")
+    //         };
+    //         setLoading(true);
 
-            let response = await addUser(addUserRequestData);
-            if (response.data.status === 201) {
-                if (response.data.result?.error === "") {
-                    const userData = response.data.result?.userData;
-                    const i = response.data.result?.operationId || "";
-                    const s = response.data.result?.oneTimeSecret || "";
-                    const finalUrl = "https://id.authid.ai/?i=" + i + "&s=" + s;
-                    setAuthOperationData({
-                        operationId: response.data.result?.operationId,
-                        oneTimeSecret: response.data.result?.oneTimeSecret,
-                        userData: userData
-                    });
-                    setFinalUrl(finalUrl);
-                    setLoading(false);
-                } else {
-                    setLoading(false);
-                    setAlert({
-                        type: "error",
-                        message: "An error occurred. Please try again.",
-                        open: true
-                    });
-                }
-            } else {
-                setLoading(false);
-                setAlert({
-                    type: "error",
-                    message: "An error occurred. Please try again.",
-                    open: true
-                });
-            }
-        } catch (error) {
-            setLoading(false);
-            setAlert({
-                type: "error",
-                message: "An error occurred. Please try again.",
-                open: true
-            });
-        }
-    };
+    //         let response = await addUser(addUserRequestData);
+    //         if (response.data.status === 201) {
+    //             if (response.data.result?.error === "") {
+    //                 const userData = response.data.result?.userData;
+    //                 const i = response.data.result?.operationId || "";
+    //                 const s = response.data.result?.oneTimeSecret || "";
+    //                 const finalUrl = "https://id.authid.ai/?i=" + i + "&s=" + s;
+    //                 setAuthOperationData({
+    //                     operationId: response.data.result?.operationId,
+    //                     oneTimeSecret: response.data.result?.oneTimeSecret,
+    //                     userData: userData
+    //                 });
+    //                 setFinalUrl(finalUrl);
+    //                 setLoading(false);
+    //             } else {
+    //                 setLoading(false);
+    //                 setAlert({
+    //                     type: "error",
+    //                     message: "An error occurred. Please try again.",
+    //                     open: true
+    //                 });
+    //             }
+    //         } else {
+    //             setLoading(false);
+    //             setAlert({
+    //                 type: "error",
+    //                 message: "An error occurred. Please try again.",
+    //                 open: true
+    //             });
+    //         }
+    //     } catch (error) {
+    //         setLoading(false);
+    //         setAlert({
+    //             type: "error",
+    //             message: "An error occurred. Please try again.",
+    //             open: true
+    //         });
+    //     }
+    // };
 
-    const handleCloseAuthModel = () => {
-        setLoading(false);
-        setFinalUrl(null);
-        setAuthOperationData(null);
-    };
+    // const handleCloseAuthModel = () => {
+    //     setLoading(false);
+    //     setFinalUrl(null);
+    //     setAuthOperationData(null);
+    // };
 
     const validatePassword = (value) => {
         const updatedErrors = passwordError.map((error) => ({
@@ -469,19 +467,21 @@ const Register = ({ setAlert, setLoading }) => {
             if (validEmail && validUsername && passwordError.every((error) => !error.showError)) {
                 setActiveStep((prev) => prev + 1);
             }
-        } else if (activeStep === 1) {
-            handleAuthenticator();
-        } else if (activeStep === 2) {
-            if (watch("loginPreference") === null || watch("loginPreference") === "") {
-                setAlert({
-                    open: true,
-                    message: "Please select a login preference.",
-                    type: "error"
-                });
-                return;
-            }
+        } 
+        // else if (activeStep === 1) {
+        //     handleAuthenticator();
+        // } 
+        else if (activeStep === 1) {
+            // if (watch("loginPreference") === null || watch("loginPreference") === "") {
+            //     setAlert({
+            //         open: true,
+            //         message: "Please select a login preference.",
+            //         type: "error"
+            //     });
+            //     return;
+            // }
             setActiveStep((prev) => prev + 1);
-        } else if (activeStep === 3) {
+        } else if (activeStep === 2) {
             setLoading(true);
             const resetData = {
                 ...data,
@@ -540,7 +540,7 @@ const Register = ({ setAlert, setLoading }) => {
                 }
             }
         }
-        else if (activeStep === 4) {
+        else if (activeStep === 3) {
             setLoading(true);
             const newData = {
                 id: watch("brandId"),
@@ -569,7 +569,7 @@ const Register = ({ setAlert, setLoading }) => {
                     setAlert({ open: true, message: res.data.message, type: "error" })
                 }
             }
-        } else if (activeStep === 5) {
+        } else if (activeStep === 4) {
             navigate("/login")
         }
         else {
@@ -577,30 +577,30 @@ const Register = ({ setAlert, setLoading }) => {
         }
     };
 
-    useEffect(() => {
-        const handleMessage = (event) => {
-            const data = event.data;
+    // useEffect(() => {
+    //     const handleMessage = (event) => {
+    //         const data = event.data;
 
-            if (typeof data !== "object" || data === null) {
-                return;
-            }
+    //         if (typeof data !== "object" || data === null) {
+    //             return;
+    //         }
 
-            if ("success" in data) {
-                if (data.success === true) {
-                    handleAuthSuccess(event);
-                } else {
-                    handleAuthFailure(event);
-                }
-            } else if ("pageName" in data) {
-                handleAuthFailure(event);
-            }
-        };
+    //         if ("success" in data) {
+    //             if (data.success === true) {
+    //                 handleAuthSuccess(event);
+    //             } else {
+    //                 handleAuthFailure(event);
+    //             }
+    //         } else if ("pageName" in data) {
+    //             handleAuthFailure(event);
+    //         }
+    //     };
 
-        window.addEventListener("message", handleMessage);
-        return () => {
-            window.removeEventListener("message", handleMessage);
-        };
-    }, [authOperationData]);
+    //     window.addEventListener("message", handleMessage);
+    //     return () => {
+    //         window.removeEventListener("message", handleMessage);
+    //     };
+    // }, [authOperationData]);
 
     useEffect(() => {
         if (Cookies.get('authToken')) {
@@ -833,7 +833,7 @@ const Register = ({ setAlert, setLoading }) => {
                                 </div>
                             )
                         }
-                        {
+                        {/* {
                             activeStep === 1 && (
                                 <div className="flex justify-center">
                                     <div className="max-w-3xl px-10">
@@ -870,58 +870,11 @@ const Register = ({ setAlert, setLoading }) => {
                                     </div>
                                 </div>
                             )
-                        }
+                        } */}
                         {
-                            activeStep === 2 && (
+                            activeStep === 1 && (
                                 <div className="flex justify-center items-center">
-                                    <div className="max-w-3xl w-full px-6">
-                                        <div>
-                                            <p className="text-center text-lg md:text-xl text-black my-5 font-semibold">
-                                                Choose Your Login Preference
-                                            </p>
-                                        </div>
-
-                                        <div className="grid md:grid-cols-2 gap-6">
-
-                                            {/* Biometric Authenticator */}
-                                            <div
-                                                className={`border-2 ${watch("loginPreference") === "authId"
-                                                    ? "border-blue-600 shadow-md"
-                                                    : "border-gray-200"
-                                                    } rounded-xl p-3 cursor-pointer transition-all hover:shadow-md`}
-                                                onClick={() => setValue("loginPreference", "authId")}
-                                            >
-                                                <div className="flex flex-col items-center">
-                                                    <img
-                                                        src={AuthidAthenticator}
-                                                        alt="Biometric Authenticator"
-                                                        className="mb-3 h-14 md:h-20"
-                                                    />
-                                                    <p className="text-black font-medium capitalize">
-                                                        Biometric Authenticator
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Password */}
-                                            <div
-                                                className={`border-2 ${watch("loginPreference") === "password"
-                                                    ? "border-blue-600 shadow-md"
-                                                    : "border-gray-200"
-                                                    } rounded-xl p-3 cursor-pointer transition-all hover:shadow-md`}
-                                                onClick={() => setValue("loginPreference", "password")}
-                                            >
-                                                <div className="flex flex-col items-center">
-                                                    <img
-                                                        src={PasswordAuthenticator}
-                                                        alt="Password"
-                                                        className="mb-3 h-14 md:h-20"
-                                                    />
-                                                    <p className="text-black font-medium capitalize">Password</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
+                                    <div className="max-w-3xl w-full px-6">                                    
                                         {/* Question 1 */}
                                         <div className="my-6 flex justify-center items-center">
                                             <div className="max-w-96 w-full">
@@ -1041,7 +994,7 @@ const Register = ({ setAlert, setLoading }) => {
                             )
                         }
                         {
-                            activeStep === 3 && (
+                            activeStep === 2 && (
                                 <div className="flex justify-center items-center">
                                     <div className="max-w-96 w-full px-6 flex flex-col gap-4">
                                         <div>
@@ -1460,7 +1413,7 @@ const Register = ({ setAlert, setLoading }) => {
                             )
                         }
                         {
-                            activeStep === 4 && (
+                            activeStep === 3 && (
                                 <>
                                     <div>
                                         <p className="text-center text-lg md:text-xl text-black my-5 font-semibold">
@@ -1540,7 +1493,7 @@ const Register = ({ setAlert, setLoading }) => {
                             )
                         }
                         {
-                            activeStep === 5 && (
+                            activeStep === 4 && (
                                 <>
                                     <div>
                                         <p className="text-center text-lg md:text-xl text-black my-5 font-semibold capitalize">
@@ -1574,7 +1527,7 @@ const Register = ({ setAlert, setLoading }) => {
                                 </div>
 
                                 <div>
-                                    <Button type="submit" text={activeStep === 1 ? "PROCEED FOR BIOMETRIC AUTHENTICATION" : activeStep === 5 ? "Let's Go" : "next"} />
+                                    <Button type="submit" text={activeStep === 4 ? "Let's Go" : "next"} />
                                 </div>
                             </div>
                             {
@@ -1593,7 +1546,7 @@ const Register = ({ setAlert, setLoading }) => {
                     </form>
                 </div>
 
-                {finalUrl != null ? (
+                {/* {finalUrl != null ? (
                     <div className="fixed inset-0 z-50 bg-white h-screen w-screen">
                         <div>
                             <AuthIDComponent
@@ -1608,7 +1561,7 @@ const Register = ({ setAlert, setLoading }) => {
                             <CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer text-black text-xl" />
                         </button>
                     </div>
-                ) : null}
+                ) : null} */}
 
                 <div className="fixed bottom-0 z-30 w-full border-b border-gray-200 shadow-sm bg-white">
                     <CopyRight />

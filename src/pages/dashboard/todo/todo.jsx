@@ -496,7 +496,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div>
+                                {/* <div>
                                     {
                                         assignee.complectedWork !== 100 && (
                                             <Button
@@ -506,7 +506,7 @@ const Todo = ({ setAlert, setHeaderTitle }) => {
                                             />
                                         )
                                     }
-                                </div>
+                                </div> */}
                             </div>
                         ))}
                     </div>
