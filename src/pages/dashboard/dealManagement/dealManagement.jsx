@@ -1316,7 +1316,7 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                         const isActive = stage.id === currentStageId;
                         const isCompleted = currentStageId !== null && stage.id < currentStageId;
 
-                        let bgClass = isActive ? "bg-[#2563EB]" : "bg-transparent hover:bg-black/5";
+                        let bgClass = isActive ? "bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)]" : "bg-transparent hover:bg-black/5";
                         let textClass = isActive ? "text-white" : "text-gray-600 hover:text-gray-900";
 
                         const isFirst = index === 0;
@@ -1850,32 +1850,114 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                     )}
                                 </div>
 
-                                {/* Details Grid – six‑column aligned grid */}
-                                <div className="w-full grid grid-cols-2 lg:grid-cols-[128px_1fr_128px_1fr_128px_1fr] gap-3 my-5">
-                                    {/* ---- Row 1: Account, Deal Amount, Opp Name ---- */}
-                                    {/* Account label */}
-                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Account:</span>
-                                    {/* Account value */}
-                                    <div className="text-gray-900 font-semibold text-base">
-                                        <OpportunityField
-                                            label="Account"
-                                            value={getDisplayName(watch("accountId"), accounts)}
-                                            type="select"
-                                            options={accounts}
-                                            onSave={(newValue) => handleSaveField("accountId", newValue)}
-                                            hideLabel
-                                        />
-                                    </div>
+                                {/* <div className="w-full grid grid-cols-2 lg:grid-cols-[128px_1fr_128px_1fr_128px_1fr] gap-3 my-5">
+                                                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Account:</span>
+                                                            <div className="text-gray-900 font-semibold text-base">
+                                                                <OpportunityField
+                                                                    label="Account"
+                                                                    value={getDisplayName(watch("accountId"), accounts)}
+                                                                    type="select"
+                                                                    options={accounts}
+                                                                    onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                                                    hideLabel
+                                                                />
+                                                            </div>
+                                
+                                                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Deal Amount:</span>
+                                                            <div className="relative cursor-pointer text-gray-900 font-semibold text-base">
+                                                                <span onClick={openPricingBox}>
+                                                                    {watch("dealAmount") ? `$${parseInt(watch("dealAmount")).toLocaleString()}` : "—"}
+                                                                </span>
+                                                                {showPricingBox && (
+                                                                    <div ref={pricingBoxRef} className="absolute z-50 left-0 top-6 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
+                                                                        <div>
+                                                                            <label className="text-xs font-semibold">List Amount</label>
+                                                                            <Input
+                                                                                name="listPrice"
+                                                                                placeholder="0"
+                                                                                value={pricingDraft.listPrice || ""}
+                                                                                onChange={handleChange}
+                                                                                error={pricingDraft.listPrice === ""}
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="text-xs font-semibold">Discount (%)</label>
+                                                                            <Input
+                                                                                name="discountPercentage"
+                                                                                placeholder="0"
+                                                                                value={pricingDraft.discountPercentage || ""}
+                                                                                onChange={handleChange}
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="text-xs font-semibold">Deal Amount</label>
+                                                                            <Input
+                                                                                name="dealAmount"
+                                                                                placeholder="0"
+                                                                                value={pricingDraft.dealAmount || ""}
+                                                                                onChange={handleChange}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                
+                                                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Opp Name:</span>
+                                                            <div className="text-gray-900 font-semibold text-base">
+                                                                <OpportunityField
+                                                                    label="Opportunity Name"
+                                                                    value={watch("opportunity")}
+                                                                    type="text"
+                                                                    onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                                                    required
+                                                                    hideLabel
+                                                                />
+                                                            </div>
+                                
+                                                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Close Date:</span>
+                                                            <div className="text-gray-900 font-semibold text-base">
+                                                                <OpportunityField
+                                                                    label="Close Date"
+                                                                    value={formatDate(watch("closeDate"))}
+                                                                    type="date"
+                                                                    onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                                                    required
+                                                                    hideLabel
+                                                                />
+                                                            </div>
+                                
+                                                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Status:</span>
+                                                            <div className="text-gray-900 font-semibold text-base">
+                                                                <OpportunityField
+                                                                    label="Status"
+                                                                    value={watch("status")}
+                                                                    type="select"
+                                                                    options={opportunityStatus}
+                                                                    onSave={(newValue) => handleSaveField("status", newValue)}
+                                                                    required
+                                                                    hideLabel
+                                                                />
+                                                            </div>
+                                                            <div></div>
+                                                            <div></div>
+                                                        </div> */}
 
-                                    {/* Deal Amount label */}
-                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Deal Amount:</span>
-                                    {/* Deal Amount value with pricing popover */}
-                                    <div className="relative cursor-pointer text-gray-900 font-semibold text-base">
-                                        <span onClick={openPricingBox}>
+                                <div className="flex justify-center items-center w-full my-5">
+                                    <OpportunityField
+                                        label="Account"
+                                        value={getDisplayName(watch("accountId"), accounts)}
+                                        type="select"
+                                        options={accounts}
+                                        onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                        hideLabel
+                                    />
+
+                                    <div className="relative cursor-pointer w-full">
+                                        <p className="font-semibold text-black" onClick={openPricingBox}>
                                             {watch("dealAmount") ? `$${parseInt(watch("dealAmount")).toLocaleString()}` : "—"}
-                                        </span>
+                                        </p>
                                         {showPricingBox && (
-                                            <div ref={pricingBoxRef} className="absolute z-50 left-0 top-6 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
+                                            <div ref={pricingBoxRef} className="absolute z-50 right-0 top-10 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
                                                 <div>
                                                     <label className="text-xs font-semibold">List Amount</label>
                                                     <Input
@@ -1908,53 +1990,28 @@ const DealManagement = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex 
                                         )}
                                     </div>
 
-                                    {/* Opp Name label */}
-                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Opp Name:</span>
-                                    {/* Opp Name value */}
-                                    <div className="text-gray-900 font-semibold text-base">
-                                        <OpportunityField
-                                            label="Opportunity Name"
-                                            value={watch("opportunity")}
-                                            type="text"
-                                            onSave={(newValue) => handleSaveField("opportunity", newValue)}
-                                            required
-                                            hideLabel
-                                        />
-                                    </div>
-
-                                    {/* ---- Row 2: Close Date, Status, (empty placeholders) ---- */}
-                                    {/* Close Date label */}
-                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Close Date:</span>
-                                    {/* Close Date value */}
-                                    <div className="text-gray-900 font-semibold text-base">
-                                        <OpportunityField
-                                            label="Close Date"
-                                            value={formatDate(watch("closeDate"))}
-                                            type="date"
-                                            onSave={(newValue) => handleSaveField("closeDate", newValue)}
-                                            required
-                                            hideLabel
-                                        />
-                                    </div>
-
-                                    {/* Status label */}
-                                    <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Status:</span>
-                                    {/* Status value */}
-                                    <div className="text-gray-900 font-semibold text-base">
-                                        <OpportunityField
-                                            label="Status"
-                                            value={watch("status")}
-                                            type="select"
-                                            options={opportunityStatus}
-                                            onSave={(newValue) => handleSaveField("status", newValue)}
-                                            required
-                                            hideLabel
-                                        />
-                                    </div>
-
-                                    {/* Empty cells to complete the 6‑column row – keep alignment */}
-                                    <div></div>
-                                    <div></div>
+                                    <OpportunityField
+                                        label="Opportunity Name"
+                                        value={watch("opportunity")}
+                                        type="text"
+                                        onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                        required={true}
+                                    />
+                                    <OpportunityField
+                                        label="Close Date"
+                                        value={formatDate(watch("closeDate"))}
+                                        type="date"
+                                        onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                        required={true}
+                                    />
+                                    <OpportunityField
+                                        label="Status"
+                                        value={watch("status")}
+                                        type="select"
+                                        options={opportunityStatus}
+                                        onSave={(newValue) => handleSaveField("status", newValue)}
+                                        required={true}
+                                    />
                                 </div>
                             </div>
 

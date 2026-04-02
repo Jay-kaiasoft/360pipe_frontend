@@ -129,7 +129,8 @@ const ForgotPassword = ({ setAlert, setLoading }) => {
                                                     render={({ field }) => (
                                                         <Input
                                                             {...field}
-                                                            label="Answer"
+                                                            // label="Answer"
+                                                            placeholder="Enter answer"
                                                             type="text"
                                                             error={errors?.answer}
                                                             onChange={(e) => {
