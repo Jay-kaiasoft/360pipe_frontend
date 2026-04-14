@@ -40,34 +40,14 @@ import OutlookCalendarOauthRedirect from "./pages/dashboard/calendar/outlookCale
 import Closeplan from "./pages/closeplan/closeplan";
 import Results from "./pages/dashboard/results/results";
 import Activities from "./pages/dashboard/activities/activities";
-import OppView from "./demoScreens/oppView";
-import TodoScreen from "./demoScreens/todo/todoScreen";
-import TodoScreenManager from "./demoScreens/todo/todoScreenManager";
 import Performance from "./pages/dashboard/performance/performance";
 import Support from "./pages/landingPage/support";
-import Dashboard from "./demoScreens/dashboard/dashboard";
 import DealManagement from "./pages/dashboard/dealManagement/dealManagement";
 
 library.add(fas, far, fab)
 
 const App = ({ setLoading }) => {
   const router = createBrowserRouter([
-    {
-      path: "/demoscreens/dashboard",
-      element: <Dashboard />,
-    },
-    {
-      path: "/demoscreens/opportunityview",
-      element: <OppView />,
-    },
-    {
-      path: "/demoscreens/todo",
-      element: <TodoScreen />,
-    },
-    {
-      path: "/demoscreens/todomanager",
-      element: <TodoScreenManager />,
-    },
     {
       path: "*",
       element: <PageNotFound />,

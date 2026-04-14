@@ -58,7 +58,7 @@ const Header = () => {
                 ? "fixed bg-white shadow-md transition-all duration-700 "
                 : "absolute bg-transparent transition-all duration-700 "
                 }
-                ${hideButtons ? "py-2 bg-white shadow" : ""}
+                ${hideButtons ? "bg-white shadow" : ""}
                 `}
         >
             <div className="flex items-center justify-between 4k:justify-center 4k:gap-32 px-5 lg:px-20 py-4">
@@ -89,7 +89,7 @@ const Header = () => {
                 {!hideButtons && (
                     <div className="hidden xl:flex space-x-3">
                         <button
-                            onClick={() => navigate("/pricing")}
+                            onClick={() => navigate("/register")}
                             className="bg-[#44288E] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#44288E] transition"
                         >
                             Sign Up
