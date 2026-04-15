@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import { Controller, useForm } from "react-hook-form";
@@ -28,7 +28,7 @@ import Checkbox from "../../../components/common/checkBox/checkbox";
 // import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
 import { addCustomer, updateCustomer, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
 import { getAllRoles } from "../../../service/roles/rolesService";
-import { capitalize, getStaticRolesWithPermissions, securityQuestions, uploadFiles } from "../../../service/common/commonService";
+import { brandfetchSrc, getStaticRolesWithPermissions, securityQuestions, uploadFiles } from "../../../service/common/commonService";
 import { getAllCountry } from "../../../service/country/countryService";
 import { getAllStateByCountry } from "../../../service/state/stateService";
 import { addBusinessInfo, deleteBrandLogo, updateBusinessInfo, uploadBrandLogo } from "../../../service/businessInfo/businessInfoService";
@@ -41,6 +41,40 @@ const calendarType = [
     { id: 1, title: "Calendar Year" },
     { id: 2, title: "Financial Year" },
 ]
+
+const useClickOutside = (ref, handler, when = true) => {
+    useEffect(() => {
+        if (!when) return;
+        const listener = (event) => {
+            const el = ref?.current;
+            if (!el) return;
+            if (el.contains(event.target)) return;
+            const isPortal = event.target.closest(".MuiPopover-root") ||
+                event.target.closest(".MuiAutocomplete-popper") ||
+                event.target.closest(".MuiDialog-root") ||
+                event.target.closest(".MuiMenu-root");
+            if (isPortal) return;
+            handler(event);
+        };
+        document.addEventListener("mousedown", listener, true);
+        document.addEventListener("touchstart", listener, true);
+        return () => {
+            document.removeEventListener("mousedown", listener, true);
+            document.removeEventListener("touchstart", listener, true);
+        };
+    }, [ref, handler, when]);
+}
+
+const normalizeDomain = (raw) => {
+    const v = (raw || "").trim();
+    if (!v) return "";
+    let d = v.replace(/^https?:\/\//i, "");
+    d = d.split("/")[0].split("?")[0].trim();
+    d = d.replace(/\.+$/, "");
+    return d;
+};
+
+
 const Register = ({ setAlert, setLoading }) => {
     const navigate = useNavigate();
 
@@ -80,6 +114,16 @@ const Register = ({ setAlert, setLoading }) => {
         },
     ]);
 
+    const [isLogoMenuOpen, setIsLogoMenuOpen] = useState(false);
+    const [isUploadLogoOpen, setIsUploadLogoOpen] = useState(false);
+    const [isFetchLogoOpen, setIsFetchLogoOpen] = useState(false);
+    const [domainDraft, setDomainDraft] = useState("");
+
+    const logoMenuRef = useRef(null);
+    const uploadLogoRef = useRef(null);
+    const fetchLogoRef = useRef(null);
+
+
     const {
         handleSubmit,
         control,
@@ -107,7 +151,7 @@ const Register = ({ setAlert, setLoading }) => {
             address2: "",
             city: "",
             state: "",
-            country: "",
+            country: "United States",
             zipCode: "",
             quota: "",
             evalPeriod: "",
@@ -189,10 +233,11 @@ const Register = ({ setAlert, setLoading }) => {
                 }
             })
             setCountrys(data)
+            handleGetAllStatesByCountryId(100)
         }
     }
 
-    const handleGetAllStatesByCountryId = async (id) => {
+    const handleGetAllStatesByCountryId = async (id = 100) => {
         if (activeStep === 2) {
             const res = await getAllStateByCountry(id)
             const data = res?.data?.result?.map((item) => {
@@ -462,12 +507,26 @@ const Register = ({ setAlert, setLoading }) => {
         }
     }
 
+    const handleSaveFetchedLogo = () => {
+        const d = normalizeDomain(domainDraft);
+        if (!d) return;
+        setValue("brandLogo", brandfetchSrc(d));
+        setFormDataFile(null);
+        setIsFetchLogoOpen(false);
+        setDomainDraft("");
+    };
+
+    useClickOutside(logoMenuRef, () => setIsLogoMenuOpen(false), isLogoMenuOpen);
+    useClickOutside(uploadLogoRef, () => setIsUploadLogoOpen(false), isUploadLogoOpen);
+
+
+
     const onSubmit = async (data) => {
         if (activeStep === 0) {
             if (validEmail && validUsername && passwordError.every((error) => !error.showError)) {
                 setActiveStep((prev) => prev + 1);
             }
-        } 
+        }
         // else if (activeStep === 1) {
         //     handleAuthenticator();
         // } 
@@ -497,7 +556,7 @@ const Register = ({ setAlert, setLoading }) => {
                         billingState: data.state,
                         billingCountry: data.country,
                         billingZipcode: data.zipCode,
-                        billingPhone: data.cellPhone,
+                        // billingPhone: data.cellPhone,
                     }
                 )
             }
@@ -730,7 +789,7 @@ const Register = ({ setAlert, setLoading }) => {
                                                 />
                                             </div>
 
-                                            <div>
+                                            {/* <div>
                                                 <Controller
                                                     name="cellPhone"
                                                     control={control}
@@ -758,7 +817,7 @@ const Register = ({ setAlert, setLoading }) => {
                                                         />
                                                     )}
                                                 />
-                                            </div>
+                                            </div> */}
 
                                             <div className="relative">
                                                 <Controller
@@ -874,7 +933,7 @@ const Register = ({ setAlert, setLoading }) => {
                         {
                             activeStep === 1 && (
                                 <div className="flex justify-center items-center">
-                                    <div className="max-w-3xl w-full px-6">                                    
+                                    <div className="max-w-3xl w-full px-6">
                                         {/* Question 1 */}
                                         <div className="my-6 flex justify-center items-center">
                                             <div className="max-w-96 w-full">
@@ -1127,20 +1186,20 @@ const Register = ({ setAlert, setLoading }) => {
                                                 }}
                                                 render={({ field }) => (
                                                     <Select
-                                                        disabled={countrys?.length === 0}
+                                                        disabled={true}
                                                         options={countrys}
                                                         label={"Country"}
                                                         placeholder="Select country"
                                                         value={countrys?.filter((row) => row.title === watch("country"))?.[0]?.id || null}
-                                                        onChange={(_, newValue) => {
-                                                            if (newValue?.id) {
-                                                                field.onChange(newValue.title);
-                                                                handleGetAllStatesByCountryId(newValue.id);
-                                                            } else {
-                                                                setValue("country", null);
-                                                                setStates([]);
-                                                            }
-                                                        }}
+                                                        // onChange={(_, newValue) => {
+                                                        //     if (newValue?.id) {
+                                                        //         field.onChange(newValue.title);
+                                                        //         handleGetAllStatesByCountryId(newValue.id);
+                                                        //     } else {
+                                                        //         setValue("country", null);
+                                                        //         setStates([]);
+                                                        //     }
+                                                        // }}
                                                         error={errors?.country}
                                                     />
                                                 )}
@@ -1169,36 +1228,6 @@ const Register = ({ setAlert, setLoading }) => {
                                                             }
                                                         }}
                                                         error={errors?.state}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="cellPhone"
-                                                control={control}
-                                                rules={{
-                                                    required: "Phone is required",
-                                                    maxLength: {
-                                                        value: 10,
-                                                        message: 'Enter valid phone number',
-                                                    },
-                                                    minLength: {
-                                                        value: 10,
-                                                        message: 'Enter valid phone number',
-                                                    },
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input
-                                                        {...field}
-                                                        label="Phone"
-                                                        type={`text`}
-                                                        error={errors?.cellPhone}
-                                                        onChange={(e) => {
-                                                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                            field.onChange(numericValue);
-                                                        }}
                                                     />
                                                 )}
                                             />
@@ -1478,15 +1507,33 @@ const Register = ({ setAlert, setLoading }) => {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className='flex justify-center items-center'>
-                                        <div className="mt-3 h-40 w-40">
-                                            <FileInputBox
-                                                onFileSelect={handleImageChange}
-                                                onRemove={handleDeleteImage}
-                                                value={watch("brandLogo")}
-                                                text="Click in this area to upload brand logo"
-                                            />
+                                        <div className="mt-3 relative">
+                                            <div
+                                                className="h-40 w-40 border-2 border-dashed border-gray-300 rounded-full flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 transition-all overflow-hidden bg-white"
+                                                onClick={() => setIsLogoMenuOpen(!isLogoMenuOpen)}
+                                            >
+                                                {watch("brandLogo") ? (
+                                                    <img src={watch("brandLogo")} alt="Brand Logo" className="h-40 w-40 object-contain p-2" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center p-4">
+                                                        <CustomIcons iconName="fa-solid fa-image" css="text-gray-400 text-3xl mb-2" />
+                                                        <p className="text-xs text-center text-gray-500 font-medium">Click to upload or fetch brand logo</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {isLogoMenuOpen && (
+                                                <div ref={logoMenuRef} className="absolute z-50 left-60 -translate-x-1/2 bottom-5 mb-2 w-48 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                                    <button type="button" className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2" onClick={() => { setIsUploadLogoOpen(true); setIsLogoMenuOpen(false); }}>
+                                                        <CustomIcons iconName="fa-solid fa-upload" css="h-4 w-4" /> Upload Logo
+                                                    </button>
+                                                    <button type="button" className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2 border-t" onClick={() => { setIsFetchLogoOpen(true); setIsLogoMenuOpen(false); }}>
+                                                        <CustomIcons iconName="fa-solid fa-cloud-arrow-down" css="h-4 w-4" /> Fetch Logo by URL
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </>
@@ -1522,9 +1569,13 @@ const Register = ({ setAlert, setLoading }) => {
                         }
                         <div className="mt-6">
                             <div className="flex justify-center items-center gap-3">
-                                <div>
-                                    <Button type="button" onClick={() => handleBack()} text={"Back"} />
-                                </div>
+                                {
+                                    activeStep !== 4 && (
+                                        <div>
+                                            <Button type="button" onClick={() => handleBack()} text={"Back"} />
+                                        </div>
+                                    )
+                                }
 
                                 <div>
                                     <Button type="submit" text={activeStep === 4 ? "Let's Go" : "next"} />
@@ -1566,6 +1617,103 @@ const Register = ({ setAlert, setLoading }) => {
                 <div className="fixed bottom-0 z-30 w-full border-b border-gray-200 shadow-sm bg-white">
                     <CopyRight />
                 </div>
+
+                {/* Upload Logo Modal */}
+                {isUploadLogoOpen && (
+                    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
+                        <div
+                            ref={uploadLogoRef}
+                            className="w-full max-w-sm rounded-xl bg-white shadow-2xl border border-gray-200 overflow-hidden"
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+                                <p className="text-sm font-semibold text-gray-900">Upload Brand Logo</p>
+                                <button
+                                    type="button"
+                                    className="h-8 w-8 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                    onClick={() => setIsUploadLogoOpen(false)}
+                                    title="Close"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-6 flex justify-center items-center">
+                                <div className="h-40 w-40">
+                                    <FileInputBox
+                                        onFileSelect={handleImageChange}
+                                        onRemove={handleDeleteImage}
+                                        value={watch("brandLogo")}
+                                        text="Click to select or drag brand logo"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="px-4 py-3 bg-gray-50 border-t flex justify-end">
+                                <Button
+                                    type="button"
+                                    onClick={() => setIsUploadLogoOpen(false)}
+                                    text="Done"
+                                    className="px-6 py-2 bg-blue-600 text-white"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Fetch Logo Modal */}
+                {isFetchLogoOpen && (
+                    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
+                        <div
+                            ref={fetchLogoRef}
+                            className="w-full max-w-sm rounded-xl bg-white shadow-2xl border border-gray-200 overflow-hidden"
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+                                <p className="text-sm font-semibold text-gray-900">Fetch Logo via Domain</p>
+                                <button
+                                    type="button"
+                                    className="h-8 w-8 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                    onClick={() => setIsFetchLogoOpen(false)}
+                                    title="Close"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-4">
+                                <p className="text-xs text-gray-600 mb-2 font-medium">Enter company domain to fetch logo (e.g. google.com)</p>
+                                <div className="flex flex-col gap-4">
+                                    <Input
+                                        placeholder="example.com"
+                                        value={domainDraft}
+                                        onChange={(e) => setDomainDraft(e.target.value)}
+                                        autoFocus
+                                    />
+
+                                    <div className="flex justify-end gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outlined"
+                                            onClick={() => { setIsFetchLogoOpen(false); setDomainDraft(""); }}
+                                            text="Cancel"
+                                            className="px-4 py-1.5 text-xs"
+                                        />
+                                        <Button
+                                            type="button"
+                                            onClick={handleSaveFetchedLogo}
+                                            text="Fetch & Save"
+                                            className="px-4 py-1.5 text-xs bg-blue-600 text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
