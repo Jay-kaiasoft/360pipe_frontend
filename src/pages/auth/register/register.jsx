@@ -26,7 +26,7 @@ import FileInputBox from "../../../components/fileInputBox/fileInputBox";
 import Checkbox from "../../../components/common/checkBox/checkbox";
 // import { getCurrentLocation } from "../../../service/common/radarService";
 // import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
-import { addCustomer, updateCustomer, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
+import { addCustomer, updateCustomer, userLogin, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
 import { getAllRoles } from "../../../service/roles/rolesService";
 import { brandfetchSrc, getStaticRolesWithPermissions, securityQuestions, uploadFiles } from "../../../service/common/commonService";
 import { getAllCountry } from "../../../service/country/countryService";
@@ -519,8 +519,6 @@ const Register = ({ setAlert, setLoading }) => {
     useClickOutside(logoMenuRef, () => setIsLogoMenuOpen(false), isLogoMenuOpen);
     useClickOutside(uploadLogoRef, () => setIsUploadLogoOpen(false), isUploadLogoOpen);
 
-
-
     const onSubmit = async (data) => {
         if (activeStep === 0) {
             if (validEmail && validUsername && passwordError.every((error) => !error.showError)) {
@@ -629,7 +627,29 @@ const Register = ({ setAlert, setLoading }) => {
                 }
             }
         } else if (activeStep === 4) {
-            navigate("/login")
+            // navigate("/login")
+            let newData = {
+                email: watch("emailAddress"),
+                password: watch("password")
+            }
+            const res = await userLogin(newData)
+            if (res?.data?.status === 200 && res?.data?.result?.token) {
+                Cookies.set('authToken', res?.data?.result?.token, { expires: 0.5 });
+                const userdata = {
+                    username: res?.data?.result?.username,
+                    email: res?.data?.result?.email,
+                    userId: res?.data?.result?.userId,
+                    roleId: res?.data?.result?.roleId,
+                    roleName: res?.data?.result?.roleName,
+                    permissions: res?.data?.result?.permissions?.rolesActions,
+                    subUser: res?.data?.result?.subUser
+                };
+                localStorage.setItem("userInfo", JSON.stringify(userdata));
+                navigate("/dashboard")
+                // setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
+            } else {
+                setAlert({ open: true, type: "error", message: res?.data?.result?.error || res?.data?.msg || "Server error" })
+            }
         }
         else {
             setActiveStep((prev) => prev + 1);
@@ -1499,6 +1519,14 @@ const Register = ({ setAlert, setLoading }) => {
                                                         <Input {...field} label="Website URL" type="text"
                                                             onChange={(e) => {
                                                                 field.onChange(e.target.value);
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                field.onBlur();
+                                                                const domain = normalizeDomain(e.target.value);
+                                                                if (domain) {
+                                                                    setValue("brandLogo", brandfetchSrc(domain));
+                                                                    setFormDataFile(null);
+                                                                }
                                                             }}
                                                             error={errors?.websiteUrl}
                                                         />
