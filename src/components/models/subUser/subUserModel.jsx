@@ -99,7 +99,7 @@ function buildLabelsForKind(kind, startMonthIndex) {
 function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, handleGetAllUsers }) {
     const theme = useTheme()
     const [validEmail, setValidEmail] = useState(null);
-    const [validUsername, setValidUsername] = useState(null);
+    const [validEmailError, setValidEmailError] = useState(null);
 
     const [subUsersTypes, setSubUsersTypes] = useState([]);
     const [emailAddress, setEmailAddress] = useState(null);
@@ -226,7 +226,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
             amount12: '',
         });
         setValidEmail(null);
-        setValidUsername(null);
         setIsEmailExits(false);
         setEmailAddress(null);
         handleClose();
@@ -246,6 +245,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                     type: "error",
                     message: response?.data?.message || "An error occurred. Please try again.",
                 });
+                setValidEmailError(response?.data?.message)
                 setValidEmail(false);
             }
         }
@@ -467,7 +467,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
             endEvalPeriod: watch("endEvalPeriod"),
         }
 
-        if ((id && watch("emailAddress") === emailAddress) || validEmail || validUsername) {
+        if ((id && watch("emailAddress") === emailAddress) || validEmail) {
             if (id) {
                 const res = await updateSubUser(id, newData);
                 if (res?.data.status === 200) {
@@ -497,7 +497,14 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                     return;
                 }
             }
-        } else {
+        } else if (!validEmail) {
+            setAlert({
+                open: true,
+                type: "error",
+                message: validEmailError,
+            });
+        }
+        else {
             setAlert({
                 open: true,
                 type: "error",
@@ -563,7 +570,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     return (
         <React.Fragment>
             <BootstrapDialog
-            onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
+                onClose={(event, reason) => handleRequestClose(event, reason, onClose)}
                 open={open}
                 aria-labelledby="customized-dialog-title"
                 fullWidth
@@ -718,7 +725,7 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                             <Select
                                                                 requiredFiledLabel={true}
                                                                 options={calendarType}
-                                                                label="Calendar Type"
+                                                                label="Sales Manager Calendar Type"
                                                                 placeholder="Select calendar type"
                                                                 value={parseInt(watch("calendarYearType")) || null}
                                                                 onChange={(_, newValue) => field.onChange(newValue?.id || null)}

@@ -102,125 +102,120 @@ const Security = ({ setAlert }) => {
     return (
         <div className='flex justify-center items-center'>
             <div>
-                <Tabs tabsData={tabData} selectedTab={selectedTab} handleChange={handleChangeTab} />
-                <form className='mt-6 w-[500px]' onSubmit={handleSubmit(submit)}>
-                    {selectedTab === 0 && (
-                        <>
-                            {/* Question 1 */}
-                            <div className="my-6 flex justify-center items-center">
-                                <div className="max-w-96 w-full">
-                                    <div className="flex gap-3">
-                                        <div className="w-full">
-                                            <div className="mb-3">
-                                                <Controller
-                                                    name="question1"
-                                                    control={control}
-                                                    rules={{ required: "Question 1 is required" }}
-                                                    render={({ field }) => (
-                                                        <Select
-                                                            options={getFilteredQuestions(field.value)}
-                                                            label="Security Question One"
-                                                            placeholder="Select question"
-                                                            value={parseInt(watch("question1")) || null}
-                                                            onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                                            error={errors?.question1}
-                                                        />
-                                                    )}
+                {/* <Tabs tabsData={tabData} selectedTab={selectedTab} handleChange={handleChangeTab} /> */}
+                <form className='w-[500px]' onSubmit={handleSubmit(submit)}>
+                    {/* Question 1 */}
+                    <div className="mb-6 flex justify-center items-center">
+                        <div className="max-w-96 w-full">
+                            <div className="flex gap-3">
+                                <div className="w-full">
+                                    <div className="mb-3">
+                                        <Controller
+                                            name="question1"
+                                            control={control}
+                                            rules={{ required: "Question 1 is required" }}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={getFilteredQuestions(field.value)}
+                                                    label="Security Question One"
+                                                    placeholder="Select question"
+                                                    value={parseInt(watch("question1")) || null}
+                                                    onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                    error={errors?.question1}
                                                 />
-                                            </div>
-                                            <div>
-                                                <Controller
-                                                    name="answer1"
-                                                    control={control}
-                                                    rules={{ required: "Answer 1 is required" }}
-                                                    render={({ field }) => (
-                                                        <Input {...field} label="Question One Answer" type="text" error={errors?.answer1} />
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
+                                            )}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Controller
+                                            name="answer1"
+                                            control={control}
+                                            rules={{ required: "Answer 1 is required" }}
+                                            render={({ field }) => (
+                                                <Input {...field} label="Question One Answer" type="text" error={errors?.answer1} />
+                                            )}
+                                        />
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Question 2 */}
-                            <div className="my-6 flex justify-center items-center">
-                                <div className="max-w-96 w-full">
-                                    <div className="flex gap-3">
-                                        <div className="w-full">
-                                            <div className="mb-3">
-                                                <Controller
-                                                    name="question2"
-                                                    control={control}
-                                                    rules={{ required: "Question 2 is required" }}
-                                                    render={({ field }) => (
-                                                        <Select
-                                                            options={getFilteredQuestions(field.value)}
-                                                            label="Security Question Two"
-                                                            placeholder="Select question"
-                                                            value={parseInt(watch("question2")) || null}
-                                                            onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                                            error={errors?.question2}
-                                                        />
-                                                    )}
+                    {/* Question 2 */}
+                    <div className="my-6 flex justify-center items-center">
+                        <div className="max-w-96 w-full">
+                            <div className="flex gap-3">
+                                <div className="w-full">
+                                    <div className="mb-3">
+                                        <Controller
+                                            name="question2"
+                                            control={control}
+                                            rules={{ required: "Question 2 is required" }}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={getFilteredQuestions(field.value)}
+                                                    label="Security Question Two"
+                                                    placeholder="Select question"
+                                                    value={parseInt(watch("question2")) || null}
+                                                    onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                    error={errors?.question2}
                                                 />
-                                            </div>
-                                            <div>
-                                                <Controller
-                                                    name="answer2"
-                                                    control={control}
-                                                    rules={{ required: "Answer 2 is required" }}
-                                                    render={({ field }) => (
-                                                        <Input {...field} label="Question Two Answer" type="text" error={errors?.answer2} />
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
+                                            )}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Controller
+                                            name="answer2"
+                                            control={control}
+                                            rules={{ required: "Answer 2 is required" }}
+                                            render={({ field }) => (
+                                                <Input {...field} label="Question Two Answer" type="text" error={errors?.answer2} />
+                                            )}
+                                        />
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Question 3 */}
-                            <div className="my-6 flex justify-center items-center">
-                                <div className="max-w-96 w-full">
-                                    <div className="flex gap-3">
-                                        <div className="w-full">
-                                            <div className="mb-3">
-                                                <Controller
-                                                    name="question3"
-                                                    control={control}
-                                                    rules={{ required: "Question 3 is required" }}
-                                                    render={({ field }) => (
-                                                        <Select
-                                                            options={getFilteredQuestions(field.value)}
-                                                            label="Security Question Three"
-                                                            placeholder="Select question"
-                                                            value={parseInt(watch("question3")) || null}
-                                                            onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                                            error={errors?.question3}
-                                                        />
-                                                    )}
+                    {/* Question 3 */}
+                    <div className="my-6 flex justify-center items-center">
+                        <div className="max-w-96 w-full">
+                            <div className="flex gap-3">
+                                <div className="w-full">
+                                    <div className="mb-3">
+                                        <Controller
+                                            name="question3"
+                                            control={control}
+                                            rules={{ required: "Question 3 is required" }}
+                                            render={({ field }) => (
+                                                <Select
+                                                    options={getFilteredQuestions(field.value)}
+                                                    label="Security Question Three"
+                                                    placeholder="Select question"
+                                                    value={parseInt(watch("question3")) || null}
+                                                    onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                    error={errors?.question3}
                                                 />
-                                            </div>
-                                            <div>
-                                                <Controller
-                                                    name="answer3"
-                                                    control={control}
-                                                    rules={{ required: "Answer 3 is required" }}
-                                                    render={({ field }) => (
-                                                        <Input {...field} label="Question Three Answer" type="text" error={errors?.answer3} />
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
+                                            )}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Controller
+                                            name="answer3"
+                                            control={control}
+                                            rules={{ required: "Answer 3 is required" }}
+                                            render={({ field }) => (
+                                                <Input {...field} label="Question Three Answer" type="text" error={errors?.answer3} />
+                                            )}
+                                        />
                                     </div>
                                 </div>
                             </div>
-                        </>
-                    )}
-                    {selectedTab === 1 && (
+                        </div>
+                    </div>
+                    {/* {selectedTab === 1 && (
                         <div className="grid md:grid-cols-2 gap-6">
-                            {/* Biometric Authenticator */}
                             <button
                                 className={`border-2 ${watch("loginPreference") === "authId"
                                     ? "border-[#44288E] shadow-md"
@@ -241,7 +236,6 @@ const Security = ({ setAlert }) => {
                                 </div>
                             </button>
 
-                            {/* Password */}
                             <button
                                 className={`border-2 ${watch("loginPreference") === "password"
                                     ? "border-[#44288E] shadow-md"
@@ -260,7 +254,7 @@ const Security = ({ setAlert }) => {
                                 </div>
                             </button>
                         </div>
-                    )}
+                    )} */}
                     {
                         selectedTab === 0 && (
                             <div className="mt-6 mb-3 flex justify-end items-center gap-3 cap">

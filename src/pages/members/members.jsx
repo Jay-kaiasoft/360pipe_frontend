@@ -243,7 +243,7 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
         actionId={1}
         component={
           <div>
-            <Button type={`button`} text={'Create Member'} onClick={() => handleClickOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
+            <Button type={`button`} text={'Invite Member'} onClick={() => handleClickOpen()} startIcon={<CustomIcons iconName="fa-solid fa-plus" css="h-5 w-5" />} />
           </div>
         }
       />

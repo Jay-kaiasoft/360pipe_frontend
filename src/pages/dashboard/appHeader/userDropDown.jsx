@@ -143,10 +143,10 @@ export default function UserDropdown() {
         <div className="relative z-50" ref={dropdownRef}>
             <button
                 onClick={toggleDropdown}
-                className="flex items-center justify-center text-white dropdown-toggle rounded-full w-10 h-10 p-2 bg-[#44288E]"
+                className="flex items-center justify-center text-white dropdown-toggle rounded-full w-12 h-12 p-2 bg-[#44288E]"
             >
                 <span className="overflow-hidden rounded-full">
-                    {getInitials(userdata?.username || userdata?.name)}
+                    {getInitials(userdata?.name || userdata?.username)}
                     {/* <CustomIcons iconName="fa-solid fa-circle-user" css={"text-lg text-[#6033A3] h-6 w-6"} /> */}
                 </span>
             </button>
@@ -157,7 +157,7 @@ export default function UserDropdown() {
                     {/* User Info */}
                     <div className="pb-3 border-b border-gray-200">
                         <span className="block text-lg font-medium text-gray-700">
-                            {userdata?.username ? userdata?.username : userdata?.name}
+                            {userdata?.name ? userdata?.name : userdata?.username}
                         </span>
                         <span className="block mt-1 text-sm text-gray-500">
                             {/* {userdata?.email ? userdata?.email : ""} <br /> */}

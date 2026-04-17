@@ -45,6 +45,7 @@ const Layout = ({ sessionEndModel }) => {
         actionButtonText="Login"
         handleAction={() => navigate("/login")}
         closeIcon={false}
+        cancelAction={false}
       />
     </div>
   )

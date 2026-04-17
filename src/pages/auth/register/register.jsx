@@ -74,7 +74,6 @@ const normalizeDomain = (raw) => {
     return d;
 };
 
-
 const Register = ({ setAlert, setLoading }) => {
     const navigate = useNavigate();
 
@@ -603,7 +602,7 @@ const Register = ({ setAlert, setLoading }) => {
                 id: watch("brandId"),
                 cusId: watch("cusId"),
                 businessName: watch("businessName"),
-                brandName: watch("brandName"),
+                // brandName: watch("brandName"),
                 brandLogo: watch("brandLogo"),
                 websiteUrl: watch("websiteUrl"),
             }
@@ -1080,11 +1079,15 @@ const Register = ({ setAlert, setLoading }) => {
                                             <Controller
                                                 name="name"
                                                 control={control}
+                                                rules={{
+                                                    required: "Name is required"
+                                                }}
                                                 render={({ field }) => (
                                                     <Input {...field} label="Name" type="text"
                                                         onChange={(e) => {
                                                             field.onChange(e.target.value);
                                                         }}
+                                                        error={errors?.name}
                                                     />
                                                 )}
                                             />
@@ -1094,11 +1097,15 @@ const Register = ({ setAlert, setLoading }) => {
                                             <Controller
                                                 name="title"
                                                 control={control}
+                                                rules={{
+                                                    required: "Title is required"
+                                                }}
                                                 render={({ field }) => (
                                                     <Input {...field} label="Title" type="text"
                                                         onChange={(e) => {
                                                             field.onChange(e.target.value);
                                                         }}
+                                                        error={errors?.title}
                                                     />
                                                 )}
                                             />
@@ -1275,7 +1282,7 @@ const Register = ({ setAlert, setLoading }) => {
                                                 render={({ field }) => (
                                                     <Select
                                                         options={calendarType}
-                                                        label="Calendar Type"
+                                                        label="Sales Manager Calendar Type"
                                                         placeholder="Select calendar type"
                                                         value={parseInt(watch("calendarYearType")) || null}
                                                         onChange={(_, newValue) => field.onChange(newValue?.id || null)}
@@ -1490,7 +1497,7 @@ const Register = ({ setAlert, setLoading }) => {
                                                 />
                                             </div>
 
-                                            <div>
+                                            {/* <div>
                                                 <Controller
                                                     name="brandName"
                                                     rules={{
@@ -1506,7 +1513,7 @@ const Register = ({ setAlert, setLoading }) => {
                                                         />
                                                     )}
                                                 />
-                                            </div>
+                                            </div> */}
 
                                             <div>
                                                 <Controller

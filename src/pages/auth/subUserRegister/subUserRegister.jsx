@@ -3,6 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { setAlert, setLoading } from '../../../redux/commonReducers/commonReducers';
+import Cookies from 'js-cookie';
 
 import '@authid/web-component'
 import AuthIDComponent from '@authid/react-component';
@@ -18,7 +19,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Header from '../../landingPage/header';
 import CopyRight from '../../landingPage/copyRight';
 
-import { checkValidSubUserToken, updateCustomer, verifyUsername } from '../../../service/customers/customersService';
+import { checkValidSubUserToken, updateCustomer, userLogin, verifyUsername } from '../../../service/customers/customersService';
 import { addUser, updateUser } from '../../../service/auth/authIdAccountService';
 import { getCurrentLocation } from '../../../service/common/radarService';
 import { capitalize, securityQuestions } from '../../../service/common/commonService';
@@ -333,7 +334,7 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
             if (validUsername && passwordError.every((error) => !error.showError)) {
                 setActiveStep((prev) => prev + 1);
             }
-        } 
+        }
         // else if (activeStep === 1) {
         //     handleAuthenticator();
         // } 
@@ -357,7 +358,28 @@ const SubUserRegister = ({ setAlert, setLoading }) => {
             const res = await updateCustomer(watch("id"), resetData);
             if (res.data.status === 200) {
                 setLoading(false);
-                navigate("/login");
+                let newData = {
+                    email: watch("emailAddress"),
+                    password: watch("password")
+                }
+                const res = await userLogin(newData)
+                if (res?.data?.status === 200 && res?.data?.result?.token) {
+                    Cookies.set('authToken', res?.data?.result?.token, { expires: 0.5 });
+                    const userdata = {
+                        username: res?.data?.result?.username,
+                        email: res?.data?.result?.email,
+                        userId: res?.data?.result?.userId,
+                        roleId: res?.data?.result?.roleId,
+                        roleName: res?.data?.result?.roleName,
+                        permissions: res?.data?.result?.permissions?.rolesActions,
+                        subUser: res?.data?.result?.subUser
+                    };
+                    localStorage.setItem("userInfo", JSON.stringify(userdata));
+                    navigate("/dashboard")
+                    // setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
+                } else {
+                    setAlert({ open: true, type: "error", message: res?.data?.result?.error || res?.data?.msg || "Server error" })
+                }
             } else {
                 setLoading(false);
                 setAlert({
