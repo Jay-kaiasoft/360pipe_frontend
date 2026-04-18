@@ -120,13 +120,14 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     } = useForm({
         defaultValues: {
             id: "",
-            name: "",
+            firstName: "",
+            lastName: "",
+            title: "",
             emailAddress: "",
             subUserTypeId: "",
             crmId: null,
             username: "",
             password: "",
-            cellPhone: "",
             calendarYearType: "",
 
             startEvalPeriod: null,
@@ -197,13 +198,14 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
     const onClose = () => {
         reset({
             id: "",
-            name: "",
+            firstName: "",
+            lastName: "",
+            title: "",
             emailAddress: "",
             subUserTypeId: "",
             crmId: null,
             username: "",
             password: "",
-            cellPhone: "",
             calendarYearType: "",
 
             startEvalPeriod: null,
@@ -259,13 +261,14 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                     setIsEmailExits(true);
                 }
                 setValue("id", response?.data?.result?.id || "");
-                setValue("name", response?.data?.result?.name || "");
+                setValue("firstName", response?.data?.result?.firstName || "");
+                setValue("lastName", response?.data?.result?.lastName || "");
+                setValue("title", response?.data?.result?.title || "");
                 setValue("emailAddress", response?.data?.result?.emailAddress || "");
                 setEmailAddress(response?.data?.result?.emailAddress || null);
                 setValue("subUserTypeId", response?.data?.result?.subUserTypeId || "");
                 setValue("username", response?.data?.result?.username || "");
                 setValue("password", response?.data?.result?.password || "");
-                setValue("cellPhone", response?.data?.result?.cellPhone || "");
                 setValue("calendarYearType", response?.data?.result?.calendarYearType ? calendarType?.find((item) => item.title === response?.data?.result?.calendarYearType)?.id : null);
                 if (response?.data?.result?.calendarYearType) {
                     setValue("startEvalPeriod", response?.data?.result?.startEvalPeriod)
@@ -455,13 +458,14 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
 
     const submit = async (data) => {
         const newData = {
-            name: watch("name") || "",
+            firstName: watch("firstName") || "",
+            lastName: watch("lastName") || "",
+            title: watch("title") || "",
             emailAddress: watch("emailAddress") || "",
             subUserTypeId: watch("subUserTypeId") || "",
             crmId: watch("crmId") || null,
             username: watch("username") || "",
             password: watch("password") || "",
-            cellPhone: watch("cellPhone") || "",
             calendarYearType: calendarType?.find((item) => item.id === watch("calendarYearType"))?.title || "",
             startEvalPeriod: watch("startEvalPeriod"),
             endEvalPeriod: watch("endEvalPeriod"),
@@ -599,18 +603,62 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                             <div className='grid gap-[30px]'>
                                 <div>
                                     <Controller
-                                        name="name"
+                                        name="firstName"
                                         control={control}
                                         rules={{
-                                            required: "Name is required",
+                                            required: "First name is required",
                                         }}
                                         render={({ field }) => (
                                             <Input
                                                 {...field}
-                                                label="Name"
+                                                label="First name"
                                                 type={`text`}
                                                 requiredFiledLabel={true}
-                                                error={errors.name}
+                                                error={errors.firstName}
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Controller
+                                        name="lastName"
+                                        control={control}
+                                        rules={{
+                                            required: "Last name is required",
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Last name"
+                                                type={`text`}
+                                                requiredFiledLabel={true}
+                                                error={errors.lastName}
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Controller
+                                        name="title"
+                                        control={control}
+                                        rules={{
+                                            required: "Title is required",
+                                        }}
+                                        render={({ field }) => (
+                                            <Input
+                                                {...field}
+                                                label="Title"
+                                                type={`text`}
+                                                requiredFiledLabel={true}
+                                                error={errors.title}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                 }}
@@ -676,37 +724,6 @@ function SubUserModel({ setSyncingPushStatus, setAlert, open, handleClose, id, h
                                                         <CustomIcons iconName={'fa-solid fa-xmark'} css={`text-red-500`} />
                                                     ) : null
                                                 }
-                                            />
-                                        )}
-                                    />
-                                </div>
-
-                                <div>
-                                    <Controller
-                                        name="cellPhone"
-                                        control={control}
-                                        rules={{
-                                            required: "Phone is required",
-                                            maxLength: {
-                                                value: 10,
-                                                message: 'Enter valid phone number',
-                                            },
-                                            minLength: {
-                                                value: 10,
-                                                message: 'Enter valid phone number',
-                                            },
-                                        }}
-                                        render={({ field }) => (
-                                            <Input
-                                                {...field}
-                                                requiredFiledLabel={true}
-                                                label="Phone"
-                                                type={`text`}
-                                                error={errors?.cellPhone}
-                                                onChange={(e) => {
-                                                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                    field.onChange(numericValue);
-                                                }}
                                             />
                                         )}
                                     />

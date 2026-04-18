@@ -39,7 +39,7 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
   const handleOpenInviteDialog = (data) => {
     const newData = {
       email: data.emailAddress,
-      name: data.name,
+      name: data.firstName + " " + data.lastName,
       userId: data.id,
     }
     setInvitationData(newData);
@@ -140,6 +140,15 @@ const Members = ({ setAlert, setSyncingPushStatus, syncingPullStatus }) => {
       headerClassName: 'uppercase',
       flex: 1,
       maxWidth: 800,
+      renderCell: (params) => {
+        return (
+          <div>
+            <span>
+              {params.row.firstName + " " + params.row.lastName}
+            </span>
+          </div>
+        )
+      }
     },
     {
       field: 'emailAddress',

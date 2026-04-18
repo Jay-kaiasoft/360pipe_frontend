@@ -38,11 +38,11 @@ const Profile = ({ setAlert }) => {
     } = useForm({
         defaultValues: {
             id: "",
-            username: "",
+            firstName: "",
+            lastName: "",
             emailAddress: "",
             name: "",
             title: "",
-            cellPhone: "",
             address1: "",
             address2: "",
             city: "",
@@ -246,10 +246,30 @@ const Profile = ({ setAlert }) => {
 
                         <div>
                             <Controller
-                                name="name"
+                                name="firstName"
                                 control={control}
+                                rules={{
+                                    required: "First name is required"
+                                }}
                                 render={({ field }) => (
-                                    <Input {...field} label="Name" type="text"
+                                    <Input {...field} label="First Name" type="text" error={errors?.firstName}
+                                        onChange={(e) => {
+                                            field.onChange(e.target.value);
+                                        }}
+                                    />
+                                )}
+                            />
+                        </div>
+
+                        <div>
+                            <Controller
+                                name="lastName"
+                                control={control}
+                                rules={{
+                                    required: "Last name is required"
+                                }}
+                                render={({ field }) => (
+                                    <Input {...field} label="Last Name" type="text" error={errors?.lastName}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                         }}
@@ -262,8 +282,11 @@ const Profile = ({ setAlert }) => {
                             <Controller
                                 name="title"
                                 control={control}
+                                rules={{
+                                    required: "Title is required"
+                                }}
                                 render={({ field }) => (
-                                    <Input {...field} label="Title" type="text"
+                                    <Input {...field} label="Title" type="text" error={errors?.title}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                         }}
@@ -389,36 +412,6 @@ const Profile = ({ setAlert }) => {
                                             }
                                         }}
                                         error={errors?.state}
-                                    />
-                                )}
-                            />
-                        </div>
-
-                        <div>
-                            <Controller
-                                name="cellPhone"
-                                control={control}
-                                rules={{
-                                    required: "Phone is required",
-                                    maxLength: {
-                                        value: 10,
-                                        message: 'Enter valid phone number',
-                                    },
-                                    minLength: {
-                                        value: 10,
-                                        message: 'Enter valid phone number',
-                                    },
-                                }}
-                                render={({ field }) => (
-                                    <Input
-                                        {...field}
-                                        label="Phone"
-                                        type={`text`}
-                                        error={errors?.cellPhone}
-                                        onChange={(e) => {
-                                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                            field.onChange(numericValue);
-                                        }}
                                     />
                                 )}
                             />
