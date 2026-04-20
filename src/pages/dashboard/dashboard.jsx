@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, useRef, useLayoutEffect } from "react";
 import ReactDOM from "react-dom";
 import { getDashboardData } from "../../service/customers/customersService";
+import { useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import CustomIcons from "../../components/common/icons/CustomIcons";
+import AlertDialog from "../../components/common/alertDialog/alertDialog";
 
 // --- StatCard with reduced height and font sizes ---
 const StatCard = ({ title, icon, children, gradient, onMouseEnter, onMouseLeave }) => (
@@ -57,7 +59,9 @@ const adjustPopupPosition = (triggerRect, popupWidth, popupHeight, offset = 10) 
 };
 
 const Dashboard = ({ filterStartDate, filterEndDate }) => {
+    const navigate = useNavigate();
     const [dashboardData, setDashboardData] = useState(null);
+    const [openCRMAlert, setOpenCRMAlert] = useState(false);
 
     // --- Pipeline card popup visibility ---
     const [showPipelinePopup, setShowPipelinePopup] = useState(false);
@@ -97,6 +101,9 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
 
     useEffect(() => {
         document.title = "Dashboard - 360Pipe";
+        if (!localStorage.getItem("salesforceUserData")) {
+            setOpenCRMAlert(true);
+        }
         if (filterStartDate && filterEndDate) {
             handleGetDashboardData();
         }
@@ -283,6 +290,19 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                 </div>
             </div>
 
+            <AlertDialog
+                open={openCRMAlert}
+                handleClose={() => setOpenCRMAlert(false)}
+                title="Connect to CRM"
+                message="Please connect your CRM account to view and synchronize your sales data."
+                handleAction={() => {
+                    setOpenCRMAlert(false);
+                    navigate("/dashboard/mycrm");
+                }}
+                actionButtonText="Connect"
+                cancelButtonText="Later"
+            />
+
             {/* Portal for Pipeline card table popup */}
             {showPipelinePopup && pipelineCardRect && ui.pipeLineData.length > 0 &&
                 ReactDOM.createPortal(
@@ -308,7 +328,7 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {ui.pipeLineData.map((row, i) => (
+                                    {ui?.pipeLineData?.map((row, i) => (
                                         <tr
                                             key={row.contactId ?? i}
                                             className={`border-b border-slate-100 hover:bg-slate-200 cursor-pointer transition-colors ${hoveredPipelineRow?.id === row.id ? 'bg-slate-200' : ''}`}
@@ -317,7 +337,7 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                                         >
                                             <td className="px-4 py-3 text-sm text-slate-700">{row.created_by || '—'}</td>
                                             <td className="px-4 py-3 text-sm text-slate-700">{row.account || '—'}</td>
-                                            <td className="px-4 py-3 text-sm font-semibold text-slate-800">{moneyLabel(row.totalDealAmount) || '—'}</td>
+                                            <td className="px-4 py-3 text-sm font-semibold text-slate-800">{moneyLabel(ui.totalDealAmount) || '—'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -343,6 +363,7 @@ const Dashboard = ({ filterStartDate, filterEndDate }) => {
                             overflowY: 'auto',
                         }}
                     >
+                        {console.log("hoveredPipelineRow?.row?.opps", hoveredPipelineRow)}
                         {hoveredPipelineRow?.row?.opps?.length > 0 ? (
                             <div className="overflow-hidden rounded-xl">
                                 <table className="w-full border-collapse">

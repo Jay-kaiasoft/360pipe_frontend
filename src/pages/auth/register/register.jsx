@@ -5,14 +5,8 @@ import { Controller, useForm } from "react-hook-form";
 import Cookies from 'js-cookie';
 
 import '@authid/web-component'
-// import AuthIDComponent from '@authid/react-component';
 
 import { setAlert, setLoading } from "../../../redux/commonReducers/commonReducers";
-
-// import AuthIdLogo from "../../../assets/svgs/authid-logo.svg"
-// import AuthIdSignUpSvg from '../../../assets/svgs/authid-signup.svg';
-// import AuthidAthenticator from "../../../assets/svgs/authid-authenticator.svg";
-// import PasswordAuthenticator from "../../../assets/svgs/password-authenticator.svg";
 
 import Button from "../../../components/common/buttons/button";
 import CopyRight from "../../landingPage/copyRight";
@@ -24,8 +18,6 @@ import Input from "../../../components/common/input/input";
 import Select from "../../../components/common/select/select";
 import FileInputBox from "../../../components/fileInputBox/fileInputBox";
 import Checkbox from "../../../components/common/checkBox/checkbox";
-// import { getCurrentLocation } from "../../../service/common/radarService";
-// import { addUser, updateUser } from "../../../service/auth/authIdAccountService";
 import { addCustomer, updateCustomer, userLogin, verifyEmail, verifyUsername } from "../../../service/customers/customersService";
 import { getAllRoles } from "../../../service/roles/rolesService";
 import { brandfetchSrc, getStaticRolesWithPermissions, securityQuestions, uploadFiles } from "../../../service/common/commonService";
@@ -34,6 +26,10 @@ import { getAllStateByCountry } from "../../../service/state/stateService";
 import { addBusinessInfo, deleteBrandLogo, updateBusinessInfo, uploadBrandLogo } from "../../../service/businessInfo/businessInfoService";
 import { createSubUserTypes } from "../../../service/subUserType/subUserTypeService";
 import DatePickerComponent from "../../../components/common/datePickerComponent/datePickerComponent";
+import { deleteQuota, getAllCustomerQuotas } from "../../../service/customerQuota/customerQuotaService";
+import Components from "../../../components/muiComponents/components";
+import AlertDialog from "../../../components/common/alertDialog/alertDialog";
+import AddQuotaModel from "../../../components/models/subUser/addQuotaModel";
 
 const steps = ["", "", "", "", ""];
 
@@ -122,6 +118,10 @@ const Register = ({ setAlert, setLoading }) => {
     const uploadLogoRef = useRef(null);
     const fetchLogoRef = useRef(null);
 
+    const [quota, setQuota] = useState([])
+    const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [selectedQuotaId, setSelectedQuotaId] = useState(null)
+    const [openModel, setOpenModel] = useState(false)
 
     const {
         handleSubmit,
@@ -141,7 +141,8 @@ const Register = ({ setAlert, setLoading }) => {
             password: "",
             accountOwner: "",
             managerId: "",
-            name: "",
+            firstName: "",
+            lastName: "",
             title: "",
             roleId: 3,
             emailAddress: "",
@@ -180,6 +181,40 @@ const Register = ({ setAlert, setLoading }) => {
             websiteUrl: "",
         },
     });
+
+    const handleOpenModel = (id = null) => {
+        setSelectedQuotaId(id)
+        setOpenModel(true)
+    }
+
+    const handleCloseModel = () => {
+        setSelectedQuotaId(null)
+        setOpenModel(false)
+    }
+
+    const handleOpenDeleteDialog = (id) => {
+        setSelectedQuotaId(id);
+        setDialog({ open: true, title: 'Delete Contact', message: 'Are you sure! Do you want to delete this quota?', actionButtonText: 'yes' });
+    }
+
+    const handleCloseDeleteDialog = () => {
+        setSelectedQuotaId(null);
+        setDialog({ open: false, title: '', message: '', actionButtonText: '' });
+    }
+
+    const handleDeleteQuota = async () => {
+        const res = await deleteQuota(selectedQuotaId);
+        if (res.status === 200) {
+            handleGetAllQuotas();
+            handleCloseDeleteDialog();
+        } else {
+            setAlert({
+                open: true,
+                message: res?.message || "Failed to delete contact",
+                type: "error"
+            });
+        }
+    }
 
     const getFilteredQuestions = (current) => {
         const selected = [watch("question1"), watch("question2"), watch("question3")].filter(
@@ -231,7 +266,7 @@ const Register = ({ setAlert, setLoading }) => {
                     title: item.cntName
                 }
             })
-            setCountrys(data)
+            setCountrys(data?.filter((item) => item.id === 100 || item.id === 16))
             handleGetAllStatesByCountryId(100)
         }
     }
@@ -279,154 +314,6 @@ const Register = ({ setAlert, setLoading }) => {
         const data = response?.data?.result?.map(role => ({ id: role.id, title: role.role })) || [];
         setRoles(data);
     }
-
-    // const handleAuthSuccess = async (event) => {
-    //     setLoading(true);
-    //     if (event.data.success && authOperationData) {
-    //         const updateJsonData = {
-    //             authOperationId: authOperationData.operationId,
-    //             authSelfieOperationId: '',
-    //             id: authOperationData.userData?.id
-    //         };
-    //         setValue("authId", authOperationData.userData?.id);
-    //         try {
-    //             const updateResponse = await updateUser(updateJsonData);
-    //             if (updateResponse.data?.status === 200) {
-    //                 setLoading(false);
-    //                 handleCloseAuthModel();
-    //                 setAlert({
-    //                     open: true,
-    //                     type: "success",
-    //                     message: "Verification process is completed. Let's continue with registration process.",
-    //                 });
-    //                 if (parseInt(watch("documentType")) === 21) {
-    //                     let name = updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.split(" ") || [];
-    //                     if (name.length > 0) {
-    //                         setValue(
-    //                             "name",
-    //                             name[0].charAt(0).toUpperCase() + name[0].slice(1).toLowerCase() + name[1].charAt(0).toUpperCase() + name[1].slice(1).toLowerCase()
-    //                         );
-
-    //                     }
-    //                     setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.Address?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
-    //                 } else if (parseInt(watch("documentType")) === 2) {
-    //                     setValue("name", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.NameOfHolder?.toLowerCase() + updateResponse?.data?.result?.authUserData?.userInfo?.primaryID?.toLowerCase()));
-    //                     setValue("city", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressCity?.toLowerCase()));
-    //                     let pc = updateResponse?.data?.result?.authUserData?.userInfo?.AddressPostalCode?.split("-");
-    //                     if (pc.length > 0) {
-    //                         setValue("zipCode", pc[0]);
-    //                     }
-    //                     setValue("address1", capitalize(updateResponse?.data?.result?.authUserData?.userInfo?.AddressStreet?.toLowerCase()?.replaceAll(/[^a-zA-Z0-9.,\-\s]/gi, " ")));
-    //                 }
-    //                 setActiveStep((prevStep) => prevStep + 1);
-    //             } else {
-    //                 handleCloseAuthModel();
-    //                 setAlert({
-    //                     open: true,
-    //                     type: "error",
-    //                     message: "An error occurred. Please try again.",
-    //                 });
-    //             }
-    //         } catch (error) {
-    //             handleCloseAuthModel();
-    //             setAlert({
-    //                 open: true,
-    //                 type: "error",
-    //                 message: "An error occurred. Please try again.",
-    //             });
-    //         }
-    //     }
-    // };
-
-    // const handleAuthFailure = (event) => {
-    //     switch (event.data.pageName) {
-    //         case "documentFailedPage":
-    //         case "documentFailedNonMobilePage":
-    //         case "networkErrorPage":
-    //         case "livenessErrorPage":
-    //         case "docScanWasmTimeoutPage":
-    //         case "requestTimeoutPage":
-    //             // We don't want to stop the process for these pages
-    //             return;
-    //         case "verifiedMatchFailPage":
-    //         case "verifyDeclinedPage":
-    //         case "docScanResolutionTooLowPage":
-    //         case "videoDeviceNotFoundPage":
-    //         case "standardErrorPage":
-    //         case "defaultFailedPage":
-    //             handleCloseAuthModel();
-    //             setAlert({
-    //                 open: true,
-    //                 type: "error",
-    //                 message: "Verification failed. Please try again.",
-    //             });
-    //             break;
-    //         default:
-    //             handleCloseAuthModel();
-    //             break;
-    //     }
-    // };
-
-    // const handleAuthenticator = async () => {
-    //     try {
-    //         const locationResponse = await getCurrentLocation();
-    //         if (locationResponse?.address?.country === "United States") {
-    //             setValue("documentType", "2");
-    //         } else if (locationResponse?.address?.country === "India") {
-    //             setValue("documentType", "21");
-    //         }
-
-    //         let addUserRequestData = {
-    //             email: watch("emailAddress"),
-    //             documentType: watch("documentType")
-    //         };
-    //         setLoading(true);
-
-    //         let response = await addUser(addUserRequestData);
-    //         if (response.data.status === 201) {
-    //             if (response.data.result?.error === "") {
-    //                 const userData = response.data.result?.userData;
-    //                 const i = response.data.result?.operationId || "";
-    //                 const s = response.data.result?.oneTimeSecret || "";
-    //                 const finalUrl = "https://id.authid.ai/?i=" + i + "&s=" + s;
-    //                 setAuthOperationData({
-    //                     operationId: response.data.result?.operationId,
-    //                     oneTimeSecret: response.data.result?.oneTimeSecret,
-    //                     userData: userData
-    //                 });
-    //                 setFinalUrl(finalUrl);
-    //                 setLoading(false);
-    //             } else {
-    //                 setLoading(false);
-    //                 setAlert({
-    //                     type: "error",
-    //                     message: "An error occurred. Please try again.",
-    //                     open: true
-    //                 });
-    //             }
-    //         } else {
-    //             setLoading(false);
-    //             setAlert({
-    //                 type: "error",
-    //                 message: "An error occurred. Please try again.",
-    //                 open: true
-    //             });
-    //         }
-    //     } catch (error) {
-    //         setLoading(false);
-    //         setAlert({
-    //             type: "error",
-    //             message: "An error occurred. Please try again.",
-    //             open: true
-    //         });
-    //     }
-    // };
-
-    // const handleCloseAuthModel = () => {
-    //     setLoading(false);
-    //     setFinalUrl(null);
-    //     setAuthOperationData(null);
-    // };
 
     const validatePassword = (value) => {
         const updatedErrors = passwordError.map((error) => ({
@@ -515,6 +402,13 @@ const Register = ({ setAlert, setLoading }) => {
         setDomainDraft("");
     };
 
+    const handleGetAllQuotas = async () => {
+        if (activeStep === 3 && watch("cusId")) {
+            const res = await getAllCustomerQuotas(watch("cusId"))
+            setQuota(res?.result)
+        }
+    }
+
     useClickOutside(logoMenuRef, () => setIsLogoMenuOpen(false), isLogoMenuOpen);
     useClickOutside(uploadLogoRef, () => setIsUploadLogoOpen(false), isUploadLogoOpen);
 
@@ -524,24 +418,10 @@ const Register = ({ setAlert, setLoading }) => {
                 setActiveStep((prev) => prev + 1);
             }
         }
-        // else if (activeStep === 1) {
-        //     handleAuthenticator();
-        // } 
-        else if (activeStep === 1) {
-            // if (watch("loginPreference") === null || watch("loginPreference") === "") {
-            //     setAlert({
-            //         open: true,
-            //         message: "Please select a login preference.",
-            //         type: "error"
-            //     });
-            //     return;
-            // }
-            setActiveStep((prev) => prev + 1);
-        } else if (activeStep === 2) {
+        else if (activeStep === 2) {
             setLoading(true);
             const resetData = {
                 ...data,
-                authId: watch("authId"),
                 question1: securityQuestions?.find(q => q.id === parseInt(data.question1))?.title || "",
                 question2: securityQuestions?.find(q => q.id === parseInt(data.question2))?.title || "",
                 question3: securityQuestions?.find(q => q.id === parseInt(data.question3))?.title || "",
@@ -596,7 +476,7 @@ const Register = ({ setAlert, setLoading }) => {
                 }
             }
         }
-        else if (activeStep === 3) {
+        else if (activeStep === 4) {
             setLoading(true);
             const newData = {
                 id: watch("brandId"),
@@ -625,7 +505,7 @@ const Register = ({ setAlert, setLoading }) => {
                     setAlert({ open: true, message: res.data.message, type: "error" })
                 }
             }
-        } else if (activeStep === 4) {
+        } else if (activeStep === 5) {
             // navigate("/login")
             let newData = {
                 email: watch("emailAddress"),
@@ -641,7 +521,8 @@ const Register = ({ setAlert, setLoading }) => {
                     roleId: res?.data?.result?.roleId,
                     roleName: res?.data?.result?.roleName,
                     permissions: res?.data?.result?.permissions?.rolesActions,
-                    subUser: res?.data?.result?.subUser
+                    subUser: res?.data?.result?.subUser,
+                    name: res?.data?.result?.name
                 };
                 localStorage.setItem("userInfo", JSON.stringify(userdata));
                 navigate("/dashboard")
@@ -655,31 +536,6 @@ const Register = ({ setAlert, setLoading }) => {
         }
     };
 
-    // useEffect(() => {
-    //     const handleMessage = (event) => {
-    //         const data = event.data;
-
-    //         if (typeof data !== "object" || data === null) {
-    //             return;
-    //         }
-
-    //         if ("success" in data) {
-    //             if (data.success === true) {
-    //                 handleAuthSuccess(event);
-    //             } else {
-    //                 handleAuthFailure(event);
-    //             }
-    //         } else if ("pageName" in data) {
-    //             handleAuthFailure(event);
-    //         }
-    //     };
-
-    //     window.addEventListener("message", handleMessage);
-    //     return () => {
-    //         window.removeEventListener("message", handleMessage);
-    //     };
-    // }, [authOperationData]);
-
     useEffect(() => {
         if (Cookies.get('authToken')) {
             navigate("/dashboard");
@@ -689,6 +545,9 @@ const Register = ({ setAlert, setLoading }) => {
 
     useEffect(() => {
         handleGetAllCountrys();
+        if (activeStep === 3) {
+            handleOpenModel()
+        }
     }, [activeStep])
 
     useEffect(() => {
@@ -713,6 +572,7 @@ const Register = ({ setAlert, setLoading }) => {
             setValue("endEvalPeriod", null);
         }
     }, [watch("calendarYearType")]);
+
     return (
         <>
             <div className="h-screen flex flex-col">
@@ -911,44 +771,7 @@ const Register = ({ setAlert, setLoading }) => {
                                 </div>
                             )
                         }
-                        {/* {
-                            activeStep === 1 && (
-                                <div className="flex justify-center">
-                                    <div className="max-w-3xl px-10">
-                                        <div>
-                                            <p className="text-center md:text-2xl font-semibold text-black my-6">Identity Verification Required - Biometric Check</p>
-                                        </div>
 
-                                        <div className="md:flex justify-center items-start gap-5">
-                                            <div className="md:pr-5 flex md:block justify-center">
-                                                <img src={AuthIdSignUpSvg} alt="Authid Signup" style={{ width: '170px' }} />
-                                            </div>
-                                            <div className="w-full">
-                                                <p className="text-left my-3 md:my-0">To ensure the security of both your account and our platform, we need to confirm your identity due to the advanced capabilities of our tools. SalesAndMarketing.ai uses the industry-leading biometric solution <NavLink to="https://www.authid.ai/" target="_blank" rel="noreferrer" className="text-blue-600">AuthID</NavLink> for verification. You'll need a valid <strong>Driver's License</strong> and your <strong>cell phone</strong> to complete the process.</p>
-                                                <p className="text-left">You can choose a one-time biometric verification or continue using a traditional password for future logins - though we recommend going passwordless for a faster and more secure experience.</p>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm font-bold mt-3 text-black text-center">
-                                                Powered by
-                                            </p>
-                                            <div className="flex justify-center items-center gap-3 my-2">
-                                                <NavLink to={'https://authid.ai/'} target="_blank" rel="noreferrer">
-                                                    <img src={AuthIdLogo} alt="AuthID Logo" className="h-[70px]" />
-                                                </NavLink>
-                                                <NavLink to={'https://kaiasoft.com/'} target="_blank" rel="noreferrer">
-                                                    <img src="/images/logo/kaiasoft-logo.png" alt="Kaiasoft Logo" className="h-[70px]" />
-                                                </NavLink>
-                                            </div>
-                                            <p className="text-sm text-center mb-3">
-                                                Would you like to enable passwordless Authentication for your SaaS contact   <NavLink className={'text-blue-600'} to={'https://kaiasoft.com/'} target="_blank" rel="noreferrer">Kaiasoft.com</NavLink>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        } */}
                         {
                             activeStep === 1 && (
                                 <div className="flex justify-center items-center">
@@ -1074,402 +897,498 @@ const Register = ({ setAlert, setLoading }) => {
                         {
                             activeStep === 2 && (
                                 <div className="flex justify-center items-center">
-                                    <div className="max-w-96 w-full px-6 flex flex-col gap-4">
-                                        <div>
-                                            <Controller
-                                                name="name"
-                                                control={control}
-                                                rules={{
-                                                    required: "Name is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input {...field} label="Name" type="text"
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
+                                    <div className={`${!watch("billingAddressSameAsPrimary") ? "max-w-[50rem]" : "max-w-[28rem]"} w-full px-6`}>
+                                        <div className={`grid ${!watch("billingAddressSameAsPrimary") ? "md:grid-cols-2 grid-cols-1" : "grid-cols-1"} flex flex-col gap-4`}>
+                                            <div className="flex flex-col gap-4">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <Controller
+                                                        name="firstName"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "First Name is required"
                                                         }}
-                                                        error={errors?.name}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="First Name" type="text"
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                }}
+                                                                error={errors?.firstName}
+                                                            />
+                                                        )}
                                                     />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="title"
-                                                control={control}
-                                                rules={{
-                                                    required: "Title is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input {...field} label="Title" type="text"
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
+                                                    <Controller
+                                                        name="lastName"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "Last Name is required"
                                                         }}
-                                                        error={errors?.title}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="Last Name" type="text"
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                }}
+                                                                error={errors?.lastName}
+                                                            />
+                                                        )}
                                                     />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="roleId"
-                                                control={control}
-                                                rules={{
-                                                    required: "Role is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        disabled
-                                                        options={roles}
-                                                        label={"Role"}
-                                                        placeholder="Select role"
-                                                        value={parseInt(watch("roleId")) || null}
-                                                    // onChange={(_, newValue) => {
-                                                    //     if (newValue?.id) {
-                                                    //         field.onChange(newValue.id);
-                                                    //     } else {
-                                                    //         setValue("roleId", 1);
-                                                    //     }
-                                                    // }}
-                                                    // error={errors?.roleId}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="address1"
-                                                control={control}
-                                                rules={{
-                                                    required: "Address is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input {...field} label="Address 1" type="text" error={errors?.address1}
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="address2"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Input {...field} label="Address 2" type="text"
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="city"
-                                                control={control}
-                                                rules={{
-                                                    required: "City is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input {...field} label="City" type="text" error={errors?.city}
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="zipCode"
-                                                control={control}
-                                                rules={{
-                                                    required: "Zip Code is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Input {...field} label="Post Code" type="text" error={errors?.zipCode}
-                                                        onChange={(e) => {
-                                                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                            field.onChange(numericValue);
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="country"
-                                                control={control}
-                                                rules={{
-                                                    required: "Country is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        disabled={true}
-                                                        options={countrys}
-                                                        label={"Country"}
-                                                        placeholder="Select country"
-                                                        value={countrys?.filter((row) => row.title === watch("country"))?.[0]?.id || null}
-                                                        // onChange={(_, newValue) => {
-                                                        //     if (newValue?.id) {
-                                                        //         field.onChange(newValue.title);
-                                                        //         handleGetAllStatesByCountryId(newValue.id);
-                                                        //     } else {
-                                                        //         setValue("country", null);
-                                                        //         setStates([]);
-                                                        //     }
-                                                        // }}
-                                                        error={errors?.country}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="state"
-                                                control={control}
-                                                rules={{
-                                                    required: "State is required"
-                                                }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        disabled={states?.length === 0}
-                                                        options={states}
-                                                        label={"State"}
-                                                        placeholder="Select state"
-                                                        value={states?.filter((row) => row.title === watch("state"))?.[0]?.id || null}
-                                                        onChange={(_, newValue) => {
-                                                            if (newValue?.id) {
-                                                                field.onChange(newValue.title);
-                                                            } else {
-                                                                setValue("state", null);
-                                                            }
-                                                        }}
-                                                        error={errors?.state}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="billingAddressSameAsPrimary"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <Checkbox
-                                                        text="My Billing Address Is Same As My Address"
-                                                        checked={watch("billingAddressSameAsPrimary")}
-                                                        onChange={(e) => field.onChange(e.target.checked)}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <Controller
-                                                name="calendarYearType"
-                                                control={control}
-                                                rules={{ required: "Calendar Year Type is required" }}
-                                                render={({ field }) => (
-                                                    <Select
-                                                        options={calendarType}
-                                                        label="Sales Manager Calendar Type"
-                                                        placeholder="Select calendar type"
-                                                        value={parseInt(watch("calendarYearType")) || null}
-                                                        onChange={(_, newValue) => field.onChange(newValue?.id || null)}
-                                                        error={errors?.calendarYearType}
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-
-                                        {
-                                            watch("calendarYearType") && (
-                                                <div>
-                                                    <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
                                                 </div>
-                                            )
-                                        }
 
-                                        {
-                                            watch("calendarYearType") && (
                                                 <div>
-                                                    <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                    <Controller
+                                                        name="title"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "Title is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="Title" type="text"
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                }}
+                                                                error={errors?.title}
+                                                            />
+                                                        )}
+                                                    />
                                                 </div>
-                                            )
-                                        }
-                                        {
-                                            !watch("billingAddressSameAsPrimary") && (
-                                                <>
-                                                    <div>
-                                                        <Controller
-                                                            name="billingAddress1"
-                                                            control={control}
-                                                            rules={{
-                                                                required: "Address is required"
-                                                            }}
-                                                            render={({ field }) => (
-                                                                <Input {...field} label="Address 1" type="text" error={errors?.billingAddress1}
-                                                                    onChange={(e) => {
-                                                                        field.onChange(e.target.value);
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </div>
 
-                                                    <div>
-                                                        <Controller
-                                                            name="billingAddress2"
-                                                            control={control}
-                                                            render={({ field }) => (
-                                                                <Input {...field} label="Address 2" type="text"
-                                                                    onChange={(e) => {
-                                                                        field.onChange(e.target.value);
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </div>
+                                                <div>
+                                                    <Controller
+                                                        name="roleId"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "Role is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Select
+                                                                options={roles}
+                                                                label={"Role"}
+                                                                placeholder="Select role"
+                                                                value={parseInt(watch("roleId")) || null}
+                                                                onChange={(_, newValue) => {
+                                                                    field.onChange(newValue.id);
+                                                                }}
+                                                                error={errors?.roleId}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
 
-                                                    <div>
-                                                        <Controller
-                                                            name="billingCity"
-                                                            control={control}
-                                                            rules={{
-                                                                required: "City is required"
-                                                            }}
-                                                            render={({ field }) => (
-                                                                <Input {...field} label="City" type="text" error={errors?.billingCity}
-                                                                    onChange={(e) => {
-                                                                        field.onChange(e.target.value);
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </div>
+                                                <div>
+                                                    <Controller
+                                                        name="address1"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "Address is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="Address 1" type="text" error={errors?.address1}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
 
-                                                    <div>
-                                                        <Controller
-                                                            name="billingZipcode"
-                                                            control={control}
-                                                            rules={{
-                                                                required: "Zip Code is required"
-                                                            }}
-                                                            render={({ field }) => (
-                                                                <Input {...field} label="Post Code" type="text" error={errors?.billingZipcode}
-                                                                    onChange={(e) => {
-                                                                        const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                                        field.onChange(numericValue);
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </div>
+                                                <div>
+                                                    <Controller
+                                                        name="address2"
+                                                        control={control}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="Address 2" type="text"
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
 
-                                                    <div>
-                                                        <Controller
-                                                            name="billingCountry"
-                                                            control={control}
-                                                            rules={{
-                                                                required: "Country is required"
-                                                            }}
-                                                            render={({ field }) => (
-                                                                <Select
-                                                                    disabled={countrys?.length === 0}
-                                                                    options={countrys}
-                                                                    label={"Country"}
-                                                                    placeholder="Select country"
-                                                                    value={countrys?.filter((row) => row.title === watch("billingCountry"))?.[0]?.id || null}
-                                                                    onChange={(_, newValue) => {
-                                                                        if (newValue?.id) {
-                                                                            field.onChange(newValue.title);
-                                                                            handleGetAllBillingStatesByCountryId(newValue.id);
-                                                                        } else {
-                                                                            setValue("billingCountry", null);
-                                                                            setBillingStates([]);
-                                                                        }
-                                                                    }}
-                                                                    error={errors?.billingCountry}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </div>
+                                                <div>
+                                                    <Controller
+                                                        name="city"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "City is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="City" type="text" error={errors?.city}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
 
-                                                    <div>
-                                                        <Controller
-                                                            name="billingState"
-                                                            control={control}
-                                                            rules={{
-                                                                required: "State is required"
-                                                            }}
-                                                            render={({ field }) => (
-                                                                <Select
-                                                                    disabled={billingStates?.length === 0}
-                                                                    options={billingStates}
-                                                                    label={"State"}
-                                                                    placeholder="Select state"
-                                                                    value={billingStates?.filter((row) => row.title === watch("billingState"))?.[0]?.id || null}
-                                                                    onChange={(_, newValue) => {
-                                                                        if (newValue?.id) {
-                                                                            field.onChange(newValue.title);
-                                                                        } else {
-                                                                            setValue("billingState", null);
-                                                                        }
-                                                                    }}
-                                                                    error={errors?.billingState}
-                                                                />
-                                                            )}
-                                                        />
-                                                    </div>
+                                                <div>
+                                                    <Controller
+                                                        name="zipCode"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "Zip Code is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Input {...field} label="Post Code" type="text" error={errors?.zipCode}
+                                                                onChange={(e) => {
+                                                                    const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                                    field.onChange(numericValue);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
 
-                                                    <div>
-                                                        <Controller
-                                                            name="billingPhone"
-                                                            control={control}
-                                                            rules={{
-                                                                required: "Phone is required",
-                                                                maxLength: {
-                                                                    value: 10,
-                                                                    message: 'Enter valid phone number',
-                                                                },
-                                                                minLength: {
-                                                                    value: 10,
-                                                                    message: 'Enter valid phone number',
-                                                                },
-                                                            }}
-                                                            render={({ field }) => (
-                                                                <Input
-                                                                    {...field}
-                                                                    label="Phone"
-                                                                    type={`text`}
-                                                                    error={errors?.billingPhone}
-                                                                    onChange={(e) => {
-                                                                        const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                                                                        field.onChange(numericValue);
+                                                <div>
+                                                    <Controller
+                                                        name="country"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "Country is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Select
+                                                                options={countrys}
+                                                                label={"Country"}
+                                                                placeholder="Select country"
+                                                                value={countrys?.filter((row) => row.title === watch("country"))?.[0]?.id || null}
+                                                                onChange={(_, newValue) => {
+                                                                    if (newValue?.id) {
+                                                                        field.onChange(newValue.title);
+                                                                        handleGetAllStatesByCountryId(newValue.id);
+                                                                    } else {
+                                                                        setValue("country", null);
+                                                                        setStates([]);
+                                                                    }
+                                                                }}
+                                                                error={errors?.country}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Controller
+                                                        name="state"
+                                                        control={control}
+                                                        rules={{
+                                                            required: "State is required"
+                                                        }}
+                                                        render={({ field }) => (
+                                                            <Select
+                                                                disabled={states?.length === 0}
+                                                                options={states}
+                                                                label={"State"}
+                                                                placeholder="Select state"
+                                                                value={states?.filter((row) => row.title === watch("state"))?.[0]?.id || null}
+                                                                onChange={(_, newValue) => {
+                                                                    if (newValue?.id) {
+                                                                        field.onChange(newValue.title);
+                                                                    } else {
+                                                                        setValue("state", null);
+                                                                    }
+                                                                }}
+                                                                error={errors?.state}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Controller
+                                                        name="calendarYearType"
+                                                        control={control}
+                                                        rules={{ required: "Calendar Year Type is required" }}
+                                                        render={({ field }) => (
+                                                            <Select
+                                                                options={calendarType}
+                                                                label="Sales Manager Calendar Type"
+                                                                placeholder="Select calendar type"
+                                                                value={parseInt(watch("calendarYearType")) || null}
+                                                                onChange={(_, newValue) => field.onChange(newValue?.id || null)}
+                                                                error={errors?.calendarYearType}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
+
+                                                {
+                                                    watch("calendarYearType") && (
+                                                        <div>
+                                                            <DatePickerComponent setValue={setValue} control={control} name='startEvalPeriod' label={`Start Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                        </div>
+                                                    )
+                                                }
+
+                                                {
+                                                    watch("calendarYearType") && (
+                                                        <div>
+                                                            <DatePickerComponent setValue={setValue} control={control} name='endEvalPeriod' label={`End Eval Period`} minDate={null} maxDate={null} required={true} />
+                                                        </div>
+                                                    )
+                                                }
+
+                                                <div>
+                                                    <Controller
+                                                        name="billingAddressSameAsPrimary"
+                                                        control={control}
+                                                        render={({ field }) => (
+                                                            <Checkbox
+                                                                text="My Billing Address Is Same As My Address"
+                                                                checked={watch("billingAddressSameAsPrimary")}
+                                                                onChange={(e) => field.onChange(e.target.checked)}
+                                                            />
+                                                        )}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-4">
+                                                {
+                                                    !watch("billingAddressSameAsPrimary") && (
+                                                        <>
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingAddress1"
+                                                                    control={control}
+                                                                    rules={{
+                                                                        required: "Address is required"
                                                                     }}
+                                                                    render={({ field }) => (
+                                                                        <Input {...field} label="Address 1" type="text" error={errors?.billingAddress1}
+                                                                            onChange={(e) => {
+                                                                                field.onChange(e.target.value);
+                                                                            }}
+                                                                        />
+                                                                    )}
                                                                 />
-                                                            )}
-                                                        />
-                                                    </div>
-                                                </>
-                                            )
-                                        }
+                                                            </div>
+
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingAddress2"
+                                                                    control={control}
+                                                                    render={({ field }) => (
+                                                                        <Input {...field} label="Address 2" type="text"
+                                                                            onChange={(e) => {
+                                                                                field.onChange(e.target.value);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingCity"
+                                                                    control={control}
+                                                                    rules={{
+                                                                        required: "City is required"
+                                                                    }}
+                                                                    render={({ field }) => (
+                                                                        <Input {...field} label="City" type="text" error={errors?.billingCity}
+                                                                            onChange={(e) => {
+                                                                                field.onChange(e.target.value);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingZipcode"
+                                                                    control={control}
+                                                                    rules={{
+                                                                        required: "Zip Code is required"
+                                                                    }}
+                                                                    render={({ field }) => (
+                                                                        <Input {...field} label="Post Code" type="text" error={errors?.billingZipcode}
+                                                                            onChange={(e) => {
+                                                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                                                field.onChange(numericValue);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingCountry"
+                                                                    control={control}
+                                                                    rules={{
+                                                                        required: "Country is required"
+                                                                    }}
+                                                                    render={({ field }) => (
+                                                                        <Select
+                                                                            disabled={countrys?.length === 0}
+                                                                            options={countrys}
+                                                                            label={"Country"}
+                                                                            placeholder="Select country"
+                                                                            value={countrys?.filter((row) => row.title === watch("billingCountry"))?.[0]?.id || null}
+                                                                            onChange={(_, newValue) => {
+                                                                                if (newValue?.id) {
+                                                                                    field.onChange(newValue.title);
+                                                                                    handleGetAllBillingStatesByCountryId(newValue.id);
+                                                                                } else {
+                                                                                    setValue("billingCountry", null);
+                                                                                    setBillingStates([]);
+                                                                                }
+                                                                            }}
+                                                                            error={errors?.billingCountry}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingState"
+                                                                    control={control}
+                                                                    rules={{
+                                                                        required: "State is required"
+                                                                    }}
+                                                                    render={({ field }) => (
+                                                                        <Select
+                                                                            disabled={billingStates?.length === 0}
+                                                                            options={billingStates}
+                                                                            label={"State"}
+                                                                            placeholder="Select state"
+                                                                            value={billingStates?.filter((row) => row.title === watch("billingState"))?.[0]?.id || null}
+                                                                            onChange={(_, newValue) => {
+                                                                                if (newValue?.id) {
+                                                                                    field.onChange(newValue.title);
+                                                                                } else {
+                                                                                    setValue("billingState", null);
+                                                                                }
+                                                                            }}
+                                                                            error={errors?.billingState}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <Controller
+                                                                    name="billingPhone"
+                                                                    control={control}
+                                                                    rules={{
+                                                                        required: "Phone is required",
+                                                                        maxLength: {
+                                                                            value: 10,
+                                                                            message: 'Enter valid phone number',
+                                                                        },
+                                                                        minLength: {
+                                                                            value: 10,
+                                                                            message: 'Enter valid phone number',
+                                                                        },
+                                                                    }}
+                                                                    render={({ field }) => (
+                                                                        <Input
+                                                                            {...field}
+                                                                            label="Phone"
+                                                                            type={`text`}
+                                                                            error={errors?.billingPhone}
+                                                                            onChange={(e) => {
+                                                                                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                                                                                field.onChange(numericValue);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                />
+                                                            </div>
+                                                        </>
+                                                    )
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )
                         }
                         {
                             activeStep === 3 && (
+                                <>
+                                    <div>
+                                        <p className="text-center text-lg md:text-xl text-black font-semibold">
+                                            Enter Your Quota
+                                        </p>
+                                    </div>
+                                    <div className="flex justify-center items-center">
+                                        <div className="overflow-y-auto max-w-xl">
+                                            {/* Title bar */}
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="text-[22px] font-semibold"></h3>
+
+                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                    <Components.IconButton onClick={() => handleOpenModel()}>
+                                                        <CustomIcons iconName={'fa-solid fa-plus'} css='cursor-pointer text-white h-4 w-4' />
+                                                    </Components.IconButton>
+                                                </div>
+                                            </div>
+
+                                            {/* Table */}
+                                            <div className="border rounded-md overflow-hidden">
+                                                <table className="w-full text-left border-collapse">
+                                                    {/* Header */}
+                                                    <thead className="sticky top-0 bg-white z-10">
+                                                        <tr style={{ backgroundColor: '#EDE9FE' }}>
+                                                            <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left w-16" style={{ color: '#5B21B6' }}>#</th>
+                                                            <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-left w-60" style={{ color: '#5B21B6' }}>Term</th>
+                                                            <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right w-40" style={{ color: '#5B21B6' }}>Quota</th>
+                                                            <th className="py-4 px-6 font-semibold text-[0.875rem] leading-[1.25rem] tracking-wider uppercase text-right w-40" style={{ color: '#5B21B6' }}>Action</th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    {/* Body */}
+                                                    {quota?.length > 0 ? (
+                                                        <tbody>
+                                                            {quota.map((row, i) => {
+                                                                const isLastRow = i === (quota?.length || 0) - 1;
+                                                                return (
+                                                                    <tr key={row.id ?? i} style={{ borderBottom: isLastRow ? 'none' : '1px solid #F1F5F9' }} className="transition-colors hover:bg-[#F5F3FF]">
+                                                                        <td className="px-6 py-4 align-middle text-sm font-bold text-[#111827]">{i + 1}</td>
+                                                                        <td className="px-6 py-4 align-middle text-sm text-[#111827] font-medium">{row.term || '—'}</td>
+                                                                        <td className="px-6 py-4 align-middle text-sm text-[#111827] font-medium text-right">${row.quota?.toLocaleString('en-US') || '—'}</td>
+                                                                        <td className="px-6 py-4 align-middle">
+                                                                            <div className='flex items-center gap-2 justify-end h-full'>
+                                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                    <Components.IconButton onClick={() => handleOpenModel(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                    </Components.IconButton>
+                                                                                </div>
+                                                                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                                    <Components.IconButton onClick={() => handleOpenDeleteDialog(row.id)}>
+                                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                                    </Components.IconButton>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                )
+                                                            })}
+                                                        </tbody>
+                                                    ) : (
+                                                        <tbody>
+                                                            <tr>
+                                                                <td
+                                                                    colSpan={4}
+                                                                    className="px-4 py-4 text-center text-sm font-semibold"
+                                                                >
+                                                                    No records
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    )}
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )
+                        }
+                        {
+                            activeStep === 4 && (
                                 <>
                                     <div>
                                         <p className="text-center text-lg md:text-xl text-black my-5 font-semibold">
@@ -1496,24 +1415,6 @@ const Register = ({ setAlert, setLoading }) => {
                                                     )}
                                                 />
                                             </div>
-
-                                            {/* <div>
-                                                <Controller
-                                                    name="brandName"
-                                                    rules={{
-                                                        required: "Brand Name is required"
-                                                    }}
-                                                    control={control}
-                                                    render={({ field }) => (
-                                                        <Input {...field} label="Brand Name" type="text"
-                                                            onChange={(e) => {
-                                                                field.onChange(e.target.value);
-                                                            }}
-                                                            error={errors?.brandName}
-                                                        />
-                                                    )}
-                                                />
-                                            </div> */}
 
                                             <div>
                                                 <Controller
@@ -1575,7 +1476,7 @@ const Register = ({ setAlert, setLoading }) => {
                             )
                         }
                         {
-                            activeStep === 4 && (
+                            activeStep === 5 && (
                                 <>
                                     <div>
                                         <p className="text-center text-lg md:text-xl text-black my-5 font-semibold capitalize">
@@ -1605,7 +1506,7 @@ const Register = ({ setAlert, setLoading }) => {
                         <div className="mt-6">
                             <div className="flex justify-center items-center gap-3">
                                 {
-                                    activeStep !== 4 && (
+                                    activeStep !== 5 && (
                                         <div>
                                             <Button type="button" onClick={() => handleBack()} text={"Back"} />
                                         </div>
@@ -1613,7 +1514,7 @@ const Register = ({ setAlert, setLoading }) => {
                                 }
 
                                 <div>
-                                    <Button type="submit" text={activeStep === 4 ? "Let's Go" : "next"} />
+                                    <Button type="submit" text={activeStep === 5 ? "Let's Go" : "next"} />
                                 </div>
                             </div>
                             {
@@ -1631,23 +1532,6 @@ const Register = ({ setAlert, setLoading }) => {
                         </div>
                     </form>
                 </div>
-
-                {/* {finalUrl != null ? (
-                    <div className="fixed inset-0 z-50 bg-white h-screen w-screen">
-                        <div>
-                            <AuthIDComponent
-                                url={finalUrl}
-                                webauth={true}
-                            />
-                        </div>
-                        <button
-                            onClick={() => { handleCloseAuthModel() }}
-                            className="absolute top-5 right-5 w-10 h-10 text-xl font-bold z-50 text-black border-2 border-black rounded-full"
-                        >
-                            <CustomIcons iconName="fa-solid fa-xmark" css="cursor-pointer text-black text-xl" />
-                        </button>
-                    </div>
-                ) : null} */}
 
                 <div className="fixed bottom-0 z-30 w-full border-b border-gray-200 shadow-sm bg-white">
                     <CopyRight />
@@ -1749,6 +1633,16 @@ const Register = ({ setAlert, setLoading }) => {
                         </div>
                     </div>
                 )}
+
+                <AddQuotaModel open={openModel} handleClose={handleCloseModel} customerId={watch("cusId")} id={selectedQuotaId} startEvalPeriod={watch("startEvalPeriod")} endEvalPeriod={watch("endEvalPeriod")} handleGetAllQuota={handleGetAllQuotas} />
+                <AlertDialog
+                    open={dialog.open}
+                    title={dialog.title}
+                    message={dialog.message}
+                    actionButtonText={dialog.actionButtonText}
+                    handleAction={() => handleDeleteQuota()}
+                    handleClose={() => handleCloseDeleteDialog()}
+                />
             </div>
         </>
     );

@@ -275,6 +275,38 @@ export const getStaticRoles = () => {
             id: 10,
             title: 'Technical Expert',
         },
+        {
+            id: 11,
+            title: 'SALES VP',
+        },
+        {
+            id: 12,
+            title: 'SC MANAGER',
+        },
+        {
+            id: 13,
+            title: 'SC DIRECTOR',
+        },
+        {
+            id: 14,
+            title: 'SC VP',
+        },
+        {
+            id: 15,
+            title: 'INSIDE SALES REPRESENTIVE',
+        },
+        {
+            id: 16,
+            title: 'ISR MANAGER',
+        },
+        {
+            id: 17,
+            title: 'ISR DIRECTOR',
+        },
+        {
+            id: 18,
+            title: 'ISR VP',
+        },
     ];
 }
 

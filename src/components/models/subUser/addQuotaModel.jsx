@@ -208,6 +208,34 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // ✅ AUTO-CALCULATE AMOUNTS based on Quota & Period
+  useEffect(() => {
+    const termId = parseInt(watch('term'));
+    const quotaVal = parseIntSafe(watch('quota'));
+
+    if (termId && quotaVal > 0) {
+      const selectedTermData = terms.find(t => t.id === termId);
+      if (selectedTermData) {
+        const kind = selectedTermData.kind;
+        const count = TERM_COUNTS[kind] || 0;
+        if (count > 0) {
+          const distributedAmount = Math.floor(quotaVal / count);
+          const formattedAmount = formatIntWithCommas(distributedAmount);
+
+          for (let i = 1; i <= 12; i++) {
+            const fieldName = `amount${i}`;
+            if (i <= count) {
+              setValue(fieldName, formattedAmount, { shouldDirty: true });
+            } else {
+              setValue(fieldName, '', { shouldDirty: true });
+            }
+          }
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch('term'), watch('quota')]);
+
   const submit = async () => {
     const selectedTerm = terms.find(t => t.id === parseInt(watch('term')));
     if (!selectedTerm || !watch("quota")) return;
