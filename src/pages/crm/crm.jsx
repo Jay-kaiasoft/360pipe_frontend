@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { setAlert, setLoading, setLoadingMessage, setSyncCount, setSyncingPullStatus, setSyncingPushStatus } from '../../redux/commonReducers/commonReducers';
+import { setAlert, setLoading, setLoadingMessage, setSalesforceUserDetails, setSyncCount, setSyncingPullStatus, setSyncingPushStatus, setSyncStatus } from '../../redux/commonReducers/commonReducers';
 
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, exchangeToken, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
@@ -8,6 +8,7 @@ import AlertDialog from '../../components/common/alertDialog/alertDialog';
 import { syncFromQ4magic } from '../../service/salesforce/syncFromQ4magic/syncFromQ4magicService';
 import { syncToQ4Magic } from '../../service/salesforce/syncToQ4Magic/syncToQ4MagicService';
 import { getAllSyncRecords } from '../../service/syncRecords/syncRecordsService';
+import { getSyncStatus } from '../../service/syncStatus/syncStatusService';
 
 const UserInfoSkeleton = () => (
     <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full animate-pulse">
@@ -19,23 +20,10 @@ const UserInfoSkeleton = () => (
     </div>
 );
 
-const getInitials = (name = "") => {
-    if (!name) return "";
-    const parts = name.trim().split(" ");
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-};
-
-const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus }) => {
+const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus }) => {
     const exchangingRef = useRef(false);
     const popupRef = useRef(null);
     const intervalRef = useRef(null);
-
-    const [userInfo, setUserInfo] = useState(
-        localStorage.getItem("salesforceUserData")
-            ? JSON.parse(localStorage.getItem("salesforceUserData"))
-            : null
-    );
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
 
@@ -52,7 +40,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
         setDialog({ open: false, title: '', message: '', actionButtonText: '' });
     };
 
-    const handleGetUserInfo = async () => {
+    const handleGetSalesForceUserInfo = async () => {
         try {
             const token = localStorage.getItem("accessToken_salesforce");
             const url = localStorage.getItem("instanceUrl_salesforce");
@@ -60,10 +48,16 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
             if (token && url) {
                 const userRes = await getUserInfo();
                 const data = userRes?.result?.data || null;
-
-                setUserInfo(data);
-                localStorage.setItem("salesforceUserData", JSON.stringify(data) || "");
-                setSyncingPushStatus(true);
+                if (data) {
+                    setSalesforceUserDetails(data);
+                    localStorage.setItem("salesforceUserData", JSON.stringify(data));
+                    setSyncingPushStatus(true);
+                } else {
+                    setSalesforceUserDetails(null)
+                    localStorage.removeItem("salesforceUserData");
+                    localStorage.removeItem("accessToken_salesforce");
+                    localStorage.removeItem("instanceUrl_salesforce");
+                }
             }
         } catch (error) {
             console.error("Error fetching user info:", error);
@@ -111,6 +105,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
 
     const handleSync = async () => {
         try {
+            setSyncStatus(true)
             const res = await syncToQ4Magic();
             if (res?.status === 200) {
                 setLoading(false);
@@ -121,9 +116,11 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                 })
                 handleGetAllSyncRecords()
                 setLoadingMessage(null)
+                setSyncStatus(false)
             } else {
                 setLoading(false);
                 setLoadingMessage(null)
+                setSyncStatus(false)
                 setAlert({
                     open: true,
                     message: res?.message || "Failed to sync data",
@@ -153,6 +150,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                 localStorage.removeItem("instanceUrl_salesforce");
                 localStorage.removeItem("salesforceUserData");
                 setLoadingMessage(null)
+                setSyncStatus(false)
                 setAlert({
                     open: true,
                     message: "Your Salesforce session has expired. Please reconnect your Salesforce account.",
@@ -275,7 +273,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                             });
 
                             closePopup();
-                            await handleGetUserInfo();
+                            await handleGetSalesForceUserInfo();
                             await handlePushData()
                             setLoading(false);
                             setLoadingMessage(null)
@@ -321,7 +319,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
         localStorage.removeItem("salesforceUserData");
         localStorage.removeItem("accessToken_salesforce");
         localStorage.removeItem("instanceUrl_salesforce");
-        setUserInfo(null);
+        setSalesforceUserDetails(null);
 
         setAlert({
             open: true,
@@ -332,9 +330,25 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
         handleCloseDialog();
     };
 
+    const handleGetSyncStatus = async () => {
+        try {
+            if (syncStatus) {
+                const res = await getSyncStatus();
+                if (res?.status === 200) {
+                    setLoadingMessage(res?.result?.statusMessage || "Please wait ! We are syncing your data.....")
+                } else {
+                    setLoadingMessage(null)
+                    setSyncStatus(false)
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching sync status:", error);
+        }
+    };
+
     useEffect(() => {
         document.title = "My CRM - 360Pipe"
-        handleGetUserInfo();
+        handleGetSalesForceUserInfo();
 
         // cleanup on unmount
         return () => {
@@ -344,20 +358,33 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    useEffect(() => {
+        let interval;
+        if (syncStatus) {
+            handleGetSyncStatus();
+            interval = setInterval(() => {
+                handleGetSyncStatus()
+            }, 5000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [syncStatus]);
+
     return (
         <div className='pt-10'>
-            {(loading && userInfo === null) ? (
+            {(loading && salesforceUserDetails === null) ? (
                 <UserInfoSkeleton />
-            ) : userInfo ? (
+            ) : salesforceUserDetails ? (
                 <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full">
-                    <div className="w-24 h-24 flex items-center justify-center rounded-full shadow-md -mt-16 mb-4 bg-gray-400 text-white text-2xl font-bold">
-                        {getInitials(userInfo?.name)}
+                    <div className="mb-6">
+                        <img src={SalesForceLogo} alt="Salesforce Logo" className="mb-3 h-14 md:h-20" />
                     </div>
-                    <h2 className="text-2xl font-semibold text-gray-800">{userInfo?.name}</h2>
-                    <p className="text-gray-500 mb-4">{userInfo?.email}</p>
+                    <h2 className="text-2xl font-semibold text-gray-800">{salesforceUserDetails?.name}</h2>
+                    <p className="text-gray-500 mb-4">{salesforceUserDetails?.email}</p>
 
                     <a
-                        href={userInfo?.profile}
+                        href={salesforceUserDetails?.profile}
                         target="_blank"
                         rel="noreferrer"
                         className="text-[#44288E] text-sm font-medium underline hover:text-[#44288E] transition-colors duration-200"
@@ -411,6 +438,8 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
 
 const mapStateToProps = (state) => ({
     loading: state.common.loading,
+    salesforceUserDetails: state.common.salesforceUserDetails,
+    syncStatus: state.common.syncStatus,
 });
 
 const mapDispatchToProps = {
@@ -419,7 +448,9 @@ const mapDispatchToProps = {
     setSyncingPullStatus,
     setSyncingPushStatus,
     setLoadingMessage,
-    setSyncCount
+    setSyncCount,
+    setSalesforceUserDetails,
+    setSyncStatus
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Crm);

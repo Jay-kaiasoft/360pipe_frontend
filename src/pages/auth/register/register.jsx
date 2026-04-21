@@ -897,8 +897,8 @@ const Register = ({ setAlert, setLoading }) => {
                         {
                             activeStep === 2 && (
                                 <div className="flex justify-center items-center">
-                                    <div className={`${!watch("billingAddressSameAsPrimary") ? "max-w-[50rem]" : "max-w-[28rem]"} w-full px-6`}>
-                                        <div className={`grid ${!watch("billingAddressSameAsPrimary") ? "md:grid-cols-2 grid-cols-1" : "grid-cols-1"} flex flex-col gap-4`}>
+                                    <div className={`${!watch("billingAddressSameAsPrimary") ? "max-w-[60rem]" : "max-w-[30rem]"} w-full px-6`}>
+                                        <div className={`grid ${!watch("billingAddressSameAsPrimary") ? "md:grid-cols-[1fr_auto_1fr] grid-cols-1" : "grid-cols-1"} gap-4`}>
                                             <div className="flex flex-col gap-4">
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <Controller
@@ -1142,10 +1142,26 @@ const Register = ({ setAlert, setLoading }) => {
                                                     />
                                                 </div>
                                             </div>
+
+                                            {
+                                                !watch("billingAddressSameAsPrimary") && (
+                                                    <div className="hidden md:block w-px bg-gray-200 self-stretch my-5"></div>
+                                                )
+                                            }
+
                                             <div className="flex flex-col gap-4">
                                                 {
                                                     !watch("billingAddressSameAsPrimary") && (
                                                         <>
+                                                            <div>
+                                                                <p className="text-center text-lg md:text-xl text-black mb-5 font-semibold">
+                                                                    Billing Information
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="hidden md:block h-[84px]"></div>
+                                                            <div className="hidden md:block h-[84px]"></div>
+
                                                             <div>
                                                                 <Controller
                                                                     name="billingAddress1"

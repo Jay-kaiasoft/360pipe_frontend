@@ -10,6 +10,7 @@ import {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
+  setSalesforceUserDetails,
 } from "../../../redux/commonReducers/commonReducers"
 
 import Components from "../../../components/muiComponents/components"
@@ -21,6 +22,7 @@ import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUser
 import { Tabs } from "../../../components/common/tabs/tabs"
 import UserDropdown from "./userDropDown"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
+import { getUserInfo } from "../../../service/salesforce/connect/salesforceConnectService"
 
 
 const AppHeader = ({
@@ -32,10 +34,11 @@ const AppHeader = ({
   setSyncingPullStatus,
   syncCount,
   syncingPushStatus,
+  salesforceUserDetails,
+  setSalesforceUserDetails
 }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const userDetails = getUserDetails()
-  const salesforceUserDetails = getSalesforceUserDetails()
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -43,11 +46,6 @@ const AppHeader = ({
   const inputRef = useRef(null)
 
   const [tabsData, setTabsData] = useState([])
-  // const [tabsData2, setTabsData2] = useState([{
-  //   // label: "Dashboard",
-  //   icon: <CustomIcons iconName="fa-solid fa-house" />,
-  //   path: "/dashboard",
-  // }])
   const [selectedTab, setSelectedTab] = useState(null)
   const [selectedTab2, setSelectedTab2] = useState(null)
 
@@ -59,15 +57,6 @@ const AppHeader = ({
       setSelectedTab2(null)
     }
   }
-
-  // const handleChangeTab2 = (value) => {
-  //   const selectedPath = tabsData2[value]?.path
-  //   if (selectedPath) {
-  //     navigate(selectedPath)
-  //     setSelectedTab(null)
-  //     setSelectedTab2(value)
-  //   }
-  // }
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) dispatch(toggleSidebar())
@@ -128,7 +117,32 @@ const AppHeader = ({
     }
   }
 
+  const handleGetSalesForceUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("accessToken_salesforce");
+      const url = localStorage.getItem("instanceUrl_salesforce");
+
+      if (token && url) {
+        const userRes = await getUserInfo();
+        const data = userRes?.result?.data || null;
+        if (data) {
+          setSalesforceUserDetails(data);
+          localStorage.setItem("salesforceUserData", JSON.stringify(data));
+          setSyncingPushStatus(true);
+        } else {
+          setSalesforceUserDetails(null)
+          localStorage.removeItem("salesforceUserData");
+          localStorage.removeItem("accessToken_salesforce");
+          localStorage.removeItem("instanceUrl_salesforce");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  };
+
   useEffect(() => {
+    handleGetSalesForceUserInfo()
     handleGetAllSyncRecords()
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -252,13 +266,11 @@ const AppHeader = ({
           {
             !userDetails?.subUser && (
               <div className="flex items-center gap-6">
-                {(userDetails?.userId === salesforceUserDetails?.userId &&
-                  localStorage.getItem("accessToken_salesforce") &&
-                  localStorage.getItem("instanceUrl_salesforce")) && (
-                    <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                      <Button onClick={() => handlePushData()} text={"SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
-                    </Components.Badge>
-                  )}
+                {(salesforceUserDetails && (
+                  <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
+                    <Button onClick={() => handlePushData()} text={"SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
+                  </Components.Badge>
+                ))}
               </div>
             )
           }
@@ -277,6 +289,7 @@ const mapStateToProps = (state) => ({
   syncCount: state.common.syncCount,
   syncingPullStatus: state.common.syncingPullStatus,
   syncingPushStatus: state.common.syncingPushStatus,
+  salesforceUserDetails: state.common.salesforceUserDetails,
 })
 
 const mapDispatchToProps = {
@@ -286,6 +299,7 @@ const mapDispatchToProps = {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
+  setSalesforceUserDetails
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

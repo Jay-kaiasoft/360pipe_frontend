@@ -7,6 +7,8 @@ const initialState = {
   alert: { open: false, message: '', type: '' },
   uploadedFiles: [],
   userDetails: null,
+  salesforceUserDetails: null,
+  syncStatus: false,
   userPermissions: null,
   title: null,
   sessionEndModel: false,
@@ -35,6 +37,12 @@ const commonReducersSlice = createSlice({
   reducers: {
     setHeaderTitle(state, action) {
       state.headerTitle = action.payload;
+    },
+    setSalesforceUserDetails(state, action) {
+      state.salesforceUserDetails = action.payload;
+    },
+    setSyncStatus(state, action) {
+      state.syncStatus = action.payload;
     },
     setSessionEndModel(state, action) {
       state.sessionEndModel = action.payload;
@@ -137,6 +145,8 @@ export const {
   setSyncingPushStatus,
   setFilterStartDate,
   setFilterEndDate,
+  setSalesforceUserDetails,
+  setSyncStatus,
 
   // Sidebar actions
   toggleSidebar,

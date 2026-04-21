@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 const baseURL = process.env.REACT_APP_MAIN_BASE_URL;
 
 const axiosInterceptor = (signal) => {
+    const ignoreApi = ["/syncStatus/get"];
     let headers = {
         "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Origin": "*",
@@ -27,8 +28,10 @@ const axiosInterceptor = (signal) => {
     // Request Interceptor
     axiosInstance.interceptors.request.use(
         (config) => {
-            store.dispatch(setLoading(true));
-
+            const isIgnored = ignoreApi.some((path) => config?.url?.endsWith(path));
+            if (!isIgnored) {
+                store.dispatch(setLoading(true));
+            }
             if (signal) {
                 config.signal = signal;
             }
@@ -41,7 +44,10 @@ const axiosInterceptor = (signal) => {
     // Response Interceptor
     axiosInstance.interceptors.response.use(
         (response) => {
-            store.dispatch(setLoading(false));
+            const isIgnored = ignoreApi.some((path) => response?.config?.url?.endsWith(path));
+            if (!isIgnored) {
+                store.dispatch(setLoading(false));
+            }
             if (response.status === 403 && response?.data?.msg === "Access Denied") {
                 Cookies.remove('authToken');
                 localStorage.removeItem("userInfo");

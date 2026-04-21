@@ -8,6 +8,7 @@ export const radarPKAPIKey = process.env.REACT_APP_RADAR_PK_API_KEY
 
 export const q4magicSyncURL = baseURL + '/syncToQ4Magic'
 export const syncFromQ4magicURL = baseURL + '/syncFromQ4Magic'
+export const syncStatusURL = baseURL + '/syncStatus'
 
 export const authIdURL = baseURL + '/authIdDetails'
 export const countryURL = baseURL + '/country'

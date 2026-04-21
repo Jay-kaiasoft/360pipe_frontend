@@ -290,6 +290,15 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
 
   const selectedTerm = terms?.find(t => t.id === parseInt(watch('term')));
 
+  const currentQuota = parseIntSafe(watch('quota'));
+  const count = selectedTerm ? TERM_COUNTS[selectedTerm.kind] : 0;
+
+  let totalAllocated = 0;
+  for (let i = 1; i <= count; i++) {
+    totalAllocated += parseIntSafe(watch(`amount${i}`));
+  }
+  const isMismatch = currentQuota > 0 && count > 0 && totalAllocated !== currentQuota;
+
   return (
     <React.Fragment>
       <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
@@ -408,15 +417,27 @@ function AddQuotaModel({ setAlert, open, handleClose, customerId, id, handleGetA
                     );
                   })()}
                 </div>
-
               </div>
             </div>
           </Components.DialogContent>
 
           <Components.DialogActions>
-            <div className="flex justify-end items-center gap-4">
-              <Button type="submit" text={id ? 'Update' : 'Submit'} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
-              <Button type="button" text={'Cancel'} useFor="disabled" onClick={onClose} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
+            <div className={`flex w-full ${isMismatch ? 'justify-between' : 'justify-end'} items-center gap-4 px-[30px]`}>
+              {
+                isMismatch && (
+                  <div className="flex items-center gap-2 text-red-500">
+                    <CustomIcons iconName="fa-solid fa-triangle-exclamation" css="text-red-500" />
+                    <span className="text-sm font-semibold">
+                      The sum of period amounts (${formatIntWithCommas(totalAllocated)}) does not match the total quota (${watch('quota') || '0'}). Please adjust manually.
+                    </span>
+                  </div>
+                )
+              }
+
+              <div className="flex items-center gap-4">
+                <Button type="submit" disabled={isMismatch} text={id ? 'Update' : 'Submit'} endIcon={<CustomIcons iconName={'fa-solid fa-floppy-disk'} css='cursor-pointer' />} />
+                <Button type="button" text={'Cancel'} useFor="disabled" onClick={onClose} startIcon={<CustomIcons iconName={'fa-solid fa-xmark'} css='cursor-pointer mr-2' />} />
+              </div>
             </div>
           </Components.DialogActions>
         </form>
