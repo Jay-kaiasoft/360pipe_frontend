@@ -12,12 +12,12 @@ const Loader = ({ loading, loadingMessage }) => {
                     <div className="w-full h-full rounded-full border-4 border-[#44288E] border-t-transparent border-r-transparent animate-spinDualRing"></div>
                 </div>
 
-                {/* Message */}
+                {/* Message
                 {loadingMessage && (
                     <p className="text-sm font-medium text-gray-700 break-words max-w-md">
                         {loadingMessage}
                     </p>
-                )}
+                )} */}
             </div>
         </div>
     );

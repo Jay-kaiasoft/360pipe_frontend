@@ -9,3 +9,12 @@ export const getSyncStatus = async () => {
         throw error;
     }
 };
+
+export const saveSyncStatus = async () => {
+    try {
+        const response = await axiosInterceptor().get(`${syncStatusURL}/save`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

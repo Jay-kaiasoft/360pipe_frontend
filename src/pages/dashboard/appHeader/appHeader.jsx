@@ -11,6 +11,7 @@ import {
   setSyncingPullStatus,
   setLoadingMessage,
   setSalesforceUserDetails,
+  setSyncStatus,
 } from "../../../redux/commonReducers/commonReducers"
 
 import Components from "../../../components/muiComponents/components"
@@ -23,6 +24,7 @@ import { Tabs } from "../../../components/common/tabs/tabs"
 import UserDropdown from "./userDropDown"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
 import { getUserInfo } from "../../../service/salesforce/connect/salesforceConnectService"
+import { saveSyncStatus } from "../../../service/syncStatus/syncStatusService"
 
 
 const AppHeader = ({
@@ -35,7 +37,9 @@ const AppHeader = ({
   syncCount,
   syncingPushStatus,
   salesforceUserDetails,
-  setSalesforceUserDetails
+  setSalesforceUserDetails,
+  setSyncStatus,
+  syncStatus
 }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const userDetails = getUserDetails()
@@ -158,73 +162,92 @@ const AppHeader = ({
     handleSetNavItems()
   }, [locaiton.pathname])
 
-  const handleSync = async () => {
-    try {
-      const res = await syncToQ4Magic()
-      if (res?.status === 200) {
-        setLoading(false)
-        setLoadingMessage(null)
-        setAlert({
-          open: true,
-          message: res?.message || "Data synced successfully",
-          type: "success",
-        })
-        setSyncingPullStatus(true)
-        handleGetAllSyncRecords()
-      } else {
-        setLoading(false)
-        setLoadingMessage(null)
-        setAlert({
-          open: true,
-          message: res?.message || "Failed to sync data",
-          type: "error",
-        })
-      }
-    } catch (err) {
-      setLoading(false)
-      setLoadingMessage(null)
-      setAlert({
-        open: true,
-        message: err.message || "Error syncing data.",
-        type: "error",
-      })
-    }
-  }
+  // const handleSync = async () => {
+  //   try {
+  //     const res = await syncToQ4Magic()
+  //     if (res?.status === 200) {
+  //       setLoading(false)
+  //       setLoadingMessage(null)
+  //       setAlert({
+  //         open: true,
+  //         message: res?.message || "Data synced successfully",
+  //         type: "success",
+  //       })
+  //       setSyncingPullStatus(true)
+  //       handleGetAllSyncRecords()
+  //     } else {
+  //       setLoading(false)
+  //       setLoadingMessage(null)
+  //       setAlert({
+  //         open: true,
+  //         message: res?.message || "Failed to sync data",
+  //         type: "error",
+  //       })
+  //     }
+  //   } catch (err) {
+  //     setLoading(false)
+  //     setLoadingMessage(null)
+  //     setAlert({
+  //       open: true,
+  //       message: err.message || "Error syncing data.",
+  //       type: "error",
+  //     })
+  //   }
+  // }
 
-  const handlePushData = async () => {
-    setLoadingMessage("Please wait ! We are syncing your data.....")
-    setLoading(true)
-    try {
-      const res = await syncFromQ4magic()
-      if (res?.status === 200) {
-        handleSync()
-      } else if (res?.status === 401) {
-        setLoading(false)
-        setLoadingMessage(null)
-        localStorage.removeItem("accessToken_salesforce")
-        localStorage.removeItem("instanceUrl_salesforce")
-        localStorage.removeItem("salesforceUserData")
-        setAlert({
-          open: true,
-          message: "Your Salesforce session has expired. Please reconnect your Salesforce account.",
-          type: "error",
-        })
-        navigate("/dashboard/mycrm")
-      } else {
-        setLoading(false)
-        setLoadingMessage(null)
-        setAlert({
-          open: true,
-          message: res?.message || "Failed to sync data",
-          type: "error",
-        })
-      }
-    } catch (err) {
-      setLoading(false)
-      setLoadingMessage(null)
+  // const handlePushData = async () => {
+  //   setLoadingMessage("Please wait ! We are syncing your data.....")
+  //   setLoading(true)
+  //   try {
+  //     const res = await syncFromQ4magic()
+  //     if (res?.status === 200) {
+  //       handleSync()
+  //     } else if (res?.status === 401) {
+  //       setLoading(false)
+  //       setLoadingMessage(null)
+  //       localStorage.removeItem("accessToken_salesforce")
+  //       localStorage.removeItem("instanceUrl_salesforce")
+  //       localStorage.removeItem("salesforceUserData")
+  //       setAlert({
+  //         open: true,
+  //         message: "Your Salesforce session has expired. Please reconnect your Salesforce account.",
+  //         type: "error",
+  //       })
+  //       navigate("/dashboard/mycrm")
+  //     } else {
+  //       setLoading(false)
+  //       setLoadingMessage(null)
+  //       setAlert({
+  //         open: true,
+  //         message: res?.message || "Failed to sync data",
+  //         type: "error",
+  //       })
+  //     }
+  //   } catch (err) {
+  //     setLoading(false)
+  //     setLoadingMessage(null)
+  //     setAlert({
+  //       open: true,
+  //       message: err.message || "Error syncing accounts to Q4Magic.",
+  //       type: "error",
+  //     })
+  //   }
+  // }
+
+  const handleSyncData = async () => {
+    setSyncStatus(true)
+    const res = await saveSyncStatus()
+    if (res.status === 200) {
       setAlert({
         open: true,
-        message: err.message || "Error syncing accounts to Q4Magic.",
+        type: "success",
+        message: res?.message || "Sync started",
+      })
+      return
+    } else {
+      setAlert({
+        open: true,
+        message: res?.message || "Failed to sync data",
         type: "error",
       })
     }
@@ -268,7 +291,7 @@ const AppHeader = ({
               <div className="flex items-center gap-6">
                 {(salesforceUserDetails && (
                   <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                    <Button onClick={() => handlePushData()} text={"SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
+                    <Button disabled={syncStatus} onClick={() => handleSyncData()} text={"SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
                   </Components.Badge>
                 ))}
               </div>
@@ -290,6 +313,7 @@ const mapStateToProps = (state) => ({
   syncingPullStatus: state.common.syncingPullStatus,
   syncingPushStatus: state.common.syncingPushStatus,
   salesforceUserDetails: state.common.salesforceUserDetails,
+  syncStatus: state.common.syncStatus,
 })
 
 const mapDispatchToProps = {
@@ -299,7 +323,8 @@ const mapDispatchToProps = {
   setSyncingPushStatus,
   setSyncingPullStatus,
   setLoadingMessage,
-  setSalesforceUserDetails
+  setSalesforceUserDetails,
+  setSyncStatus
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)

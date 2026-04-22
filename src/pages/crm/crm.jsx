@@ -5,10 +5,7 @@ import { setAlert, setLoading, setLoadingMessage, setSalesforceUserDetails, setS
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, exchangeToken, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
-import { syncFromQ4magic } from '../../service/salesforce/syncFromQ4magic/syncFromQ4magicService';
-import { syncToQ4Magic } from '../../service/salesforce/syncToQ4Magic/syncToQ4MagicService';
-import { getAllSyncRecords } from '../../service/syncRecords/syncRecordsService';
-import { getSyncStatus } from '../../service/syncStatus/syncStatusService';
+import { getSyncStatus, saveSyncStatus } from '../../service/syncStatus/syncStatusService';
 
 const UserInfoSkeleton = () => (
     <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full animate-pulse">
@@ -20,7 +17,7 @@ const UserInfoSkeleton = () => (
     </div>
 );
 
-const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus }) => {
+const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus }) => {
     const exchangingRef = useRef(false);
     const popupRef = useRef(null);
     const intervalRef = useRef(null);
@@ -82,96 +79,11 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
         popupRef.current = null;
     };
 
-    const handleGetAllSyncRecords = async () => {
-        try {
-            const syncRecords = await getAllSyncRecords();
-            if (syncRecords?.status === 200) {
-                setSyncCount(syncRecords.result?.filter((row) => row.subjectId != null && row.deleted === false)?.length || null);
-                setSyncingPullStatus(false);
-                setSyncingPushStatus(false);
-                setLoadingMessage(null)
-            } else {
-                setLoadingMessage(null)
-            }
-        } catch (error) {
-            setLoadingMessage(null)
-            setAlert({
-                open: true,
-                message: error.message || "Error fetching sync records.",
-                type: "error"
-            });
-        }
-    }
-
-    const handleSync = async () => {
-        try {
-            setSyncStatus(true)
-            const res = await syncToQ4Magic();
-            if (res?.status === 200) {
-                setLoading(false);
-                setAlert({
-                    open: true,
-                    message: res?.message || "Data synced successfully",
-                    type: "success"
-                })
-                handleGetAllSyncRecords()
-                setLoadingMessage(null)
-                setSyncStatus(false)
-            } else {
-                setLoading(false);
-                setLoadingMessage(null)
-                setSyncStatus(false)
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to sync data",
-                    type: "error"
-                })
-            }
-        } catch (err) {
-            setLoading(false);
-            setLoadingMessage(null)
-            setAlert({
-                open: true,
-                message: err.message || "Error syncing data.",
-                type: "error"
-            })
-        }
-    }
-
-    const handlePushData = async () => {
-        try {
-            setLoadingMessage("Please wait ! We are syncing your data.....")
-            const res = await syncFromQ4magic();
-            if (res?.status === 200) {
-                await handleSync();
-            } else if (res?.status === 401) {
-                setLoading(false);
-                localStorage.removeItem("accessToken_salesforce");
-                localStorage.removeItem("instanceUrl_salesforce");
-                localStorage.removeItem("salesforceUserData");
-                setLoadingMessage(null)
-                setSyncStatus(false)
-                setAlert({
-                    open: true,
-                    message: "Your Salesforce session has expired. Please reconnect your Salesforce account.",
-                    type: "error"
-                })
-            }
-            else {
-                setLoading(false);
-                setAlert({
-                    open: true,
-                    message: res?.message || "Failed to sync data",
-                    type: "error"
-                })
-            }
-        } catch (err) {
-            setLoading(false);
-            setAlert({
-                open: true,
-                message: err.message || "Error syncing accounts to Q4Magic.",
-                type: "error"
-            })
+    const handleSyncData = async () => {
+        setSyncStatus(true)
+        const res = await saveSyncStatus()
+        if (res.status === 200) {
+            handleGetSyncStatus();
         }
     }
 
@@ -274,7 +186,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
 
                             closePopup();
                             await handleGetSalesForceUserInfo();
-                            await handlePushData()
+                            await handleSyncData()
                             setLoading(false);
                             setLoadingMessage(null)
                             return;
@@ -332,14 +244,17 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
 
     const handleGetSyncStatus = async () => {
         try {
-            if (syncStatus) {
-                const res = await getSyncStatus();
-                if (res?.status === 200) {
+            const res = await getSyncStatus();
+            if (res?.status === 200) {
+                if (res?.result?.status === 1) {
                     setLoadingMessage(res?.result?.statusMessage || "Please wait ! We are syncing your data.....")
+                    setSyncStatus(true)
                 } else {
                     setLoadingMessage(null)
-                    setSyncStatus(false)
                 }
+            } else {
+                setLoadingMessage(null)
+                setLoadingMessage(null)
             }
         } catch (error) {
             console.error("Error fetching sync status:", error);
@@ -349,7 +264,7 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
     useEffect(() => {
         document.title = "My CRM - 360Pipe"
         handleGetSalesForceUserInfo();
-
+        handleGetSyncStatus()
         // cleanup on unmount
         return () => {
             stopPopupWatcher();
@@ -391,11 +306,21 @@ const Crm = ({ setLoadingMessage, setLoading, setAlert, loading, setSyncCount, s
                     >
                         View Salesforce Profile
                     </a>
-
+                    {
+                        syncStatus && (
+                            <div className='flex justify-start gap-3 items-center'>
+                                <div className="w-6 h-6">
+                                    <div className="w-full h-full rounded-full border-4 border-[#44288E] border-t-transparent border-r-transparent animate-spinDualRing"></div>
+                                </div>
+                                <p className="text-black my-4 text-sm">{loadingMessage}</p>
+                            </div>
+                        )
+                    }
                     <div className='flex justify-between gap-4 w-full mt-4'>
                         <button
+                            disabled={syncStatus}
                             onClick={handleOpenDialog}
-                            className="flex-1 py-3 bg-[#44288E] text-white rounded shadow-md hover:bg-[#44288E] transition-colors duration-300"
+                            className={`flex-1 py-3 bg-[#44288E] text-white rounded shadow-md hover:bg-[#44288E] transition-colors duration-300 ${syncStatus ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                             Logout
                         </button>
@@ -440,6 +365,7 @@ const mapStateToProps = (state) => ({
     loading: state.common.loading,
     salesforceUserDetails: state.common.salesforceUserDetails,
     syncStatus: state.common.syncStatus,
+    loadingMessage: state.common.loadingMessage,
 });
 
 const mapDispatchToProps = {
