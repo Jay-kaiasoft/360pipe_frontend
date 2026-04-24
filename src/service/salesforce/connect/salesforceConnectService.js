@@ -1,5 +1,6 @@
 import { salesforceBaseURL } from "../../../config/config";
 import axiosInterceptor from "../../axiosInterceptor/axiosInterceptor"
+import store from "../../../redux/store";
 
 export const connectToSalesforce = async () => {
     try {
@@ -20,8 +21,7 @@ export const exchangeToken = async (code) => {
 }
 
 export const getUserInfo = async () => {
-    const accessToken = localStorage.getItem("accessToken_salesforce");
-    const instanceUrl = localStorage.getItem("instanceUrl_salesforce");
+    const { salesforceAccessToken: accessToken, salesforceInstanceUrl: instanceUrl } = store.getState().common;
     try {
         const response = await axiosInterceptor().get(`${salesforceBaseURL}/userInfo?accessToken=${accessToken}&instanceUrl=${instanceUrl}`)
         return response.data;

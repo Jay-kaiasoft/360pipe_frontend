@@ -58,7 +58,7 @@ const adjustPopupPosition = (triggerRect, popupWidth, popupHeight, offset = 10) 
     return { top, left };
 };
 
-const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails }) => {
+const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, salesforceAccessToken }) => {
     const navigate = useNavigate();
     const [dashboardData, setDashboardData] = useState(null);
     const [openCRMAlert, setOpenCRMAlert] = useState(false);
@@ -101,13 +101,15 @@ const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails }) =>
 
     useEffect(() => {
         document.title = "Dashboard - 360Pipe";
-        if (!localStorage.getItem("accessToken_salesforce") && salesforceUserDetails === null) {
+        if (!salesforceAccessToken && salesforceUserDetails === null) {
             setOpenCRMAlert(true);
+        } else {
+            setOpenCRMAlert(false);
         }
         if (filterStartDate && filterEndDate) {
             handleGetDashboardData();
         }
-    }, [filterStartDate, filterEndDate]);
+    }, [filterStartDate, filterEndDate, salesforceAccessToken, salesforceUserDetails]);
 
     const ui = useMemo(() => {
         const totalContacts = parseInt(dashboardData?.totalContacts || 0);
@@ -398,6 +400,7 @@ const mapStateToProps = (state) => ({
     filterStartDate: state.common.filterStartDate,
     filterEndDate: state.common.filterEndDate,
     salesforceUserDetails: state.common.salesforceUserDetails,
+    salesforceAccessToken: state.common.salesforceAccessToken,
 });
 
 export default connect(mapStateToProps, null)(Dashboard);

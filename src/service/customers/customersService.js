@@ -168,3 +168,12 @@ export const checkValidSubUserToken = async (token) => {
         console.log(error)
     }
 }
+
+export const getUserSalesForceToken = async (id) => {
+    try {
+        const response = await axiosInterceptor().get(`${customersURL}/getUserSalesForceToken/${id}`)
+        return response.data
+    } catch (error) {
+        console.log(error)
+    }
+}

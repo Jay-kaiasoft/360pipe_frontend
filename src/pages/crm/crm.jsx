@@ -1,11 +1,13 @@
 import { connect } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { setAlert, setLoading, setLoadingMessage, setSalesforceUserDetails, setSyncCount, setSyncingPullStatus, setSyncingPushStatus, setSyncStatus } from '../../redux/commonReducers/commonReducers';
+import { setAlert, setLoading, setLoadingMessage, setSalesforceUserDetails, setSyncCount, setSyncingPullStatus, setSyncingPushStatus, setSyncStatus, setSalesforceTokens, clearSalesforceTokens } from '../../redux/commonReducers/commonReducers';
 
 import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, exchangeToken, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
 import { getSyncStatus, saveSyncStatus } from '../../service/syncStatus/syncStatusService';
+import { getUserDetails } from '../../utils/getUserDetails';
+import { fetchAndSetSalesforceTokens } from '../../utils/salesforceTokenHelper';
 
 const UserInfoSkeleton = () => (
     <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full animate-pulse">
@@ -17,12 +19,14 @@ const UserInfoSkeleton = () => (
     </div>
 );
 
-const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus }) => {
+const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus, salesforceAccessToken, salesforceInstanceUrl, setSalesforceTokens, clearSalesforceTokens }) => {
     const exchangingRef = useRef(false);
     const popupRef = useRef(null);
     const intervalRef = useRef(null);
+    const userDetails = getUserDetails();
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
+    const [syncMessage, setSyncMessage] = useState(null)
 
     const handleOpenDialog = () => {
         setDialog({
@@ -37,10 +41,10 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
         setDialog({ open: false, title: '', message: '', actionButtonText: '' });
     };
 
-    const handleGetSalesForceUserInfo = async () => {
+    const handleGetSalesForceUserInfo = async (tokenOverride, urlOverride) => {
         try {
-            const token = localStorage.getItem("accessToken_salesforce");
-            const url = localStorage.getItem("instanceUrl_salesforce");
+            const token = tokenOverride || salesforceAccessToken;
+            const url = urlOverride || salesforceInstanceUrl;
 
             if (token && url) {
                 const userRes = await getUserInfo();
@@ -52,8 +56,7 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
                 } else {
                     setSalesforceUserDetails(null)
                     localStorage.removeItem("salesforceUserData");
-                    localStorage.removeItem("accessToken_salesforce");
-                    localStorage.removeItem("instanceUrl_salesforce");
+                    clearSalesforceTokens();
                 }
             }
         } catch (error) {
@@ -81,6 +84,7 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
 
     const handleSyncData = async () => {
         setSyncStatus(true)
+        setSyncMessage("Please wait ! We are syncing your data.....")
         const res = await saveSyncStatus()
         if (res.status === 200) {
             handleGetSyncStatus();
@@ -176,8 +180,7 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
                         const instanceUrl = tokenRes?.result?.data?.instance_url;
 
                         if (token && instanceUrl) {
-                            localStorage.setItem("accessToken_salesforce", token);
-                            localStorage.setItem("instanceUrl_salesforce", instanceUrl);
+                            setSalesforceTokens({ accessToken: token, instanceUrl: instanceUrl });
                             setAlert({
                                 open: true,
                                 type: "success",
@@ -229,8 +232,7 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
 
     const handleLogout = () => {
         localStorage.removeItem("salesforceUserData");
-        localStorage.removeItem("accessToken_salesforce");
-        localStorage.removeItem("instanceUrl_salesforce");
+        clearSalesforceTokens();
         setSalesforceUserDetails(null);
 
         setAlert({
@@ -246,15 +248,18 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
         try {
             const res = await getSyncStatus();
             if (res?.status === 200) {
-                if (res?.result?.status === 1) {
-                    setLoadingMessage(res?.result?.statusMessage || "Please wait ! We are syncing your data.....")
+                if (res?.result?.status === 1 || res?.result?.status === 2) {
+                    setSyncMessage(res?.result?.statusMessage || "Please wait ! We are syncing your data.....")
                     setSyncStatus(true)
                 } else {
-                    setLoadingMessage(null)
+                    setSyncMessage(null)
+                    setSyncStatus(false)
+                    setSyncingPushStatus(true);
                 }
             } else {
-                setLoadingMessage(null)
-                setLoadingMessage(null)
+                setSyncMessage(null)
+                setSyncStatus(false)
+                setSyncingPushStatus(true);
             }
         } catch (error) {
             console.error("Error fetching sync status:", error);
@@ -262,16 +267,33 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
     };
 
     useEffect(() => {
-        document.title = "My CRM - 360Pipe"
-        handleGetSalesForceUserInfo();
-        handleGetSyncStatus()
-        // cleanup on unmount
+        const init = async () => {
+            let currentToken = salesforceAccessToken;
+            let currentUrl = salesforceInstanceUrl;
+
+            if (!currentToken || !currentUrl) {
+                const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
+                if (tokens) {
+                    setSalesforceTokens(tokens);
+                    currentToken = tokens.accessToken;
+                    currentUrl = tokens.instanceUrl;
+                }
+            }
+
+            if (currentToken && currentUrl && !salesforceUserDetails) {
+                await handleGetSalesForceUserInfo(currentToken, currentUrl);
+            }
+        };
+
+        document.title = "My CRM - 360Pipe";
+        init();
+        handleGetSyncStatus();
+
         return () => {
             stopPopupWatcher();
             closePopup();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [salesforceAccessToken, salesforceInstanceUrl, salesforceUserDetails]);
 
     useEffect(() => {
         let interval;
@@ -312,7 +334,7 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
                                 <div className="w-6 h-6">
                                     <div className="w-full h-full rounded-full border-4 border-[#44288E] border-t-transparent border-r-transparent animate-spinDualRing"></div>
                                 </div>
-                                <p className="text-black my-4 text-sm">{loadingMessage}</p>
+                                <p className="text-black my-4 text-sm">{syncMessage}</p>
                             </div>
                         )
                     }
@@ -366,6 +388,8 @@ const mapStateToProps = (state) => ({
     salesforceUserDetails: state.common.salesforceUserDetails,
     syncStatus: state.common.syncStatus,
     loadingMessage: state.common.loadingMessage,
+    salesforceAccessToken: state.common.salesforceAccessToken,
+    salesforceInstanceUrl: state.common.salesforceInstanceUrl,
 });
 
 const mapDispatchToProps = {
@@ -376,7 +400,9 @@ const mapDispatchToProps = {
     setLoadingMessage,
     setSyncCount,
     setSalesforceUserDetails,
-    setSyncStatus
+    setSyncStatus,
+    setSalesforceTokens,
+    clearSalesforceTokens
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Crm);

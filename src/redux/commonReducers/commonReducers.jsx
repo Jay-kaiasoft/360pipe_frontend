@@ -28,6 +28,8 @@ const initialState = {
   filterEndDate: null,
   oppSelectedTabIndex: 0,
   performanceSelectedTabIndex: 0,
+  salesforceAccessToken: null,
+  salesforceInstanceUrl: null,
 
 };
 
@@ -127,6 +129,14 @@ const commonReducersSlice = createSlice({
     setPerformanceSelectedTabIndex(state, action) {
       state.performanceSelectedTabIndex = action.payload;
     },
+    setSalesforceTokens(state, action) {
+      state.salesforceAccessToken = action.payload.accessToken;
+      state.salesforceInstanceUrl = action.payload.instanceUrl;
+    },
+    clearSalesforceTokens(state) {
+      state.salesforceAccessToken = null;
+      state.salesforceInstanceUrl = null;
+    },
   },
 });
 
@@ -157,7 +167,9 @@ export const {
   setIsMobile,
   setOpenSubmenu,
   setOppSelectedTabIndex,
-  setPerformanceSelectedTabIndex
+  setPerformanceSelectedTabIndex,
+  setSalesforceTokens,
+  clearSalesforceTokens
 } = commonReducersSlice.actions;
 
 export default commonReducersSlice.reducer;

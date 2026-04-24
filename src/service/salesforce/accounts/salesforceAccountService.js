@@ -1,10 +1,9 @@
 import { salesforceAccountURL } from "../../config/config";
 import axiosInterceptor from "../../axiosInterceptor/axiosInterceptor"
-
-const accessToken = localStorage.getItem("accessToken_salesforce");
-const instanceUrl = localStorage.getItem("instanceUrl_salesforce");
+import store from "../../../redux/store";
 
 export const getAllAccounts = async () => {
+    const { salesforceAccessToken: accessToken, salesforceInstanceUrl: instanceUrl } = store.getState().common;
     try {
         const response = await axiosInterceptor().get(`${salesforceAccountURL}/getall?access_token=${accessToken}&instance_url=${instanceUrl}`)
         return response.data;
@@ -14,6 +13,7 @@ export const getAllAccounts = async () => {
 };
 
 export const getAccountDetails = async (accountId) => {
+    const { salesforceAccessToken: accessToken, salesforceInstanceUrl: instanceUrl } = store.getState().common;
     try {
         const response = await axiosInterceptor().get(`${salesforceAccountURL}/get/${accountId}?access_token=${accessToken}&instance_url=${instanceUrl}`)
         return response.data;

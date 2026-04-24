@@ -25,6 +25,8 @@ import UserDropdown from "./userDropDown"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
 import { getUserInfo } from "../../../service/salesforce/connect/salesforceConnectService"
 import { saveSyncStatus } from "../../../service/syncStatus/syncStatusService"
+import { fetchAndSetSalesforceTokens } from "../../../utils/salesforceTokenHelper"
+import { setSalesforceTokens, clearSalesforceTokens } from "../../../redux/commonReducers/commonReducers"
 
 
 const AppHeader = ({
@@ -39,7 +41,11 @@ const AppHeader = ({
   salesforceUserDetails,
   setSalesforceUserDetails,
   setSyncStatus,
-  syncStatus
+  syncStatus,
+  salesforceAccessToken,
+  salesforceInstanceUrl,
+  setSalesforceTokens,
+  clearSalesforceTokens
 }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const userDetails = getUserDetails()
@@ -121,10 +127,10 @@ const AppHeader = ({
     }
   }
 
-  const handleGetSalesForceUserInfo = async () => {
+  const handleGetSalesForceUserInfo = async (tokenOverride, urlOverride) => {
     try {
-      const token = localStorage.getItem("accessToken_salesforce");
-      const url = localStorage.getItem("instanceUrl_salesforce");
+      const token = tokenOverride || salesforceAccessToken;
+      const url = urlOverride || salesforceInstanceUrl;
 
       if (token && url) {
         const userRes = await getUserInfo();
@@ -136,8 +142,7 @@ const AppHeader = ({
         } else {
           setSalesforceUserDetails(null)
           localStorage.removeItem("salesforceUserData");
-          localStorage.removeItem("accessToken_salesforce");
-          localStorage.removeItem("instanceUrl_salesforce");
+          clearSalesforceTokens();
         }
       }
     } catch (error) {
@@ -146,7 +151,24 @@ const AppHeader = ({
   };
 
   useEffect(() => {
-    handleGetSalesForceUserInfo()
+    const initSalesforce = async () => {
+      let currentToken = salesforceAccessToken;
+      let currentUrl = salesforceInstanceUrl;
+
+      if (!currentToken || !currentUrl) {
+        const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
+        if (tokens) {
+          setSalesforceTokens(tokens);
+          currentToken = tokens.accessToken;
+          currentUrl = tokens.instanceUrl;
+        }
+      }
+
+      if (currentToken && currentUrl && !salesforceUserDetails) {
+        await handleGetSalesForceUserInfo(currentToken, currentUrl);
+      }
+    };
+    initSalesforce();
     handleGetAllSyncRecords()
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -156,7 +178,7 @@ const AppHeader = ({
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  }, [salesforceAccessToken, salesforceInstanceUrl, salesforceUserDetails, userDetails?.userId])
 
   useEffect(() => {
     handleSetNavItems()
@@ -205,8 +227,6 @@ const AppHeader = ({
   //     } else if (res?.status === 401) {
   //       setLoading(false)
   //       setLoadingMessage(null)
-  //       localStorage.removeItem("accessToken_salesforce")
-  //       localStorage.removeItem("instanceUrl_salesforce")
   //       localStorage.removeItem("salesforceUserData")
   //       setAlert({
   //         open: true,
@@ -235,7 +255,6 @@ const AppHeader = ({
   // }
 
   const handleSyncData = async () => {
-    setSyncStatus(true)
     const res = await saveSyncStatus()
     if (res.status === 200) {
       setAlert({
@@ -243,6 +262,7 @@ const AppHeader = ({
         type: "success",
         message: res?.message || "Sync started",
       })
+      setSyncStatus(true)
       return
     } else {
       setAlert({
@@ -291,7 +311,7 @@ const AppHeader = ({
               <div className="flex items-center gap-6">
                 {(salesforceUserDetails && (
                   <Components.Badge badgeContent={syncCount !== null ? syncCount : null} color="error">
-                    <Button disabled={syncStatus} onClick={() => handleSyncData()} text={"SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
+                    <Button disabled={syncStatus} onClick={() => handleSyncData()} text={syncStatus ? "SYNCING..." : "SYNC"} sx={{ backgroundColor: "#44288E", color: "white", "&:hover .overlay": { backgroundColor: "#44288E", color: "white", boxShadow: 0 }, }} />
                   </Components.Badge>
                 ))}
               </div>
@@ -314,6 +334,8 @@ const mapStateToProps = (state) => ({
   syncingPushStatus: state.common.syncingPushStatus,
   salesforceUserDetails: state.common.salesforceUserDetails,
   syncStatus: state.common.syncStatus,
+  salesforceAccessToken: state.common.salesforceAccessToken,
+  salesforceInstanceUrl: state.common.salesforceInstanceUrl,
 })
 
 const mapDispatchToProps = {
@@ -324,7 +346,9 @@ const mapDispatchToProps = {
   setSyncingPullStatus,
   setLoadingMessage,
   setSalesforceUserDetails,
-  setSyncStatus
+  setSyncStatus,
+  setSalesforceTokens,
+  clearSalesforceTokens
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AppHeader)
