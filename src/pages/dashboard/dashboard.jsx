@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import CustomIcons from "../../components/common/icons/CustomIcons";
 import AlertDialog from "../../components/common/alertDialog/alertDialog";
+import { fetchAndSetSalesforceTokens } from "../../utils/salesforceTokenHelper";
+import { clearSalesforceTokens, setSalesforceTokens, setSalesforceUserDetails } from "../../redux/commonReducers/commonReducers";
+import { getUserDetails } from "../../utils/getUserDetails";
 
 // --- StatCard with reduced height and font sizes ---
 const StatCard = ({ title, icon, children, gradient, onMouseEnter, onMouseLeave }) => (
@@ -58,8 +61,10 @@ const adjustPopupPosition = (triggerRect, popupWidth, popupHeight, offset = 10) 
     return { top, left };
 };
 
-const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, salesforceAccessToken }) => {
+const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, salesforceAccessToken, setSalesforceTokens, salesforceInstanceUrl, clearSalesforceTokens, setSalesforceUserDetails }) => {
     const navigate = useNavigate();
+    const userDetails = getUserDetails()
+
     const [dashboardData, setDashboardData] = useState(null);
     const [openCRMAlert, setOpenCRMAlert] = useState(false);
 
@@ -99,10 +104,36 @@ const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, sale
         }
     };
 
+    const initSalesforce = async () => {
+        let currentToken = salesforceAccessToken;
+        let currentUrl = salesforceInstanceUrl
+        const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
+        if (tokens) {
+            setSalesforceTokens(tokens);
+            currentToken = tokens.accessToken;
+            currentUrl = tokens.instanceUrl;
+            if (currentToken && currentUrl && !salesforceUserDetails) {
+                const userRes = await getUserInfo(currentToken, currentUrl);
+                const data = userRes?.result?.data || null;
+                if (data) {
+                    setSalesforceUserDetails(data);
+                    localStorage.setItem("salesforceUserData", JSON.stringify(data));
+                } else {
+                    setSalesforceUserDetails(null)
+                    localStorage.removeItem("salesforceUserData");
+                    clearSalesforceTokens(); // Removed to prevent infinite loop on fetch failure
+                }
+            }
+        } else {
+            setOpenCRMAlert(true);
+            return; // Stop if no tokens available
+        }
+    }
+
     useEffect(() => {
         document.title = "Dashboard - 360Pipe";
         if (!salesforceAccessToken && salesforceUserDetails === null) {
-            setOpenCRMAlert(true);
+            initSalesforce()
         } else {
             setOpenCRMAlert(false);
         }
@@ -401,6 +432,13 @@ const mapStateToProps = (state) => ({
     filterEndDate: state.common.filterEndDate,
     salesforceUserDetails: state.common.salesforceUserDetails,
     salesforceAccessToken: state.common.salesforceAccessToken,
+    salesforceInstanceUrl: state.common.salesforceInstanceUrl,
 });
 
-export default connect(mapStateToProps, null)(Dashboard);
+const mapDispatchToProps = {
+    setSalesforceTokens,
+    clearSalesforceTokens,
+    setSalesforceUserDetails
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

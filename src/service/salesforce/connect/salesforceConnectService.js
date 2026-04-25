@@ -20,8 +20,7 @@ export const exchangeToken = async (code) => {
     }
 }
 
-export const getUserInfo = async () => {
-    const { salesforceAccessToken: accessToken, salesforceInstanceUrl: instanceUrl } = store.getState().common;
+export const getUserInfo = async (accessToken, instanceUrl) => {
     try {
         const response = await axiosInterceptor().get(`${salesforceBaseURL}/userInfo?accessToken=${accessToken}&instanceUrl=${instanceUrl}`)
         return response.data;

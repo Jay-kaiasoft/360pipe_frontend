@@ -127,31 +127,8 @@ const AppHeader = ({
     }
   }
 
-  const handleGetSalesForceUserInfo = async (tokenOverride, urlOverride) => {
+  const initSalesforce = async () => {
     try {
-      const token = tokenOverride || salesforceAccessToken;
-      const url = urlOverride || salesforceInstanceUrl;
-
-      if (token && url) {
-        const userRes = await getUserInfo();
-        const data = userRes?.result?.data || null;
-        if (data) {
-          setSalesforceUserDetails(data);
-          localStorage.setItem("salesforceUserData", JSON.stringify(data));
-          setSyncingPushStatus(true);
-        } else {
-          setSalesforceUserDetails(null)
-          localStorage.removeItem("salesforceUserData");
-          clearSalesforceTokens();
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-    }
-  };
-
-  useEffect(() => {
-    const initSalesforce = async () => {
       let currentToken = salesforceAccessToken;
       let currentUrl = salesforceInstanceUrl;
 
@@ -161,15 +138,60 @@ const AppHeader = ({
           setSalesforceTokens(tokens);
           currentToken = tokens.accessToken;
           currentUrl = tokens.instanceUrl;
+        } else {
+          return; // Stop if no tokens available
         }
       }
 
       if (currentToken && currentUrl && !salesforceUserDetails) {
         await handleGetSalesForceUserInfo(currentToken, currentUrl);
       }
-    };
+
+      // Only call sync records if we have the necessary credentials
+      if (currentToken && currentUrl) {
+        handleGetAllSyncRecords();
+      }
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.message || "Failed to initialize Salesforce connection.",
+        type: "error",
+      });
+    }
+  };
+
+
+  const handleGetSalesForceUserInfo = async (tokenOverride, urlOverride) => {
+    try {
+      const token = tokenOverride || salesforceAccessToken;
+      const url = urlOverride || salesforceInstanceUrl;
+
+      if (token && url) {
+        const userRes = await getUserInfo(token, url);
+        const data = userRes?.result?.data || null;
+        if (data) {
+          setSalesforceUserDetails(data);
+          localStorage.setItem("salesforceUserData", JSON.stringify(data));
+          setSyncingPushStatus(true);
+        } else {
+          setSalesforceUserDetails(null)
+          localStorage.removeItem("salesforceUserData");
+          clearSalesforceTokens(); // Removed to prevent infinite loop on fetch failure
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      setAlert({
+        open: true,
+        message: error.message || "Error fetching Salesforce user info.",
+        type: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
     initSalesforce();
-    handleGetAllSyncRecords()
+
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault()
