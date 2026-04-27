@@ -15,37 +15,26 @@ import {
 } from "../../../redux/commonReducers/commonReducers"
 
 import Components from "../../../components/muiComponents/components"
-import { syncToQ4Magic } from "../../../service/salesforce/syncToQ4Magic/syncToQ4MagicService"
-import { syncFromQ4magic } from "../../../service/salesforce/syncFromQ4magic/syncFromQ4magicService"
 import { getAllSyncRecords } from "../../../service/syncRecords/syncRecordsService"
 import Button from "../../../components/common/buttons/button"
-import { getSalesforceUserDetails, getUserDetails } from "../../../utils/getUserDetails"
+import { getUserDetails } from "../../../utils/getUserDetails"
 import { Tabs } from "../../../components/common/tabs/tabs"
 import UserDropdown from "./userDropDown"
 import CustomIcons from "../../../components/common/icons/CustomIcons"
-import { getUserInfo } from "../../../service/salesforce/connect/salesforceConnectService"
 import { saveSyncStatus } from "../../../service/syncStatus/syncStatusService"
-import { fetchAndSetSalesforceTokens } from "../../../utils/salesforceTokenHelper"
 import { setSalesforceTokens, clearSalesforceTokens } from "../../../redux/commonReducers/commonReducers"
 
 
 const AppHeader = ({
   setAlert,
-  setLoadingMessage,
-  setLoading,
   setSyncCount,
   setSyncingPushStatus,
   setSyncingPullStatus,
   syncCount,
   syncingPushStatus,
   salesforceUserDetails,
-  setSalesforceUserDetails,
   setSyncStatus,
   syncStatus,
-  salesforceAccessToken,
-  salesforceInstanceUrl,
-  setSalesforceTokens,
-  clearSalesforceTokens
 }) => {
   const { isMobileOpen } = useSelector((state) => state.common)
   const userDetails = getUserDetails()
@@ -127,70 +116,8 @@ const AppHeader = ({
     }
   }
 
-  const initSalesforce = async () => {
-    try {
-      let currentToken = salesforceAccessToken;
-      let currentUrl = salesforceInstanceUrl;
-
-      if (!currentToken || !currentUrl) {
-        const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
-        if (tokens) {
-          setSalesforceTokens(tokens);
-          currentToken = tokens.accessToken;
-          currentUrl = tokens.instanceUrl;
-        } else {
-          return; // Stop if no tokens available
-        }
-      }
-
-      if (currentToken && currentUrl && !salesforceUserDetails) {
-        await handleGetSalesForceUserInfo(currentToken, currentUrl);
-      }
-
-      // Only call sync records if we have the necessary credentials
-      if (currentToken && currentUrl) {
-        handleGetAllSyncRecords();
-      }
-    } catch (error) {
-      setAlert({
-        open: true,
-        message: error.message || "Failed to initialize Salesforce connection.",
-        type: "error",
-      });
-    }
-  };
-
-
-  const handleGetSalesForceUserInfo = async (tokenOverride, urlOverride) => {
-    try {
-      const token = tokenOverride || salesforceAccessToken;
-      const url = urlOverride || salesforceInstanceUrl;
-
-      if (token && url) {
-        const userRes = await getUserInfo(token, url);
-        const data = userRes?.result?.data || null;
-        if (data) {
-          setSalesforceUserDetails(data);
-          localStorage.setItem("salesforceUserData", JSON.stringify(data));
-          setSyncingPushStatus(true);
-        } else {
-          setSalesforceUserDetails(null)
-          localStorage.removeItem("salesforceUserData");
-          clearSalesforceTokens(); // Removed to prevent infinite loop on fetch failure
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-      setAlert({
-        open: true,
-        message: error.message || "Error fetching Salesforce user info.",
-        type: "error",
-      });
-    }
-  };
-
   useEffect(() => {
-    initSalesforce();
+    // initSalesforce();
 
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -200,7 +127,7 @@ const AppHeader = ({
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [salesforceAccessToken, salesforceInstanceUrl, salesforceUserDetails, userDetails?.userId])
+  }, [])
 
   useEffect(() => {
     handleSetNavItems()

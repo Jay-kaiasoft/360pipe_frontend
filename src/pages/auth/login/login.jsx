@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 import '@authid/web-component'
 import AuthIDComponent from '@authid/react-component';
 
-import { setAlert, setLoading } from "../../../redux/commonReducers/commonReducers";
+import { clearSalesforceTokens, setAlert, setLoading, setSalesforceTokens, setSalesforceUserDetails } from "../../../redux/commonReducers/commonReducers";
 
 import Header from '../../landingPage/header'
 import CopyRight from '../../landingPage/copyRight'
@@ -16,8 +16,10 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import Button from '../../../components/common/buttons/button';
 import { userLogin } from '../../../service/customers/customersService';
 import { loginWithAuthID } from '../../../service/auth/authIdAccountService';
+import { fetchAndSetSalesforceTokens } from '../../../utils/salesforceTokenHelper';
+import { getUserInfo } from '../../../service/salesforce/connect/salesforceConnectService';
 
-const Login = ({ setAlert, loading }) => {
+const Login = ({ setAlert, loading, salesforceUserDetails, setSalesforceTokens, clearSalesforceTokens, setSalesforceUserDetails }) => {
     const navigate = useNavigate();
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [loginPreference, setLoginPreference] = useState(null);
@@ -112,11 +114,34 @@ const Login = ({ setAlert, loading }) => {
                 name: res?.data?.result?.name
             };
             localStorage.setItem("userInfo", JSON.stringify(userdata));
-            navigate("/dashboard")
+            const tokens = await fetchAndSetSalesforceTokens(res?.data?.result?.userId);
+            if (tokens != null) {
+                setSalesforceTokens(tokens);
+                let currentToken = tokens?.accessToken;
+                let currentUrl = tokens?.instanceUrl;
+                if (currentToken && currentUrl && !salesforceUserDetails) {
+                    const userRes = await getUserInfo(currentToken, currentUrl);
+                    const data = userRes?.result?.data || null;
+                    if (data) {
+                        setSalesforceUserDetails(data);
+                        navigate("/dashboard")
+                    } else {
+                        setSalesforceUserDetails(null)
+                        clearSalesforceTokens();
+                        navigate("/dashboard")
+                    }
+                }
+            } else {
+                navigate("/dashboard")
+            }
             // setAlert({ open: true, type: "success", message: res?.data?.message || "Login successful" })
         } else {
             setAlert({ open: true, type: "error", message: res?.data?.result?.error || res?.data?.msg || "Server error" })
         }
+    }
+
+    const initSalesforce = async () => {
+
     }
 
     useEffect(() => {
@@ -323,11 +348,17 @@ const Login = ({ setAlert, loading }) => {
 
 const mapDispatchToProps = {
     setAlert,
-    setLoading
+    setLoading,
+    setSalesforceTokens,
+    clearSalesforceTokens,
+    setSalesforceUserDetails
 };
 
 const mapStateToProps = (state) => ({
     loading: state.common.loading,
+    salesforceUserDetails: state.common.salesforceUserDetails,
+    salesforceAccessToken: state.common.salesforceAccessToken,
+    salesforceInstanceUrl: state.common.salesforceInstanceUrl,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Login);

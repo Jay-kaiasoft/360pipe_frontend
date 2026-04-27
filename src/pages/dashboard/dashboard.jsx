@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { connect } from "react-redux";
 import CustomIcons from "../../components/common/icons/CustomIcons";
 import AlertDialog from "../../components/common/alertDialog/alertDialog";
-import { fetchAndSetSalesforceTokens } from "../../utils/salesforceTokenHelper";
 import { clearSalesforceTokens, setSalesforceTokens, setSalesforceUserDetails } from "../../redux/commonReducers/commonReducers";
 import { getUserDetails } from "../../utils/getUserDetails";
+import { fetchAndSetSalesforceTokens } from "../../utils/salesforceTokenHelper";
+import { getUserInfo } from "../../service/salesforce/connect/salesforceConnectService";
 
 // --- StatCard with reduced height and font sizes ---
 const StatCard = ({ title, icon, children, gradient, onMouseEnter, onMouseLeave }) => (
@@ -61,7 +62,7 @@ const adjustPopupPosition = (triggerRect, popupWidth, popupHeight, offset = 10) 
     return { top, left };
 };
 
-const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, salesforceAccessToken, setSalesforceTokens, salesforceInstanceUrl, clearSalesforceTokens, setSalesforceUserDetails }) => {
+const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, salesforceAccessToken, salesforceInstanceUrl, setSalesforceUserDetails, setSalesforceTokens }) => {
     const navigate = useNavigate();
     const userDetails = getUserDetails()
 
@@ -104,43 +105,12 @@ const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, sale
         }
     };
 
-    const initSalesforce = async () => {
-        let currentToken = salesforceAccessToken;
-        let currentUrl = salesforceInstanceUrl
-        const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
-        if (tokens) {
-            setSalesforceTokens(tokens);
-            currentToken = tokens.accessToken;
-            currentUrl = tokens.instanceUrl;
-            if (currentToken && currentUrl && !salesforceUserDetails) {
-                const userRes = await getUserInfo(currentToken, currentUrl);
-                const data = userRes?.result?.data || null;
-                if (data) {
-                    setSalesforceUserDetails(data);
-                    localStorage.setItem("salesforceUserData", JSON.stringify(data));
-                } else {
-                    setSalesforceUserDetails(null)
-                    localStorage.removeItem("salesforceUserData");
-                    clearSalesforceTokens(); // Removed to prevent infinite loop on fetch failure
-                }
-            }
-        } else {
-            setOpenCRMAlert(true);
-            return; // Stop if no tokens available
-        }
-    }
-
     useEffect(() => {
         document.title = "Dashboard - 360Pipe";
-        if (!salesforceAccessToken && salesforceUserDetails === null) {
-            initSalesforce()
-        } else {
-            setOpenCRMAlert(false);
-        }
         if (filterStartDate && filterEndDate) {
             handleGetDashboardData();
         }
-    }, [filterStartDate, filterEndDate, salesforceAccessToken, salesforceUserDetails]);
+    }, [filterStartDate, filterEndDate]);
 
     const ui = useMemo(() => {
         const totalContacts = parseInt(dashboardData?.totalContacts || 0);
@@ -230,6 +200,32 @@ const Dashboard = ({ filterStartDate, filterEndDate, salesforceUserDetails, sale
         }
     }, [hoveredPipelineRow, hoveredPipelineRowRect]);
 
+    const initSalesForce = async () => {
+        if (!salesforceAccessToken && !salesforceInstanceUrl) {
+            const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
+            if (tokens != null) {
+                setSalesforceTokens(tokens);
+                let currentToken = tokens?.accessToken;
+                let currentUrl = tokens?.instanceUrl;
+                if (currentToken && currentUrl && !salesforceUserDetails) {
+                    const userRes = await getUserInfo(currentToken, currentUrl);
+                    const data = userRes?.result?.data || null;
+                    if (data) {
+                        setSalesforceUserDetails(data);
+                    } else {
+                        setSalesforceUserDetails(null)
+                        clearSalesforceTokens();
+                    }
+                }
+            } else {
+                setOpenCRMAlert(true);
+            }
+        }
+    }
+
+    useEffect(() => {
+        initSalesForce()
+    }, [])
     return (
         <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
             <div className="max-w-7xl mx-auto px-4 py-8">

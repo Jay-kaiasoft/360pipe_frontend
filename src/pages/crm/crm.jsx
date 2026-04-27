@@ -6,8 +6,8 @@ import SalesForceLogo from '../../assets/svgs/salesforce.svg';
 import { connectToSalesforce, exchangeToken, getUserInfo } from '../../service/salesforce/connect/salesforceConnectService';
 import AlertDialog from '../../components/common/alertDialog/alertDialog';
 import { getSyncStatus, saveSyncStatus } from '../../service/syncStatus/syncStatusService';
-import { getUserDetails } from '../../utils/getUserDetails';
 import { fetchAndSetSalesforceTokens } from '../../utils/salesforceTokenHelper';
+import { getUserDetails } from '../../utils/getUserDetails';
 
 const UserInfoSkeleton = () => (
     <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center max-w-sm w-full animate-pulse">
@@ -19,11 +19,11 @@ const UserInfoSkeleton = () => (
     </div>
 );
 
-const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus, salesforceAccessToken, salesforceInstanceUrl, setSalesforceTokens, clearSalesforceTokens }) => {
+const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading, setSyncCount, setSyncingPushStatus, setSyncingPullStatus, salesforceUserDetails, setSalesforceUserDetails, syncStatus, setSyncStatus, setSalesforceTokens, clearSalesforceTokens, salesforceAccessToken, salesforceInstanceUrl }) => {
     const exchangingRef = useRef(false);
     const popupRef = useRef(null);
     const intervalRef = useRef(null);
-    const userDetails = getUserDetails();
+    const userData = getUserDetails()
 
     const [dialog, setDialog] = useState({ open: false, title: '', message: '', actionButtonText: '' });
     const [syncMessage, setSyncMessage] = useState(null)
@@ -266,34 +266,26 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
         }
     };
 
-    useEffect(() => {
-        const init = async () => {
-            let currentToken = salesforceAccessToken;
-            let currentUrl = salesforceInstanceUrl;
-
-            if (!currentToken || !currentUrl) {
-                const tokens = await fetchAndSetSalesforceTokens(userDetails?.userId);
-                if (tokens) {
-                    setSalesforceTokens(tokens);
-                    currentToken = tokens.accessToken;
-                    currentUrl = tokens.instanceUrl;
+    const initSalesForce = async () => {
+        if (!salesforceAccessToken && !salesforceInstanceUrl) {
+            const tokens = await fetchAndSetSalesforceTokens(userData?.userId);
+            if (tokens != null) {
+                setSalesforceTokens(tokens);
+                let currentToken = tokens?.accessToken;
+                let currentUrl = tokens?.instanceUrl;
+                if (currentToken && currentUrl && !salesforceUserDetails) {
+                    const userRes = await getUserInfo(currentToken, currentUrl);
+                    const data = userRes?.result?.data || null;
+                    if (data) {
+                        setSalesforceUserDetails(data);
+                    } else {
+                        setSalesforceUserDetails(null)
+                        clearSalesforceTokens();
+                    }
                 }
             }
-
-            if (currentToken && currentUrl && !salesforceUserDetails) {
-                await handleGetSalesForceUserInfo(currentToken, currentUrl);
-            }
-        };
-
-        document.title = "My CRM - 360Pipe";
-        init();
-        handleGetSyncStatus();
-
-        return () => {
-            stopPopupWatcher();
-            closePopup();
-        };
-    }, [salesforceAccessToken, salesforceInstanceUrl, salesforceUserDetails]);
+        }
+    }
 
     useEffect(() => {
         let interval;
@@ -307,6 +299,10 @@ const Crm = ({ loadingMessage, setLoadingMessage, setLoading, setAlert, loading,
             if (interval) clearInterval(interval);
         };
     }, [syncStatus]);
+
+    useEffect(() => {
+        initSalesForce()
+    }, [])
 
     return (
         <div className='pt-10'>
