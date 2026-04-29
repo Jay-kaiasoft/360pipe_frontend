@@ -28,6 +28,7 @@ import DeleteEventAlert from './deleteEventAlert';
 import { useLocation, useParams } from 'react-router-dom';
 import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import SelectMultiple from '../../common/select/selectMultiple';
+import { add, setHours } from 'date-fns';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -46,6 +47,7 @@ const repeatList = [
     { id: 3, title: 'Weekly', value: 'week' },
     { id: 4, title: 'Monthly', value: 'month' },
     { id: 5, title: 'Yearly', value: 'year' },
+    { id: 6, title: "Custom", value: "custom" }
 ];
 
 // ---------- helpers for repeat JSON text ----------
@@ -112,7 +114,13 @@ const buildOccursText = ({ unit, every, startDate, selectedDays }) => {
 const isToday = (d) => d && dayjs(d).isSame(dayjs(), 'day');
 const isSameDay = (a, b) => a && b && dayjs(a).isSame(dayjs(b), 'day');
 
-function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEvents, thirdPartyCalendar }) {
+const formatEnd = (end) => {
+    if (!end) return null;
+    // Subtract one day, set time to 08:30, and return as dayjs
+    return dayjs(end).subtract(1, 'day').hour(8).minute(30).second(0);
+};
+
+function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEvents, thirdPartyCalendar, currentView }) {
     const theme = useTheme();
     const location = useLocation()
     const { opportunityId } = useParams()
@@ -195,6 +203,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         setLoading(false);
         reset();
         handleClose();
+        setEditorState(EditorState.createEmpty())
     };
 
     const handleOpenDeleteAlert = (value) => {
@@ -207,7 +216,12 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
         onClose()
     };
 
-    const handleCloseRepeatModel = () => setOpenRepeat(false);
+    const handleCloseRepeatModel = () => {
+        setValue("calRepeatType", 1)
+        setOpenRepeat(false);
+    }
+
+    const handleCloseRepeatModelOnSave = () => setOpenRepeat(false);
 
     const handleGetAllTimeZones = async () => {
         const res = await getTimeZones();
@@ -283,51 +297,62 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                     setEditorState(EditorState.createEmpty());
                 }
             } else {
-                const startDate =
-                    slotInfo?.start instanceof Date ? dayjs(slotInfo.start) : slotInfo?.start ? dayjs(slotInfo.start) : null;
+                // const startDate =
+                //     slotInfo?.start instanceof Date ? dayjs(slotInfo.start) : slotInfo?.start ? dayjs(slotInfo.start) : null;
 
-                let endDate =
-                    slotInfo?.end instanceof Date ? dayjs(slotInfo.end) : slotInfo?.end ? dayjs(slotInfo.end) : null;
+                // let endDate =
+                //     slotInfo?.end instanceof Date ? dayjs(slotInfo.end) : slotInfo?.end ? dayjs(slotInfo.end) : null;
 
-                // ✅ Fix: month/day-cell click is usually all-day selection where end is exclusive (+1 day at 00:00)
-                if (startDate && endDate) {
-                    const isMidnightToMidnight =
-                        startDate.hour() === 0 && startDate.minute() === 0 && startDate.second() === 0 &&
-                        endDate.hour() === 0 && endDate.minute() === 0 && endDate.second() === 0;
+                // // ✅ Fix: month/day-cell click is usually all-day selection where end is exclusive (+1 day at 00:00)
+                // if (startDate && endDate) {
+                //     const isMidnightToMidnight =
+                //         startDate.hour() === 0 && startDate.minute() === 0 && startDate.second() === 0 &&
+                //         endDate.hour() === 0 && endDate.minute() === 0 && endDate.second() === 0;
 
-                    const isExactlyOneDayExclusive = endDate.diff(startDate, 'day') === 1;
+                //     const isExactlyOneDayExclusive = endDate.diff(startDate, 'day') === 1;
 
-                    if (isMidnightToMidnight && isExactlyOneDayExclusive) {
-                        endDate = startDate; // keep same date (no +1 day)
-                    }
+                //     if (isMidnightToMidnight && isExactlyOneDayExclusive) {
+                //         endDate = startDate; // keep same date (no +1 day)
+                //     }
+                // }
+
+                // setValue('start', startDate);
+                // setValue('end', endDate);
+                if (currentView === "month") {
+                    setValue('start', dayjs(slotInfo?.start).hour(8).minute(0).second(0));
+                    setValue('end', formatEnd(slotInfo?.end));
+                } else {
+                    setValue('start', dayjs(slotInfo?.start));
+                    setValue('end', dayjs(slotInfo?.end));
                 }
-
-                setValue('start', startDate);
-                setValue('end', endDate);
-
             }
         } else {
-            const startDate =
-                slotInfo?.start instanceof Date ? dayjs(slotInfo.start) : slotInfo?.start ? dayjs(slotInfo.start) : null;
+            // const startDate =
+            //     slotInfo?.start instanceof Date ? dayjs(slotInfo.start) : slotInfo?.start ? dayjs(slotInfo.start) : null;
 
-            let endDate =
-                slotInfo?.end instanceof Date ? dayjs(slotInfo.end) : slotInfo?.end ? dayjs(slotInfo.end) : null;
+            // let endDate =
+            //     slotInfo?.end instanceof Date ? dayjs(slotInfo.end) : slotInfo?.end ? dayjs(slotInfo.end) : null;
 
-            // ✅ Fix: month/day-cell click is usually all-day selection where end is exclusive (+1 day at 00:00)
-            if (startDate && endDate) {
-                const isMidnightToMidnight =
-                    startDate.hour() === 0 && startDate.minute() === 0 && startDate.second() === 0 &&
-                    endDate.hour() === 0 && endDate.minute() === 0 && endDate.second() === 0;
+            // // ✅ Fix: month/day-cell click is usually all-day selection where end is exclusive (+1 day at 00:00)
+            // if (startDate && endDate) {
+            //     const isMidnightToMidnight =
+            //         startDate.hour() === 0 && startDate.minute() === 0 && startDate.second() === 0 &&
+            //         endDate.hour() === 0 && endDate.minute() === 0 && endDate.second() === 0;
 
-                const isExactlyOneDayExclusive = endDate.diff(startDate, 'day') === 1;
+            //     const isExactlyOneDayExclusive = endDate.diff(startDate, 'day') === 1;
 
-                if (isMidnightToMidnight && isExactlyOneDayExclusive) {
-                    endDate = startDate; // keep same date (no +1 day)
-                }
+            //     if (isMidnightToMidnight && isExactlyOneDayExclusive) {
+            //         endDate = startDate; // keep same date (no +1 day)
+            //     }
+            // }
+
+            if (currentView === "month") {
+                setValue('start', dayjs(slotInfo?.start).hour(8).minute(0).second(0));
+                setValue('end', formatEnd(slotInfo?.end));
+            } else {
+                setValue('start', dayjs(slotInfo?.start));
+                setValue('end', dayjs(slotInfo?.end));
             }
-
-            setValue('start', startDate);
-            setValue('end', endDate);
 
         }
     };
@@ -351,6 +376,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
             handleGetEvent();
             handleGetAllOpportunitiesContact()
         }
+        // console.log("=========slotInfo =======",slotInfo)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, slotInfo]);
 
@@ -483,6 +509,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
             // original editAll logic
             editAll: editAll && selectedRepeat?.id !== 1 ? 'Y' : 'N',
         };
+        console.log("payload", payload)
         const res = await saveEvents(payload);
         if (res.status === 200) {
             setAlert({ open: true, message: res?.message, type: 'success' });
@@ -794,12 +821,12 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                                 )
                             }
 
-                            <div>
+                            <div className="editor-container-integrated">
                                 <Editor
                                     editorState={editorState}
-                                    wrapperClassName="editor-wrapper-custom d-inline-block"
-                                    editorClassName="editor-class"
-                                    toolbarClassName="toolbar-class"
+                                    wrapperClassName="editor-wrapper-custom"
+                                    editorClassName="editor-main-custom"
+                                    toolbarClassName="editor-toolbar-custom"
                                     onEditorStateChange={(state) => setEditorState(state)}
                                     toolbar={toolbarProperties}
                                 />
@@ -856,7 +883,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 </form>
             </BootstrapDialog>
             <DeleteEventAlert open={openDeleteAlert} handleClose={handleCloseDeleteAlert} thirdPartyCalendar={thirdPartyCalendar} calParentId={watch("calParentId")} deleteAll={deleteAll} id={watch("id")} handleGetAllEvents={handleGetAllEvents} />
-            <ModalRepeat open={openRepeat} handleClose={handleCloseRepeatModel} values={getValues()} setValues={setValue} />
+            <ModalRepeat open={openRepeat} handleClose={handleCloseRepeatModel} values={getValues()} setValues={setValue} handleCloseRepeatModelOnSave={handleCloseRepeatModelOnSave} />
         </React.Fragment>
     );
 }

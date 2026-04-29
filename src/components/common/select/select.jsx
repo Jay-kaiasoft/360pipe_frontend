@@ -14,7 +14,7 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
                 {label}
                 {
                     requiredFiledLabel && <span className='text-red-500 ml-1'>*</span>
-                }            
+                }
             </p>
             <Components.Autocomplete
                 freeSolo={freeSolo}
@@ -30,8 +30,27 @@ const Select = forwardRef(({ size = "small", label, placeholder, error, helperTe
                 onInputChange={(event, newInputValue) => {
                     onInputChange?.(event, newInputValue);
                 }}
-                onClick={(event, newValue) => {
-                    onClick(event, newValue);
+                renderOption={(props, option) => {
+                    // Extract the default onClick handler that MUI assigns to the option
+                    const { onClick: defaultOnClick, ...restProps } = props;
+
+                    return (
+                        <li
+                            {...restProps}
+                            onClick={(event) => {
+                                // 1. Fire MUI's default click handler so standard selection still works
+                                if (defaultOnClick) {
+                                    defaultOnClick(event);
+                                }
+                                // 2. Fire your custom onClick handler, passing the clicked option!
+                                if (onClick) {
+                                    onClick(event, option);
+                                }
+                            }}
+                        >
+                            {option?.title || ""}
+                        </li>
+                    );
                 }}
                 noOptionsText={'No data found'}
                 renderInput={(params) => (

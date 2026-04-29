@@ -58,6 +58,7 @@ const Calendar = ({ setAlert }) => {
   const anchorRef = useRef(null);
   const location = useLocation()
 
+  const [currentView, setCurrentView] = useState("month")
   const [date, setDate] = useState(dayjs());
   const [events, setEvents] = useState([]);
   const [thirdPartyCalendar, setThirdPartyCalendar] = useState(null);
@@ -460,6 +461,11 @@ const Calendar = ({ setAlert }) => {
               ),
             }}
             views={['month', 'week', 'day']}
+            onRangeChange={(range, view) => {
+              if (view) {
+                setCurrentView(view)
+              }
+            }}
             eventPropGetter={
               (event) => {
                 var style = {
@@ -482,6 +488,7 @@ const Calendar = ({ setAlert }) => {
         slotInfo={selectedSlot}          // used when adding
         handleGetAllEvents={() => loadEvents(date)}
         thirdPartyCalendar={thirdPartyCalendar}
+        currentView={currentView}
       />
 
     </>
