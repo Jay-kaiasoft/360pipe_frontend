@@ -113,6 +113,7 @@ export const headerTitles = [
     { title: "Products & Service", path: "/dashboard/products" },
     { title: "Performance", path: "/dashboard/activities" },
     { title: "Performance", path: "/dashboard/results" },
+    { title: "My Calendar", path: "/dashboard/calendar" },
 ];
 
 export const matchRoute = (routePath, currentPath) => {

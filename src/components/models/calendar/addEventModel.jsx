@@ -495,7 +495,7 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
 
     return (
         <React.Fragment>
-            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="sm">
+            <BootstrapDialog onClose={(event, reason) => handleRequestClose(event, reason, onClose)} open={open} aria-labelledby="customized-dialog-title" fullWidth maxWidth="md">
                 <Components.DialogTitle sx={{ m: 0, p: 2, color: theme.palette.text.primary }} id="customized-dialog-title">
                     {
                         location?.pathname === "/dashboard/calendar" ? (
