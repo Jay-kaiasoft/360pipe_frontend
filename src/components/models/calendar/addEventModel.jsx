@@ -29,6 +29,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { getAllOpportunitiesContact } from '../../../service/opportunities/opportunitiesContactService';
 import SelectMultiple from '../../common/select/selectMultiple';
 import { add, setHours } from 'date-fns';
+import { Autocomplete, Chip, TextField } from '@mui/material';
 
 const BootstrapDialog = styled(Components.Dialog)(({ theme }) => ({
     '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -119,13 +120,18 @@ const formatEnd = (end) => {
     // Subtract one day, set time to 08:30, and return as dayjs
     return dayjs(end).subtract(1, 'day').hour(8).minute(30).second(0);
 };
-
+const validateEmail = (email) => {
+    return String(email)
+        .toLowerCase()
+        .match(/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/);
+};
 function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEvents, thirdPartyCalendar, currentView }) {
     const theme = useTheme();
     const location = useLocation()
     const { opportunityId } = useParams()
     const [contacts, setContacts] = useState([]);
     const [contactsIds, setContactsIds] = useState([]);
+    const [emailInputValue, setEmailInputValue] = useState('');
 
     const [openRepeat, setOpenRepeat] = useState(false);
     const [editAll, setEditAll] = useState(false);
@@ -271,7 +277,17 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 setValue('start', start);
                 setValue('end', end);
                 setValue("calTimeZone", convertAsiaKolkata(event.calTimeZone))
-                setValue('calAttendees', event.calAttendees ?? null);
+                let attendeesArray = [];
+                if (event.calAttendees) {
+                    try {
+                        const parsed = JSON.parse(event.calAttendees);
+                        // If it's an object with an 'attendees' property (like your old format), extract it
+                        attendeesArray = Array.isArray(parsed) ? parsed : parsed?.attendees || [];
+                    } catch {
+                        attendeesArray = [];
+                    }
+                }
+                setValue('calAttendees', attendeesArray);
                 setValue('calAetId', event.calAetId ?? null);
 
                 setValue('calParentId', event.calParentId ?? 0);
@@ -297,27 +313,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                     setEditorState(EditorState.createEmpty());
                 }
             } else {
-                // const startDate =
-                //     slotInfo?.start instanceof Date ? dayjs(slotInfo.start) : slotInfo?.start ? dayjs(slotInfo.start) : null;
-
-                // let endDate =
-                //     slotInfo?.end instanceof Date ? dayjs(slotInfo.end) : slotInfo?.end ? dayjs(slotInfo.end) : null;
-
-                // // ✅ Fix: month/day-cell click is usually all-day selection where end is exclusive (+1 day at 00:00)
-                // if (startDate && endDate) {
-                //     const isMidnightToMidnight =
-                //         startDate.hour() === 0 && startDate.minute() === 0 && startDate.second() === 0 &&
-                //         endDate.hour() === 0 && endDate.minute() === 0 && endDate.second() === 0;
-
-                //     const isExactlyOneDayExclusive = endDate.diff(startDate, 'day') === 1;
-
-                //     if (isMidnightToMidnight && isExactlyOneDayExclusive) {
-                //         endDate = startDate; // keep same date (no +1 day)
-                //     }
-                // }
-
-                // setValue('start', startDate);
-                // setValue('end', endDate);
                 if (currentView === "month") {
                     setValue('start', dayjs(slotInfo?.start).hour(8).minute(0).second(0));
                     setValue('end', formatEnd(slotInfo?.end));
@@ -327,25 +322,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                 }
             }
         } else {
-            // const startDate =
-            //     slotInfo?.start instanceof Date ? dayjs(slotInfo.start) : slotInfo?.start ? dayjs(slotInfo.start) : null;
-
-            // let endDate =
-            //     slotInfo?.end instanceof Date ? dayjs(slotInfo.end) : slotInfo?.end ? dayjs(slotInfo.end) : null;
-
-            // // ✅ Fix: month/day-cell click is usually all-day selection where end is exclusive (+1 day at 00:00)
-            // if (startDate && endDate) {
-            //     const isMidnightToMidnight =
-            //         startDate.hour() === 0 && startDate.minute() === 0 && startDate.second() === 0 &&
-            //         endDate.hour() === 0 && endDate.minute() === 0 && endDate.second() === 0;
-
-            //     const isExactlyOneDayExclusive = endDate.diff(startDate, 'day') === 1;
-
-            //     if (isMidnightToMidnight && isExactlyOneDayExclusive) {
-            //         endDate = startDate; // keep same date (no +1 day)
-            //     }
-            // }
-
             if (currentView === "month") {
                 setValue('start', dayjs(slotInfo?.start).hour(8).minute(0).second(0));
                 setValue('end', formatEnd(slotInfo?.end));
@@ -376,7 +352,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
             handleGetEvent();
             handleGetAllOpportunitiesContact()
         }
-        // console.log("=========slotInfo =======",slotInfo)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, slotInfo]);
 
@@ -829,6 +804,77 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                                     toolbarClassName="editor-toolbar-custom"
                                     onEditorStateChange={(state) => setEditorState(state)}
                                     toolbar={toolbarProperties}
+                                />
+                            </div>
+
+                            {/* Guest Email(s) – multiple freeSolo emails */}
+                            <div>
+                                <p className="mb-2 text-black text-left">Guest Email(s)</p>
+                                <Autocomplete
+                                    multiple
+                                    freeSolo
+                                    options={[]}
+                                    value={watch('calAttendees') || []}
+                                    inputValue={emailInputValue}
+                                    onInputChange={(_, newValue) => setEmailInputValue(newValue)}
+                                    onChange={(_, newValue) => {
+                                        setValue('calAttendees', newValue);
+                                    }}
+                                    renderTags={(value, getTagProps) =>
+                                        value.map((option, index) => (
+                                            <Chip
+                                                label={option}
+                                                {...getTagProps({ index })}
+                                                onDelete={() => {
+                                                    const newEmails = [...value];
+                                                    newEmails.splice(index, 1);
+                                                    setValue('calAttendees', newEmails);
+                                                }}
+                                            />
+                                        ))
+                                    }
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            variant="outlined"
+                                            size="small"
+                                            placeholder="Type email and press Enter"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const currentInput = emailInputValue.trim();
+                                                    if (currentInput && !validateEmail(currentInput)) {
+                                                        e.preventDefault();  // prevent form submission
+                                                        setAlert({ open: true, message: 'Invalid email address', type: 'error' });
+                                                    } else if (currentInput && validateEmail(currentInput)) {
+                                                        // email is valid – will be added by Autocomplete itself
+                                                        setEmailInputValue('');
+                                                    }
+                                                }
+                                            }}
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '4px',
+                                                    '& fieldset': { borderColor: theme.palette.secondary.main },
+                                                    '&:hover fieldset': { borderColor: theme.palette.secondary.main },
+                                                    '&.Mui-focused fieldset': { borderColor: theme.palette.secondary.main },
+                                                },
+                                                '& .MuiInputBase-input': { color: theme.palette.text.primary },
+                                                fontFamily: '"Inter", sans-serif',
+                                            }}
+                                        />
+                                    )}
+                                    componentsProps={{
+                                        paper: {
+                                            sx: {
+                                                '& .MuiAutocomplete-option': {
+                                                    padding: '0.5rem 1rem',
+                                                    '&:hover': {
+                                                        backgroundColor: `${theme.palette.custom.default2} !important`,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    }}
                                 />
                             </div>
                         </div>

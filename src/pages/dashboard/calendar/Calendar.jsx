@@ -253,13 +253,13 @@ const Calendar = ({ setAlert }) => {
     <>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4 px-8 grow">
-          {
+          {/* {
             location?.pathname === "/dashboard/calendar" && (
               <div>
                 <p className="text-2xl font-bold">My Calendar</p>
               </div>
             )
-          }
+          } */}
           <div className="flex items-center gap-3 text-lg">
             <Tooltip title="Add" arrow>
               <div
