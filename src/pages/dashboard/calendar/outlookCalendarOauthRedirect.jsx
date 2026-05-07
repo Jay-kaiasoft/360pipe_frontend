@@ -1,12 +1,33 @@
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const OutlookCalendarOauthRedirect = (props) => {
-    if(typeof props.location.search !== "undefined" && props.location.search !== "" && props.location.search !== null){
-        window.opener.ocSuccess(props.location.search);
+    const location = useLocation();
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const code = params.get("code");
+        const state = params.get("state");
+        let query = ""
+        if (code && state) {
+            query = `?code=${code}&state=${state}`
+        }
+        const channel = new BroadcastChannel('outlook-calendar-oauth');
+        channel.postMessage({
+            type: 'outlook-calendar-oauth-redirect',
+            query
+        });
+        channel.close();
+
+        if (window.opener && !window.opener.closed) {
+            if (query) {
+                window.opener.ocSuccess(query);
+            } else {
+                window.opener.ocError();
+            }
+        }
+
         window.close();
-    } else {
-        window.opener.ocError();
-        window.close();
-    }
+    }, [props.location]);
     return (
         <>
             <style>
@@ -88,10 +109,10 @@ const OutlookCalendarOauthRedirect = (props) => {
             `}
             </style>
             <div className="container">
-                <div className="grid-cols-2 text-right">
+                <div className="col2 text-right">
                     <strong>Importing</strong>
                 </div>
-                <div className="grid-cols-2">
+                <div className="col2">
                     <div className="stage filter-contrast">
                         <div className="dot-shuttle"></div>
                     </div>

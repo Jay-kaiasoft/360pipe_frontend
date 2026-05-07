@@ -17,6 +17,7 @@ import CustomIcons from '../../../components/common/icons/CustomIcons';
 import {
   getCalendarAuthentication,
   handleConnectGoogle,
+  oauth2CallbackGoogleCalendar
 } from '../../../service/googleCalendar/googleCalendarService';
 import { connect } from 'react-redux';
 import { setAlert } from '../../../redux/commonReducers/commonReducers';
@@ -117,15 +118,28 @@ const Calendar = ({ setAlert }) => {
     setEventModalOpen(true);
   };
 
-  const handleClickOutlookCalendar = () => {
+  const openOauthPopup = (url, name) => {
     let x = window.innerWidth / 2 - 600 / 2;
     let y = window.innerHeight / 2 - 700 / 2;
-    window.open(outlookCalendarUrl + '/outlookCalendarSignIn', "OutlookCalendarWindow", "width=600,height=700,left=" + x + ",top=" + y);
+    const popup = window.open(url, name, "width=600,height=700,left=" + x + ",top=" + y);
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      setAlert({
+        open: true,
+        type: "error",
+        message: "Popup blocked! Please allow popups for this site.",
+      });
+      return null;
+    }
+    return popup;
+  };
+
+  const handleClickOutlookCalendar = () => {
+    const popup = openOauthPopup(outlookCalendarUrl + '/outlookCalendarSignIn', "OutlookCalendarWindow");
+    if (!popup) return;
     window.ocSuccess = function (data) {
       outlookCalendarOauth(data).then(res => {
         if (res.status === 200) {
           displayGetCalendarAuthentication();
-          handleGetSync()
         } else {
           setAlert({
             open: true,
@@ -148,7 +162,30 @@ const Calendar = ({ setAlert }) => {
     try {
       const res = await handleConnectGoogle();
       if (res?.status === 200) {
-        window.location.href = res?.result?.url;
+        const popup = openOauthPopup(res?.result?.url, "GoogleCalendarWindow");
+        if (!popup) return;
+
+        window.gcSuccess = function (code, state) {
+          oauth2CallbackGoogleCalendar(code, state).then(res => {
+            if (res.status === 200) {
+              displayGetCalendarAuthentication();
+            } else {
+              setAlert({
+                open: true,
+                type: "error",
+                message: res.message || 'Failed to connect Google Calendar',
+              });
+            }
+          });
+        }
+
+        window.gcError = function () {
+          setAlert({
+            open: true,
+            type: "error",
+            message: "Something went wrong with Google Calendar connection!!!",
+          });
+        }
       } else {
         setAlert({
           open: true,
@@ -243,6 +280,68 @@ const Calendar = ({ setAlert }) => {
       document.title = "My Calendar - 360Pipe"
     }
     displayGetCalendarAuthentication();
+  }, []);
+
+  useEffect(() => {
+    const ocChannel = new BroadcastChannel('outlook-calendar-oauth');
+    const gcChannel = new BroadcastChannel('google-calendar-oauth');
+
+    gcChannel.onmessage = (event) => {
+      if (event.data?.type === 'google-calendar-oauth-redirect') {
+        const { code, state } = event.data;
+        if (!code) {
+          setAlert({
+            open: true,
+            message: 'Failed to complete Google OAuth',
+            type: 'error',
+          });
+          return;
+        }
+        oauth2CallbackGoogleCalendar(code, state).then(res => {
+          if (res.status === 200) {
+            displayGetCalendarAuthentication();
+          } else {
+            setAlert({
+              open: true,
+              message: res.message || 'Failed to complete Google OAuth',
+              type: 'error',
+            });
+          }
+        });
+      }
+    };
+    ocChannel.onmessage = (event) => {
+      if (event.data?.type === 'outlook-calendar-oauth-redirect') {
+        if (!event.data.query) {
+          setAlert({
+            open: true,
+            message: 'Failed to complete Outlook OAuth',
+            type: 'error',
+          });
+          return;
+        }
+        outlookCalendarOauth(event.data.query).then(res => {
+          if (res.status === 200) {
+            displayGetCalendarAuthentication();
+          } else {
+            console.log("displayGetCalendarAuthentication error for res", res)
+            setAlert({
+              open: true,
+              message: 'Failed to complete Outlook OAuth',
+              type: 'error',
+            });
+          }
+        });
+      }
+    };
+    return () => {
+      ocChannel.close();
+      gcChannel.close();
+    };
+  }, []);
+
+  useEffect(() => {
+
   }, []);
 
   useEffect(() => {
