@@ -484,7 +484,6 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
             // original editAll logic
             editAll: editAll && selectedRepeat?.id !== 1 ? 'Y' : 'N',
         };
-        console.log("payload", payload)
         const res = await saveEvents(payload);
         if (res.status === 200) {
             setAlert({ open: true, message: res?.message, type: 'success' });
@@ -724,7 +723,9 @@ function AddEventModel({ setAlert, open, handleClose, slotInfo, handleGetAllEven
                                                 placeholder="Select timezone"
                                                 value={watch('calTimeZone') ? parseInt(watch('calTimeZone')) : null}
                                                 onChange={(_, newValue) => {
-                                                    field.onChange(newValue.id);
+                                                    if (newValue) {                                                        
+                                                        field.onChange(newValue.id);
+                                                    }
                                                 }}
                                                 error={errors?.calTimeZone}
                                             />

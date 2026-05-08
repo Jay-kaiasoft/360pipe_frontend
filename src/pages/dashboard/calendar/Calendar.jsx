@@ -459,7 +459,7 @@ const Calendar = ({ setAlert }) => {
                       src={'/images/googlecalendar.png'}
                       alt="Google Calendar"
                       style={{ width: '30px' }}
-                      className="mx-2 cursor-pointer"
+                      className="mx-1 cursor-pointer"
                     />
                   )}
                 </Tooltip>
