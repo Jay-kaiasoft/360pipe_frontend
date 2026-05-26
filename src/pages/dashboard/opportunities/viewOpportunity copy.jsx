@@ -51,6 +51,7 @@ import { getAllMeetingsByOppId } from '../../../service/meetings/meetingsService
 import { deleteMeetingAttendees, getAllMeetingsAttendeesByMeetingId } from '../../../service/meetingAttendees/meetingAttendeesService';
 import { getByMeetingId, saveNote, updateNote } from '../../../service/notes/notesService';
 import {
+    brandfetchSrc,
     opportunityContactRoles,
     opportunityStages,
     opportunityStatus,
@@ -61,6 +62,7 @@ import { addMultipleContacts, getAllContacts } from "../../../service/contact/co
 import EnvTable from "./envTable";
 import { getOpportunitiesCurrentEnvironmentByOppId } from "../../../service/opportunitiesCurrentEnvironment/opportunitiesCurrentEnvironmentService";
 import DealDocs from "./dealDocs";
+import { getMeetingSummaryByOppId } from "../../../service/meetingSummary/meetingSummaryService";
 
 // ----------------------------
 // Constants / Helpers
@@ -127,7 +129,7 @@ const normalizeDomain = (raw) => {
     return d;
 };
 
-const brandfetchSrc = (domain) => `https://cdn.brandfetch.io/${domain}/w/100/h/100/icon?c=1id2vhiypCcqm7fpTjx`;
+// const brandfetchSrc = (domain) => `https://cdn.brandfetch.io/${domain}/w/100/h/100/icon?c=1id2vhiypCcqm7fpTjx`;
 
 const getDisplayName = (id, options) => {
     const option = options.find(opt => opt.id === id);
@@ -225,7 +227,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         title: "",
         isKeyContact: false,
         name: null,
-        oppId: opportunityId
+        oppId: opportunityId,
+        opportunityContactNotesList: [
+            { id: null, opportunityContactId: null, note: "", type: "Personal" },
+            { id: null, opportunityContactId: null, note: "", type: "Professional" }
+        ]
     });
     const [contactRows, setContactRows] = useState([emptyContactRow()]);
     const selectContactsRef = useRef(null);
@@ -285,6 +291,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     const [backgroundState, setBackgroundState] = useState(EditorState.createEmpty());
     const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
     const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
+    const [meetingSummary, setMeetingSummary] = useState([]);
 
     const [editingNoteField, setEditingNoteField] = useState(null);
     const activeNoteEditorRef = useRef(null);
@@ -404,6 +411,19 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         }
     }
 
+    const handleGetMeetingSummaryByOppId = async () => {
+        try {
+            if (opportunityId && oppSelectedTabIndex === 1) {
+                const res = await getMeetingSummaryByOppId(opportunityId);
+                if (res?.status === 200) {
+                    setMeetingSummary(res.result || []);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load meeting summary:", e);
+        }
+    }
+
     useEffect(() => {
         if (locaiton?.pathname.includes("opportunity-view")) {
             setOppSelectedTabIndex(0)
@@ -425,6 +445,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             setMeetingAttendees([])
             setValue("meetingDate", null)
         }
+        handleGetMeetingSummaryByOppId()
     }, [oppSelectedTabIndex])
 
     useEffect(() => {
@@ -555,20 +576,40 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     const currentKeyContactsCount = allContactsWithEdits.filter((c) => c.isKey).length;
 
-    const handleToggleKeyContact = (id, isKey) => {
+    const handleToggleKeyContact = (id, isKey, contact) => {
         setEditedContacts((prev) => {
             const next = [...prev];
             const idx = next.findIndex((e) => String(e.id) === String(id));
-            if (idx >= 0) next[idx] = { id, isKey };
-            else next.push({ id, isKey });
+
+            // Create the updated contact object including the new isKey value
+            const updatedContact = { ...contact, id, isKey };
+
+            if (idx >= 0) {
+                // Update the existing entry in the edit list
+                next[idx] = updatedContact;
+            } else {
+                // Add the contact to the edit list for the first time
+                next.push(updatedContact);
+            }
+
             return next;
         });
     };
 
+    // const handleToggleKeyContact = (id, isKey, contact) => {
+    //     setEditedContacts((prev) => {
+    //         const next = [...prev];
+    //         const idx = next.findIndex((e) => String(e.id) === String(id));
+    //         if (idx >= 0) next[idx] = { id, isKey };
+    //         else next.push({ id, isKey });
+    //         return next;
+    //     });
+    // };
+
     useClickOutside(selectContactsRef, async () => {
         if (!isSelectContactsOpen) return;
         if (editedContacts.length > 0) {
-            const requestData = editedContacts.map(item => ({ id: item.id, isKey: item.isKey }));
+            const requestData = editedContacts.map(item => { return item });
             const res = await updateOpportunitiesContact(requestData);
             if (res?.status === 200) {
                 handleGetOppContacts();
@@ -610,6 +651,12 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             roleId: opportunityContactRoles?.find((row) => row?.title === contact?.role)?.id,
             isKeyContact: !!contact?.isKey,
             oppId: opportunityId,
+            opportunityContactNotesList: contact?.opportunityContactNotesList?.length > 0
+                ? contact.opportunityContactNotesList
+                : [
+                    { id: null, opportunityContactId: null, note: "", type: "Personal" },
+                    { id: null, opportunityContactId: null, note: "", type: "Professional" }
+                ]
         };
 
         setContactRows([row]);
@@ -624,45 +671,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     const updateContactRow = (tempId, key, value) =>
         setContactRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [key]: value } : r)));
-
-    // const saveContactsFromModal = async () => {
-    //     const data = contactRows?.map((item) => {
-    //         let firstName = null;
-    //         let lastName = null;
-
-    //         if (!item?.id) {
-    //             const fullName = (item?.name || "").trim();
-
-    //             if (fullName) {
-    //                 const parts = fullName.split(/\s+/)
-    //                 firstName = parts[0];
-    //                 lastName = parts.slice(1).join(" ");
-    //             }
-    //         }
-
-    //         return {
-    //             firstName,
-    //             lastName,
-    //             oppId: parseInt(item?.oppId),
-    //             title: item.title,
-    //             isKeyContact: item.isKeyContact,
-    //             role: item.role,
-    //             contactId: parseInt(item.id),
-    //         };
-    //     });
-
-    //     const res = await addMultipleContacts(data);
-    //     if (res.status === 201) {
-    //         handleGetOppContacts()
-    //         closeAddContactModal();
-    //     } else {
-    //         setAlert({
-    //             open: true,
-    //             type: "error",
-    //             message: res.message
-    //         })
-    //     }
-    // };
 
     const saveContactsFromModal = async () => {
         const data = contactRows?.map((item) => {
@@ -687,6 +695,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                 isKeyContact: item.isKeyContact,
                 role: item.role,
                 contactId: item?.id ? parseInt(item.id) : null,
+                opportunityContactNotesList: item.opportunityContactNotesList
             };
         });
 
@@ -700,6 +709,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                 role: first?.role || null,
                 isKey: !!first?.isKeyContact,
                 contactId: Number.isFinite(first?.contactId) ? first.contactId : null,
+                opportunityContactNotesList: first?.opportunityContactNotesList
             };
 
             // We send array to match how updateOpportunitiesContact is used elsewhere
@@ -720,7 +730,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
         // ✅ ADD MODE: keep your existing add behavior
         const res = await addMultipleContacts(data);
-
         if (res?.status === 201) {
             handleGetOppContacts();
             closeAddContactModal();
@@ -1222,20 +1231,50 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
     const StageTimeline = ({ stages, currentStageId }) => {
         return (
-            <div className="py-4 mb-0">
-                <div className="flex flex-wrap xl:justify-evenly gap-1 overflow-x-auto pb-1">
-                    {stages?.map((stage) => {
+            <div className="py-2 mb-4 w-full overflow-x-auto no-scrollbar">
+                <div className="flex items-center bg-[#EEF2F6] rounded-[30px] p-1.5 min-w-max h-[48px]">
+                    {stages?.map((stage, index) => {
                         const isActive = stage.id === currentStageId;
                         const isCompleted = currentStageId !== null && stage.id < currentStageId;
-                        let pillClasses = isActive ? "bg-[#44288E] text-white border-[#44288E]" :
-                            isCompleted ? "bg-[#E3F2FD] text-[#44288E] border-[#B3D7FF] cursor-pointer" :
-                                "bg-white text-gray-700 border-gray-300 cursor-pointer";
+
+                        let bgClass = isActive ? "bg-[linear-gradient(90deg,#5B21B6_0%,#8d53e8_45%,#b698ea_100%)]" : "bg-transparent hover:bg-black/5";
+                        let textClass = isActive ? "text-white" : "text-gray-600 hover:text-gray-900";
+
+                        const isFirst = index === 0;
+                        const isLast = index === stages.length - 1;
+
                         return (
-                            <div key={stage.id} onClick={() => { if (!isActive) handleSaveField("salesStage", stage.title); }}>
-                                <div className={`inline-flex items-center justify-center px-3 py-2 text-xs font-semibold border rounded-full whitespace-nowrap transition-all duration-150 ${pillClasses}`}>
-                                    <span>{stage.title}</span>
-                                    {isCompleted && <CustomIcons iconName="fa-solid fa-check" css="h-3 w-3 inline-block ml-2" />}
+                            <div
+                                key={stage.id}
+                                onClick={() => { if (!isActive) handleSaveField("salesStage", stage.title); }}
+                                className={`relative flex items-center justify-center cursor-pointer transition-colors duration-200 flex-1 h-full px-4 md:px-6
+                                    ${bgClass} 
+                                    ${!isFirst ? '-ml-[15px]' : ''} 
+                                    ${isFirst ? 'rounded-l-full' : ''} 
+                                    ${isLast ? 'rounded-r-full' : ''}
+                                `}
+                                style={{
+                                    clipPath: isFirst
+                                        ? 'polygon(0% 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 0% 100%)'
+                                        : isLast
+                                            ? 'polygon(15px 50%, 0% 100%, 100% 100%, 100% 0%, 0% 0%)'
+                                            : 'polygon(15px 50%, 0% 100%, calc(100% - 15px) 100%, 100% 50%, calc(100% - 15px) 0%, 0% 0%)',
+                                    zIndex: stages.length - index
+                                }}
+                            >
+                                <div className={`relative z-10 flex items-center gap-2 text-[14px] font-medium tracking-wide ${textClass} 
+                                    ${!isFirst ? 'ml-4' : ''} 
+                                    ${!isLast ? 'mr-3' : ''}`}
+                                >
+                                    {(isCompleted || isActive) && <CustomIcons iconName="fa-solid fa-check" css={isActive ? "text-white" : "text-blue-500"} />}
+                                    <span className="truncate whitespace-nowrap">{stage.title}</span>
                                 </div>
+
+                                {!isLast && (
+                                    <svg className="absolute right-0 top-0 bottom-0 h-full w-[15px] z-20 pointer-events-none" viewBox="0 0 15 48" preserveAspectRatio="none">
+                                        <polyline points="0,0 15,24 0,48" fill="none" stroke="white" strokeWidth="6" />
+                                    </svg>
+                                )}
                             </div>
                         );
                     })}
@@ -1486,11 +1525,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     const logoUrl = watch("logo");
 
     return (
-        <div className="mx-auto px-4 mb-2">
+        <div className="mx-auto px-4 mb-4">
             {oppSelectedTabIndex === 0 && (
                 <>
                     {/* Header Grid */}
-                    <div className="flex justify-center items-center gap-10">
+                    <div className="md:flex justify-center items-center gap-10">
                         {/* Logo Section */}
                         <div className="flex justify-center md:justify-start items-center relative">
                             <div className="w-24 h-24 border border-gray-200 rounded-full flex items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-50 overflow-hidden"
@@ -1664,17 +1703,108 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                             )}
                         </div>
 
-                        {/* Details Grid */}
-                        <div className="flex justify-center items-center w-full">
+                        {/* <div className="w-full grid grid-cols-2 lg:grid-cols-[128px_1fr_128px_1fr_128px_1fr] gap-3 my-5">
+                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Account:</span>
+                            <div className="text-gray-900 font-semibold text-base">
+                                <OpportunityField
+                                    label="Account"
+                                    value={getDisplayName(watch("accountId"), accounts)}
+                                    type="select"
+                                    options={accounts}
+                                    onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                    hideLabel
+                                />
+                            </div>
+
+                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Deal Amount:</span>
+                            <div className="relative cursor-pointer text-gray-900 font-semibold text-base">
+                                <span onClick={openPricingBox}>
+                                    {watch("dealAmount") ? `$${parseInt(watch("dealAmount")).toLocaleString()}` : "—"}
+                                </span>
+                                {showPricingBox && (
+                                    <div ref={pricingBoxRef} className="absolute z-50 left-0 top-6 w-80 bg-white border border-gray-200 rounded-xl shadow-lg py-2 px-4 flex justify-start items-center gap-3">
+                                        <div>
+                                            <label className="text-xs font-semibold">List Amount</label>
+                                            <Input
+                                                name="listPrice"
+                                                placeholder="0"
+                                                value={pricingDraft.listPrice || ""}
+                                                onChange={handleChange}
+                                                error={pricingDraft.listPrice === ""}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold">Discount (%)</label>
+                                            <Input
+                                                name="discountPercentage"
+                                                placeholder="0"
+                                                value={pricingDraft.discountPercentage || ""}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold">Deal Amount</label>
+                                            <Input
+                                                name="dealAmount"
+                                                placeholder="0"
+                                                value={pricingDraft.dealAmount || ""}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Opp Name:</span>
+                            <div className="text-gray-900 font-semibold text-base">
+                                <OpportunityField
+                                    label="Opportunity Name"
+                                    value={watch("opportunity")}
+                                    type="text"
+                                    onSave={(newValue) => handleSaveField("opportunity", newValue)}
+                                    required
+                                    hideLabel
+                                />
+                            </div>
+
+                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Close Date:</span>
+                            <div className="text-gray-900 font-semibold text-base">
+                                <OpportunityField
+                                    label="Close Date"
+                                    value={formatDate(watch("closeDate"))}
+                                    type="date"
+                                    onSave={(newValue) => handleSaveField("closeDate", newValue)}
+                                    required
+                                    hideLabel
+                                />
+                            </div>
+
+                            <span className="text-gray-500 font-medium text-sm whitespace-nowrap py-1">Status:</span>
+                            <div className="text-gray-900 font-semibold text-base">
+                                <OpportunityField
+                                    label="Status"
+                                    value={watch("status")}
+                                    type="select"
+                                    options={opportunityStatus}
+                                    onSave={(newValue) => handleSaveField("status", newValue)}
+                                    required
+                                    hideLabel
+                                />
+                            </div>
+                            <div></div>
+                            <div></div>
+                        </div> */}
+
+                        <div className="flex justify-center items-center w-full my-5">
                             <OpportunityField
                                 label="Account"
                                 value={getDisplayName(watch("accountId"), accounts)}
                                 type="select"
                                 options={accounts}
                                 onSave={(newValue) => handleSaveField("accountId", newValue)}
+                                hideLabel
                             />
 
-                            {/* Pricing Popover Trigger */}
                             <div className="relative cursor-pointer w-full">
                                 <p className="font-semibold text-black" onClick={openPricingBox}>
                                     {watch("dealAmount") ? `$${parseInt(watch("dealAmount")).toLocaleString()}` : "—"}
@@ -1691,7 +1821,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 error={pricingDraft.listPrice === ""}
                                             />
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-semibold">Discount (%)</label>
                                             <Input
@@ -1701,7 +1830,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 onChange={handleChange}
                                             />
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-semibold">Deal Amount</label>
                                             <Input
@@ -1711,7 +1839,6 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 onChange={handleChange}
                                             />
                                         </div>
-
                                     </div>
                                 )}
                             </div>
@@ -1744,10 +1871,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                     <StageTimeline stages={opportunityStages} currentStageId={currentStageId} />
 
                     {/* 3-Column Layout: Why, Value, Contacts */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-3 mb-5">
                         {/* Why Do Anything */}
-                        <div ref={whyCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                        <div ref={whyCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">
                                 Why Do Anything
                             </p>
 
@@ -1792,8 +1919,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         </div>
 
                         {/* Value */}
-                        <div ref={valueCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">Value</p>
+                        <div ref={valueCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">Value</p>
 
                             <div
                                 className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
@@ -1838,16 +1965,16 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         </div>
 
                         {/* Key Contacts */}
-                        <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
                             <div className="flex justify-start items-center mb-4">
-                                <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
+                                <p className="font-medium text-gray-800 text-2xl text-center grow">Key Contacts</p>
                             </div>
 
-                            {isSelectContactsOpen && (
+                            {(isSelectContactsOpen && allContactsWithEdits?.length > 0) && (
                                 <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
-                                    {allContactsWithEdits.map(c => (
+                                    {allContactsWithEdits?.map(c => (
                                         <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
-                                            <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
+                                            <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey, c)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
                                             <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
                                             <Components.IconButton onClick={() => openEditContactModal(c)}>
                                                 <CustomIcons
@@ -1889,87 +2016,137 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         <th className="py-1 px-2 text-left">Role</th>
                                                         <th className="py-1 px-2 text-right">Key</th>
                                                         <th className="py-1 px-2 text-right">
-                                                            <button
-                                                                type="button"
-                                                                onClick={addContactRow}
-                                                                className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
-                                                                title="Add row"
-                                                            >
-                                                                <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
-                                                            </button>
+                                                            {
+                                                                editingOppContactId === null && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={addContactRow}
+                                                                        className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
+                                                                        title="Add row"
+                                                                    >
+                                                                        <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
+                                                                    </button>
+                                                                )
+                                                            }
                                                         </th>
                                                     </tr>
                                                 </thead>
 
                                                 <tbody>
                                                     {contactRows.map((row, index) => (
-                                                        <tr key={index} className="bg-white">
-                                                            {/* Name */}
-                                                            <td className="px-1 py-1 align-middle w-48">
-                                                                <Select
-                                                                    options={allContacts}
-                                                                    placeholder="Select name"
-                                                                    freeSolo={true}
-                                                                    value={row.id ? Number(row.id) : null}
-                                                                    onChange={(e, newValue) => {
-                                                                        if (typeof newValue === "object" && newValue?.id) {
-                                                                            updateContactRow(row.tempId, "id", String(newValue.id));
-                                                                            updateContactRow(row.tempId, "name", newValue?.name ?? "");
-                                                                        }
-                                                                    }}
-                                                                    onInputChange={(e, inputValue) => {
-                                                                        updateContactRow(row.tempId, "name", inputValue);
-                                                                        if (inputValue) updateContactRow(row.tempId, "id", "");
-                                                                    }}
-                                                                />
-                                                            </td>
-
-                                                            {/* Title */}
-                                                            <td className="px-1 py-1 align-middle w-40">
-                                                                <Input
-                                                                    value={row.title || ""}
-                                                                    placeholder="Title"
-                                                                    type="text"
-                                                                    onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
-                                                                />
-                                                            </td>
-
-                                                            {/* Role */}
-                                                            <td className="px-1 py-1 align-middle w-48">
-                                                                <Select
-                                                                    options={opportunityContactRoles}
-                                                                    label={null}
-                                                                    placeholder="Role"
-                                                                    value={row.roleId ? Number(row.roleId) : null}
-                                                                    onChange={(_, newValue) => {
-                                                                        updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
-                                                                        updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
-                                                                    }}
-                                                                />
-                                                            </td>
-
-                                                            {/* Key */}
-                                                            <td className="px-1 py-1 align-middle w-20">
-                                                                <div className="flex justify-end items-center">
-                                                                    <Checkbox
-                                                                        checked={!!row.isKeyContact}
-                                                                        onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                        <React.Fragment key={row.tempId || index}>
+                                                            <tr className="bg-white border-b-0">
+                                                                {/* Name */}
+                                                                <td className="px-1 py-1 align-middle w-48">
+                                                                    <Select
+                                                                        options={allContacts}
+                                                                        placeholder="Select name"
+                                                                        freeSolo={true}
+                                                                        value={row.id ? Number(row.id) : null}
+                                                                        onChange={(e, newValue) => {
+                                                                            if (typeof newValue === "object" && newValue?.id) {
+                                                                                updateContactRow(row.tempId, "id", String(newValue.id));
+                                                                                updateContactRow(row.tempId, "name", newValue?.name ?? "");
+                                                                            }
+                                                                        }}
+                                                                        onInputChange={(e, inputValue) => {
+                                                                            updateContactRow(row.tempId, "name", inputValue);
+                                                                            if (inputValue) updateContactRow(row.tempId, "id", "");
+                                                                        }}
                                                                     />
-                                                                </div>
-                                                            </td>
+                                                                </td>
 
-                                                            {/* Actions */}
-                                                            <td className="px-1 py-1 align-middle text-right">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => removeContactRow(row.tempId)}
-                                                                    className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
-                                                                    title="Remove"
-                                                                >
-                                                                    <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
-                                                                </button>
-                                                            </td>
-                                                        </tr>
+                                                                {/* Title */}
+                                                                <td className="px-1 py-1 align-middle w-40">
+                                                                    <Input
+                                                                        value={row.title || ""}
+                                                                        placeholder="Title"
+                                                                        type="text"
+                                                                        onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                                                    />
+                                                                </td>
+
+                                                                {/* Role */}
+                                                                <td className="px-1 py-1 align-middle w-48">
+                                                                    <Select
+                                                                        options={opportunityContactRoles}
+                                                                        label={null}
+                                                                        placeholder="Role"
+                                                                        value={row.roleId ? Number(row.roleId) : null}
+                                                                        onChange={(_, newValue) => {
+                                                                            updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
+                                                                            updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
+                                                                        }}
+                                                                    />
+                                                                </td>
+
+                                                                {/* Key */}
+                                                                <td className="px-1 py-1 align-middle w-20">
+                                                                    <div className="flex justify-end items-center">
+                                                                        <Checkbox
+                                                                            checked={!!row.isKeyContact}
+                                                                            onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                        />
+                                                                    </div>
+                                                                </td>
+
+                                                                {/* Actions */}
+                                                                <td className="px-1 py-1 align-middle text-right">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeContactRow(row.tempId)}
+                                                                        className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                                                                        title="Remove"
+                                                                    >
+                                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            {/* Notes Row */}
+                                                            <tr className="bg-white">
+                                                                <td colSpan={3} className="px-1 py-1">
+                                                                    <div className="flex justify-start items-center gap-3">
+                                                                        <Input
+                                                                            multiline={true}
+                                                                            rows={3}
+                                                                            label="Professional Note"
+                                                                            placeholder="Professional Note"
+                                                                            value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value;
+                                                                                const currentNotes = row.opportunityContactNotesList || [];
+                                                                                const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                const nextNotes = [
+                                                                                    { ...proNote, note: val, type: proNote.type || "Professional" },
+                                                                                    { ...perNote, type: perNote.type || "Personal" }
+                                                                                ];
+                                                                                updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                            }}
+                                                                        />
+                                                                        <Input
+                                                                            multiline={true}
+                                                                            rows={3}
+                                                                            label="Personal Note"
+                                                                            placeholder="Personal Note"
+                                                                            value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value;
+                                                                                const currentNotes = row.opportunityContactNotesList || [];
+                                                                                const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                const nextNotes = [
+                                                                                    { ...proNote, type: proNote.type || "Professional" },
+                                                                                    { ...perNote, note: val, type: perNote.type || "Personal" }
+                                                                                ];
+                                                                                updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                                <td colSpan={2}></td>
+                                                            </tr>
+                                                        </React.Fragment>
                                                     ))}
                                                 </tbody>
                                             </table>
@@ -1988,40 +2165,105 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
                             )}
 
-                            <div className="overflow-y-auto px-1">
+                            {/* <div className="overflow-y-auto px-1 flex-1">
                                 <ul className="text-sm">
                                     {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                         allContactsWithEdits
                                             ?.filter((row) => row.isKey === true)
-                                            .map((c) => (
-                                                <li
-                                                    key={c.id}
-                                                    className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
-                                                >
-                                                    <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
-                                                        {c.contactName}
-                                                    </span>
-
-                                                    <span className="text-gray-500 text-base truncate" title={c.title || ""}>
-                                                        {c.title || "-"}
-                                                    </span>
-
-                                                    <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
-                                                        {c.role || "-"}
-                                                    </span>
-                                                </li>
-                                            ))
+                                            .map((c, idx) => {
+                                                const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                const badgeColor = bgColors[idx % bgColors.length];
+                                                return (
+                                                    <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
+                                                            {initials}
+                                                        </span>
+                                                        <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                            {c.contactName}
+                                                        </span>
+                                                        <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                            {c.title || "-"}
+                                                        </span>
+                                                        <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                            {c.role || "-"}
+                                                        </span>
+                                                    </li>
+                                                )
+                                            })
                                     ) : (
                                         <p className="text-sm text-gray-400 italic">
                                             No contacts linked to this opportunity.
                                         </p>
                                     )}
                                 </ul>
+                            </div> */}
+
+                            <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
+                                {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                    <ul className="space-y-3">
+                                        {allContactsWithEdits
+                                            ?.filter((row) => row.isKey === true)
+                                            .map((c, idx) => {
+                                                const initials = (c.contactName || c.title || c.role || "UK")
+                                                    .split(' ')
+                                                    .map(n => n?.[0] || '')
+                                                    .join('')
+                                                    .substring(0, 2)
+                                                    .toUpperCase();
+
+                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                const badgeColor = bgColors[idx % bgColors.length];
+
+                                                return (
+                                                    <li key={idx} className="flex items-center gap-3 py-1">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                            {initials}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 group relative">
+                                                                <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
+                                                                <span className="text-gray-600 text-[13px]">- {c.title}</span>
+                                                                {/* Hover Tooltip */}
+                                                                {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
+                                                                    <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                                                                        {c.opportunityContactNotesList.map((n, i) => (
+                                                                            n.note?.trim() ? (
+                                                                                <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
+                                                                                    <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
+                                                                                    <div className="whitespace-pre-wrap break-words">{n.note}</div>
+                                                                                </div>
+                                                                            ) : null
+                                                                        ))}
+                                                                        {/* Tiny arrow */}
+                                                                        {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
+                                                        </div>
+                                                    </li>
+                                                );
+                                            })}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
+                                )}
+                            </div>
+
+                            <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                <button className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                    SELECT
+                                </button>
+                                <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
+                                    <i className="fa-solid fa-plus h-3 w-3 text-white"></i>
+                                </div>
                             </div>
 
                             <div className="flex items-end gap-2 absolute bottom-3 right-3">
                                 <Tooltip title="Select" arrow>
-                                    <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                    {/* <CustomIcons iconName="fa-solid fa-circle-arrow-right" css="text-white h-3.5 w-3.5" /> */}
+                                    <button disabled={allContactsWithEdits?.length === 0} className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] hover:bg-[#374151] shadow-sm flex items-center gap-1.5 cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>SELECT</button>
                                 </Tooltip>
                                 <Tooltip title="Add New" arrow>
                                     <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
@@ -2035,11 +2277,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                     </div>
 
                     {/* 3-Column Layout: Decision, Env, Next Steps */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                         {/* Decision Map */}
-                        <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 flex flex-col">
+                        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-60 flex flex-col">
                             <div className="flex justify-between mb-4 flex-none">
-                                <p className="font-medium text-black tracking-wider text-2xl">Decision Map</p>
+                                <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
                                 <div
                                     className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
                                     onClick={() => setOpenDecisionMapModel(true)}
@@ -2055,9 +2297,9 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                         {/* Current Environment */}
                         <div
                             ref={envCardRef}
-                            className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-[15rem] relative flex flex-col"
+                            className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-[15rem] relative flex flex-col"
                         >
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-3 shrink-0">
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-3 shrink-0">
                                 Current Environment
                             </p>
 
@@ -2122,8 +2364,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
 
                         {/* Next Steps */}
-                        <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
-                            <p className="font-medium text-black tracking-wider text-2xl text-center mb-4">Next Steps</p>
+                        <div ref={nextStepsRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
+                            <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
                             {isEditingNextSteps ?
                                 <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
                                 <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
@@ -2254,10 +2496,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
 
                                 {/* 3-Column Layout: Why, Value, Contacts */}
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 my-3">
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-3 mb-5">
                                     {/* Why Do Anything */}
-                                    <div ref={whyCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">
+                                    <div ref={whyCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">
                                             Why Do Anything
                                         </p>
 
@@ -2302,8 +2544,8 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
 
                                     {/* Value */}
-                                    <div ref={valueCardRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-4 shrink-0">Value</p>
+                                    <div ref={valueCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">Value</p>
 
                                         <div
                                             className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
@@ -2348,16 +2590,16 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
 
                                     {/* Key Contacts */}
-                                    <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col">
+                                    <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
                                         <div className="flex justify-start items-center mb-4">
-                                            <p className="font-medium text-black tracking-wider text-2xl text-center grow">Key Contacts</p>
+                                            <p className="font-medium text-gray-800 text-2xl text-center grow">Key Contacts</p>
                                         </div>
 
-                                        {isSelectContactsOpen && (
+                                        {(isSelectContactsOpen && allContactsWithEdits?.length > 0) && (
                                             <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
-                                                {allContactsWithEdits.map(c => (
+                                                {allContactsWithEdits?.map(c => (
                                                     <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
-                                                        <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
+                                                        <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey, c)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
                                                         <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
                                                         <Components.IconButton onClick={() => openEditContactModal(c)}>
                                                             <CustomIcons
@@ -2399,87 +2641,137 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                                     <th className="py-1 px-2 text-left">Role</th>
                                                                     <th className="py-1 px-2 text-right">Key</th>
                                                                     <th className="py-1 px-2 text-right">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={addContactRow}
-                                                                            className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
-                                                                            title="Add row"
-                                                                        >
-                                                                            <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
-                                                                        </button>
+                                                                        {
+                                                                            editingOppContactId === null && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={addContactRow}
+                                                                                    className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
+                                                                                    title="Add row"
+                                                                                >
+                                                                                    <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
+                                                                                </button>
+                                                                            )
+                                                                        }
                                                                     </th>
                                                                 </tr>
                                                             </thead>
 
                                                             <tbody>
                                                                 {contactRows.map((row, index) => (
-                                                                    <tr key={index} className="bg-white">
-                                                                        {/* Name */}
-                                                                        <td className="px-1 py-1 align-middle w-48">
-                                                                            <Select
-                                                                                options={allContacts}
-                                                                                placeholder="Select name"
-                                                                                freeSolo={true}
-                                                                                value={row.id ? Number(row.id) : null}
-                                                                                onChange={(e, newValue) => {
-                                                                                    if (typeof newValue === "object" && newValue?.id) {
-                                                                                        updateContactRow(row.tempId, "id", String(newValue.id));
-                                                                                        updateContactRow(row.tempId, "name", newValue?.name ?? "");
-                                                                                    }
-                                                                                }}
-                                                                                onInputChange={(e, inputValue) => {
-                                                                                    updateContactRow(row.tempId, "name", inputValue);
-                                                                                    if (inputValue) updateContactRow(row.tempId, "id", "");
-                                                                                }}
-                                                                            />
-                                                                        </td>
-
-                                                                        {/* Title */}
-                                                                        <td className="px-1 py-1 align-middle w-40">
-                                                                            <Input
-                                                                                value={row.title || ""}
-                                                                                placeholder="Title"
-                                                                                type="text"
-                                                                                onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
-                                                                            />
-                                                                        </td>
-
-                                                                        {/* Role */}
-                                                                        <td className="px-1 py-1 align-middle w-48">
-                                                                            <Select
-                                                                                options={opportunityContactRoles}
-                                                                                label={null}
-                                                                                placeholder="Role"
-                                                                                value={row.roleId ? Number(row.roleId) : null}
-                                                                                onChange={(_, newValue) => {
-                                                                                    updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
-                                                                                    updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
-                                                                                }}
-                                                                            />
-                                                                        </td>
-
-                                                                        {/* Key */}
-                                                                        <td className="px-1 py-1 align-middle w-20">
-                                                                            <div className="flex justify-end items-center">
-                                                                                <Checkbox
-                                                                                    checked={!!row.isKeyContact}
-                                                                                    onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                    <React.Fragment key={row.tempId || index}>
+                                                                        <tr className="bg-white border-b-0">
+                                                                            {/* Name */}
+                                                                            <td className="px-1 py-1 align-middle w-48">
+                                                                                <Select
+                                                                                    options={allContacts}
+                                                                                    placeholder="Select name"
+                                                                                    freeSolo={true}
+                                                                                    value={row.id ? Number(row.id) : null}
+                                                                                    onChange={(e, newValue) => {
+                                                                                        if (typeof newValue === "object" && newValue?.id) {
+                                                                                            updateContactRow(row.tempId, "id", String(newValue.id));
+                                                                                            updateContactRow(row.tempId, "name", newValue?.name ?? "");
+                                                                                        }
+                                                                                    }}
+                                                                                    onInputChange={(e, inputValue) => {
+                                                                                        updateContactRow(row.tempId, "name", inputValue);
+                                                                                        if (inputValue) updateContactRow(row.tempId, "id", "");
+                                                                                    }}
                                                                                 />
-                                                                            </div>
-                                                                        </td>
+                                                                            </td>
 
-                                                                        {/* Actions */}
-                                                                        <td className="px-1 py-1 align-middle text-right">
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => removeContactRow(row.tempId)}
-                                                                                className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
-                                                                                title="Remove"
-                                                                            >
-                                                                                <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
+                                                                            {/* Title */}
+                                                                            <td className="px-1 py-1 align-middle w-40">
+                                                                                <Input
+                                                                                    value={row.title || ""}
+                                                                                    placeholder="Title"
+                                                                                    type="text"
+                                                                                    onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                                                                />
+                                                                            </td>
+
+                                                                            {/* Role */}
+                                                                            <td className="px-1 py-1 align-middle w-48">
+                                                                                <Select
+                                                                                    options={opportunityContactRoles}
+                                                                                    label={null}
+                                                                                    placeholder="Role"
+                                                                                    value={row.roleId ? Number(row.roleId) : null}
+                                                                                    onChange={(_, newValue) => {
+                                                                                        updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
+                                                                                        updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
+                                                                                    }}
+                                                                                />
+                                                                            </td>
+
+                                                                            {/* Key */}
+                                                                            <td className="px-1 py-1 align-middle w-20">
+                                                                                <div className="flex justify-end items-center">
+                                                                                    <Checkbox
+                                                                                        checked={!!row.isKeyContact}
+                                                                                        onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                                    />
+                                                                                </div>
+                                                                            </td>
+
+                                                                            {/* Actions */}
+                                                                            <td className="px-1 py-1 align-middle text-right">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => removeContactRow(row.tempId)}
+                                                                                    className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                                                                                    title="Remove"
+                                                                                >
+                                                                                    <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                        {/* Notes Row */}
+                                                                        <tr className="bg-white">
+                                                                            <td colSpan={3} className="px-1 py-1">
+                                                                                <div className="flex justify-start items-center gap-3">
+                                                                                    <Input
+                                                                                        multiline={true}
+                                                                                        rows={3}
+                                                                                        label="Professional Note"
+                                                                                        placeholder="Professional Note"
+                                                                                        value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
+                                                                                        onChange={(e) => {
+                                                                                            const val = e.target.value;
+                                                                                            const currentNotes = row.opportunityContactNotesList || [];
+                                                                                            const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                            const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                            const nextNotes = [
+                                                                                                { ...proNote, note: val, type: proNote.type || "Professional" },
+                                                                                                { ...perNote, type: perNote.type || "Personal" }
+                                                                                            ];
+                                                                                            updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                        }}
+                                                                                    />
+                                                                                    <Input
+                                                                                        multiline={true}
+                                                                                        rows={3}
+                                                                                        label="Personal Note"
+                                                                                        placeholder="Personal Note"
+                                                                                        value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
+                                                                                        onChange={(e) => {
+                                                                                            const val = e.target.value;
+                                                                                            const currentNotes = row.opportunityContactNotesList || [];
+                                                                                            const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                            const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                            const nextNotes = [
+                                                                                                { ...proNote, type: proNote.type || "Professional" },
+                                                                                                { ...perNote, note: val, type: perNote.type || "Personal" }
+                                                                                            ];
+                                                                                            updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                        }}
+                                                                                    />
+                                                                                </div>
+                                                                            </td>
+                                                                            <td colSpan={2}></td>
+                                                                        </tr>
+                                                                    </React.Fragment>
                                                                 ))}
                                                             </tbody>
                                                         </table>
@@ -2498,40 +2790,105 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                             </div>
                                         )}
 
-                                        <div className="overflow-y-auto px-1">
-                                            <ul className="text-sm">
-                                                {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
-                                                    allContactsWithEdits
+                                        {/* <div className="overflow-y-auto px-1 flex-1">
+                                <ul className="text-sm">
+                                    {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                        allContactsWithEdits
+                                            ?.filter((row) => row.isKey === true)
+                                            .map((c, idx) => {
+                                                const initials = (c.contactName || c.title || c.role || "UK").split(' ').map(n => n?.[0] || '').join('').substring(0, 2).toUpperCase();
+                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                const badgeColor = bgColors[idx % bgColors.length];
+                                                return (
+                                                    <li className="grid grid-cols-[auto,1fr,1fr,1fr] gap-2 pb-1 items-center border-b border-gray-50 last:border-0">
+                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeColor}`}>
+                                                            {initials}
+                                                        </span>
+                                                        <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
+                                                            {c.contactName}
+                                                        </span>
+                                                        <span className="text-gray-500 text-base truncate" title={c.title || ""}>
+                                                            {c.title || "-"}
+                                                        </span>
+                                                        <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
+                                                            {c.role || "-"}
+                                                        </span>
+                                                    </li>
+                                                )
+                                            })
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">
+                                            No contacts linked to this opportunity.
+                                        </p>
+                                    )}
+                                </ul>
+                            </div> */}
+
+                                        <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
+                                            {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                                <ul className="space-y-3">
+                                                    {allContactsWithEdits
                                                         ?.filter((row) => row.isKey === true)
-                                                        .map((c) => (
-                                                            <li
-                                                                key={c.id}
-                                                                className="grid grid-cols-3 gap-4 py-1 items-baseline border-b border-gray-50 last:border-0"
-                                                            >
-                                                                <span className="font-medium text-indigo-600 text-base truncate" title={c.contactName || ""}>
-                                                                    {c.contactName}
-                                                                </span>
+                                                        .map((c, idx) => {
+                                                            const initials = (c.contactName || c.title || c.role || "UK")
+                                                                .split(' ')
+                                                                .map(n => n?.[0] || '')
+                                                                .join('')
+                                                                .substring(0, 2)
+                                                                .toUpperCase();
 
-                                                                <span className="text-gray-500 text-base truncate" title={c.title || ""}>
-                                                                    {c.title || "-"}
-                                                                </span>
+                                                            const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                            const badgeColor = bgColors[idx % bgColors.length];
 
-                                                                <span className="text-indigo-600 text-base truncate" title={c.role || ""}>
-                                                                    {c.role || "-"}
-                                                                </span>
-                                                            </li>
-                                                        ))
-                                                ) : (
-                                                    <p className="text-sm text-gray-400 italic">
-                                                        No contacts linked to this opportunity.
-                                                    </p>
-                                                )}
-                                            </ul>
+                                                            return (
+                                                                <li key={idx} className="flex items-center gap-3 py-1">
+                                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                                        {initials}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2 group relative">
+                                                                            <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
+                                                                            <span className="text-gray-600 text-[13px]">- {c.title}</span>
+                                                                            {/* Hover Tooltip */}
+                                                                            {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
+                                                                                <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                                                                                    {c.opportunityContactNotesList.map((n, i) => (
+                                                                                        n.note?.trim() ? (
+                                                                                            <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
+                                                                                                <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
+                                                                                                <div className="whitespace-pre-wrap break-words">{n.note}</div>
+                                                                                            </div>
+                                                                                        ) : null
+                                                                                    ))}
+                                                                                    {/* Tiny arrow */}
+                                                                                    {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
+                                                                    </div>
+                                                                </li>
+                                                            );
+                                                        })}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                            <button className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                                SELECT
+                                            </button>
+                                            <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
+                                                <i className="fa-solid fa-plus h-3 w-3 text-white"></i>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-end gap-2 absolute bottom-3 right-3">
                                             <Tooltip title="Select" arrow>
-                                                <button className="h-6 px-3 rounded-full border text-xs text-white bg-black" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>Select</button>
+                                                {/* <CustomIcons iconName="fa-solid fa-circle-arrow-right" css="text-white h-3.5 w-3.5" /> */}
+                                                <button disabled={allContactsWithEdits?.length === 0} className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] hover:bg-[#374151] shadow-sm flex items-center gap-1.5 cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>SELECT</button>
                                             </Tooltip>
                                             <Tooltip title="Add New" arrow>
                                                 <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
@@ -2545,11 +2902,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
 
                                 {/* 3-Column Layout: Decision, Env, Next Steps */}
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                                     {/* Decision Map */}
-                                    <div className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-60 flex flex-col">
+                                    <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-60 flex flex-col">
                                         <div className="flex justify-between mb-4 flex-none">
-                                            <p className="font-medium text-black tracking-wider text-2xl">Decision Map</p>
+                                            <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
                                             <div
                                                 className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
                                                 onClick={() => setOpenDecisionMapModel(true)}
@@ -2562,11 +2919,12 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         <DecisionMapTimeline items={salesProcess} />
                                     </div>
 
+                                    {/* Current Environment */}
                                     <div
                                         ref={envCardRef}
-                                        className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 h-[15rem] relative flex flex-col"
+                                        className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-[15rem] relative flex flex-col"
                                     >
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-3 shrink-0">
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-3 shrink-0">
                                             Current Environment
                                         </p>
 
@@ -2629,9 +2987,10 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         )}
                                     </div>
 
+
                                     {/* Next Steps */}
-                                    <div ref={nextStepsRef} className="w-full rounded-3xl shadow-sm border-2 border-black px-5 py-4 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
-                                        <p className="font-medium text-black tracking-wider text-2xl text-center mb-2">Next Steps</p>
+                                    <div ref={nextStepsRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
+                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
                                         {isEditingNextSteps ?
                                             <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
                                             <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
@@ -2641,6 +3000,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                             </div>
                         )}
                     </div>
+                    {/* Summary Section */}
                 </div>
             )}
 

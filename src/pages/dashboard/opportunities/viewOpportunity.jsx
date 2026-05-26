@@ -62,6 +62,7 @@ import { addMultipleContacts, getAllContacts } from "../../../service/contact/co
 import EnvTable from "./envTable";
 import { getOpportunitiesCurrentEnvironmentByOppId } from "../../../service/opportunitiesCurrentEnvironment/opportunitiesCurrentEnvironmentService";
 import DealDocs from "./dealDocs";
+import { getMeetingSummaryByOppId } from "../../../service/meetingSummary/meetingSummaryService";
 
 // ----------------------------
 // Constants / Helpers
@@ -159,6 +160,28 @@ const parseVendorsJson = (vendorsStr) => {
         return [];
     }
 };
+
+const formatMeetingSummary = (text) => {
+    if (!text) return "";
+
+    // Normalize and clean up excessive empty lines or lines with only spaces
+    let cleaned = text
+        .replace(/\r\n/g, "\n")
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line !== "")
+        .join("\n");
+
+    // Replace headings with styled tags to present beautiful typography
+    cleaned = cleaned.replace(/MEETING SUMMARY/gi, '<h4 class="text-lg font-extrabold text-[#1e3a8a] tracking-wide border-b border-gray-150 uppercase">MEETING SUMMARY</h4>');
+    cleaned = cleaned.replace(/WHY DO ANYTHING/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>WHY DO ANYTHING</h3>');
+    cleaned = cleaned.replace(/BUSINESS VALUE/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>BUSINESS VALUE</h3>');
+    cleaned = cleaned.replace(/KEYCONTACTS/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-purple-500 rounded-full"></span>KEY CONTACTS</h3>');
+    cleaned = cleaned.replace(/#NEXTSTEPS/gi, '<h3 class="text-[16px] font-bold text-gray-800 mt-3 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-emerald-500 rounded-full"></span>NEXT STEPS</h3>');
+    return cleaned;
+};
+
+
 
 // ----------------------------
 // Main Component
@@ -290,6 +313,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
     const [backgroundState, setBackgroundState] = useState(EditorState.createEmpty());
     const [agendaState, setAgendaState] = useState(EditorState.createEmpty());
     const [alignmentState, setAlignmentState] = useState(EditorState.createEmpty());
+    const [meetingSummary, setMeetingSummary] = useState([]);
 
     const [editingNoteField, setEditingNoteField] = useState(null);
     const activeNoteEditorRef = useRef(null);
@@ -409,6 +433,19 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
         }
     }
 
+    const handleGetMeetingSummaryByOppId = async () => {
+        try {
+            if (opportunityId && oppSelectedTabIndex === 1) {
+                const res = await getMeetingSummaryByOppId(opportunityId);
+                if (res?.status === 200) {
+                    setMeetingSummary(res.result || []);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load meeting summary:", e);
+        }
+    }
+
     useEffect(() => {
         if (locaiton?.pathname.includes("opportunity-view")) {
             setOppSelectedTabIndex(0)
@@ -430,6 +467,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
             setMeetingAttendees([])
             setValue("meetingDate", null)
         }
+        handleGetMeetingSummaryByOppId()
     }, [oppSelectedTabIndex])
 
     useEffect(() => {
@@ -2361,420 +2399,421 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
 
             {/* Notes Tab */}
             {oppSelectedTabIndex === 1 && (
-                <div className="flex justify-start items-start gap-4">
-                    <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
-                        <DatePickerComponent
-                            name="meetingDate"
-                            label="Meeting Date"
-                            control={control}
-                            setValue={setValue}
-                            showDates={showDates}
-                        />
-                        {
-                            filteredMeetings?.length > 0 && (
-                                <div class="rounded-md border border-gray-200 bg-white py-4 px-2 mt-3">
-                                    <div class="flex h-[400px] w-full flex-col overflow-y-scroll">
-                                        {
-                                            filteredMeetings?.map((row, index) => (
-                                                <button key={index} onClick={() => handleSelectMeeting(row.id)} class={`mb-2 group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 ${selectedMeeting === row.id ? "bg-blue-500" : "hover:bg-gray-100 "} `}>
-                                                    <div class={`flex flex-col items-start justify-between font-light ${selectedMeeting === row.id ? "text-white" : "text-gray-600"} `}>
-                                                        <p class="text-[15px] font-semibold">{row.title}</p>
-                                                    </div>
-                                                </button>
-                                            ))
-                                        }
-                                    </div>
-                                </div>
-                            )
-                        }
-                    </div>
-
-                    <div className="w-full">
-                        {selectedMeeting && (
-                            <div>
-                                <div className="min-h-40 overflow-y-auto border rounded-md overflow-hidden">
-                                    <table className="min-w-full border-collapse">
-                                        <thead className="sticky top-0 z-10">
-                                            <tr>
-                                                <th colSpan={1}>
-                                                    <div className='flex justify-start items-center pl-5'>
-                                                        {
-                                                            !openDrawer ? (
-                                                                <Components.IconButton onClick={() => setOpenDrawer(true)}>
-                                                                    <CustomIcons iconName={`fa-solid fa-bars`} css={"text-black text-lg"} />
-                                                                </Components.IconButton>
-                                                            ) :
-                                                                <Components.IconButton onClick={() => setOpenDrawer(false)}>
-                                                                    <CustomIcons iconName={`fa-solid fa-angle-left`} css={"text-black text-lg"} />
-                                                                </Components.IconButton>
-                                                        }
-                                                    </div>
-                                                </th>
-                                                <th colSpan={3} className="px-4 py-3 text-center text-lg font-bold text-black">Attendees</th>
-                                                <th className="px-4 py-3 text-sm font-semibold flex justify-end">
-                                                    <Tooltip title="Add Attendees" arrow>
-                                                        <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                            <Components.IconButton onClick={() => handleOpenAttendeesModel()}>
-                                                                <CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4 text-white" />
-                                                            </Components.IconButton>
+                <>
+                    <div className="flex justify-start items-start gap-4">
+                        <div className={`${openDrawer ? "w-56 md:w-80 " : "w-0 md:w-0 "} transition-all duration-300 ease-in-out overflow-hidden`}>
+                            <DatePickerComponent
+                                name="meetingDate"
+                                label="Meeting Date"
+                                control={control}
+                                setValue={setValue}
+                                showDates={showDates}
+                            />
+                            {
+                                filteredMeetings?.length > 0 && (
+                                    <div class="rounded-md border border-gray-200 bg-white py-4 px-2 mt-3">
+                                        <div class="flex h-[400px] w-full flex-col overflow-y-scroll">
+                                            {
+                                                filteredMeetings?.map((row, index) => (
+                                                    <button key={index} onClick={() => handleSelectMeeting(row.id)} class={`mb-2 group flex items-center gap-x-5 rounded-md px-2.5 py-2 transition-all duration-75 ${selectedMeeting === row.id ? "bg-blue-500" : "hover:bg-gray-100 "} `}>
+                                                        <div class={`flex flex-col items-start justify-between font-light ${selectedMeeting === row.id ? "text-white" : "text-gray-600"} `}>
+                                                            <p class="text-[15px] font-semibold">{row.title}</p>
                                                         </div>
-                                                    </Tooltip>
-                                                </th>
-                                            </tr>
-                                            <tr className="bg-gray-200 text-black">
-                                                <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                                                <th className="px-4 py-3 text-left text-sm font-semibold">Title</th>
-                                                <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
-                                                <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                                                <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
-                                            </tr>
-                                        </thead>
+                                                    </button>
+                                                ))
+                                            }
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
 
-                                        <tbody>
-                                            {meetingAttendees?.length > 0 ? (
-                                                meetingAttendees.map((row, i) => (
-                                                    <tr key={row.contactId ?? i} className={`bg-white border-b-1 border-t-0 border-l-0 border-r-0 ${i !== meetingAttendees?.length - 1 ? "border" : ""}`}>
-                                                        <td className="px-4 py-3 text-sm">
-                                                            {row.contactName || '—'}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-sm">
-                                                            {row.title || '—'}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-sm">
-                                                            {row.role || '—'}
-                                                        </td>
-                                                        <td className="white-space-pre-line px-4 py-3 text-sm">
-                                                            {row.note || '—'}
-                                                        </td>
-                                                        <td className="px-4 py-3 flex justify-end items-center gap-3">
-                                                            <Tooltip title="Edit" arrow>
-                                                                <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenAttendeesModel(row.id)}>
-                                                                        <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                        <div className="w-full">
+                            {selectedMeeting && (
+                                <div>
+                                    <div className="min-h-40 overflow-y-auto border rounded-md overflow-hidden">
+                                        <table className="min-w-full border-collapse">
+                                            <thead className="sticky top-0 z-10">
+                                                <tr>
+                                                    <th colSpan={1}>
+                                                        <div className='flex justify-start items-center pl-5'>
+                                                            {
+                                                                !openDrawer ? (
+                                                                    <Components.IconButton onClick={() => setOpenDrawer(true)}>
+                                                                        <CustomIcons iconName={`fa-solid fa-bars`} css={"text-black text-lg"} />
                                                                     </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
-                                                            <Tooltip title="Delete" arrow>
-                                                                <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
-                                                                    <Components.IconButton onClick={() => handleOpenDeleteAttendees(row.id)}>
-                                                                        <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                ) :
+                                                                    <Components.IconButton onClick={() => setOpenDrawer(false)}>
+                                                                        <CustomIcons iconName={`fa-solid fa-angle-left`} css={"text-black text-lg"} />
                                                                     </Components.IconButton>
-                                                                </div>
-                                                            </Tooltip>
+                                                            }
+                                                        </div>
+                                                    </th>
+                                                    <th colSpan={3} className="px-4 py-3 text-center text-lg font-bold text-black">Attendees</th>
+                                                    <th className="px-4 py-3 text-sm font-semibold flex justify-end">
+                                                        <Tooltip title="Add Attendees" arrow>
+                                                            <div className='bg-blue-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                <Components.IconButton onClick={() => handleOpenAttendeesModel()}>
+                                                                    <CustomIcons iconName="fa-solid fa-plus" css="h-4 w-4 text-white" />
+                                                                </Components.IconButton>
+                                                            </div>
+                                                        </Tooltip>
+                                                    </th>
+                                                </tr>
+                                                <tr className="bg-gray-200 text-black">
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Title</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
+                                                    <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {meetingAttendees?.length > 0 ? (
+                                                    meetingAttendees.map((row, i) => (
+                                                        <tr key={row.contactId ?? i} className={`bg-white border-b-1 border-t-0 border-l-0 border-r-0 ${i !== meetingAttendees?.length - 1 ? "border" : ""}`}>
+                                                            <td className="px-4 py-3 text-sm">
+                                                                {row.contactName || '—'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm">
+                                                                {row.title || '—'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm">
+                                                                {row.role || '—'}
+                                                            </td>
+                                                            <td className="white-space-pre-line px-4 py-3 text-sm">
+                                                                {row.note || '—'}
+                                                            </td>
+                                                            <td className="px-4 py-3 flex justify-end items-center gap-3">
+                                                                <Tooltip title="Edit" arrow>
+                                                                    <div className='bg-green-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenAttendeesModel(row.id)}>
+                                                                            <CustomIcons iconName={'fa-solid fa-pen-to-square'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </Tooltip>
+                                                                <Tooltip title="Delete" arrow>
+                                                                    <div className='bg-red-600 h-8 w-8 flex justify-center items-center rounded-full text-white'>
+                                                                        <Components.IconButton onClick={() => handleOpenDeleteAttendees(row.id)}>
+                                                                            <CustomIcons iconName={'fa-solid fa-trash'} css='cursor-pointer text-white h-4 w-4' />
+                                                                        </Components.IconButton>
+                                                                    </div>
+                                                                </Tooltip>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
+                                                            No records
                                                         </td>
                                                     </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan={6} className="px-4 py-4 text-center text-sm font-semibold">
-                                                        No records
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
 
-                                <div className="my-4">
-                                    <MeetingNotesTable />
-                                </div>
+                                    <div className="my-4">
+                                        <MeetingNotesTable />
+                                    </div>
 
-                                {/* 3-Column Layout: Why, Value, Contacts */}
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-3 mb-5">
-                                    {/* Why Do Anything */}
-                                    <div ref={whyCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">
-                                            Why Do Anything
-                                        </p>
+                                    {/* 3-Column Layout: Why, Value, Contacts */}
+                                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 my-3 mb-5">
+                                        {/* Why Do Anything */}
+                                        <div ref={whyCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                            <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">
+                                                Why Do Anything
+                                            </p>
 
-                                        <div
-                                            className={`flex-1 ${!isEditingWhy ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
-                                            onClick={() => !isEditingWhy && setIsEditingWhy(true)}
-                                        >
-                                            {isEditingWhy ? (
-                                                <div className="editor-container-integrated">
-                                                    <Editor
-                                                        editorState={whyDoAnythingState}
-                                                        wrapperClassName="editor-wrapper-custom"
-                                                        editorClassName="editor-main-custom"
-                                                        toolbarClassName="editor-toolbar-custom"
-                                                        onEditorStateChange={setWhyDoAnythingState}
-                                                        toolbar={toolbarProperties}
-                                                        onFocus={() => setActiveEditorHint("WhyDoAnything")}
-                                                        onBlur={() => setActiveEditorHint(null)}
-                                                        autoFocus
-                                                    />
-                                                    {activeEditorHint === "WhyDoAnything" && (
-                                                        <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
+                                            <div
+                                                className={`flex-1 ${!isEditingWhy ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                                onClick={() => !isEditingWhy && setIsEditingWhy(true)}
+                                            >
+                                                {isEditingWhy ? (
+                                                    <div className="editor-container-integrated">
+                                                        <Editor
+                                                            editorState={whyDoAnythingState}
+                                                            wrapperClassName="editor-wrapper-custom"
+                                                            editorClassName="editor-main-custom"
+                                                            toolbarClassName="editor-toolbar-custom"
+                                                            onEditorStateChange={setWhyDoAnythingState}
+                                                            toolbar={toolbarProperties}
+                                                            onFocus={() => setActiveEditorHint("WhyDoAnything")}
+                                                            onBlur={() => setActiveEditorHint(null)}
+                                                            autoFocus
+                                                        />
+                                                        {activeEditorHint === "WhyDoAnything" && (
+                                                            <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
                             before:content-[''] before:absolute before:top-10 before:left-[-8px] 
                             before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
-                                                            <img
-                                                                src="/images/WhyDoAnything2.png"
-                                                                alt="WhyDoAnything Hint"
-                                                                className="max-w-[200px] rounded-lg object-contain relative z-10"
-                                                            />
+                                                                <img
+                                                                    src="/images/WhyDoAnything2.png"
+                                                                    alt="WhyDoAnything Hint"
+                                                                    className="max-w-[200px] rounded-lg object-contain relative z-10"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        className="prose prose-sm max-w-none"
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: whyDoAnythingStateHTML || ""
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Value */}
+                                        <div ref={valueCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                            <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">Value</p>
+
+                                            <div
+                                                className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
+                                                onClick={() => !isEditingValue && setIsEditingValue(true)}
+                                            >
+                                                {isEditingValue ? (
+                                                    <div className="editor-container-integrated">
+                                                        <Editor
+                                                            editorState={businessValueState}
+                                                            wrapperClassName="editor-wrapper-custom"
+                                                            editorClassName="editor-main-custom"
+                                                            toolbarClassName="editor-toolbar-custom"
+                                                            onEditorStateChange={setBusinessValueState}
+                                                            toolbar={toolbarProperties}
+                                                            onFocus={() => setActiveEditorHint("BusinessValue")}
+                                                            onBlur={() => setActiveEditorHint(null)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        className="prose prose-sm max-w-none"
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: businessValueStateHTML || ""
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Floating Hint Image */}
+                                                {activeEditorHint === "BusinessValue" && (
+                                                    <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
+                            before:content-[''] before:absolute before:top-10 before:left-[-8px] 
+                            before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
+                                                        <img
+                                                            src="/images/BusinessValue2.png"
+                                                            alt="Business value guidance"
+                                                            className="max-w-[200px] rounded-lg object-contain relative z-10"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Key Contacts */}
+                                        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
+                                            <div className="flex justify-start items-center mb-4">
+                                                <p className="font-medium text-gray-800 text-2xl text-center grow">Key Contacts</p>
+                                            </div>
+
+                                            {(isSelectContactsOpen && allContactsWithEdits?.length > 0) && (
+                                                <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
+                                                    {allContactsWithEdits?.map(c => (
+                                                        <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
+                                                            <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey, c)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
+                                                            <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
+                                                            <Components.IconButton onClick={() => openEditContactModal(c)}>
+                                                                <CustomIcons
+                                                                    iconName="fa-solid fa-pen-to-square"
+                                                                    css="text-blue-600 cursor-pointer h-4 w-4"
+                                                                />
+                                                            </Components.IconButton>
+                                                            <Components.IconButton onClick={() => handleOpenDeleteDialog(c.id)}>
+                                                                <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer h-4 w-4" />
+                                                            </Components.IconButton>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div
-                                                    className="prose prose-sm max-w-none"
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: whyDoAnythingStateHTML || ""
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Value */}
-                                    <div ref={valueCardRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
-                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4 shrink-0">Value</p>
-
-                                        <div
-                                            className={`flex-1 ${!isEditingValue ? 'cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-y-auto' : ''}`}
-                                            onClick={() => !isEditingValue && setIsEditingValue(true)}
-                                        >
-                                            {isEditingValue ? (
-                                                <div className="editor-container-integrated">
-                                                    <Editor
-                                                        editorState={businessValueState}
-                                                        wrapperClassName="editor-wrapper-custom"
-                                                        editorClassName="editor-main-custom"
-                                                        toolbarClassName="editor-toolbar-custom"
-                                                        onEditorStateChange={setBusinessValueState}
-                                                        toolbar={toolbarProperties}
-                                                        onFocus={() => setActiveEditorHint("BusinessValue")}
-                                                        onBlur={() => setActiveEditorHint(null)}
-                                                        autoFocus
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div
-                                                    className="prose prose-sm max-w-none"
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: businessValueStateHTML || ""
-                                                    }}
-                                                />
-                                            )}
-
-                                            {/* Floating Hint Image */}
-                                            {activeEditorHint === "BusinessValue" && (
-                                                <div className="absolute top-0 right-[-240px] hidden xl:block bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-3
-                            before:content-[''] before:absolute before:top-10 before:left-[-8px] 
-                            before:w-4 before:h-4 before:bg-white before:border-l before:border-b before:border-gray-200 before:rotate-45">
-                                                    <img
-                                                        src="/images/BusinessValue2.png"
-                                                        alt="Business value guidance"
-                                                        className="max-w-[200px] rounded-lg object-contain relative z-10"
-                                                    />
+                                                    ))}
                                                 </div>
                                             )}
-                                        </div>
-                                    </div>
 
-                                    {/* Key Contacts */}
-                                    <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col">
-                                        <div className="flex justify-start items-center mb-4">
-                                            <p className="font-medium text-gray-800 text-2xl text-center grow">Key Contacts</p>
-                                        </div>
-
-                                        {(isSelectContactsOpen && allContactsWithEdits?.length > 0) && (
-                                            <div ref={selectContactsRef} className="absolute top-10 right-2 z-20 w-[360px] rounded-xl bg-white shadow-xl border border-gray-200 p-3 max-h-80 overflow-y-auto">
-                                                {allContactsWithEdits?.map(c => (
-                                                    <div key={c.id} className="flex items-center gap-2 mb-2 p-2 border rounded">
-                                                        <Checkbox checked={!!c.isKey} onChange={() => handleToggleKeyContact(c.id, !c.isKey, c)} disabled={currentKeyContactsCount >= 4 && !c.isKey} />
-                                                        <div className="grow"><p className="text-sm font-bold">{c.contactName}</p><p className="text-xs">{c.role}</p></div>
-                                                        <Components.IconButton onClick={() => openEditContactModal(c)}>
-                                                            <CustomIcons
-                                                                iconName="fa-solid fa-pen-to-square"
-                                                                css="text-blue-600 cursor-pointer h-4 w-4"
-                                                            />
-                                                        </Components.IconButton>
-                                                        <Components.IconButton onClick={() => handleOpenDeleteDialog(c.id)}>
-                                                            <CustomIcons iconName="fa-solid fa-trash" css="text-red-500 cursor-pointer h-4 w-4" />
-                                                        </Components.IconButton>
+                                            {/* Add Contact Modal */}
+                                            {isAddContactOpen && (
+                                                <div className="absolute top-0 -left-[300px] right-20 z-10 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+                                                    {/* Header */}
+                                                    <div className="flex items-center justify-end px-5 py-1 border-b">
+                                                        <button
+                                                            onClick={closeAddContactModal}
+                                                            className="h-9 w-9 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                                                            type="button"
+                                                        >
+                                                            ✕
+                                                        </button>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
 
-                                        {/* Add Contact Modal */}
-                                        {isAddContactOpen && (
-                                            <div className="absolute top-0 -left-[300px] right-20 z-10 rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-                                                {/* Header */}
-                                                <div className="flex items-center justify-end px-5 py-1 border-b">
-                                                    <button
-                                                        onClick={closeAddContactModal}
-                                                        className="h-9 w-9 rounded-md hover:bg-gray-100 flex items-center justify-center"
-                                                        type="button"
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
+                                                    {/* Table */}
+                                                    <div className="px-4 py-4">
+                                                        {/* makes table scrollable on smaller widths */}
+                                                        <div className="w-full overflow-x-auto">
+                                                            <table className="w-full">
+                                                                <thead>
+                                                                    <tr className="bg-[#5B45A6] text-white text-sm font-semibold">
+                                                                        <th className="py-1 px-2 text-left">Name</th>
+                                                                        <th className="py-1 px-2 text-left">Title</th>
+                                                                        <th className="py-1 px-2 text-left">Role</th>
+                                                                        <th className="py-1 px-2 text-right">Key</th>
+                                                                        <th className="py-1 px-2 text-right">
+                                                                            {
+                                                                                editingOppContactId === null && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={addContactRow}
+                                                                                        className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
+                                                                                        title="Add row"
+                                                                                    >
+                                                                                        <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
+                                                                                    </button>
+                                                                                )
+                                                                            }
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
 
-                                                {/* Table */}
-                                                <div className="px-4 py-4">
-                                                    {/* makes table scrollable on smaller widths */}
-                                                    <div className="w-full overflow-x-auto">
-                                                        <table className="w-full">
-                                                            <thead>
-                                                                <tr className="bg-[#5B45A6] text-white text-sm font-semibold">
-                                                                    <th className="py-1 px-2 text-left">Name</th>
-                                                                    <th className="py-1 px-2 text-left">Title</th>
-                                                                    <th className="py-1 px-2 text-left">Role</th>
-                                                                    <th className="py-1 px-2 text-right">Key</th>
-                                                                    <th className="py-1 px-2 text-right">
-                                                                        {
-                                                                            editingOppContactId === null && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={addContactRow}
-                                                                                    className="h-8 w-8 bg-white/20 rounded-full hover:bg-white/30 inline-flex items-center justify-center"
-                                                                                    title="Add row"
-                                                                                >
-                                                                                    <CustomIcons iconName="fa-solid fa-plus" css="text-white text-xs" />
-                                                                                </button>
-                                                                            )
-                                                                        }
-                                                                    </th>
-                                                                </tr>
-                                                            </thead>
-
-                                                            <tbody>
-                                                                {contactRows.map((row, index) => (
-                                                                    <React.Fragment key={row.tempId || index}>
-                                                                        <tr className="bg-white border-b-0">
-                                                                            {/* Name */}
-                                                                            <td className="px-1 py-1 align-middle w-48">
-                                                                                <Select
-                                                                                    options={allContacts}
-                                                                                    placeholder="Select name"
-                                                                                    freeSolo={true}
-                                                                                    value={row.id ? Number(row.id) : null}
-                                                                                    onChange={(e, newValue) => {
-                                                                                        if (typeof newValue === "object" && newValue?.id) {
-                                                                                            updateContactRow(row.tempId, "id", String(newValue.id));
-                                                                                            updateContactRow(row.tempId, "name", newValue?.name ?? "");
-                                                                                        }
-                                                                                    }}
-                                                                                    onInputChange={(e, inputValue) => {
-                                                                                        updateContactRow(row.tempId, "name", inputValue);
-                                                                                        if (inputValue) updateContactRow(row.tempId, "id", "");
-                                                                                    }}
-                                                                                />
-                                                                            </td>
-
-                                                                            {/* Title */}
-                                                                            <td className="px-1 py-1 align-middle w-40">
-                                                                                <Input
-                                                                                    value={row.title || ""}
-                                                                                    placeholder="Title"
-                                                                                    type="text"
-                                                                                    onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
-                                                                                />
-                                                                            </td>
-
-                                                                            {/* Role */}
-                                                                            <td className="px-1 py-1 align-middle w-48">
-                                                                                <Select
-                                                                                    options={opportunityContactRoles}
-                                                                                    label={null}
-                                                                                    placeholder="Role"
-                                                                                    value={row.roleId ? Number(row.roleId) : null}
-                                                                                    onChange={(_, newValue) => {
-                                                                                        updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
-                                                                                        updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
-                                                                                    }}
-                                                                                />
-                                                                            </td>
-
-                                                                            {/* Key */}
-                                                                            <td className="px-1 py-1 align-middle w-20">
-                                                                                <div className="flex justify-end items-center">
-                                                                                    <Checkbox
-                                                                                        checked={!!row.isKeyContact}
-                                                                                        onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
-                                                                                    />
-                                                                                </div>
-                                                                            </td>
-
-                                                                            {/* Actions */}
-                                                                            <td className="px-1 py-1 align-middle text-right">
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => removeContactRow(row.tempId)}
-                                                                                    className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
-                                                                                    title="Remove"
-                                                                                >
-                                                                                    <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
-                                                                                </button>
-                                                                            </td>
-                                                                        </tr>
-                                                                        {/* Notes Row */}
-                                                                        <tr className="bg-white">
-                                                                            <td colSpan={3} className="px-1 py-1">
-                                                                                <div className="flex justify-start items-center gap-3">
-                                                                                    <Input
-                                                                                        multiline={true}
-                                                                                        rows={3}
-                                                                                        label="Professional Note"
-                                                                                        placeholder="Professional Note"
-                                                                                        value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
-                                                                                        onChange={(e) => {
-                                                                                            const val = e.target.value;
-                                                                                            const currentNotes = row.opportunityContactNotesList || [];
-                                                                                            const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
-                                                                                            const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
-                                                                                            const nextNotes = [
-                                                                                                { ...proNote, note: val, type: proNote.type || "Professional" },
-                                                                                                { ...perNote, type: perNote.type || "Personal" }
-                                                                                            ];
-                                                                                            updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                <tbody>
+                                                                    {contactRows.map((row, index) => (
+                                                                        <React.Fragment key={row.tempId || index}>
+                                                                            <tr className="bg-white border-b-0">
+                                                                                {/* Name */}
+                                                                                <td className="px-1 py-1 align-middle w-48">
+                                                                                    <Select
+                                                                                        options={allContacts}
+                                                                                        placeholder="Select name"
+                                                                                        freeSolo={true}
+                                                                                        value={row.id ? Number(row.id) : null}
+                                                                                        onChange={(e, newValue) => {
+                                                                                            if (typeof newValue === "object" && newValue?.id) {
+                                                                                                updateContactRow(row.tempId, "id", String(newValue.id));
+                                                                                                updateContactRow(row.tempId, "name", newValue?.name ?? "");
+                                                                                            }
+                                                                                        }}
+                                                                                        onInputChange={(e, inputValue) => {
+                                                                                            updateContactRow(row.tempId, "name", inputValue);
+                                                                                            if (inputValue) updateContactRow(row.tempId, "id", "");
                                                                                         }}
                                                                                     />
+                                                                                </td>
+
+                                                                                {/* Title */}
+                                                                                <td className="px-1 py-1 align-middle w-40">
                                                                                     <Input
-                                                                                        multiline={true}
-                                                                                        rows={3}
-                                                                                        label="Personal Note"
-                                                                                        placeholder="Personal Note"
-                                                                                        value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
-                                                                                        onChange={(e) => {
-                                                                                            const val = e.target.value;
-                                                                                            const currentNotes = row.opportunityContactNotesList || [];
-                                                                                            const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
-                                                                                            const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
-                                                                                            const nextNotes = [
-                                                                                                { ...proNote, type: proNote.type || "Professional" },
-                                                                                                { ...perNote, note: val, type: perNote.type || "Personal" }
-                                                                                            ];
-                                                                                            updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                        value={row.title || ""}
+                                                                                        placeholder="Title"
+                                                                                        type="text"
+                                                                                        onChange={(e) => updateContactRow(row.tempId, "title", e.target.value)}
+                                                                                    />
+                                                                                </td>
+
+                                                                                {/* Role */}
+                                                                                <td className="px-1 py-1 align-middle w-48">
+                                                                                    <Select
+                                                                                        options={opportunityContactRoles}
+                                                                                        label={null}
+                                                                                        placeholder="Role"
+                                                                                        value={row.roleId ? Number(row.roleId) : null}
+                                                                                        onChange={(_, newValue) => {
+                                                                                            updateContactRow(row.tempId, "roleId", newValue?.id ? String(newValue.id) : "")
+                                                                                            updateContactRow(row.tempId, "role", newValue?.id ? String(newValue.title) : "")
                                                                                         }}
                                                                                     />
-                                                                                </div>
-                                                                            </td>
-                                                                            <td colSpan={2}></td>
-                                                                        </tr>
-                                                                    </React.Fragment>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
+                                                                                </td>
+
+                                                                                {/* Key */}
+                                                                                <td className="px-1 py-1 align-middle w-20">
+                                                                                    <div className="flex justify-end items-center">
+                                                                                        <Checkbox
+                                                                                            checked={!!row.isKeyContact}
+                                                                                            onChange={(e) => updateContactRow(row.tempId, "isKeyContact", e.target.checked)}
+                                                                                        />
+                                                                                    </div>
+                                                                                </td>
+
+                                                                                {/* Actions */}
+                                                                                <td className="px-1 py-1 align-middle text-right">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => removeContactRow(row.tempId)}
+                                                                                        className="h-9 w-9 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                                                                                        title="Remove"
+                                                                                    >
+                                                                                        <CustomIcons iconName="fa-solid fa-trash" css="text-red-600 text-sm" />
+                                                                                    </button>
+                                                                                </td>
+                                                                            </tr>
+                                                                            {/* Notes Row */}
+                                                                            <tr className="bg-white">
+                                                                                <td colSpan={3} className="px-1 py-1">
+                                                                                    <div className="flex justify-start items-center gap-3">
+                                                                                        <Input
+                                                                                            multiline={true}
+                                                                                            rows={3}
+                                                                                            label="Professional Note"
+                                                                                            placeholder="Professional Note"
+                                                                                            value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "professional")?.note || ""}
+                                                                                            onChange={(e) => {
+                                                                                                const val = e.target.value;
+                                                                                                const currentNotes = row.opportunityContactNotesList || [];
+                                                                                                const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                                const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                                const nextNotes = [
+                                                                                                    { ...proNote, note: val, type: proNote.type || "Professional" },
+                                                                                                    { ...perNote, type: perNote.type || "Personal" }
+                                                                                                ];
+                                                                                                updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                            }}
+                                                                                        />
+                                                                                        <Input
+                                                                                            multiline={true}
+                                                                                            rows={3}
+                                                                                            label="Personal Note"
+                                                                                            placeholder="Personal Note"
+                                                                                            value={row.opportunityContactNotesList?.find(n => n.type?.toLowerCase() === "personal")?.note || ""}
+                                                                                            onChange={(e) => {
+                                                                                                const val = e.target.value;
+                                                                                                const currentNotes = row.opportunityContactNotesList || [];
+                                                                                                const proNote = currentNotes.find(n => n.type?.toLowerCase() === "professional") || { id: null, opportunityContactId: null, note: "", type: "Professional" };
+                                                                                                const perNote = currentNotes.find(n => n.type?.toLowerCase() === "personal") || { id: null, opportunityContactId: null, note: "", type: "Personal" };
+                                                                                                const nextNotes = [
+                                                                                                    { ...proNote, type: proNote.type || "Professional" },
+                                                                                                    { ...perNote, note: val, type: perNote.type || "Personal" }
+                                                                                                ];
+                                                                                                updateContactRow(row.tempId, "opportunityContactNotesList", nextNotes);
+                                                                                            }}
+                                                                                        />
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td colSpan={2}></td>
+                                                                            </tr>
+                                                                        </React.Fragment>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex justify-end gap-2 px-5 py-2 border-t">
+                                                        <button
+                                                            type="button"
+                                                            onClick={saveContactsFromModal}
+                                                            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                                                        >
+                                                            {editingOppContactId ? "Update" : "Add"}
+                                                        </button>
                                                     </div>
                                                 </div>
+                                            )}
 
-                                                <div className="flex justify-end gap-2 px-5 py-2 border-t">
-                                                    <button
-                                                        type="button"
-                                                        onClick={saveContactsFromModal}
-                                                        className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-                                                    >
-                                                        {editingOppContactId ? "Update" : "Add"}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* <div className="overflow-y-auto px-1 flex-1">
+                                            {/* <div className="overflow-y-auto px-1 flex-1">
                                 <ul className="text-sm">
                                     {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
                                         allContactsWithEdits
@@ -2808,183 +2847,228 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </ul>
                             </div> */}
 
-                                        <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
-                                            {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
-                                                <ul className="space-y-3">
-                                                    {allContactsWithEdits
-                                                        ?.filter((row) => row.isKey === true)
-                                                        .map((c, idx) => {
-                                                            const initials = (c.contactName || c.title || c.role || "UK")
-                                                                .split(' ')
-                                                                .map(n => n?.[0] || '')
-                                                                .join('')
-                                                                .substring(0, 2)
-                                                                .toUpperCase();
+                                            <div className="overflow-y-auto flex-1 max-h-[8rem] relative">
+                                                {allContactsWithEdits?.filter((row) => row.isKey === true).length > 0 ? (
+                                                    <ul className="space-y-3">
+                                                        {allContactsWithEdits
+                                                            ?.filter((row) => row.isKey === true)
+                                                            .map((c, idx) => {
+                                                                const initials = (c.contactName || c.title || c.role || "UK")
+                                                                    .split(' ')
+                                                                    .map(n => n?.[0] || '')
+                                                                    .join('')
+                                                                    .substring(0, 2)
+                                                                    .toUpperCase();
 
-                                                            const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
-                                                            const badgeColor = bgColors[idx % bgColors.length];
+                                                                const bgColors = ['bg-[#4267B2]', 'bg-[#9C27B0]', 'bg-[#009688]', 'bg-[#E91E63]', 'bg-[#FF9800]'];
+                                                                const badgeColor = bgColors[idx % bgColors.length];
 
-                                                            return (
-                                                                <li key={idx} className="flex items-center gap-3 py-1">
-                                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
-                                                                        {initials}
-                                                                    </div>
-                                                                    <div className="flex-1">
-                                                                        <div className="flex items-center gap-2 group relative">
-                                                                            <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
-                                                                            <span className="text-gray-600 text-[13px]">- {c.title}</span>
-                                                                            {/* Hover Tooltip */}
-                                                                            {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
-                                                                                <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
-                                                                                    {c.opportunityContactNotesList.map((n, i) => (
-                                                                                        n.note?.trim() ? (
-                                                                                            <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
-                                                                                                <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
-                                                                                                <div className="whitespace-pre-wrap break-words">{n.note}</div>
-                                                                                            </div>
-                                                                                        ) : null
-                                                                                    ))}
-                                                                                    {/* Tiny arrow */}
-                                                                                    {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
-                                                                                </div>
-                                                                            )}
+                                                                return (
+                                                                    <li key={idx} className="flex items-center gap-3 py-1">
+                                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${badgeColor}`}>
+                                                                            {initials}
                                                                         </div>
-                                                                        <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
-                                                                    </div>
-                                                                </li>
-                                                            );
+                                                                        <div className="flex-1">
+                                                                            <div className="flex items-center gap-2 group relative">
+                                                                                <span className="font-bold text-[#1e3a8a] text-[15px] cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>{c.contactName || ''}</span>
+                                                                                <span className="text-gray-600 text-[13px]">- {c.title}</span>
+                                                                                {/* Hover Tooltip */}
+                                                                                {c?.opportunityContactNotesList?.some(n => n.note?.trim()) && (
+                                                                                    <div className="hidden group-hover:block absolute top-0 left-10 mb-2 z-50 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-700 animate-in fade-in zoom-in duration-200 cursor-pointer">
+                                                                                        {c.opportunityContactNotesList.map((n, i) => (
+                                                                                            n.note?.trim() ? (
+                                                                                                <div key={i} className="mb-2 last:mb-0 pb-2 border-b last:border-0 border-gray-100">
+                                                                                                    <div className="font-bold text-[#1e3a8a] mb-1">{n.type + " Notes"}</div>
+                                                                                                    <div className="whitespace-pre-wrap break-words">{n.note}</div>
+                                                                                                </div>
+                                                                                            ) : null
+                                                                                        ))}
+                                                                                        {/* Tiny arrow */}
+                                                                                        {/* <div className="absolute top-full left-4 -mt-1.5 w-3 h-3 bg-white border-r border-b border-gray-200 rotate-45"></div> */}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="text-gray-500 text-[13px]">{c.role || 'Contact'}</div>
+                                                                        </div>
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                    </ul>
+                                                ) : (
+                                                    <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                                <button className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                                    SELECT
+                                                </button>
+                                                <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
+                                                    <i className="fa-solid fa-plus h-3 w-3 text-white"></i>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-end gap-2 absolute bottom-3 right-3">
+                                                <Tooltip title="Select" arrow>
+                                                    {/* <CustomIcons iconName="fa-solid fa-circle-arrow-right" css="text-white h-3.5 w-3.5" /> */}
+                                                    <button disabled={allContactsWithEdits?.length === 0} className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] hover:bg-[#374151] shadow-sm flex items-center gap-1.5 cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>SELECT</button>
+                                                </Tooltip>
+                                                <Tooltip title="Add New" arrow>
+                                                    <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
+                                                        <Components.IconButton onClick={() => openAddContactModal()}>
+                                                            <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
+                                                        </Components.IconButton>
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 3-Column Layout: Decision, Env, Next Steps */}
+                                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                        {/* Decision Map */}
+                                        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-60 flex flex-col">
+                                            <div className="flex justify-between mb-4 flex-none">
+                                                <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
+                                                <div
+                                                    className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
+                                                    onClick={() => setOpenDecisionMapModel(true)}
+                                                >
+                                                    <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3" />
+                                                </div>
+                                            </div>
+
+                                            {/* Component: Now 'h-full' will mean '100% of the REMAINING space' */}
+                                            <DecisionMapTimeline items={salesProcess} />
+                                        </div>
+
+                                        {/* Current Environment */}
+                                        <div
+                                            ref={envCardRef}
+                                            className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-[15rem] relative flex flex-col"
+                                        >
+                                            <p className="font-medium text-gray-800 text-2xl text-center mb-3 shrink-0">
+                                                Current Environment
+                                            </p>
+
+                                            {/* Content area */}
+                                            <div
+                                                className="flex-1 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-hidden"
+                                                onClick={() => !isEditingEnv && setIsEditingEnv(true)}
+                                            >
+                                                {/* Make this a column layout so competitors can sit at the bottom */}
+                                                <div className="h-full flex flex-col">
+                                                    {/* Scrollable list */}
+                                                    <ul className="list-disc pl-5 flex-1 overflow-y-auto pr-2 space-y-1">
+                                                        {currentEnvRows
+                                                            ?.filter((row) => row.solution !== "Competitors")
+                                                            ?.map((row, rowIndex) => {
+                                                                const activeVendors = row.vendors
+                                                                    ?.filter((v) => v.isChecked)
+                                                                    ?.map((v) => v.value)
+                                                                    .join(" / ");
+
+                                                                return activeVendors ? (
+                                                                    <li key={row.id || rowIndex} className="text-black text-lg">
+                                                                        {activeVendors}
+                                                                    </li>
+                                                                ) : null;
+                                                            })}
+                                                    </ul>
+
+                                                    {/* Bottom pinned competitors (no absolute) */}
+                                                    {currentEnvRows
+                                                        ?.filter((row) => row.solution === "Competitors")
+                                                        ?.map((row, rowIndex) => {
+                                                            const competitorNames = row.vendors
+                                                                ?.filter((v) => v.isChecked)
+                                                                ?.map((v) => v.value)
+                                                                .join(", ");
+
+                                                            return competitorNames ? (
+                                                                <div
+                                                                    key={row.id || rowIndex}
+                                                                    className="shrink-0 pt-2 mt-2"
+                                                                >
+                                                                    <p className="text-lg">
+                                                                        <span className="font-bold text-blue-700">Competition:</span>{" "}
+                                                                        {competitorNames}
+                                                                    </p>
+                                                                </div>
+                                                            ) : null;
                                                         })}
-                                                </ul>
-                                            ) : (
-                                                <p className="text-sm text-gray-400 italic">No contacts linked to this opportunity.</p>
+                                                </div>
+                                            </div>
+
+                                            {isEditingEnv && (
+                                                <EnvTable
+                                                    opportunityId={opportunityId}
+                                                    handleGetOpportunitiesCurrentEnvironmentByOppId={
+                                                        handleGetOpportunitiesCurrentEnvironmentByOppId
+                                                    }
+                                                />
                                             )}
                                         </div>
 
-                                        <div className="flex items-end gap-2 absolute bottom-3 right-3">
-                                            <button className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] shadow-sm flex items-center gap-1.5 cursor-pointer">
-                                                SELECT
-                                            </button>
-                                            <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full cursor-pointer">
-                                                <i className="fa-solid fa-plus h-3 w-3 text-white"></i>
-                                            </div>
-                                        </div>
 
-                                        <div className="flex items-end gap-2 absolute bottom-3 right-3">
-                                            <Tooltip title="Select" arrow>
-                                                {/* <CustomIcons iconName="fa-solid fa-circle-arrow-right" css="text-white h-3.5 w-3.5" /> */}
-                                                <button disabled={allContactsWithEdits?.length === 0} className="h-7 px-4 rounded-full text-[11px] font-bold tracking-wider text-white bg-[#4B5563] hover:bg-[#374151] shadow-sm flex items-center gap-1.5 cursor-pointer" onClick={() => setIsSelectContactsOpen(!isSelectContactsOpen)}>SELECT</button>
-                                            </Tooltip>
-                                            <Tooltip title="Add New" arrow>
-                                                <div className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full">
-                                                    <Components.IconButton onClick={() => openAddContactModal()}>
-                                                        <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3 text-white" />
-                                                    </Components.IconButton>
+                                        {/* Next Steps */}
+                                        <div ref={nextStepsRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
+                                            <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
+                                            {isEditingNextSteps ?
+                                                <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
+                                                <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {!selectedMeeting && (!meetingSummary || meetingSummary.length === 0) && (
+                                <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
+                                    <div className="h-16 w-16 bg-blue-50 rounded-2xl flex justify-center items-center text-blue-600 mb-4 animate-pulse">
+                                        <CustomIcons iconName="fa-solid fa-calendar-check" css="text-blue-500 text-3xl" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-800 mb-2">No Meeting Selected</h3>
+                                    <p className="text-gray-500 text-sm max-w-sm">
+                                        Please select a meeting from the calendar sidebar to view attendees, notes, and action items.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div>
+                        {/* Summary Section */}
+                        {meetingSummary && meetingSummary.length > 0 && (
+                            <div className="mt-6 space-y-6">
+                                {meetingSummary.map((item, idx) => (
+                                    <div key={item.id || idx} className="w-full bg-white rounded-2xl shadow-sm border border-gray-150 p-6 transition-all duration-300 hover:shadow-md">
+                                        <div className="flex items-center justify-between gap-3 mb-5 border-b border-gray-100 pb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 bg-gradient-to-tr from-blue-600 to-indigo-700 rounded-xl flex justify-center items-center text-white shadow-md shadow-blue-100">
+                                                    <CustomIcons iconName="fa-solid fa-wand-magic-sparkles" css="text-white text-base" />
                                                 </div>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 3-Column Layout: Decision, Env, Next Steps */}
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                                    {/* Decision Map */}
-                                    <div className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-60 flex flex-col">
-                                        <div className="flex justify-between mb-4 flex-none">
-                                            <p className="font-medium text-gray-800 text-2xl">Decision Map</p>
-                                            <div
-                                                className="bg-blue-600 h-6 w-6 flex justify-center items-center rounded-full text-white cursor-pointer"
-                                                onClick={() => setOpenDecisionMapModel(true)}
-                                            >
-                                                <CustomIcons iconName="fa-solid fa-plus" css="h-3 w-3" />
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-gray-900">
+                                                        {item.oppName || watch("opportunity") || "AI Meeting Summary"}
+                                                    </h3>
+                                                    <p className="text-xs text-gray-500">Auto-extracted notes, value propositions, and next steps</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1">
+                                                {(item.meetingDate || item.date || item.createdAt) && (
+                                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                                                        <CustomIcons iconName="fa-regular fa-calendar" css="text-gray-400 text-xs" />
+                                                        {formatDate(item.meetingDate || item.date || item.createdAt)}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-
-                                        {/* Component: Now 'h-full' will mean '100% of the REMAINING space' */}
-                                        <DecisionMapTimeline items={salesProcess} />
+                                        <div className="prose prose-blue max-w-none text-gray-750 whitespace-pre-wrap leading-relaxed text-[15px]" dangerouslySetInnerHTML={{ __html: formatMeetingSummary(item.summary) }} />
                                     </div>
-
-                                    {/* Current Environment */}
-                                    <div
-                                        ref={envCardRef}
-                                        className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 h-[15rem] relative flex flex-col"
-                                    >
-                                        <p className="font-medium text-gray-800 text-2xl text-center mb-3 shrink-0">
-                                            Current Environment
-                                        </p>
-
-                                        {/* Content area */}
-                                        <div
-                                            className="flex-1 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-colors overflow-hidden"
-                                            onClick={() => !isEditingEnv && setIsEditingEnv(true)}
-                                        >
-                                            {/* Make this a column layout so competitors can sit at the bottom */}
-                                            <div className="h-full flex flex-col">
-                                                {/* Scrollable list */}
-                                                <ul className="list-disc pl-5 flex-1 overflow-y-auto pr-2 space-y-1">
-                                                    {currentEnvRows
-                                                        ?.filter((row) => row.solution !== "Competitors")
-                                                        ?.map((row, rowIndex) => {
-                                                            const activeVendors = row.vendors
-                                                                ?.filter((v) => v.isChecked)
-                                                                ?.map((v) => v.value)
-                                                                .join(" / ");
-
-                                                            return activeVendors ? (
-                                                                <li key={row.id || rowIndex} className="text-black text-lg">
-                                                                    {activeVendors}
-                                                                </li>
-                                                            ) : null;
-                                                        })}
-                                                </ul>
-
-                                                {/* Bottom pinned competitors (no absolute) */}
-                                                {currentEnvRows
-                                                    ?.filter((row) => row.solution === "Competitors")
-                                                    ?.map((row, rowIndex) => {
-                                                        const competitorNames = row.vendors
-                                                            ?.filter((v) => v.isChecked)
-                                                            ?.map((v) => v.value)
-                                                            .join(", ");
-
-                                                        return competitorNames ? (
-                                                            <div
-                                                                key={row.id || rowIndex}
-                                                                className="shrink-0 pt-2 mt-2"
-                                                            >
-                                                                <p className="text-lg">
-                                                                    <span className="font-bold text-blue-700">Competition:</span>{" "}
-                                                                    {competitorNames}
-                                                                </p>
-                                                            </div>
-                                                        ) : null;
-                                                    })}
-                                            </div>
-                                        </div>
-
-                                        {isEditingEnv && (
-                                            <EnvTable
-                                                opportunityId={opportunityId}
-                                                handleGetOpportunitiesCurrentEnvironmentByOppId={
-                                                    handleGetOpportunitiesCurrentEnvironmentByOppId
-                                                }
-                                            />
-                                        )}
-                                    </div>
-
-
-                                    {/* Next Steps */}
-                                    <div ref={nextStepsRef} className="w-full bg-white rounded-2xl shadow-md border border-gray-100 p-3 min-h-[15rem] relative flex flex-col" onClick={() => setIsEditingNextSteps(true)}>
-                                        <p className="font-medium text-gray-800 text-2xl text-center mb-4">Next Steps</p>
-                                        {isEditingNextSteps ?
-                                            <Input multiline rows={6} value={watch("nextSteps")} onChange={e => setValue("nextSteps", e.target.value)} /> :
-                                            <div className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{watch("nextSteps") || <span className="italic text-gray-400">No steps defined.</span>}</div>
-                                        }
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         )}
                     </div>
-                </div>
+                </>
             )}
 
             {/* {oppSelectedTabIndex === 2 && <Calendar />} */}
