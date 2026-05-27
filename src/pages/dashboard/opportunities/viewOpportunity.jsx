@@ -141,7 +141,7 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
     });
 };
 
@@ -3025,7 +3025,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 </div>
                             )}
 
-                            {!selectedMeeting && (!meetingSummary || meetingSummary.length === 0) && (
+                            {/* {!selectedMeeting && (!meetingSummary || meetingSummary.length === 0) && (
                                 <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
                                     <div className="h-16 w-16 bg-blue-50 rounded-2xl flex justify-center items-center text-blue-600 mb-4 animate-pulse">
                                         <CustomIcons iconName="fa-solid fa-calendar-check" css="text-blue-500 text-3xl" />
@@ -3035,7 +3035,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         Please select a meeting from the calendar sidebar to view attendees, notes, and action items.
                                     </p>
                                 </div>
-                            )}
+                            )} */}
                         </div>
                     </div>
 
@@ -3063,7 +3063,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                         const introMatch = matches[introIdx];
                                         const introStart = introMatch.index + introMatch.length;
                                         const introEnd = (introIdx + 1 < matches.length) ? matches[introIdx + 1].index : displaySummary.length;
-                                        
+
                                         displayIntro = displaySummary.substring(introStart, introEnd).trim();
 
                                         const beforeIntro = displaySummary.substring(0, introMatch.index).trim();
@@ -3090,16 +3090,22 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                     <h3 className="text-lg font-bold text-gray-900">
                                                         {item.oppName || watch("opportunity") || "AI Meeting Summary"}
                                                     </h3>
-                                                    <p className="text-xs text-gray-500">Auto-extracted notes, value propositions, and next steps</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {(item.meetingDate || item.date || item.createdAt) && (
+                                                            <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                                                                <CustomIcons iconName="fa-regular fa-calendar" css="text-gray-400 text-xs" />
+                                                                {/* {formatDate(item.meetingDate || item.date || item.createdAt)} */}
+                                                                {new Date(item.meetingDate || item.date || item.createdAt).toLocaleDateString('en-US', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
+                                                                })}
+                                                            </span>
+                                                        )}
+                                                    </p>
                                                 </div>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-1">
-                                                {(item.meetingDate || item.date || item.createdAt) && (
-                                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
-                                                        <CustomIcons iconName="fa-regular fa-calendar" css="text-gray-400 text-xs" />
-                                                        {formatDate(item.meetingDate || item.date || item.createdAt)}
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
 
