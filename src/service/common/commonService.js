@@ -493,3 +493,15 @@ export const handleRequestClose = (event, reason, onClose) => {
     if (reason && reason === "backdropClick") return;
     onClose();
 };
+// Input: "05/27/2026, 01:06:31 PM" (assumed UTC)
+export function parseUTCDateString(dateStr) {
+    const [datePart, timePart, ampm] = dateStr.match(/(.+), (.+) (AM|PM)/).slice(1);
+    const [month, day, year] = datePart.split('/');
+    let [hour, minute, second] = timePart.split(':');
+    hour = parseInt(hour, 10);
+    if (ampm === 'PM' && hour !== 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+
+    // Create UTC date
+    return new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+}

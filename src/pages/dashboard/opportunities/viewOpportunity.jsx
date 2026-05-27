@@ -55,6 +55,7 @@ import {
     opportunityContactRoles,
     opportunityStages,
     opportunityStatus,
+    parseUTCDateString,
     uploadFiles,
     userTimeZone
 } from '../../../service/common/commonService';
@@ -3094,14 +3095,26 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                         {(item.meetingDate || item.date || item.createdAt) && (
                                                             <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
                                                                 <CustomIcons iconName="fa-regular fa-calendar" css="text-gray-400 text-xs" />
-                                                                {/* {formatDate(item.meetingDate || item.date || item.createdAt)} */}
-                                                                {new Date(item.meetingDate || item.date || item.createdAt).toLocaleDateString('en-US', {
-                                                                    year: 'numeric',
-                                                                    month: 'short',
-                                                                    day: 'numeric',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit',
-                                                                })}
+                                                                {(() => {
+                                                                    const rawDate = item.meetingDate || item.date || item.createdAt;
+                                                                    let dateObj;
+
+                                                                    // Detect if it's your custom UTC format
+                                                                    if (typeof rawDate === 'string' && rawDate.match(/\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2} (AM|PM)/)) {
+                                                                        dateObj = parseUTCDateString(rawDate);
+                                                                    } else {
+                                                                        dateObj = new Date(rawDate);
+                                                                    }
+
+                                                                    return dateObj.toLocaleString('en-US', {
+                                                                        year: 'numeric',
+                                                                        month: 'short',
+                                                                        day: 'numeric',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit',
+                                                                        timeZone: userTimeZone,   // now works correctly because dateObj is UTC
+                                                                    });
+                                                                })()}
                                                             </span>
                                                         )}
                                                     </p>
