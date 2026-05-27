@@ -174,12 +174,14 @@ const formatMeetingSummary = (text) => {
 
     // Replace headings with styled tags to present beautiful typography
     cleaned = cleaned.replace(/MEETING SUMMARY/gi, '<h4 class="text-lg font-extrabold text-[#1e3a8a] tracking-wide border-b border-gray-150 uppercase">MEETING SUMMARY</h4>');
+    cleaned = cleaned.replace(/INTRODUCTION/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-orange-500 rounded-full"></span>INTRODUCTION</h3>');
     cleaned = cleaned.replace(/WHY DO ANYTHING/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>WHY DO ANYTHING</h3>');
     cleaned = cleaned.replace(/BUSINESS VALUE/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>BUSINESS VALUE</h3>');
     cleaned = cleaned.replace(/KEYCONTACTS/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-purple-500 rounded-full"></span>KEY CONTACTS</h3>');
     cleaned = cleaned.replace(/#NEXTSTEPS/gi, '<h3 class="text-[16px] font-bold text-gray-800 mt-3 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-emerald-500 rounded-full"></span>NEXT STEPS</h3>');
     return cleaned;
 };
+
 
 
 
@@ -3022,6 +3024,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                     </div>
                                 </div>
                             )}
+
                             {!selectedMeeting && (!meetingSummary || meetingSummary.length === 0) && (
                                 <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
                                     <div className="h-16 w-16 bg-blue-50 rounded-2xl flex justify-center items-center text-blue-600 mb-4 animate-pulse">
@@ -3035,11 +3038,48 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                             )}
                         </div>
                     </div>
-                    <div>
-                        {/* Summary Section */}
-                        {meetingSummary && meetingSummary.length > 0 && (
-                            <div className="mt-6 space-y-6">
-                                {meetingSummary.map((item, idx) => (
+
+                    {/* Summary Section */}
+                    {meetingSummary && meetingSummary.length > 0 && (
+                        <div className="mt-6 space-y-6">
+                            {meetingSummary.map((item, idx) => {
+                                let displayIntro = item.introduction;
+                                let displaySummary = item.summary;
+
+                                if (!displayIntro && displaySummary) {
+                                    const headingRegex = /(MEETING\s*SUMMARY|INTRODUCTION|WHY\s*DO\s*ANYTHING|BUSINESS\s*VALUE|KEY\s*CONTACTS|#?NEXT\s*STEPS)/gi;
+                                    const matches = [];
+                                    let match;
+                                    while ((match = headingRegex.exec(displaySummary)) !== null) {
+                                        matches.push({
+                                            name: match[1].toUpperCase().replace(/\s+/g, ''),
+                                            index: match.index,
+                                            length: match[0].length
+                                        });
+                                    }
+
+                                    const introIdx = matches.findIndex(m => m.name === "INTRODUCTION");
+                                    if (introIdx !== -1) {
+                                        const introMatch = matches[introIdx];
+                                        const introStart = introMatch.index + introMatch.length;
+                                        const introEnd = (introIdx + 1 < matches.length) ? matches[introIdx + 1].index : displaySummary.length;
+                                        
+                                        displayIntro = displaySummary.substring(introStart, introEnd).trim();
+
+                                        const beforeIntro = displaySummary.substring(0, introMatch.index).trim();
+                                        const afterIntro = displaySummary.substring(introEnd).trim();
+
+                                        if (beforeIntro && afterIntro) {
+                                            displaySummary = beforeIntro + "\n\n" + afterIntro;
+                                        } else if (beforeIntro) {
+                                            displaySummary = beforeIntro;
+                                        } else {
+                                            displaySummary = afterIntro;
+                                        }
+                                    }
+                                }
+
+                                return (
                                     <div key={item.id || idx} className="w-full bg-white rounded-2xl shadow-sm border border-gray-150 p-6 transition-all duration-300 hover:shadow-md">
                                         <div className="flex items-center justify-between gap-3 mb-5 border-b border-gray-100 pb-4">
                                             <div className="flex items-center gap-3">
@@ -3062,12 +3102,27 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="prose prose-blue max-w-none text-gray-750 whitespace-pre-wrap leading-relaxed text-[15px]" dangerouslySetInnerHTML={{ __html: formatMeetingSummary(item.summary) }} />
+
+                                        <div className="prose prose-blue max-w-none text-gray-750 whitespace-pre-wrap leading-relaxed text-[15px]">
+                                            {displayIntro && (
+                                                <div className="mb-5 border-b border-gray-100 pb-4">
+                                                    <h3 className="text-[16px] font-bold text-gray-800 mb-2 uppercase flex items-center gap-1.5">
+                                                        <span className="w-1.5 h-4 bg-orange-500 rounded-full"></span>
+                                                        Introduction
+                                                    </h3>
+                                                    <div className="text-gray-700 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: displayIntro }} />
+                                                </div>
+                                            )}
+                                            {displaySummary && (
+                                                <div dangerouslySetInnerHTML={{ __html: formatMeetingSummary(displaySummary) }} />
+                                            )}
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
                 </>
             )}
 
