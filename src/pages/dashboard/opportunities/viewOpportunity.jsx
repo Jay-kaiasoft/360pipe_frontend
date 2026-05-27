@@ -173,12 +173,12 @@ const formatMeetingSummary = (text) => {
         .join("\n");
 
     // Replace headings with styled tags to present beautiful typography
-    cleaned = cleaned.replace(/MEETING SUMMARY/gi, '<h4 class="text-lg font-extrabold text-[#1e3a8a] tracking-wide border-b border-gray-150 uppercase">MEETING SUMMARY</h4>');
-    cleaned = cleaned.replace(/INTRODUCTION/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-orange-500 rounded-full"></span>INTRODUCTION</h3>');
-    cleaned = cleaned.replace(/WHY DO ANYTHING/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>WHY DO ANYTHING</h3>');
-    cleaned = cleaned.replace(/BUSINESS VALUE/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>BUSINESS VALUE</h3>');
-    cleaned = cleaned.replace(/KEYCONTACTS/gi, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-purple-500 rounded-full"></span>KEY CONTACTS</h3>');
-    cleaned = cleaned.replace(/#NEXTSTEPS/gi, '<h3 class="text-[16px] font-bold text-gray-800 mt-3 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-emerald-500 rounded-full"></span>NEXT STEPS</h3>');
+    cleaned = cleaned.replace(/\b(?:MEETING\s*SUMMARY|Meeting\s*Summary)\b/g, '<h4 class="text-lg font-extrabold text-[#1e3a8a] tracking-wide border-b border-gray-150 uppercase">MEETING SUMMARY</h4>');
+    cleaned = cleaned.replace(/\b(?:INTRODUCTION|Introduction)\b/g, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-orange-500 rounded-full"></span>INTRODUCTION</h3>');
+    cleaned = cleaned.replace(/\b(?:WHY\s*DO\s*ANYTHING|Why\s*Do\s*Anything)\b/g, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>WHY DO ANYTHING</h3>');
+    cleaned = cleaned.replace(/\b(?:BUSINESS\s*VALUE|Business\s*Value)\b/g, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>BUSINESS VALUE</h3>');
+    cleaned = cleaned.replace(/\b(?:KEY\s*CONTACTS|Key\s*Contacts|KEYCONTACTS|KeyContacts)\b/g, '<h3 class="text-[16px] font-bold text-gray-800 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-purple-500 rounded-full"></span>KEY CONTACTS</h3>');
+    cleaned = cleaned.replace(/(?:#NEXTSTEPS|#NextSteps|#?NEXT\s*STEPS|#?Next\s*Steps)\b/g, '<h3 class="text-[16px] font-bold text-gray-800 mt-3 uppercase flex items-center gap-1.5"><span class="w-1.5 h-4 bg-emerald-500 rounded-full"></span>NEXT STEPS</h3>');
     return cleaned;
 };
 
@@ -3047,7 +3047,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 let displaySummary = item.summary;
 
                                 if (!displayIntro && displaySummary) {
-                                    const headingRegex = /(MEETING\s*SUMMARY|INTRODUCTION|WHY\s*DO\s*ANYTHING|BUSINESS\s*VALUE|KEY\s*CONTACTS|#?NEXT\s*STEPS)/gi;
+                                    const headingRegex = /\b(MEETING\s*SUMMARY|Meeting\s*Summary|INTRODUCTION|Introduction|WHY\s*DO\s*ANYTHING|Why\s*Do\s*Anything|BUSINESS\s*VALUE|Business\s*Value|KEY\s*CONTACTS|Key\s*Contacts|KEYCONTACTS|KeyContacts|#?NEXT\s*STEPS|#?Next\s*Steps|#?NEXTSTEPS|#?NextSteps)\b/g;
                                     const matches = [];
                                     let match;
                                     while ((match = headingRegex.exec(displaySummary)) !== null) {
