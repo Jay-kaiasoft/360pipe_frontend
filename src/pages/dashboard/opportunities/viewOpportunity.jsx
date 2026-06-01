@@ -183,6 +183,222 @@ const formatMeetingSummary = (text) => {
     return cleaned;
 };
 
+const renderJSONSummary = (summaryStr) => {
+    try {
+        const data = JSON.parse(summaryStr);
+        return (
+            <div className="space-y-6 text-gray-800 font-sans">
+                {/* Executive Summary */}
+                {data.executiveSummary && (
+                    <div className="bg-blue-50/40 p-4 rounded-xl border border-blue-100/50">
+                        <h4 className="text-base font-bold text-blue-900 mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-blue-600 rounded-full"></span>
+                            Executive Summary
+                        </h4>
+                        <p className="text-sm text-gray-700 leading-relaxed font-semibold">{data.executiveSummary}</p>
+                    </div>
+                )}
+
+                {/* Business Problem & Desired Outcomes Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Business Problem */}
+                    {data.businessProblem && data.businessProblem.length > 0 && (
+                        <div className="bg-red-50/20 p-4 rounded-xl border border-red-100/50">
+                            <h4 className="text-sm font-bold text-red-900 mb-2 flex items-center gap-2">
+                                <span className="w-1.5 h-4 bg-red-500 rounded-full"></span>
+                                Business Problem
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 pl-1 text-sm text-gray-700 font-semibold">
+                                {data.businessProblem.map((problem, i) => (
+                                    <li key={i}>{problem}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Desired Outcomes */}
+                    {data.desiredOutcomes && data.desiredOutcomes.length > 0 && (
+                        <div className="bg-emerald-50/20 p-4 rounded-xl border border-emerald-100/50">
+                            <h4 className="text-sm font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                                <span className="w-1.5 h-4 bg-emerald-500 rounded-full"></span>
+                                Desired Outcomes & Metrics
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 pl-1 text-sm text-gray-700 font-semibold">
+                                {data.desiredOutcomes.map((outcome, i) => (
+                                    <li key={i}>{outcome}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+
+                {/* Buying Team */}
+                {data.buyingTeam && (
+                    <div className="bg-purple-50/20 p-4 rounded-xl border border-purple-100/50">
+                        <h4 className="text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-purple-500 rounded-full"></span>
+                            Buying Team
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div className="p-2.5 bg-white rounded-lg border border-purple-50">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Economic Buyer</span>
+                                <span className="font-semibold text-gray-800">{data.buyingTeam["Economic Buyer"] || "Not specified"}</span>
+                            </div>
+                            <div className="p-2.5 bg-white rounded-lg border border-purple-50">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Champion</span>
+                                <span className="font-semibold text-gray-800">{data.buyingTeam["Champion"] || "Not specified"}</span>
+                            </div>
+                            {data.buyingTeam["Decision Makers"] && data.buyingTeam["Decision Makers"].length > 0 && (
+                                <div className="sm:col-span-2 p-2.5 bg-white rounded-lg border border-purple-50">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">Decision Makers</span>
+                                    <ul className="list-none space-y-0.5 font-semibold text-gray-800 pl-1">
+                                        {data.buyingTeam["Decision Makers"].map((name, i) => (
+                                            <li key={i}>• {name}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            {data.buyingTeam["Influencers"] && data.buyingTeam["Influencers"].length > 0 && (
+                                <div className="sm:col-span-2 p-2.5 bg-white rounded-lg border border-purple-50">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">Influencers</span>
+                                    <ul className="list-none space-y-0.5 font-semibold text-gray-800 pl-1">
+                                        {data.buyingTeam["Influencers"].map((name, i) => (
+                                            <li key={i}>• {name}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Decision Process */}
+                {data.decisionProcess && (
+                    <div className="bg-indigo-50/20 p-4 rounded-xl border border-indigo-100/50">
+                        <h4 className="text-sm font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
+                            Decision Process & Criteria
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                            {data.decisionProcess["Evaluation criteria"] && (
+                                <div>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Evaluation Criteria</span>
+                                    <span className="font-semibold text-gray-800 leading-relaxed block">{data.decisionProcess["Evaluation criteria"]}</span>
+                                </div>
+                            )}
+                            {data.decisionProcess["Approval process"] && (
+                                <div>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Approval Process</span>
+                                    <span className="font-semibold text-gray-800 leading-relaxed block">{data.decisionProcess["Approval process"]}</span>
+                                </div>
+                            )}
+                            {data.decisionProcess["Procurement, legal, and security requirements"] && (
+                                <div>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Procurement, Legal & Security Requirements</span>
+                                    <span className="font-semibold text-gray-800 leading-relaxed block">{data.decisionProcess["Procurement, legal, and security requirements"]}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Deal Assessment */}
+                {data.dealAssessment && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                        <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-slate-600 rounded-full"></span>
+                            Deal Assessment
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider block mb-1">Strengths</span>
+                                <ul className="list-disc list-inside space-y-0.5 text-gray-700 pl-1 font-semibold">
+                                    {(data.dealAssessment.strengths || []).map((strength, i) => (
+                                        <li key={i}>{strength}</li>
+                                    ))}
+                                    {(!data.dealAssessment.strengths || data.dealAssessment.strengths.length === 0) && (
+                                        <li className="list-none text-gray-400 italic">None</li>
+                                    )}
+                                </ul>
+                            </div>
+                            <div>
+                                <span className="text-[10px] font-black text-red-600 uppercase tracking-wider block mb-1">Risks</span>
+                                <ul className="list-disc list-inside space-y-0.5 text-gray-700 pl-1 font-semibold">
+                                    {(data.dealAssessment.risks || []).map((risk, i) => (
+                                        <li key={i}>{risk}</li>
+                                    ))}
+                                    {(!data.dealAssessment.risks || data.dealAssessment.risks.length === 0) && (
+                                        <li className="list-none text-gray-400 italic">None</li>
+                                    )}
+                                </ul>
+                            </div>
+                            <div>
+                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block mb-1">Gaps</span>
+                                <ul className="list-disc list-inside space-y-0.5 text-gray-700 pl-1 font-semibold">
+                                    {(data.dealAssessment.gaps || []).map((gap, i) => (
+                                        <li key={i}>{gap}</li>
+                                    ))}
+                                    {(!data.dealAssessment.gaps || data.dealAssessment.gaps.length === 0) && (
+                                        <li className="list-none text-gray-400 italic">None</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Recommended Strategy */}
+                {data.recommendedStrategy && data.recommendedStrategy.length > 0 && (
+                    <div className="bg-amber-50/20 p-4 rounded-xl border border-amber-100/50">
+                        <h4 className="text-sm font-bold text-amber-900 mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-amber-500 rounded-full"></span>
+                            Recommended Strategy
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1 pl-1 text-sm text-gray-700 font-semibold">
+                            {data.recommendedStrategy.map((strategy, i) => (
+                                <li key={i}>{strategy}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Next Meeting Objective */}
+                {data.nextMeetingObjective && (
+                    <div className="bg-teal-50/20 p-4 rounded-xl border border-teal-100/50">
+                        <h4 className="text-sm font-bold text-teal-900 mb-3 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-teal-500 rounded-full"></span>
+                            Next Meeting Objective
+                        </h4>
+                        <div className="space-y-3 text-sm">
+                            <div>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Desired Outcome</span>
+                                <span className="font-semibold text-gray-800 block">{data.nextMeetingObjective.desiredOutcome || "Not specified"}</span>
+                            </div>
+                            {data.nextMeetingObjective.recommendedAgenda && data.nextMeetingObjective.recommendedAgenda.length > 0 && (
+                                <div>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">Recommended Agenda</span>
+                                    <ul className="list-disc list-inside space-y-0.5 text-gray-700 pl-1 font-semibold">
+                                        {data.nextMeetingObjective.recommendedAgenda.map((item, i) => (
+                                            <li key={i}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            <div>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Success Criteria</span>
+                                <span className="font-semibold text-gray-800 block">{data.nextMeetingObjective.successCriteria || "Not specified"}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    } catch (e) {
+        console.error("Failed to parse JSON summary:", e);
+        return <div dangerouslySetInnerHTML={{ __html: formatMeetingSummary(summaryStr) }} />;
+    }
+};
+
 
 
 
@@ -3047,7 +3263,7 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                 let displayIntro = item.introduction;
                                 let displaySummary = item.summary;
 
-                                if (!displayIntro && displaySummary) {
+                                if (!displayIntro && displaySummary && !displaySummary.trim().startsWith('{')) {
                                     const headingRegex = /\b(MEETING\s*SUMMARY|Meeting\s*Summary|INTRODUCTION|Introduction|WHY\s*DO\s*ANYTHING|Why\s*Do\s*Anything|BUSINESS\s*VALUE|Business\s*Value|KEY\s*CONTACTS|Key\s*Contacts|KEYCONTACTS|KeyContacts|#?NEXT\s*STEPS|#?Next\s*Steps|#?NEXTSTEPS|#?NextSteps)\b/g;
                                     const matches = [];
                                     let match;
@@ -3133,7 +3349,11 @@ const ViewOpportunity = ({ setAlert, oppSelectedTabIndex, setOppSelectedTabIndex
                                                 </div>
                                             )}
                                             {displaySummary && (
-                                                <div dangerouslySetInnerHTML={{ __html: formatMeetingSummary(displaySummary) }} />
+                                                displaySummary.trim().startsWith('{') ? (
+                                                    renderJSONSummary(displaySummary)
+                                                ) : (
+                                                    <div dangerouslySetInnerHTML={{ __html: formatMeetingSummary(displaySummary) }} />
+                                                )
                                             )}
                                         </div>
                                     </div>
